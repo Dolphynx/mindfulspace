@@ -1,11 +1,44 @@
-/tmp
-/out-tsc
+# === OS & IDE ===
+.DS_Store
+.idea/
+.vscode/
+*.swp
 
-/node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-/.pnp
-.pnp.js
+# === Node / Dependencies ===
+node_modules/
+.pnp/
+.pnp.*
+*.tsbuildinfo
+*.log
+pnpm-debug.log*
 
-.vscode/*
+# === Next.js / Frontend build ===
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel/
+
+# === NestJS / Backend build ===
+api/dist/
+api/coverage/
+
+# === Env files ===
+.env
+.env.*
+!.env.example
+!.env.prod.template
+
+# === Docker ===
+**/Dockerfile.txt
+docker-compose.override.yml
+**/tmp/
+**/logs/
+
+# === Misc ===
+*.pem
+*.local
+*.bak
+
+# === OS metadata ===
+Thumbs.db
+ehthumbs.db
