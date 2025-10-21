@@ -1,0 +1,10 @@
+.git
+.gitignore
+node_modules
+.pnpm-store
+**/node_modules
+**/.next/cache
+**/dist
+Dockerfile
+docker-compose*.yml
+.env*

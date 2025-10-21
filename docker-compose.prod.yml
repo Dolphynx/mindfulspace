@@ -2,42 +2,49 @@ services:
   db:
     image: postgres:16-alpine
     container_name: mindfulspace_db
-    env_file: ./.env.prod
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: mindfulspace
+      POSTGRES_USER: ms_user
+      POSTGRES_PASSWORD: ms_pass
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD-SHELL", "pg_isready -U ms_user -d mindfulspace"]
+      interval: 10s
+      timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   api:
-    image: ${CI_REGISTRY_IMAGE:-mindfulspace}/api:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/api-nest/Dockerfile
     container_name: mindfulspace_api
-    env_file: ./.env.prod
     environment:
       NODE_ENV: production
-      PORT: 3001
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    ports: ["3001:3001"]
+      DATABASE_URL: postgres://ms_user:ms_pass@db:5432/mindfulspace
+      PORT: "3001"
+    expose:
+      - "3001"
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
 
   frontend:
-    image: ${CI_REGISTRY_IMAGE:-mindfulspace}/frontend:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: apps/frontend-next/Dockerfile
     container_name: mindfulspace_frontend
-    env_file: ./.env.prod
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
-    ports: ["80:3000"]
+      NEXT_PUBLIC_API_URL: http://api:3001
+      PORT: "3000"
+    ports:
+      - "80:3000"
     depends_on:
       - api
+    restart: unless-stopped
 
 volumes:
   db_data:

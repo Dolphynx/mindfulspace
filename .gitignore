@@ -3,24 +3,30 @@
 .idea/
 .vscode/
 *.swp
+Thumbs.db
+ehthumbs.db
 
-# === Node / Dependencies ===
+# === Node / PNPM ===
 node_modules/
+**/node_modules/
 .pnp/
 .pnp.*
+.pnpm-store/
 *.tsbuildinfo
 *.log
 pnpm-debug.log*
 
-# === Next.js / Frontend build ===
-frontend/.next/
-frontend/out/
-frontend/build/
-frontend/.vercel/
+# Garder le lockfile PNPM à la racine, ignorer ceux des sous-dossiers
+**/pnpm-lock.yaml
+!/pnpm-lock.yaml
 
-# === NestJS / Backend build ===
-api/dist/
-api/coverage/
+# === Builds / Outputs (toutes apps/packages) ===
+**/.next/
+**/dist/
+**/coverage/
+**/out/
+**/build/
+**/.vercel/
 
 # === Env files ===
 .env
@@ -34,11 +40,7 @@ docker-compose.override.yml
 **/tmp/
 **/logs/
 
-# === Misc ===
+# === Certs & divers ===
 *.pem
 *.local
 *.bak
-
-# === OS metadata ===
-Thumbs.db
-ehthumbs.db
