@@ -16,6 +16,7 @@ Projet Next.js + NestJS + PostgreSQL organisé en monorepo avec PNPM workspaces.
 
 ## Structure du projet
 
+```
 mindfulspace/
 ├── apps/
 │   ├── frontend-next/     → Application Next.js (interface)
@@ -30,6 +31,7 @@ mindfulspace/
 ├── docker-compose.yml
 ├── .gitignore
 └── README.md
+```
 
 ---
 
