@@ -1,3 +1,4 @@
+```mermaid
 flowchart TD
 %% Vue conteneurs MindfulSpace
 
@@ -26,3 +27,4 @@ runner -->|build et push| reg
 dockerEngine -->|pull| reg
 dockerEngine --> frontend
 dockerEngine --> backend
+```

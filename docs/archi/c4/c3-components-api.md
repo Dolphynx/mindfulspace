@@ -1,3 +1,4 @@
+```mermaid
 flowchart LR
 subgraph api [NestJS API]
 cAuth[AuthController]
@@ -34,3 +35,4 @@ cAuth -.-> validator
 cUsers -.-> validator
 cHabits -.-> validator
 cRes -.-> validator
+```

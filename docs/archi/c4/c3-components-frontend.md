@@ -1,3 +1,4 @@
+```mermaid
 flowchart TD
 subgraph front [Next.js Frontend]
 subgraph pub [Pages publiques SSG ISR]
@@ -41,3 +42,4 @@ layout --> sw
 sw --> idx
 habitsUI --> idx
 meditationsUI --> idx
+```

@@ -1,3 +1,4 @@
+```mermaid
 sequenceDiagram
 participant UI as Frontend Nextjs
 participant AuthC as AuthController Nest
@@ -22,3 +23,4 @@ AuthS-->>AuthC: ok
 AuthC->>JWT: sign({sub: userId})
 JWT-->>AuthC: accessToken, refreshToken
 AuthC-->>UI: 200 {accessToken, refreshToken}
+```

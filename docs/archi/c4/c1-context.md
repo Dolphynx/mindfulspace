@@ -1,3 +1,4 @@
+```mermaid
 flowchart LR
 %% Contexte global MindfulSpace
 
@@ -18,3 +19,4 @@ userAuth -->|Utilise les fonctionnalités connectées| appWeb
 appWeb <--> apiSrv
 apiSrv --> mailSrv
 appWeb -.-> analyticsSrv
+```
