@@ -4,10 +4,11 @@ Ce dossier contient la documentation d’architecture et de conception du projet
 
 ## Structure
 
-| Dossier | Contenu | Objectif |
-|:--|:--|:--|
-| [`adr/`](./adr/README.md) | Architecture Decision Records | Explique **les choix techniques et architecturaux** du projet : décisions, justifications, conséquences, alternatives. |
-| [`archi/c4/`](./archi/c4/README.md) | Diagrammes C4 | Montre **comment ces décisions s’articulent visuellement** dans le système : contexte, conteneurs, composants, flux de code. |
+| Dossier                                        | Contenu                        | Objectif                                                                                                                                                           |
+|:-----------------------------------------------|:-------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`archi/adr/`](./archi/adr/README.md)          | Architecture Decision Records  | Explique **les choix techniques et architecturaux** du projet : décisions, justifications, conséquences, alternatives.                                             |
+| [`archi/c4/`](./archi/c4/README.md)            | Diagrammes C4                  | Montre **comment ces décisions s’articulent visuellement** dans le système : contexte, conteneurs, composants, flux de code.                                       |
+| [`project-management/`](./project-management/README.md) | Documents de gestion de projet | Centraliser les informations de gestion,  Centraliser les informations de gestion, assurer la cohérence entre la planification agile et la documentation technique |
 
 ## Utilisation
 
