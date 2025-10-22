@@ -1,39 +1,36 @@
-# MindfulSpace – C3 : Composants (API NestJS)
-
-```mermaid
 flowchart LR
-    subgraph API[NestJS API]
-      ControllerAuth[AuthController]
-      ControllerUser[UsersController]
-      ControllerHabits[HabitsController]
-      ControllerMed[MedicationsController]
-      ControllerRes[ResourcesController]
+subgraph api [NestJS API]
+cAuth[AuthController]
+cUsers[UsersController]
+cHabits[HabitsController]
+cMed[MedicationsController]
+cRes[ResourcesController]
 
-      ServiceAuth[AuthService]
-      ServiceUser[UsersService]
-      ServiceHabits[HabitsService]
-      ServiceMed[MedicationsService]
-      ServiceRes[ResourcesService]
+    sAuth[AuthService]
+    sUsers[UsersService]
+    sHabits[HabitsService]
+    sMed[MedicationsService]
+    sRes[ResourcesService]
 
-      RepoUser[(UsersRepository)]
-      RepoHabit[(HabitsRepository)]
-      RepoRes[(ResourcesRepository)]
+    rUsers[(UsersRepository)]
+    rHabits[(HabitsRepository)]
+    rRes[(ResourcesRepository)]
 
-      JWT[JWT Provider]
-      Mailer[Mailer Provider]
-      Validator[Validation Pipe]
-    end
+    provJwt[JwtProvider]
+    provMail[Mailer]
+    validator[Validation Pipe]
+end
 
-    ControllerAuth --> ServiceAuth --> RepoUser
-    ControllerUser --> ServiceUser --> RepoUser
-    ControllerHabits --> ServiceHabits --> RepoHabit
-    ControllerMed --> ServiceMed
-    ControllerRes --> ServiceRes --> RepoRes
+cAuth --> sAuth --> rUsers
+cUsers --> sUsers --> rUsers
+cHabits --> sHabits --> rHabits
+cMed --> sMed
+cRes --> sRes --> rRes
 
-    ServiceAuth --> JWT
-    ServiceAuth --> Mailer
-    ControllerAuth -.-> Validator
-    ControllerUser -.-> Validator
-    ControllerHabits -.-> Validator
-    ControllerRes -.-> Validator
-```
+sAuth --> provJwt
+sAuth --> provMail
+
+cAuth -.-> validator
+cUsers -.-> validator
+cHabits -.-> validator
+cRes -.-> validator

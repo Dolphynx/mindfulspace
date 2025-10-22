@@ -1,45 +1,43 @@
-# MindfulSpace – C3 : Composants (Frontend Next.js)
-
-```mermaid
 flowchart TD
-    subgraph Front[Next.js Frontend]
-      subgraph PagesPubliques[Pages publiques (SSG/ISR)]
-        Home[Home]
-        Docs[Ressources]
-        About[Présentation]
-      end
+subgraph front [Next.js Frontend]
+subgraph pub [Pages publiques SSG ISR]
+home[Home]
+docs[Ressources]
+about[Presentation]
+end
 
-      subgraph PagesAuth[Pages authentifiées (SSR)]
-        Dashboard[Dashboard]
-        HabitsUI[Habitudes]
-        MeditationsUI[Méditations]
-        Profile[Profil]
-      end
-
-      subgraph Infra[Infrastructure UI]
-        Layout[App Layout / Shell]
-        SW[Service Worker]
-        IDX[IndexedDB client]
-        Store[State mgmt (Context/Zustand)]
-        ApiClient[Client API / fetchers]
-      end
+    subgraph auth [Pages authentifiees SSR]
+      dashboard[Dashboard]
+      habitsUI[Habitudes]
+      meditationsUI[Meditations]
+      profile[Profil]
+      authHub[Noeud auth]
     end
 
-    Home --> Layout
-    Docs --> Layout
-    About --> Layout
+    subgraph infra [Infrastructure UI]
+      layout[App layout]
+      sw[Service Worker]
+      idx[IndexedDB]
+      store[State management]
+      apiClient[Client API]
+    end
+end
 
-    Dashboard --> Layout
-    HabitsUI --> Layout
-    MeditationsUI --> Layout
-    Profile --> Layout
+home --> layout
+docs --> layout
+about --> layout
 
-    Layout --> ApiClient
-    PagesAuth --> ApiClient
-    ApiClient -->|/api| API[(API REST)]
+dashboard --> layout
+habitsUI --> layout
+meditationsUI --> layout
+profile --> layout
 
-    Layout --> SW
-    SW --> IDX
-    HabitsUI --> IDX
-    MeditationsUI --> IDX
-```
+authHub --> apiClient
+layout --> apiClient
+
+apiClient --> apiRest[(API REST)]
+
+layout --> sw
+sw --> idx
+habitsUI --> idx
+meditationsUI --> idx

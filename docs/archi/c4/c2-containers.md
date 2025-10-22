@@ -1,24 +1,28 @@
-# MindfulSpace – C2 : Conteneurs
-
-```mermaid
 flowchart TD
-    subgraph VPS[Hôte : VPS Debian 13]
-      Traefik[Reverse Proxy Traefik\n:443/:80]
-      Front[Frontend Next.js (container)]
-      API[NestJS API (container)]
-      DB[(PostgreSQL (container, port interne))]
-      Registry[(Docker Registry (externe))]
-    end
+%% Vue conteneurs MindfulSpace
 
-    User[Client Web / Mobile] -->|HTTPS| Traefik
-    Traefik -->|/| Front
-    Traefik -->|/api| API
-    API -->|TCP interne| DB
+subgraph vps [Hote VPS Debian]
+traefik[Traefik - reverse proxy]
+frontend[Frontend Next.js]
+backend[NestJS API]
+postgres[(PostgreSQL)]
+dockerEngine[Docker Engine et Deployer]
+end
 
-    subgraph CI[CI/CD GitLab]
-      Runner[Runner Docker]
-    end
+subgraph cicd [GitLab CI et CD]
+runner[Runner Docker]
+end
 
-    Runner -->|Build/Push images| Registry
-    VPS -->|Pull images| Registry
-```
+subgraph registry [Docker Registry]
+reg[(Registry)]
+end
+
+client[Client Web ou Mobile] -->|HTTPS| traefik
+traefik -->|/| frontend
+traefik -->|/api| backend
+backend --> postgres
+
+runner -->|build et push| reg
+dockerEngine -->|pull| reg
+dockerEngine --> frontend
+dockerEngine --> backend
