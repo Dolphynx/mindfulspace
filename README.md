@@ -109,7 +109,7 @@ Inutile d’installer séparément dans /apps/frontend-next ou /apps/api-nest.
 
 Le projet est prêt pour Docker :
 
-docker-compose up --build
+docker compose -f docker-compose.dev.yml up --build
 
 Cela lancera :
 - le frontend (Next.js)

@@ -37,9 +37,10 @@ services:
       dockerfile: apps/frontend-next/Dockerfile
     container_name: mindfulspace_frontend_dev
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       NEXT_PUBLIC_API_URL: http://localhost:3001
       PORT: "3000"
+    command: ["node", "apps/frontend-next/server.js"]
     ports:
       - "3000:3000"
     depends_on:

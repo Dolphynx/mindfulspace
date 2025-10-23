@@ -34,4 +34,4 @@ COPY --from=build /app/apps/frontend-next/public ./apps/frontend-next/public
 COPY --from=build /app/apps/frontend-next/.next/static ./apps/frontend-next/.next/static
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "apps/frontend-next/server.js"]
