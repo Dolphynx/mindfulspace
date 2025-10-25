@@ -5,7 +5,6 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
-  REGISTRY_PATH: "git-registry.helmo.be/q230306/mindfulspace"
   FRONTEND_CONTEXT: "apps/frontend-next"
   API_CONTEXT: "apps/api-nest"
 
@@ -42,18 +41,18 @@ build_images:
     - >
       docker build
       --file "$FRONTEND_CONTEXT/Dockerfile"
-      --tag "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG"
+      --tag "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
       .
 
     # API: idem
     - >
       docker build
       --file "$API_CONTEXT/Dockerfile"
-      --tag "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG"
+      --tag "$CI_REGISTRY_IMAGE/api:$API_TAG"
       .
 
-    - docker push "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG"
-    - docker push "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG"
+    - docker push "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
+    - docker push "$CI_REGISTRY_IMAGE/api:$API_TAG"
 
   needs: []
 
