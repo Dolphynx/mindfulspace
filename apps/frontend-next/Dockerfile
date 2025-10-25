@@ -2,24 +2,24 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# 1) Manifests du monorepo (racine)
-# On ajoute tsconfig.base.json pour les "extends" TS dans les apps
+# 1) Copie des manifestes racine nécessaires à PNPM
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 
-# 2) Manifests de l'app front
+# 2) Copie des manifestes des apps dont on dépend
 COPY apps/frontend-next/package.json apps/frontend-next/package.json
 
-# 3) Install PNPM + deps filtrées (workspace)
-RUN npm i -g pnpm && pnpm install --filter ./apps/frontend-next...
+# Étape clé :
+# On installe PNPM global, puis on installe TOUTES les deps du monorepo,
+# pas juste le filtre frontal. Pourquoi ?
+# - PNPM va créer le store partagé et les node_modules avec les bons liens.
+# - Ensuite on pourra builder juste le frontend.
+RUN npm i -g pnpm && pnpm install
 
-# (Optionnel) Supprimer un lockfile PNPM local si présent dans l'app pour éviter le warning Turbopack
-RUN rm -f /app/apps/frontend-next/pnpm-lock.yaml || true
-
-# 4) Code source de l'app
+# 3) Maintenant qu'on a les deps, on copie le code source complet du front
 COPY apps/frontend-next ./apps/frontend-next
-WORKDIR /app/apps/frontend-next
 
-# 5) Build Next en mode standalone (voir next.config.ts plus bas)
+# 4) Build Next.js en mode production standalone
+WORKDIR /app/apps/frontend-next
 ENV NODE_ENV=production
 RUN pnpm build
 
@@ -28,7 +28,8 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copie la sortie standalone générée par Next
+# On copie uniquement ce qui est nécessaire pour faire tourner l'app
+# (le build standalone de Next embarque déjà les node_modules utiles)
 COPY --from=build /app/apps/frontend-next/.next/standalone ./
 COPY --from=build /app/apps/frontend-next/public ./apps/frontend-next/public
 COPY --from=build /app/apps/frontend-next/.next/static ./apps/frontend-next/.next/static
