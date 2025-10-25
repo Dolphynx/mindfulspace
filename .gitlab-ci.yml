@@ -1,0 +1,131 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""                     # évite le warning docker:dind
+  REGISTRY_PATH: "git-registry.helmo.be/q230306/mindfulspace"
+  FRONTEND_CONTEXT: "apps/frontend-next"
+  API_CONTEXT: "apps/api-nest"
+
+# -------------------------------------------------
+# 1. BUILD & PUSH IMAGES
+#    - Sur main      => tag "staging"
+#    - Sur un tag    => tag "prod"
+# -------------------------------------------------
+build_images:
+  stage: build
+  image: docker:27
+  services:
+    - docker:dind
+
+  rules:
+    # On build sur main (staging) ET sur tag (prod)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
+
+  script:
+    # 1. login au registry
+    #    $CI_REGISTRY_USER et $CI_REGISTRY_PASSWORD doivent être définis dans les variables CI
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+
+    # 2. définir les tags d'image selon ce qu'on déploie
+    #    - branche main  => staging
+    #    - tag git       => prod
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        export FRONT_TAG="prod"
+        export API_TAG="prod"
+      else
+        export FRONT_TAG="staging"
+        export API_TAG="staging"
+      fi
+
+    # 3. build frontend
+    - docker build \
+      --file "$FRONTEND_CONTEXT/Dockerfile" \
+      --tag "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG" \
+      "$FRONTEND_CONTEXT"
+
+    # 4. build api
+    - docker build \
+      --file "$API_CONTEXT/Dockerfile" \
+      --tag "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG" \
+      "$API_CONTEXT"
+
+    # 5. push les images
+    - docker push "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG"
+    - docker push "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG"
+
+  needs: []
+
+
+# -------------------------------------------------
+# 2. DEPLOY STAGING
+#    - Déployé à chaque push sur main
+#    - Mets à jour /srv/mindfulspace/staging sur le VPS
+#    - Suppose que le compose du serveur référence les tags ':staging'
+# -------------------------------------------------
+deploy_staging:
+  stage: deploy
+  image: alpine:3.20
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+  before_script:
+    # client ssh
+    - apk add --no-cache openssh-client
+
+    # ssh-agent
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+
+    # known_hosts pour éviter l'interaction
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
+
+  script:
+    # se connecter au VPS et relancer le compose staging
+    - ssh ms-deploy@"$VPS_IP" "
+      cd /srv/mindfulspace/staging &&
+      docker compose pull &&
+      docker compose up -d --remove-orphans
+      "
+
+  needs:
+    - build_images
+
+
+# -------------------------------------------------
+# 3. DEPLOY PRODUCTION
+#    - Déployé SEULEMENT quand on pousse un tag git (release)
+#    - Mets à jour /srv/mindfulspace/production
+#    - Suppose que le compose du serveur référence les tags ':prod'
+# -------------------------------------------------
+deploy_production:
+  stage: deploy
+  image: alpine:3.20
+
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
+
+  script:
+    - ssh ms-deploy@"$VPS_IP" "
+      cd /srv/mindfulspace/production &&
+      docker compose pull &&
+      docker compose up -d --remove-orphans
+      "
+
+  needs:
+    - build_images
