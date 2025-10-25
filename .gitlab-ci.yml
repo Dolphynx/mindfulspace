@@ -2,37 +2,46 @@ stages:
   - build
   - deploy
 
+# Variables communes
 variables:
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""                     # évite le warning docker:dind
+  DOCKER_TLS_CERTDIR: ""                 # évite le warning docker:dind + pas de TLS
   REGISTRY_PATH: "git-registry.helmo.be/q230306/mindfulspace"
   FRONTEND_CONTEXT: "apps/frontend-next"
   API_CONTEXT: "apps/api-nest"
 
 # -------------------------------------------------
 # 1. BUILD & PUSH IMAGES
-#    - Sur main      => tag "staging"
-#    - Sur un tag    => tag "prod"
+#    - Push sur main      => images taggées "staging"
+#    - Push d'un tag git  => images taggées "prod"
 # -------------------------------------------------
 build_images:
   stage: build
   image: docker:27
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--tls=false"]           # important: désactive le TLS côté dind
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375       # client docker -> service dind
+    DOCKER_TLS_CERTDIR: ""               # doit matcher le --tls=false
+    # (on redéfinit DOCKER_TLS_CERTDIR ici car GitLab fusionne variables globales + job)
 
   rules:
-    # On build sur main (staging) ET sur tag (prod)
+    # On build:
+    #  - à chaque commit sur main (staging)
+    #  - à chaque tag (prod)
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
 
-  script:
-    # 1. login au registry
-    #    $CI_REGISTRY_USER et $CI_REGISTRY_PASSWORD doivent être définis dans les variables CI
+  before_script:
+    # 1. login registry (CI_REGISTRY_USER / CI_REGISTRY_PASSWORD / CI_REGISTRY
+    #    doivent être définies dans les variables du projet)
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
 
-    # 2. définir les tags d'image selon ce qu'on déploie
-    #    - branche main  => staging
-    #    - tag git       => prod
+    # 2. calcul des tags d'images
+    #    main  -> staging
+    #    tag   -> prod
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
         export FRONT_TAG="prod"
@@ -41,20 +50,25 @@ build_images:
         export FRONT_TAG="staging"
         export API_TAG="staging"
       fi
+      echo "FRONT_TAG=$FRONT_TAG"
+      echo "API_TAG=$API_TAG"
 
+  script:
     # 3. build frontend
-    - docker build \
-      --file "$FRONTEND_CONTEXT/Dockerfile" \
-      --tag "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG" \
+    - >
+      docker build
+      --file "$FRONTEND_CONTEXT/Dockerfile"
+      --tag "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG"
       "$FRONTEND_CONTEXT"
 
     # 4. build api
-    - docker build \
-      --file "$API_CONTEXT/Dockerfile" \
-      --tag "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG" \
+    - >
+      docker build
+      --file "$API_CONTEXT/Dockerfile"
+      --tag "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG"
       "$API_CONTEXT"
 
-    # 5. push les images
+    # 5. push des images
     - docker push "$CI_REGISTRY/$REGISTRY_PATH/frontend:$FRONT_TAG"
     - docker push "$CI_REGISTRY/$REGISTRY_PATH/api:$API_TAG"
 
@@ -64,8 +78,8 @@ build_images:
 # -------------------------------------------------
 # 2. DEPLOY STAGING
 #    - Déployé à chaque push sur main
-#    - Mets à jour /srv/mindfulspace/staging sur le VPS
-#    - Suppose que le compose du serveur référence les tags ':staging'
+#    - Met à jour /srv/mindfulspace/staging sur le VPS
+#    - Suppose que le docker-compose du serveur référence les tags ':staging'
 # -------------------------------------------------
 deploy_staging:
   stage: deploy
@@ -78,17 +92,19 @@ deploy_staging:
     # client ssh
     - apk add --no-cache openssh-client
 
-    # ssh-agent
+    # agent ssh (clé privée stockée dans la variable protégée SSH_PRIVATE_KEY)
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
 
-    # known_hosts pour éviter l'interaction
+    # known_hosts pour éviter le "Are you sure..."
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
 
   script:
-    # se connecter au VPS et relancer le compose staging
+    # connexion SSH vers l'utilisateur ms-deploy@VPS
+    # pull les dernières images taggées staging
+    # puis redeploy compose
     - ssh ms-deploy@"$VPS_IP" "
       cd /srv/mindfulspace/staging &&
       docker compose pull &&
@@ -101,9 +117,9 @@ deploy_staging:
 
 # -------------------------------------------------
 # 3. DEPLOY PRODUCTION
-#    - Déployé SEULEMENT quand on pousse un tag git (release)
-#    - Mets à jour /srv/mindfulspace/production
-#    - Suppose que le compose du serveur référence les tags ':prod'
+#    - Déployé uniquement lorsqu'on pousse un TAG git (release)
+#    - Met à jour /srv/mindfulspace/production
+#    - Suppose que le docker-compose du serveur référence les tags ':prod'
 # -------------------------------------------------
 deploy_production:
   stage: deploy
