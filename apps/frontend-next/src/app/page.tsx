@@ -2,49 +2,48 @@ import Image from "next/image";
 
 export default function Home() {
     return (
-        <main className="flex flex-col items-center justify-center min-h-screen px-6 py-16 text-center">
-            <section className="w-full max-w-3xl flex flex-col items-center gap-10 rounded-3xl bg-white/70 backdrop-blur-xl shadow-[0_30px_120px_-20px_rgba(0,0,0,0.3)] p-8 sm:p-12 border border-white/60">
-                {/* Illustration / header visuel */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="rounded-2xl bg-gradient-to-tr from-emerald-50 via-white to-rose-50 p-6 shadow-inner ring-1 ring-emerald-100/60 min-w-[220px]">
-                        <Image
-                            src="/dev_team.svg" // laisse tel quel tant qu’on n'a pas mieux
-                            alt="MindfulSpace illustration"
-                            width={260}
-                            height={260}
-                            priority
-                            className="mx-auto drop-shadow-xl"
-                        />
-                    </div>
-
-                    <h1 className="text-4xl sm:text-5xl font-semibold leading-tight tracking-tight text-emerald-700">
-                        👋 Salut la Team
-                        <br className="sm:hidden" />{" "}
-                        <span className="text-emerald-600 font-bold">
-              MindfulSpace&nbsp;!
-            </span>
+        <main className="flex flex-col items-center justify-start min-h-screen text-center bg-gradient-to-b from-emerald-50 via-white to-rose-50">
+            {/* BANNIÈRE */}
+            <div className="relative w-full h-[300px] overflow-hidden">
+                <Image
+                    src="/hill-5324149_1280.jpg"
+                    alt="Paysage apaisant MindfulSpace"
+                    fill
+                    priority
+                    className="object-contain object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-emerald-900 drop-shadow-sm">
+                    <h1 className="text-4xl sm:text-5xl font-bold mb-2">
+                        MindfulSpace
                     </h1>
-
-                    <p className="text-lg sm:text-xl text-slate-700 leading-relaxed max-w-prose">
-                        Cette page a été{" "}
-                        <span className="text-emerald-600 font-semibold">
-              déployée automatiquement
-            </span>{" "}
-                        grâce à notre pipeline{" "}
-                        <span className="text-sky-600 font-semibold">
-              CI/CD GitLab
-            </span>{" "}
-                        🚀
-                        <br />
-                        Prenez une grande inspiration,{" "}
-                        <span className="italic text-slate-600">
-              le déploiement est zen.
-            </span>
+                    <p className="text-base sm:text-lg font-medium text-emerald-800">
+                        Respirez, votre espace de sérénité est en ligne 🌿
                     </p>
                 </div>
+            </div>
 
-                {/* Petit module respiration */}
-                <div className="w-full max-w-sm rounded-2xl bg-emerald-50/70 border border-emerald-100 text-left p-5 shadow-inner">
+            {/* SECTION CONTENU */}
+            <section className="max-w-3xl w-full -mt-20 sm:-mt-28 bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_60px_-10px_rgba(0,0,0,0.2)] p-8 sm:p-12 border border-emerald-100/60">
+                <p className="text-lg sm:text-xl text-slate-700 leading-relaxed mb-8">
+                    Cette page a été{" "}
+                    <span className="text-emerald-600 font-semibold">
+            déployée automatiquement [EN PRODUCTION]
+          </span>{" "}
+                    grâce à notre pipeline{" "}
+                    <span className="text-sky-600 font-semibold">
+            CI/CD GitLab
+          </span>{" "}
+                    🚀
+                    <br />
+                    Prenez une grande inspiration,{" "}
+                    <span className="italic text-slate-600">
+            le déploiement est zen.
+          </span>
+                </p>
+
+                {/* MODULE RESPIRATION */}
+                <div className="w-full rounded-2xl bg-emerald-50/70 border border-emerald-100 text-left p-5 shadow-inner">
                     <p className="text-sm font-medium text-emerald-800 tracking-wide uppercase">
                         Pause respiration (10s)
                     </p>
@@ -56,8 +55,8 @@ export default function Home() {
                     </p>
                 </div>
 
-                {/* Boutons */}
-                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                {/* BOUTONS */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                     <a
                         href="https://git.helmo.be/"
                         target="_blank"
@@ -77,7 +76,7 @@ export default function Home() {
                     </a>
                 </div>
 
-                {/* Footer */}
+                {/* FOOTER */}
                 <footer className="mt-8 text-sm text-slate-500">
                     <p>
                         Made with ❤️ et sérénité par{" "}
@@ -88,8 +87,8 @@ export default function Home() {
                 </footer>
             </section>
 
-            {/* mini note bas de page */}
-            <p className="mt-10 text-xs text-slate-400">
+            {/* NOTE BAS DE PAGE */}
+            <p className="mt-10 mb-6 text-xs text-slate-400">
                 prod = calme • staging = expérimental • respire avant de push 🙏
             </p>
         </main>
