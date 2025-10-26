@@ -1,28 +1,30 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 01/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 01/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Hébergement : VPS Debian 13 + Docker
+# ADR 1 : Hébergement sur VPS avec Docker
 
-## Contexte
-L'équipe dispose d'un VPS Debian 13 déjà équipé de Docker. Les contraintes du cours imposent de 
-justifier des choix d'infrastructure réalistes et maîtrisables par une petite équipe. Le projet 
-comporte plusieurs services (front, API, base de données, reverse proxy) devant cohabiter sur un même hôte.
+## Status
+Accepted
 
-## Décision
-Héberger l'application sur un VPS Debian 13 et exécuter chaque service dans un conteneur Docker 
-orchestré par Docker Compose. Les artefacts de déploiement sont versionnés dans le dépôt, et les 
-images sont construites en CI puis tirées sur le VPS.
+## Context
+Nous devons héberger l’application MindfulSpace dans un environnement stable, accessible publiquement, et conforme aux contraintes d’un projet académique.  
+Les options incluaient : hébergement mutualisé, PaaS (Heroku, Vercel), ou serveur VPS autogéré.  
+Nous souhaitons maîtriser l’infrastructure, comprendre les couches réseau, et gérer le déploiement complet.
 
-## Conséquences
-- Parité entre environnements et reproductibilité des mises en production.
-- Isolation des services et simplification des rollbacks.
-- Besoin d'une politique de sauvegarde (base de données, fichiers) et d'une supervision minimale.
-- Nécessité d'automatiser les mises à jour de sécurité du système et des images.
+## Decision
+Nous avons choisi d’héberger le projet sur un **VPS Debian 13 (Trixie)**, configuré avec **Docker Engine 28.5.1**.  
+Docker permet d’exécuter chaque service dans un conteneur isolé :  
+- **Frontend** (Next.js, Node 20)  
+- **Backend API** (NestJS, Node 20)  
+- **Base de données** (PostgreSQL 15)  
+- **Traefik** (reverse proxy et gestion TLS)  
 
-## Alternatives
-PaaS (Railway, Render, Fly.io) ou services managés. Non retenu afin de garder la maîtrise 
-pédagogique de l'infrastructure et limiter la dépendance à un fournisseur.
+## Consequences
+- L’équipe comprend la chaîne complète du déploiement (OS → Docker → App).  
+- L’environnement est portable et reproductible.  
+- L’administration demande un minimum de maintenance (surveillance VPS, mises à jour Docker).  
+- Le coût et la complexité restent faibles pour un petit projet.

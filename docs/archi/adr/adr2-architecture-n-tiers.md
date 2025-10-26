@@ -1,27 +1,28 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 02/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 02/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Architecture logique : n-tiers
+# ADR 2 : Architecture N-tiers
 
-## Contexte
-Le produit comporte une partie publique (SEO), une application authentifiée, une API métier 
-et une base de données relationnelle. L'équipe doit privilégier la clarté, la testabilité et 
-un déploiement simple sur un seul serveur.
+## Status
+Accepted
 
-## Décision
-Adopter une architecture n-tiers avec séparation front-end, API et base de données. Les communications 
-se font via des contrats HTTP stables. Chaque tier est packagé et déployé indépendamment dans un conteneur distinct.
+## Context
+MindfulSpace nécessite une séparation claire entre l’interface utilisateur, la logique métier et la persistance des données.  
+Les frameworks choisis (Next.js + NestJS) s’intègrent naturellement dans une architecture en trois couches.
 
-## Conséquences
-- Séparation des responsabilités et contrôle du couplage.
-- Tests, intégration continue et déploiement facilité par service.
-- Complexité maîtrisée pour une équipe étudiante.
-- Couplage plus fort qu'une architecture microservices, mais sans l'overhead d'orchestration et d'observabilité distribuée.
+## Decision
+Nous adoptons une **architecture N-tiers** :
+- **Frontend (Next.js)** : couche de présentation, PWA responsive.  
+- **Backend (NestJS)** : couche métier et API REST/GraphQL.  
+- **Database (PostgreSQL)** : couche de stockage des données.
 
-## Alternatives
-Microservices. Écarté pour la version initiale à cause du coût opérationnel (maillage, traçage, 
-résilience inter-services, orchestration).
+Ces services communiquent via HTTP interne, isolés dans des conteneurs distincts et reliés par un réseau Docker interne.
+
+## Consequences
+- Bonne séparation des responsabilités.  
+- Facilite la maintenance et les tests.  
+- Compatible avec une montée en charge future (scalabilité horizontale possible).

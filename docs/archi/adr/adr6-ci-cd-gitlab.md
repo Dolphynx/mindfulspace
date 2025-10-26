@@ -1,26 +1,33 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 01/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 01/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# CI/CD : GitLab CI sur runner Docker
+# ADR 6 : Intégration et déploiement continu avec GitLab CI/CD
 
-## Contexte
-Le dépôt est hébergé sur GitLab de l'école. L'équipe souhaite automatiser lint, tests, build 
-d'images et déploiement sur le VPS via SSH.
+## Status
+Accepted
 
-## Décision
-Mettre en place des jobs par application (lint, test, build image), publier les images dans un 
-registre, et déployer par connexion SSH au VPS avec `docker compose pull` puis `up -d`. Variables 
-et secrets gérés dans les variables GitLab CI.
+## Context
+Les membres de l’équipe doivent pouvoir déployer rapidement et de façon reproductible.  
+Le dépôt GitLab est utilisé comme registre de code et d’images Docker.
 
-## Conséquences
-- Traçabilité et reproductibilité des déploiements.
-- Qualité intégrée au pipeline.
-- Besoin de politiques de cache et d'optimisation des couches Docker.
-- Gestion rigoureuse des secrets dans CI/CD.
+## Decision
+Mise en place d’un pipeline GitLab CI/CD avec deux étapes :  
+1. **Build** :  
+   - Utilise `docker:27` + service `docker:dind`.  
+   - Construit les images `frontend` et `api`.  
+   - Pousse les images vers le **Container Registry GitLab**.  
+   - Tag `staging` pour la branche `main`, `prod` pour les tags Git.  
+2. **Deploy** :  
+   - Connexion SSH au VPS via clé privée stockée dans `SSH_PRIVATE_KEY`.  
+   - `docker pull` des nouvelles images et `docker compose up -d`.  
+   - Environnements distincts : `/srv/staging` et `/srv/prod`.
 
-## Alternatives
-GitHub Actions. Non retenu car le dépôt vit sur GitLab.
+## Consequences
+- Déploiement automatisé sans action manuelle.  
+- Séparation claire staging/production.  
+- Sécurité renforcée grâce aux variables masquées et protégées (GitLab CI/CD).  
+- CI portable et compatible avec Docker-in-Docker.

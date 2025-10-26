@@ -1,25 +1,28 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 01/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 01/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Secrets & configuration
+# ADR 13 : Gestion des secrets et de la configuration
 
-## Contexte
-Le projet manipule des secrets (DB, JWT, SMTP) et variables de configuration. Les fuites doivent 
-être évitées et la rotation doit rester possible.
+## Status
+Accepted
 
-## Décision
-Stocker les secrets dans les variables GitLab CI pour la CI/CD, utiliser `.env.local` ignoré en VCS 
-pour le développement, injecter la configuration en production via `env_file` ou variables Compose, 
-et mettre en place une rotation régulière des secrets critiques.
+## Context
+Les secrets (mots de passe, clés SSH, tokens) doivent être protégés.  
+Nous utilisons GitLab CI/CD et des fichiers `.env` locaux pour stocker les données sensibles.
 
-## Conséquences
-- Réduction du risque de fuite et séparation claire des environnements.
-- Conformité au principe 12-factor pour la configuration.
-- Discipline d'équipe nécessaire pour la mise à jour et la révocation des secrets.
+## Decision
+- Secrets d’infrastructure (clé SSH, credentials Docker registry) :  
+  → stockés dans GitLab CI/CD (variables **masked** et **protected**).  
+- Secrets applicatifs (DB password, JWT secret, clés API) :  
+  → définis dans des fichiers `.env` sur le serveur, non versionnés.  
+- Variables partagées via `docker compose` au runtime.  
+- Aucune donnée sensible dans le dépôt Git.
 
-## Alternatives
-Gestion centralisée via Vault. Non retenue pour la v1 en raison de la complexité de mise en place.
+## Consequences
+- Sécurité des secrets respectée.  
+- Déploiement automatisé sans divulgation.  
+- Bonne conformité aux pratiques DevOps.

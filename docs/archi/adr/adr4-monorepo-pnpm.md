@@ -1,25 +1,26 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 16/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 16/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Monorepo avec pnpm workspaces
+# ADR 4 : Monorepo géré avec PNPM
 
-## Contexte
-Le projet contient un front Next.js, une API NestJS et des packages partagés (types, utilitaires). 
-Une gestion multi-dépôts augmenterait la friction et la duplication de configuration.
+## Status
+Accepted
 
-## Décision
-Centraliser le code dans un monorepo pnpm workspaces avec `apps/frontend-next`, `apps/api-nest` et 
-`packages/*`. Un seul `node_modules` à la racine. Pipelines CI segmentés par application.
+## Context
+Le projet comporte deux applications étroitement liées (Next.js et NestJS).  
+Avoir deux dépôts compliquerait la maintenance, les dépendances et le CI/CD.
 
-## Conséquences
-- Partage de code et de types simplifié.
-- Déduplication des dépendances et configuration unique.
-- Pipelines plus efficaces grâce au cache et à la sensibilité par dossier.
-- Attention requise pour éviter les couplages non souhaités entre apps et packages.
+## Decision
+Nous utilisons un **monorepo** géré par **pnpm workspaces** :  
+- Racine : fichiers `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`.  
+- Sous-apps : `apps/frontend-next` et `apps/api-nest`.  
+- Une seule installation de dépendances (`pnpm install`).
 
-## Alternatives
-Multi-repos. Non retenu pour limiter la charge de coordination et simplifier la CI/CD.
+## Consequences
+- Un seul `node_modules` partagé → moins de duplication.  
+- Build reproductible et plus rapide dans Docker.  
+- Facilite la synchronisation de versions front/back et la gestion des types partagés.

@@ -1,25 +1,28 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 22/10/2025  
-**Statut :** En cours  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 22/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Conteneurisation : images “prod” multi-stage
+# ADR 12 : Conteneurisation des applications
 
-## Contexte
-Les images doivent être petites, sûres et rapides à construire. Le front et l'API ont 
-des besoins de build distincts.
+## Status
+Accepted
 
-## Décision
-Construire des images multi-stage : Next.js en mode standalone avec assets statiques séparés ; 
-NestJS sur base Node Alpine ; base de données via image officielle PostgreSQL ; healthchecks au 
-niveau Docker Compose et labels Traefik.
+## Context
+Afin de garantir des environnements homogènes en développement, intégration et production, nous avons décidé de conteneuriser toutes les applications du projet.
 
-## Conséquences
-- Temps de démarrage plus court et surface d'attaque réduite.
-- Builds plus verbaux nécessitant une configuration de cache maîtrisée.
-- Séparation claire entre dépendances de build et d'exécution.
+## Decision
+Chaque composant est exécuté dans un conteneur Docker :  
+- **Frontend** : Next.js buildé en mode production (output standalone).  
+- **Backend** : API NestJS (Node 20).  
+- **Database** : PostgreSQL.  
+- **Traefik** : reverse proxy / TLS.  
 
-## Alternatives
-Images de développement en production. Non retenu pour des raisons de performance et de sécurité.
+Les images sont construites dans la CI/CD, taguées (`staging` ou `prod`) puis poussées dans le registre GitLab.
+
+## Consequences
+- Portabilité totale.  
+- Aucune dépendance installée directement sur le VPS.  
+- Simplifie le déploiement et la montée en charge future.

@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace  
 **Date :** 15/10/2025  
 **Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
 # Observabilité & santé : /health, logs, métriques
 

@@ -1,26 +1,29 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 06/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 06/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Stack technique : Next.js + NestJS + PostgreSQL
+# ADR 3 : Stack technique
 
-## Contexte
-Le produit combine SEO, pages publiques, parcours authentifiés et logique métier. Le front 
-doit fournir SSR/SSG/ISR et le back-end doit rester modulaire et typé. Les données sont relationnelles.
+## Status
+Accepted
 
-## Décision
-Utiliser Next.js pour le front (SSR/SSG/ISR, RSC), NestJS pour l'API (structure modulaire, 
-DI, validation), PostgreSQL pour la persistance des données.
+## Context
+Nous avons besoin d’une stack moderne, compatible TypeScript, full JavaScript, et adaptée à un déploiement Docker.  
 
-## Conséquences
-- Bon compromis entre SEO, performance perçue et productivité.
-- Architecture back robuste, testable et typée.
-- Intégrité référentielle et requêtes avancées côté PostgreSQL.
-- Double courbe d'apprentissage (Next et Nest).
+## Decision
+- **Frontend** : Next.js 14 (React, SSR, SSG, PWA-ready).  
+- **Backend** : NestJS (structure modulaire, validation, sécurité).  
+- **Database** : PostgreSQL.  
+- **Langage** : TypeScript.  
+- **Gestionnaire de paquets** : pnpm.  
+- **Hébergement** : VPS Debian 13 + Docker.  
+- **Reverse proxy** : Traefik v3.1 (Let’s Encrypt TLS).  
+- **CI/CD** : GitLab CI/CD (staging via branche main, prod via tag).
 
-## Alternatives
-Remix/Fastify/Prisma-only ou frameworks monolithiques (Rails/Django). Non retenus pour rester 
-dans l'écosystème JavaScript demandé et conserver SSR/ISR natifs.
+## Consequences
+- Cohérence du langage entre front et back.  
+- Stack largement documentée et utilisée en entreprise.  
+- Simplicité d’intégration continue via Docker.

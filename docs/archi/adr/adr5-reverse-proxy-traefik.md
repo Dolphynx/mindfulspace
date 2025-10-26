@@ -1,25 +1,27 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 10/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 10/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Reverse proxy & entrypoint : Traefik
+# ADR 5 : Reverse proxy avec Traefik
 
-## Contexte
-Un seul VPS héberge plusieurs services web. Le proxy doit gérer le routage, le TLS et l'automatisation 
-des certificats avec une intégration Docker simple.
+## Status
+Accepted
 
-## Décision
-Utiliser Traefik comme reverse proxy avec Let’s Encrypt, routage par labels Docker, redirections 
-HTTP→HTTPS et middlewares de sécurité (HSTS, headers).
+## Context
+L’application comporte plusieurs services Docker (frontend, API, base de données).  
+Il faut exposer uniquement les services publics via HTTPS, avec un certificat automatique.
 
-## Conséquences
-- Déploiement de nouveaux services par simple ajout de labels.
-- Certificats TLS gérés automatiquement.
-- Courbe de configuration initiale plus importante.
+## Decision
+Nous utilisons **Traefik v3.1** comme reverse proxy et gestionnaire TLS.  
+- Écoute sur les ports 80 et 443 du VPS.  
+- Routage automatique basé sur les labels Docker (`Host(mindfulspace.be)` etc.).  
+- Certificats **Let's Encrypt** via résolveur ACME et challenge HTTP.  
+- Traefik tourne dans son propre conteneur avec un volume `/letsencrypt` persistant.
 
-## Alternatives
-Caddy ou Nginx Proxy Manager. Non retenus pour privilégier l'intégration par labels Docker et la 
-flexibilité des middlewares Traefik.
+## Consequences
+- HTTPS automatique et renouvelé.  
+- Isolation des services internes.  
+- Une seule porte d’entrée publique pour l’ensemble de la stack.

@@ -1,25 +1,29 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 10/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (HELMo – Bloc 3 Framework)
+**Projet :** MindfulSpace
+**Date :** 10/10/2025
+**Statut :** accepté
+**Auteur :** Équipe MindfulSpace (S. Gouvars)
 
-# Sécurité & réseau : firewall, SSH, HTTPS
+# ADR 7 : Sécurité réseau et isolation
 
-## Contexte
-Les services sont exposés publiquement. Il faut réduire la surface d'attaque et sécuriser l'accès 
-au serveur et aux applications.
+## Status
+Accepted
 
-## Décision
-Mettre en place un pare-feu (UFW ou nftables) pour n'ouvrir que 22, 80, 443. Renforcer SSH 
-(authentification par clés, utilisateur dédié, fail2ban). Forcer HTTPS via Traefik, activer HSTS 
-et appliquer une CSP progressive.
+## Context
+L’application contient des composants sensibles (API et base de données).  
+Il est impératif d’isoler les services pour éviter les expositions inutiles.
 
-## Conséquences
-- Posture de sécurité minimale solide.
-- Maintien à jour requis de la politique CSP et des certificats.
-- Procédures à définir pour l'accès d'urgence et la rotation de clés.
+## Decision
+- Deux réseaux Docker :  
+  - **web** : Traefik, frontend et API.  
+  - **internal** : API et base de données.  
+- Seul Traefik expose des ports sur le VPS (80/443).  
+- Postgres n’est accessible qu’en interne depuis l’API.  
+- Accès SSH restreint à l’utilisateur `ms-deploy`.  
+- `PermitRootLogin prohibit-password` pour bloquer les connexions root directes.
 
-## Alternatives
-WAF ou services de protection gérés. Non retenus pour garder la simplicité et le contrôle local.
+## Consequences
+- Aucune exposition de la DB sur Internet.  
+- Flux réseau maîtrisés et audités.  
+- Bonne pratique de sécurité pour un projet déployé publiquement.
