@@ -28,7 +28,7 @@ export default function Home() {
                 <p className="text-lg sm:text-xl text-slate-700 leading-relaxed mb-8">
                     Cette page a été{" "}
                     <span className="text-emerald-600 font-semibold">
-            déployée automatiquement [EN PRODUCTION]
+            déployée automatiquement [EN STAGING]
           </span>{" "}
                     grâce à notre pipeline{" "}
                     <span className="text-sky-600 font-semibold">
