@@ -10,7 +10,7 @@ Stack principale : **Next.js + NestJS + PostgreSQL**, organisée en **monorepo P
 
 ---
 
-## ⚙Stack technique
+## Stack technique
 
 - **Frontend** : Next.js (TypeScript, TailwindCSS)
 - **Backend** : NestJS (TypeScript)

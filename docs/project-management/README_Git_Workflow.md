@@ -144,4 +144,14 @@ Format : `vMAJOR.MINOR.PATCH`
 | Tag stable | main | tag v* | Déploiement production |
 | Hotfix prod | hotfix/* | main + dev | Correction + synchro |
 
+
 > « Tout déploiement prod vient d’un tag stable validé sur staging. »
+
+---
+
+## 8. Schéma visuel
+
+
+![Mindfulspace Light Gitflow](./images/MindfulSpace_Light_Gitflow.png)
+
+
