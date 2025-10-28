@@ -9,7 +9,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@mindfulspace/frontend/*": ["apps/frontend-next/src/*"],
+      "@mindfulspace/api/*": ["apps/api-nest/src/*"],
+      "@mindfulspace/shared/*": ["packages/*"]
+    }
   },
   "exclude": ["node_modules", "dist", ".next"]
 }

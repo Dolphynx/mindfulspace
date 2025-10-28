@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Couleurs globales du thème clair MindfulSpace */
+:root {
+    --background: #f7fcf8;
+    --foreground: #2f3a2f;
+    --font-sans: var(--font-geist-sans, system-ui, sans-serif);
+    --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+}
+
+/* Dark mode (facultatif) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+/* Styles de base */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+}
+
+/* pour s’assurer que Next met bien la couleur de fond avant le render */
+body {
+    @apply antialiased;
+}

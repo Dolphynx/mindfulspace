@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "@/globals.css";
+
+import AppChrome from "@/components/AppChrome";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -13,21 +15,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "MindfulSpace",
-    description: "Déployé avec amour et sérénité grâce à CI/CD GitLab 🌿",
+    title: {
+        default: "MindfulSpace – Prends soin de ton esprit",
+        template: "%s · MindfulSpace",
+    },
+    description:
+        "MindfulSpace t'aide à suivre ton bien-être (sommeil, respiration, méditation) et à développer une routine plus apaisée. Projet étudiant HELMo.",
+    robots: {
+        index: false,
+        follow: false,
+    },
 };
 
 export default function RootLayout({
                                        children,
-                                   }: Readonly<{
+                                   }: {
     children: React.ReactNode;
-}>) {
+}) {
     return (
         <html lang="fr">
         <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen text-slate-800 bg-[radial-gradient(circle_at_20%_20%,#ecfdf5_0%,#fdf2f8_40%,#fff_70%)]`}
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-        {children}
+        <AppChrome>{children}</AppChrome>
         </body>
         </html>
     );

@@ -1,0 +1,73 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+export default function Navbar() {
+    const pathname = usePathname();
+
+    const NavButton = ({
+                           href,
+                           icon,
+                           label,
+                       }: {
+        href: string;
+        icon?: React.ReactNode;
+        label: string;
+    }) => {
+        const active = pathname === href;
+        return (
+            <Link
+                href={href}
+                className={
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border transition-colors " +
+                    (active
+                        ? "bg-brandGreen text-white border-brandGreen shadow-sm"
+                        : "text-brandText border-transparent hover:bg-white/60 hover:border-brandBorder")
+                }
+            >
+                {icon && (
+                    <span
+                        className="text-lg leading-none"
+                        aria-hidden={label ? undefined : "true"}
+                    >
+                        {icon}
+                    </span>
+                )}
+                <span>{label}</span>
+            </Link>
+        );
+    };
+
+    return (
+        <header className="w-full bg-brandSurface border-b border-brandBorder">
+            {/* --- DEBUG MARKER: NAVBAR V3 --- */}
+            <div className="hidden" data-navbar-version="v3" />
+
+            <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-2">
+                        <Image
+                            src="/images/MindfulSpace_logo.jpg"
+                            alt="MindfulSpace logo"
+                            width={90}
+                            height={40}
+                            className="object-contain"
+                            priority
+                        />
+                    </Link>
+                </div>
+
+                <nav className="flex items-center gap-4">
+                    <NavButton
+                        href="/"
+                        label="Dashboard"
+                        icon={<span>🏠</span>}
+                    />
+                    <NavButton href="/contact" label="Contact" />
+                </nav>
+            </div>
+        </header>
+    );
+}
