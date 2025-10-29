@@ -1,33 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import sleepDataDefault from "@/data/sleepData.json";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-} from "recharts";
-import type { DotProps } from "recharts";
+import { useState, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { DotProps } from "recharts";
 
 type SleepPoint = {
     day: string;
     hours: number;
 };
 
-// Type minimal pour le dot actif.
-// On ne dépend plus d'un type interne non exporté par recharts.
 type ActiveDotPropsLike = {
     cx?: number;
     cy?: number;
 };
 
-/**
- * Custom Dot for the normal state
- */
+// Type des props
+type SleepChartCardProps = {
+    chartData: { label: string; value: number }[];
+};
+
+// Custom Dot for the normal state
 function CustomDot(props: DotProps) {
     const { cx, cy } = props;
     if (typeof cx !== "number" || typeof cy !== "number") return null;
@@ -43,14 +35,10 @@ function CustomDot(props: DotProps) {
     );
 }
 
-/**
- * Custom Dot for the active (hover) state
- * Must always return an element (not null) to satisfy Line.activeDot expectations
- */
+// Custom Dot for the active (hover) state
 function CustomActiveDot(props: ActiveDotPropsLike) {
     const { cx, cy } = props;
     if (typeof cx !== "number" || typeof cy !== "number") {
-        // On rend un point invisible plutôt que null, pour rester typesafe
         return (
             <circle
                 cx={0}
@@ -74,9 +62,12 @@ function CustomActiveDot(props: ActiveDotPropsLike) {
     );
 }
 
-export default function SleepChartCard() {
-    // Plus tard ça viendra de l'API Nest
-    const [sleepData] = useState<SleepPoint[]>(sleepDataDefault);
+export default function SleepChartCard({ chartData }: SleepChartCardProps) {
+    // Transformation des données pour correspondre au format requis par le graphique
+    const sleepData = chartData.map((data) => ({
+        day: data.label,
+        hours: data.value,
+    }));
 
     const displayedRange = "27/10 → 02/11";
 
@@ -86,7 +77,7 @@ export default function SleepChartCard() {
             <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 p-5 border-b border-[#d9eadf]">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-900 leading-tight">
-                        Sleep Tracking
+                        Sleep Tracking (From DB !)
                     </h2>
                     <p className="text-gray-600 text-lg">
                         Your sleep pattern over the last week
