@@ -1,0 +1,51 @@
+name: mindfulspace_staging
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mindfulspace_db_staging
+    environment:
+      POSTGRES_DB: mindfulspace
+      POSTGRES_USER: ms_user
+      POSTGRES_PASSWORD: ms_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ms_user -d mindfulspace"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api-nest/Dockerfile
+    container_name: mindfulspace_api_dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://ms_user:ms_pass@db:5432/mindfulspace
+      PORT: "3001"
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend-next/Dockerfile
+    container_name: mindfulspace_frontend_dev
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      PORT: "3000"
+    command: ["node", "apps/frontend-next/server.js"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  db_data_dev:
