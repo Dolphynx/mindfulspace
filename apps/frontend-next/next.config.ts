@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
+const withPWA = require('next-pwa')({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: false
+        // process.env.NODE_ENV === 'development',
+});
+
+module.exports = withPWA({
+    reactStrictMode: true,
+});
+
 /**
  * Détection de l'environnement Windows.
  * (process.platform renvoie "win32" sous Windows)
