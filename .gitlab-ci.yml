@@ -141,14 +141,15 @@ migrate_staging:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
   script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/staging &&
-      # attendre que la DB soit healthy
-      until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_staging 2>/dev/null)\" = \"healthy\" ]; do
-      echo 'waiting for db (staging)...'; sleep 2;
-      done &&
-      docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
+    - |
+      ssh ms-deploy@"$VPS_IP" "
+        set -e
+        cd /srv/mindfulspace/staging &&
+        # attendre que la DB soit healthy
+        until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_staging 2>/dev/null)\" = \"healthy\" ]; do
+          echo 'waiting for db (staging)...'; sleep 2;
+        done &&
+        docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
       "
   needs:
     - deploy_staging
@@ -222,14 +223,15 @@ migrate_production:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
   script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/production &&
-      # attendre que la DB soit healthy
-      until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_prod 2>/dev/null)\" = \"healthy\" ]; do
-      echo 'waiting for db (prod)...'; sleep 2;
-      done &&
-      docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
+    - |
+      ssh ms-deploy@"$VPS_IP" "
+        set -e
+        cd /srv/mindfulspace/production &&
+        # attendre que la DB soit healthy
+        until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_prod 2>/dev/null)\" = \"healthy\" ]; do
+          echo 'waiting for db (prod)...'; sleep 2;
+        done &&
+        docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
       "
   needs:
     - deploy_production
