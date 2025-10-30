@@ -1,7 +1,7 @@
 stages:
-  - verify     # utilisé par les branches / MRs
-  - build      # build + push images (main et tags uniquement)
-  - deploy     # déploiement staging/prod (main et tags uniquement)
+  - verify
+  - build
+  - deploy
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -10,7 +10,7 @@ variables:
   API_CONTEXT: "apps/api-nest"
 
 # -------------------------------------------------
-# 0. JOB DE VERIF POUR LES MR / BRANCHES
+# 0. VERIFY (MR / feature / dev)
 # -------------------------------------------------
 verify_build:
   stage: verify
@@ -18,16 +18,13 @@ verify_build:
   services:
     - name: docker:dind
       command: ["--tls=false"]
-
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH =~ /^(dev|feature\/.*)$/'
     - when: never
-
   script:
     - echo "Building FRONTEND image locally for validation only..."
     - >
@@ -43,7 +40,7 @@ verify_build:
       .
 
 # -------------------------------------------------
-# 1. BUILD & PUSH IMAGES (main + tags)
+# 1. BUILD & PUSH (main / tags)
 # -------------------------------------------------
 build_images:
   stage: build
@@ -51,16 +48,13 @@ build_images:
   services:
     - name: docker:dind
       command: ["--tls=false"]
-
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
     - when: never
-
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
     - |
@@ -73,47 +67,36 @@ build_images:
       fi
       echo "FRONT_TAG=$FRONT_TAG"
       echo "API_TAG=$API_TAG"
-
   script:
-    # FRONTEND
     - >
       docker build
       --file "$FRONTEND_CONTEXT/Dockerfile"
       --tag "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
       .
-
-    # API
     - >
       docker build
       --file "$API_CONTEXT/Dockerfile"
       --tag "$CI_REGISTRY_IMAGE/api:$API_TAG"
       .
-
-    # push
     - docker push "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
     - docker push "$CI_REGISTRY_IMAGE/api:$API_TAG"
-
   needs: []
 
 # -------------------------------------------------
-# 2. DEPLOY STAGING (main)
+# 2. DEPLOY STAGING
 # -------------------------------------------------
 deploy_staging:
   stage: deploy
   image: alpine:3.20
-
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - when: never
-
   before_script:
     - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-
   script:
     - ssh ms-deploy@"$VPS_IP" "
       set -e
@@ -121,12 +104,11 @@ deploy_staging:
       docker compose pull &&
       docker compose up -d --remove-orphans
       "
-
   needs:
     - build_images
 
 # -------------------------------------------------
-# 2.bis. MIGRATE STAGING (auto après deploy)
+# 2.bis. MIGRATE STAGING
 # -------------------------------------------------
 migrate_staging:
   stage: deploy
@@ -145,7 +127,6 @@ migrate_staging:
       ssh ms-deploy@"$VPS_IP" "
         set -e
         cd /srv/mindfulspace/staging &&
-        # attendre que la DB soit healthy
         until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_staging 2>/dev/null)\" = \"healthy\" ]; do
           echo 'waiting for db (staging)...'; sleep 2;
         done &&
@@ -154,13 +135,14 @@ migrate_staging:
   needs:
     - deploy_staging
 
-# Seed STAGING : job manuel (à lancer 1x quand DB vide/reset)
+# Seed STAGING (manuel, 1ʳᵉ init)
 seed_staging:
   stage: deploy
   image: alpine:3.20
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-    - when: manual
+      when: manual
+    - when: never
   allow_failure: false
   before_script:
     - apk add --no-cache openssh-client
@@ -178,24 +160,20 @@ seed_staging:
     - migrate_staging
 
 # -------------------------------------------------
-# 3. DEPLOY PRODUCTION (tags)
+# 3. DEPLOY PRODUCTION
 # -------------------------------------------------
 deploy_production:
   stage: deploy
   image: alpine:3.20
-
   rules:
     - if: '$CI_COMMIT_TAG'
     - when: never
-
   before_script:
     - apk add --no-cache openssh-client
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-
   script:
     - ssh ms-deploy@"$VPS_IP" "
       set -e
@@ -203,12 +181,11 @@ deploy_production:
       docker compose pull &&
       docker compose up -d --remove-orphans
       "
-
   needs:
     - build_images
 
 # -------------------------------------------------
-# 3.bis. MIGRATE PRODUCTION (auto après deploy tags)
+# 3.bis. MIGRATE PRODUCTION
 # -------------------------------------------------
 migrate_production:
   stage: deploy
@@ -227,7 +204,6 @@ migrate_production:
       ssh ms-deploy@"$VPS_IP" "
         set -e
         cd /srv/mindfulspace/production &&
-        # attendre que la DB soit healthy
         until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_prod 2>/dev/null)\" = \"healthy\" ]; do
           echo 'waiting for db (prod)...'; sleep 2;
         done &&
@@ -236,13 +212,14 @@ migrate_production:
   needs:
     - deploy_production
 
-# Seed PROD : manuel (à ne lancer que si DB prod est vide au tout début)
+# Seed PROD (manuel, 1ʳᵉ init)
 seed_production:
   stage: deploy
   image: alpine:3.20
   rules:
     - if: '$CI_COMMIT_TAG'
-    - when: manual
+      when: manual
+    - when: never
   allow_failure: false
   before_script:
     - apk add --no-cache openssh-client
