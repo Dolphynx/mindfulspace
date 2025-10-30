@@ -28,6 +28,8 @@ COPY --from=build /app/apps/api-nest/node_modules ./apps/api-nest/node_modules
 
 # On copie le build compilé NestJS
 COPY --from=build /app/apps/api-nest/dist ./apps/api-nest/dist
+# On doit aussi copier le dossier prisma pour migrate/seed
+COPY --from=build /app/apps/api-nest/prisma ./apps/api-nest/prisma
 
 EXPOSE 3001
 CMD ["node", "apps/api-nest/dist/main.js"]
