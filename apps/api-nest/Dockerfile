@@ -15,6 +15,11 @@ RUN npm i -g pnpm && pnpm install
 COPY apps/api-nest ./apps/api-nest
 WORKDIR /app/apps/api-nest
 ENV NODE_ENV=production
+
+# DATABASE_URL factice pour satisfaire prisma.config.ts au build
+ARG DATABASE_URL="postgresql://user:pass@localhost:5432/dummy?schema=public"
+ENV DATABASE_URL=${DATABASE_URL}
+
 RUN pnpm build
 
 # ---- Runtime stage ----
