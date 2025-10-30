@@ -1,7 +1,43 @@
 import Image from "next/image";
 import SleepChartCard from "@/components/SleepChartCard";
 
-export default function HomePage() {
+// Le type des objets renvoyés par l'API Nest (/test-data)
+type ChartPoint = {
+    label: string; // ex: "Lun"
+    value: number; // ex: 12
+};
+
+// fetch côté serveur (Server Component)
+// Pas de cache pour voir les updates en dev
+async function getChartData(): Promise<ChartPoint[]> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    // Sécurité soft au cas où la var d'env manque
+    if (!baseUrl) {
+        console.error("NEXT_PUBLIC_API_URL manquant dans le front");
+        return [];
+    }
+
+    const res = await fetch(
+        `${baseUrl}/test-data?metricName=daily_meditation_minutes`,
+        {
+            // important en dev pour éviter que Next mette ça en cache
+            cache: "no-store",
+        }
+    );
+
+    if (!res.ok) {
+        console.error("Erreur API test-data:", res.status, res.statusText);
+        return [];
+    }
+
+    return res.json();
+}
+
+export default async function HomePage() {
+    // Récupérer les données du backend
+    const chartData = await getChartData();
+
     return (
         <div className="text-brandText flex flex-col">
             {/* HERO */}
@@ -61,7 +97,10 @@ export default function HomePage() {
                                         <span className="text-brandText-soft">(hier)</span>
                                     </span>
                                 </span>
-                                <span className="font-medium text-brandText">7 h 10</span>
+                                {/* Remplacer par la donnée réelle du sommeil */}
+                                <span className="font-medium text-brandText">
+                                    {chartData.find((data) => data.label === "Sommeil")?.value || "N/A"} h
+                                </span>
                             </li>
 
                             <li className="flex items-center justify-between">
@@ -73,7 +112,10 @@ export default function HomePage() {
                                         Méditation
                                     </span>
                                 </span>
-                                <span className="font-medium text-brandText">12 min</span>
+                                {/* Remplacer par la donnée réelle de la méditation */}
+                                <span className="font-medium text-brandText">
+                                    {chartData.find((data) => data.label === "Méditation")?.value || "N/A"} min
+                                </span>
                             </li>
 
                             <li className="flex items-center justify-between">
@@ -85,8 +127,9 @@ export default function HomePage() {
                                         Activité physique
                                     </span>
                                 </span>
+                                {/* Remplacer par la donnée réelle de l'activité physique */}
                                 <span className="font-medium text-brandText">
-                                    3 200 pas
+                                    {chartData.find((data) => data.label === "Activité")?.value || "N/A"} pas
                                 </span>
                             </li>
                         </ul>
@@ -94,7 +137,7 @@ export default function HomePage() {
                 </article>
 
                 {/* Carte droite */}
-                <SleepChartCard />
+                <SleepChartCard chartData={chartData} />
             </section>
         </div>
     );

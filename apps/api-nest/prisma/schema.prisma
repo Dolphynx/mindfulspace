@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Home page test graph
+model TestData {
+  id          String   @id @default(uuid())
+  metricName  String
+  label       String
+  metricValue Int
+  createdAt   DateTime @default(now())
+}
