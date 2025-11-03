@@ -8,19 +8,20 @@
     "dev:api": "pnpm --filter ./apps/api-nest start:dev",
     "build:front": "pnpm --filter ./apps/frontend-next build",
     "build:api": "pnpm --filter ./apps/api-nest build",
-
     "lint": "pnpm -r --if-present run lint",
     "lint:front": "pnpm --filter ./apps/frontend-next run lint",
     "lint:api": "pnpm --filter ./apps/api-nest run lint",
-
     "test": "pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
-
     "check": "pnpm run lint && pnpm run test && pnpm run typecheck",
     "test:api": "pnpm --filter ./apps/api-nest test",
     "build": "pnpm build:api && pnpm build:front"
   },
   "devDependencies": {
     "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@nestjs/swagger": "^11.2.1",
+    "swagger-ui-express": "^5.0.1"
   }
 }

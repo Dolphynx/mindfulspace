@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import GlobalNotice from "@/components/GlobalNotice";
 import Navbar from "@/components/Navbar";
@@ -28,6 +29,9 @@ function getInitialPrefs(): CookiePrefs {
 }
 
 export default function AppChrome({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const isSession = pathname?.startsWith("/seance/") ?? false;
+
     const [openPrefs, setOpenPrefs] = useState(false);
     const [prefs, setPrefs] = useState<CookiePrefs>(getInitialPrefs);
 
@@ -54,15 +58,18 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
             <GlobalNotice />
 
             <div className="min-h-screen flex flex-col bg-brandBg text-brandText border-t border-brandBorder">
-                <Navbar />
+                {/* Masquer le menu pendant la séance */}
+                {!isSession && <Navbar />}
 
                 <main className="flex-1">{children}</main>
 
-                {/* ✅ on passe bien la fonction au Footer */}
-                <Footer onOpenPreferences={() => setOpenPrefs(true)} />
+                {!isSession && <Footer onOpenPreferences={() => setOpenPrefs(true)} />}
             </div>
 
-            <CookieBanner onOpenPreferences={() => setOpenPrefs(true)} />
+            {/* Bannière cookies uniquement hors séance */}
+            {!isSession && (
+                <CookieBanner onOpenPreferences={() => setOpenPrefs(true)} />
+            )}
 
             <CookiePreferencesModal
                 isOpen={openPrefs}
