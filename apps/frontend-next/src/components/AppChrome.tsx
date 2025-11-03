@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import GlobalNotice from "@/components/GlobalNotice";
-import Navbar from "@/components/Navbar";
-import CookieBanner from "@/components/CookieBanner";
-import CookiePreferencesModal from "@/components/CookiePreferencesModal";
-import Footer from "@/components/Footer";
+import {
+    Navbar,
+    CookieBanner,
+    CookiePreferencesModal,
+    Footer,
+} from "@/components/layout";
 
 import {
     CookiePrefs,

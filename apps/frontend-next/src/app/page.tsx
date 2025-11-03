@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getUserPrefs } from "@/lib/userPrefs";
+import { getUserPrefs } from "@/lib";
 
 export default async function Entry() {
     const prefs = await getUserPrefs();

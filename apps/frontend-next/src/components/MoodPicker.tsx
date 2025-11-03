@@ -1,5 +1,5 @@
 "use client";
-import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib/mood";
+import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib";
 
 type MoodPickerProps = {
     value?: MoodValue | null;

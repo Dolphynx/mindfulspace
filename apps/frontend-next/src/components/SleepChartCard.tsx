@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DotProps } from "recharts";
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import MoodPicker from "@/components/MoodPicker";
-import { MoodValue, moodToPercent } from "@/lib/mood";
+import { MoodValue, moodToPercent } from "@/lib";
 import { useRouter } from "next/navigation";
 
 export default function HumeurPage() {

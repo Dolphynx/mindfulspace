@@ -1,4 +1,4 @@
-import { getTip } from "@/lib/getTip";
+import { getTip } from "@/lib";
 import Link from "next/link";
 
 export default async function AstucePage() {

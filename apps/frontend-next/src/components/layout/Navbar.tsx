@@ -47,7 +47,7 @@ export default function Navbar() {
 
             <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/apps/frontend-next/public" className="flex items-center gap-2">
                         <Image
                             src="/images/MindfulSpace_logo.jpg"
                             alt="MindfulSpace logo"
