@@ -63,20 +63,20 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
 
                 <main className="flex-1">{children}</main>
 
-                {!isSession && <Footer onOpenPreferences={() => setOpenPrefs(true)} />}
+                {!isSession && <Footer onOpenPreferencesAction={() => setOpenPrefs(true)} />}
             </div>
 
             {/* Bannière cookies uniquement hors séance */}
             {!isSession && (
-                <CookieBanner onOpenPreferences={() => setOpenPrefs(true)} />
+                <CookieBanner onOpenPreferencesAction={() => setOpenPrefs(true)} />
             )}
 
             <CookiePreferencesModal
                 isOpen={openPrefs}
-                onClose={() => setOpenPrefs(false)}
+                onCloseAction={() => setOpenPrefs(false)}
                 prefs={prefs}
-                onChangePrefs={setPrefs}
-                onSave={handleSavePrefs}
+                onChangePrefsAction={setPrefs}
+                onSaveAction={handleSavePrefs}
             />
         </>
     );

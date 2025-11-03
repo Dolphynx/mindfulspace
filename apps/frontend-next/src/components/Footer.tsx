@@ -4,10 +4,10 @@ import Link from "next/link";
 import FooterCookiesLink from "@/components/FooterCookiesLink";
 
 type FooterProps = {
-    onOpenPreferences: () => void;
+    onOpenPreferencesAction: () => void;
 };
 
-export default function Footer({ onOpenPreferences }: FooterProps) {
+export default function Footer({ onOpenPreferencesAction }: FooterProps) {
     return (
         <footer className="w-full bg-transparent border-t border-brandBorder py-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-[12px] text-brandText-soft max-w-7xl mx-auto px-4">
@@ -17,7 +17,7 @@ export default function Footer({ onOpenPreferences }: FooterProps) {
 
                 <div className="flex items-center gap-3">
                     {/* bouton / lien qui ouvre la modale de préférences cookies */}
-                    <FooterCookiesLink onOpenPreferences={onOpenPreferences} />
+                    <FooterCookiesLink onOpenPreferencesAction={onOpenPreferencesAction} />
 
                     {/* lien vers la politique de cookies */}
                     <Link

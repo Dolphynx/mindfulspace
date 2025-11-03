@@ -5,18 +5,18 @@ import { CookiePrefs } from "@/lib/cookieConsent";
 
 type CookiePreferencesModalProps = {
     isOpen: boolean;
-    onClose: () => void;
+    onCloseAction: () => void;
     prefs: CookiePrefs;
-    onChangePrefs: (next: CookiePrefs) => void;
-    onSave: () => void;
+    onChangePrefsAction: (next: CookiePrefs) => void;
+    onSaveAction: () => void;
 };
 
 export default function CookiePreferencesModal({
                                                    isOpen,
-                                                   onClose,
+                                                   onCloseAction,
                                                    prefs,
-                                                   onChangePrefs,
-                                                   onSave,
+                                                   onChangePrefsAction,
+                                                   onSaveAction,
                                                }: CookiePreferencesModalProps) {
     const firstFocusableRef = useRef<HTMLElement | null>(null);
     const lastFocusableRef = useRef<HTMLElement | null>(null);
@@ -33,12 +33,12 @@ export default function CookiePreferencesModal({
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 e.preventDefault();
-                onClose();
+                onCloseAction();
             }
         };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
-    }, [isOpen, onClose]);
+    }, [isOpen, onCloseAction]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -74,7 +74,7 @@ export default function CookiePreferencesModal({
             aria-hidden={false}
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
-                    onClose();
+                    onCloseAction();
                 }
             }}
         >
@@ -100,7 +100,7 @@ export default function CookiePreferencesModal({
                             className="mt-1 h-4 w-4 rounded border-brandBorder"
                             checked={prefs.analytics}
                             onChange={(e) =>
-                                onChangePrefs({
+                                onChangePrefsAction({
                                     ...prefs,
                                     analytics: e.target.checked,
                                 })
@@ -124,7 +124,7 @@ export default function CookiePreferencesModal({
                             className="mt-1 h-4 w-4 rounded border-brandBorder"
                             checked={prefs.personalization}
                             onChange={(e) =>
-                                onChangePrefs({
+                                onChangePrefsAction({
                                     ...prefs,
                                     personalization: e.target.checked,
                                 })
@@ -165,7 +165,7 @@ export default function CookiePreferencesModal({
                     <button
                         type="button"
                         className="rounded-md border border-brandBorder bg-white px-4 py-2 text-sm font-medium text-brandText hover:bg-brandBg"
-                        onClick={onClose}
+                        onClick={onCloseAction}
                     >
                         Annuler
                     </button>
@@ -175,8 +175,8 @@ export default function CookiePreferencesModal({
                         type="button"
                         className="rounded-md bg-brandGreen px-4 py-2 text-sm font-semibold text-white shadow-subtle hover:opacity-90"
                         onClick={() => {
-                            onSave();
-                            onClose();
+                            onSaveAction();
+                            onCloseAction();
                         }}
                     >
                         Enregistrer

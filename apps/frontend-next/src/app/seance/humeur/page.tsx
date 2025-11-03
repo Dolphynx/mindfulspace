@@ -20,7 +20,7 @@ export default function HumeurPage() {
             <h1 className="text-4xl">Comment vous sentez-vous ?</h1>
             <p className="text-lg text-brandText-soft">Prenez un moment pour reconnaître vos émotions</p>
 
-            <MoodPicker value={value} onChange={(v) => setValue(v)} />
+            <MoodPicker value={value} onChangeAction={(v) => setValue(v)} />
 
             <button
                 onClick={next}

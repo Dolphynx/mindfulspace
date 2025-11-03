@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { hasConsent, acceptAllCookies } from "@/lib/cookieConsent";
 
 export default function CookieBanner({
-                                         onOpenPreferences,
+                                         onOpenPreferencesAction,
                                      }: {
-    onOpenPreferences: () => void;
+    onOpenPreferencesAction: () => void;
 }) {
     const [show, setShow] = useState(false);
 
@@ -44,7 +44,7 @@ export default function CookieBanner({
                     <button
                         className="flex-1 rounded-md border border-brandBorder bg-white text-brandText px-4 py-2 text-sm font-medium hover:bg-brandBg"
                         onClick={() => {
-                            onOpenPreferences();
+                            onOpenPreferencesAction();
                         }}
                     >
                         Je choisis

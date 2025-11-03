@@ -1,14 +1,14 @@
 "use client";
 
 export default function FooterCookiesLink({
-                                              onOpenPreferences,
+                                              onOpenPreferencesAction,
                                           }: {
-    onOpenPreferences: () => void;
+    onOpenPreferencesAction: () => void;
 }) {
     return (
         <button
             className="text-[12px] text-brandText-soft underline hover:text-brandText"
-            onClick={onOpenPreferences}
+            onClick={onOpenPreferencesAction}
         >
             Cookies
         </button>

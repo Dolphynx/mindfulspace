@@ -3,7 +3,7 @@ import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib/mood";
 
 type MoodPickerProps = {
     value?: MoodValue | null;
-    onChange?: (v: MoodValue, opt: MoodOption) => void;
+    onChangeAction?: (v: MoodValue, opt: MoodOption) => void;
     size?: "sm" | "md";           // taille des cartes
     variant?: "cards" | "row";    // grille cartes ou rangée compacte
     disabled?: boolean;
@@ -12,7 +12,7 @@ type MoodPickerProps = {
 
 export default function MoodPicker({
                                        value = null,
-                                       onChange,
+                                       onChangeAction,
                                        size = "md",
                                        variant = "cards",
                                        disabled,
@@ -42,7 +42,7 @@ export default function MoodPicker({
                         disabled={disabled}
                         role="option"
                         aria-selected={active}
-                        onClick={() => onChange?.(opt.value, opt)}
+                        onClick={() => onChangeAction?.(opt.value, opt)}
                         className={`${baseItem} ${sizeCls} ${
                             active
                                 ? "bg-brandGreen/10 border-brandGreen"
