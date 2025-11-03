@@ -1,24 +1,30 @@
 # MindfulSpace
 
-Application web de suivi du bien-être mental et de méditation guidée.
-
-Projet étudiant (HELMo – Bloc 3 Framework & Archilog 2025).  
-Architecture **n-tiers** déployée sur un **VPS Debian 13**, conteneurisée avec **Docker** et orchestrée via **Traefik**.  
-Déploiement automatisé grâce à **GitLab CI/CD**.
-
-Stack principale : **Next.js + NestJS + PostgreSQL**, organisée en **monorepo PNPM**.
+Application web de bien-être mental et de pleine conscience.  
+Projet académique HELMo – Framework / Archilog.
 
 ---
 
-## Stack technique
+## Objectif
 
-- **Frontend** : Next.js (TypeScript, TailwindCSS)
-- **Backend** : NestJS (TypeScript)
-- **Base de données** : PostgreSQL 16
-- **Reverse proxy** : Traefik v3 (HTTPS, dashboard, routing dynamique)
-- **CI/CD** : GitLab CI (runner Docker)
-- **Hébergement** : VPS Debian 13
-- **Environnement** : Docker Compose (staging & production)
+L’application permet aux utilisateurs de :
+- suivre leurs habitudes de bien-être (sommeil, sport, méditation),
+- accéder à des méditations guidées,
+- consulter des ressources éducatives (articles, vidéos, podcasts),
+- interagir dans une communauté via forum / groupes.
+
+---
+
+## Architecture technique
+
+| Composant | Technologie | Description |
+|------------|-------------|-------------|
+| Frontend | Next.js (React 18 + TypeScript) | Interface utilisateur |
+| Backend API | NestJS + Prisma | Logique métier & accès DB |
+| Base de données | PostgreSQL 16-alpine | Données utilisateurs, contenu |
+| Conteneurisation | Docker Compose | Orchestration multi-service |
+| CI/CD | GitLab CI | Build, test, déploiement auto |
+| OS cible | Debian 13 (Trixie) | VPS / environnements locaux |
 
 ---
 
@@ -45,42 +51,202 @@ mindfulspace/
 
 ## Installation locale
 
-### Prérequis
-- Node.js ≥ 18
-- PNPM installé globalement (`npm i -g pnpm`)
-- Docker (optionnel pour base de données locale)
+### 1. Prérequis
+Assurez-vous d’avoir :
+- Node.js ≥ 20
+- pnpm ≥ 9
+- Docker ≥ 28.5.1
+- Docker Compose v2
+- Git
 
-### Étapes
+Vérifiez vos versions :
 ```bash
-git clone https://git.helmo.be/q230306/mindfulspace.git
-cd mindfulspace
-pnpm install
+node -v
+pnpm -v
+docker -v
+docker compose version
 ```
-
-### Commandes utiles
-
-| Commande | Description |
-|-----------|-------------|
-| `pnpm -r dev` | Lancer front + back en développement |
-| `pnpm --filter frontend-next dev` | Lancer uniquement le frontend |
-| `pnpm --filter api-nest start:dev` | Lancer uniquement l’API |
-| `pnpm -w lint` | Vérifier le lint sur tout le monorepo |
-| `pnpm -r build` | Construire toutes les apps |
 
 ---
 
-## Docker local (développement)
-
-Le projet est prêt pour Docker :
-
+### 2. Cloner le dépôt
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+git clone git@gitlab.helmo.be:q230306/mindfulspace.git
+cd mindfulspace
 ```
 
-Lance :
-- le frontend Next.js
-- le backend NestJS
-- la base PostgreSQL
+---
+
+### 3. Installation des dépendances
+```bash
+pnpm install
+```
+> Ce dépôt est un monorepo avec deux applications :
+> - `apps/api-nest`
+> - `apps/frontend-next`
+
+---
+
+### 4. Docker : structure actuelle
+
+| Fichier | Rôle | Description |
+|----------|------|-------------|
+| `docker-compose.yml` | Utilisé | Lance les trois services : API, frontend et base de données |
+| `docker-compose-db.yml` | Utilisé | Lance uniquement la base de données pour le dev local |
+
+Remarque : sous Windows il faut installer Docker Desktop (et le composant Linux) et il doit tourner pour lancer les containers (la DB notamment).
+
+---
+
+### 5. Lancer uniquement la base de données
+
+```bash
+docker compose -f docker-compose-db.yml up -d
+```
+
+Cela crée un conteneur PostgreSQL :
+- nom : `mindfulspace_db_local`
+- base : `mindfulspace_local`
+- user : `ms_user`
+- password : `ms_password`
+
+---
+
+### 6. Configurer les environnements
+
+Créer deux fichiers `.env.local` (un par app).
+
+#### `/apps/api-nest/.env`
+```env
+DATABASE_URL="postgresql://ms_user:ms_password@localhost:5432/mindfulspace_local"
+PORT=3001
+```
+
+#### `/apps/frontend-next/.env.local`
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+---
+
+### 7. Initialiser la base de données
+
+Depuis le dossier `apps/api-nest` :
+```bash
+pnpm prisma migrate deploy
+pnpm prisma db seed
+```
+
+---
+
+### 8. Lancer les applications sans Docker
+
+#### API (NestJS)
+```bash
+cd ./apps/api-nest
+pnpm run start:de
+```
+ou
+```bash
+pnpm --filter .\apps\api-nest run start:dev
+```
+API disponible sur [http://localhost:3001](http://localhost:3001)
+
+#### Frontend (Next.js)
+```bash
+cd ./apps/frontend-next
+pnpm dev
+```
+ou
+```bash
+pnpm --filter .\apps\frontend-next run dev
+```
+Frontend disponible sur [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 9. Lancer l’ensemble via Docker Compose
+
+Depuis la racine :
+```bash
+docker compose up --build
+```
+
+Cela démarre 3 conteneurs :
+- Frontend → http://localhost:3000  
+- API → http://localhost:3001  
+- PostgreSQL → port 5432  
+
+---
+
+## Configuration WebStorm pour lancer tout le projet
+
+### Objectif
+Avoir une configuration unique dans **WebStorm** permettant de lancer :
+- la base de données (Docker),
+- l’API NestJS en mode dev,
+- le frontend Next.js en mode dev,
+avec hot reload (HMR) pour le front et l’API.
+
+### Étapes à suivre
+
+#### 1. Créer une configuration Docker
+- Type : **Docker Compose**
+- Nom : `Dev: DB (Docker)`
+- Fichier : `./docker-compose-db.yml`
+- Service : `db`
+- Options : cocher **Store as project file**  
+- Laisser `Attach to: None`
+
+#### 2. Créer deux configurations npm
+**A. Dev: API**
+- Type : **npm**
+- Nom : `Dev: API`
+- Package.json : `apps/api-nest/package.json`
+- Command : `run`
+- Script : `start:dev`
+- Package manager : `pnpm`
+- Node interpreter : `Project node`
+- Cocher **Allow multiple instances** et **Store as project file**
+
+**B. Dev: Frontend**
+- Type : **npm**
+- Nom : `Dev: Frontend`
+- Package.json : `apps/frontend-next/package.json`
+- Command : `run`
+- Script : `dev`
+- Package manager : `pnpm`
+- Node interpreter : `Project node`
+- Cocher **Allow multiple instances** et **Store as project file**
+
+#### 3. Créer une configuration Compound
+- Type : **Compound**
+- Nom : `Dev: Front + API + DB`
+- Ajouter :
+  - `Docker 'Dev: DB (Docker)'`
+  - `npm 'Dev: API'`
+  - `npm 'Dev: Frontend'`
+- Cocher **Store as project file**
+
+#### 4. Lancer
+- Choisir la configuration `Dev: Front + API + DB`
+- Cliquer sur ▶️ Run  
+  → Les trois services démarrent dans le bon ordre.
+
+---
+
+## Dépannage
+
+Si erreur `tsx` ou `prisma not found` :
+```bash
+pnpm install
+pnpm prisma generate
+```
+
+Pour vider les conteneurs et volumes :
+```bash
+docker compose down -v
+```
 
 ---
 
@@ -159,11 +325,6 @@ vMAJOR.MINOR.PATCH
 
 ---
 
-## Notes pour l’équipe
-
-- Toujours utiliser **PNPM**, jamais `npm` ou `yarn`.
-- Pas de commit direct sur `dev` ou `main` → **Merge Request obligatoire**.
-- Faire un `pnpm install` après chaque `git pull`.
-- Les tags sont réservés au déploiement production.
-
-> “Tout déploiement prod vient d’un tag stable validé sur staging.”
+## Auteurs
+Projet MindfulSpace – HELMo Liège  
+Développement réalisé par les étudiants de 3e année – Cours Framework & Archilog.
