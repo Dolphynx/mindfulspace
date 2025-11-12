@@ -1,23 +1,25 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
-const withPWA = require('next-pwa')({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: false
-        // process.env.NODE_ENV === 'development',
-});
-
-module.exports = withPWA({
+/*module.exports = withPWA({
     reactStrictMode: true,
-});
+});*/
+
 
 /**
  * Détection de l'environnement Windows.
  * (process.platform renvoie "win32" sous Windows)
  */
 const isWindows = process.platform === "win32";
+const isExport = process.env.NEXT_OUTPUT === "export";
+
+const withPWA = require('next-pwa')({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: false
+    // process.env.NODE_ENV === 'development',
+});
 
 /**
  * Configuration Next.js adaptée au monorepo et au build Docker.
@@ -25,11 +27,17 @@ const isWindows = process.platform === "win32";
  * - Actif sur Linux (CI/CD, VPS)
  */
 const nextConfig: NextConfig = {
+
+    reactStrictMode: true,
     /**
      * En prod (CI, Docker) => output standalone pour une image légère.
      * En dev local sous Windows => désactivé pour éviter les erreurs de symlink.
      */
-    ...(isWindows ? {} : { output: "standalone" }),
+    ...(isExport
+        ? { output: "export" } // for Capacitor
+        : !isWindows
+            ? { output: "standalone" } // for Docker/prod
+            : {}),
 
     /**
      * IMPORTANT: ne pas échouer le build à cause d’ESLint en prod.
@@ -56,4 +64,6 @@ const nextConfig: NextConfig = {
     },*/
 };
 
-export default nextConfig;
+// export default nextConfig;
+
+module.exports = withPWA(nextConfig);
