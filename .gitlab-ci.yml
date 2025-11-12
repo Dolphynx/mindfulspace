@@ -1,56 +1,48 @@
-stages:
-  - verify
-  - build
-  - deploy
+# ---- Pipeline MindfulSpace ----
+stages: [verify, build, deploy]
 
-# Répertoires utiles dans le monorepo
+# Variables globales
 variables:
-  FRONTEND_CONTEXT: "apps/frontend-next"
-  API_CONTEXT: "apps/api-nest"
+  # Évite l'échec de "prisma generate" en verify (pas de vraie DB en CI)
+  DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy?schema=public"
+  # Utilisé par Kaniko pour le fichier d'auth docker
+  DOCKER_CONFIG: /kaniko/.docker
 
-# -------------------------------------------------
-# 0) VERIFY (MR / feature / dev) : build rapide sans Docker
-# -------------------------------------------------
+# Paramètres par défaut des jobs
+default:
+  tags: [docker, linux]
+
+# -------- VERIFY (toutes branches & MR) --------
 verify:frontend:
   stage: verify
   image: node:20-alpine
-  variables:
-      DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy?schema=public"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
-    - when: never
   script:
     - corepack enable
     - pnpm -v || npm i -g pnpm
     - pnpm install --frozen-lockfile
-    - pnpm --filter frontend build
+    - pnpm --filter ./apps/frontend-next build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
 
 verify:api:
   stage: verify
   image: node:20-alpine
-  variables:
-      DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy?schema=public"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
-    - when: never
   script:
     - corepack enable
     - pnpm -v || npm i -g pnpm
     - pnpm install --frozen-lockfile
-    - pnpm --filter api build
+    - pnpm --filter ./apps/api-nest build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
 
-# -------------------------------------------------
-# 1) BUILD & PUSH avec Kaniko (main & tags)
-# -------------------------------------------------
+# -------- BUILD (main & tags) --------
 .build_with_kaniko:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  variables:
-    DOCKER_CONFIG: /kaniko/.docker
+    name: gcr.io/kaniko-project/executor:debug   # contient /bin/sh
+    entrypoint: [""]                              # ne pas écraser notre script
   before_script:
     - mkdir -p "$DOCKER_CONFIG"
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > "$DOCKER_CONFIG/config.json"
@@ -60,122 +52,93 @@ build:images:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
-    - when: never
   script:
-    # Tagging
-    - |
-      if [ -n "$CI_COMMIT_TAG" ]; then
-        FRONT_TAG="prod"
-        API_TAG="prod"
-      else
-        FRONT_TAG="staging"
-        API_TAG="staging"
-      fi
+    - if [ -n "$CI_COMMIT_TAG" ]; then FRONT_TAG=prod; API_TAG=prod; else FRONT_TAG=staging; API_TAG=staging; fi
     # Frontend
     - >
       /kaniko/executor
       --context "${CI_PROJECT_DIR}"
-      --dockerfile "${FRONTEND_CONTEXT}/Dockerfile"
+      --dockerfile "apps/frontend-next/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}/frontend:${FRONT_TAG}"
-      --cache=true
-      --cache-repo="${KANIKO_CACHE_REPO}"
+      --cache=true --cache-repo="${KANIKO_CACHE_REPO}"
     # API
     - >
       /kaniko/executor
       --context "${CI_PROJECT_DIR}"
-      --dockerfile "${API_CONTEXT}/Dockerfile"
+      --dockerfile "apps/api-nest/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}/api:${API_TAG}"
-      --build-arg DATABASE_URL="postgresql://user:pass@localhost:5432/dummy?schema=public"
-      --cache=true
-      --cache-repo="${KANIKO_CACHE_REPO}"
+      --cache=true --cache-repo="${KANIKO_CACHE_REPO}"
 
-# -------------------------------------------------
-# 2) DEPLOY STAGING (push sur main)
-# -------------------------------------------------
-deploy:staging:
-  stage: deploy
+# -------- DEPLOY (staging=main, prod=tag) --------
+.deploy_base:
   image: alpine:3.20
+  stage: deploy
+  needs: ["build:images"]
+  before_script:
+    - apk add --no-cache openssh-client curl
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - printf "Host vps\n  HostName %s\n  Port %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  StrictHostKeyChecking no\n" \
+      "$SSH_HOST" "$SSH_PORT" "$SSH_USER" > ~/.ssh/config
+
+deploy:staging:
+  extends: .deploy_base
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-    - when: never
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval "$(ssh-agent -s)"
-    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
   script:
+    - DEPLOY_DIR="$STAGING_DEPLOY_DIR"
+    - URL="$STAGING_DATABASE_URL"
+
+    - ssh vps "sudo mkdir -p '$DEPLOY_DIR' && sudo chown -R \$USER:'\$USER' '$DEPLOY_DIR'"
+
+    # api.env = DATABASE_URL complète
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | sudo tee '$DEPLOY_DIR/api.env' >/dev/null && sudo chmod 600 '$DEPLOY_DIR/api.env'"
+
+    # db.env = password extrait depuis l’URL
     - |
-      ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -se << 'EOF'
-      set -euo pipefail
-      mkdir -p "$STAGING_DEPLOY_DIR"
-      cd "$STAGING_DEPLOY_DIR"
+      ssh vps '
+        set -euo pipefail
+        URL='"$URL"'
+        CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
+        PASS=${CREDS#*:}
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | sudo tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        sudo chmod 600 "'"$DEPLOY_DIR"'/db.env"
+      '
 
-      # Génère/MAJ les .env
-      cat > api.env <<EOT
-      NODE_ENV=production
-      PORT=3001
-      DATABASE_URL=$STAGING_DATABASE_URL
-      JWT_SECRET=${JWT_SECRET_STAGING:-change_me}
-      API_BASE_URL=https://api.staging.mindfulspace.be
-      FRONTEND_BASE_URL=https://staging.mindfulspace.be
-      EOT
+    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose pull && sudo docker compose up -d && sudo docker compose ps"
 
-      cat > db.env <<EOT
-      POSTGRES_PASSWORD=${STAGING_DB_PASSWORD:-postgres}
-      EOT
+    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma migrate deploy"
+    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma db seed || true"
 
-      # Compose file est déjà présent dans le dossier
-      docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
-      docker compose pull
-      docker compose up -d --remove-orphans
+    - ssh vps "curl -sfI https://api.staging.mindfulspace.be/health >/dev/null"
+    - ssh vps "curl -sfI https://staging.mindfulspace.be >/dev/null"
 
-      # Migrations & seed (en staging uniquement)
-      docker compose exec -T api sh -lc 'node -v >/dev/null 2>&1 && npx prisma migrate deploy'
-      docker compose exec -T api sh -lc 'npx prisma db seed || true'
-      EOF
-  needs: ["build:images"]
-
-# -------------------------------------------------
-# 3) DEPLOY PRODUCTION (tag)
-# -------------------------------------------------
 deploy:prod:
-  stage: deploy
-  image: alpine:3.20
+  extends: .deploy_base
   rules:
     - if: '$CI_COMMIT_TAG'
-    - when: never
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval "$(ssh-agent -s)"
-    - echo "$SSH_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
   script:
+    - DEPLOY_DIR="$PRODUCTION_DEPLOY_DIR"
+    - URL="$PROD_DATABASE_URL"
+
+    - ssh vps "sudo mkdir -p '$DEPLOY_DIR' && sudo chown -R \$USER:'\$USER' '$DEPLOY_DIR'"
+
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | sudo tee '$DEPLOY_DIR/api.env' >/dev/null && sudo chmod 600 '$DEPLOY_DIR/api.env'"
+
     - |
-      ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" bash -se << 'EOF'
-      set -euo pipefail
-      mkdir -p "$PROD_DEPLOY_DIR"
-      cd "$PROD_DEPLOY_DIR"
+      ssh vps '
+        set -euo pipefail
+        URL='"$URL"'
+        CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
+        PASS=${CREDS#*:}
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | sudo tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        sudo chmod 600 "'"$DEPLOY_DIR"'/db.env"
+      '
 
-      cat > api.env <<EOT
-      NODE_ENV=production
-      PORT=3001
-      DATABASE_URL=$PROD_DATABASE_URL
-      JWT_SECRET=${JWT_SECRET_PROD:-change_me}
-      API_BASE_URL=https://api.mindfulspace.be
-      FRONTEND_BASE_URL=https://mindfulspace.be
-      EOT
+    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose pull && sudo docker compose up -d && sudo docker compose ps"
 
-      cat > db.env <<EOT
-      POSTGRES_PASSWORD=${PROD_DB_PASSWORD:-postgres}
-      EOT
+    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma migrate deploy"
 
-      docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
-      docker compose pull
-      docker compose up -d --remove-orphans
-
-      # Migrations sans seed en prod
-      docker compose exec -T api sh -lc 'npx prisma migrate deploy'
-      EOF
-  needs: ["build:images"]
+    - ssh vps "curl -sfI https://api.mindfulspace.be/health >/dev/null"
+    - ssh vps "curl -sfI https://mindfulspace.be >/dev/null"

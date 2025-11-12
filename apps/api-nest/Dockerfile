@@ -10,6 +10,7 @@ RUN corepack enable
 
 # Copie fichiers workspace
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.base.json ./
 COPY apps/api-nest/package.json apps/api-nest/package.json
 
 # Installe les deps au niveau monorepo

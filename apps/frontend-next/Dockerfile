@@ -5,6 +5,7 @@ RUN corepack enable
 
 # Dépendances build
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.base.json ./
 COPY apps/frontend-next/package.json apps/frontend-next/package.json
 RUN pnpm install --frozen-lockfile
 
