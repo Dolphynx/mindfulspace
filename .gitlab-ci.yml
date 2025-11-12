@@ -42,7 +42,7 @@ verify:api:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug   # contient /bin/sh
-    entrypoint: [""]                              # ne pas écraser notre script
+    entrypoint: [""]                             # ne pas écraser notre script
   before_script:
     - mkdir -p "$DOCKER_CONFIG"
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > "$DOCKER_CONFIG/config.json"
@@ -90,10 +90,11 @@ deploy:staging:
     - DEPLOY_DIR="$STAGING_DEPLOY_DIR"
     - URL="$STAGING_DATABASE_URL"
 
-    - ssh vps "sudo mkdir -p '$DEPLOY_DIR' && sudo chown -R \$USER:'\$USER' '$DEPLOY_DIR'"
+    # dossier de déploiement (déjà possédé par l'utilisateur deploy)
+    - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
     # api.env = DATABASE_URL complète
-    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | sudo tee '$DEPLOY_DIR/api.env' >/dev/null && sudo chmod 600 '$DEPLOY_DIR/api.env'"
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
 
     # db.env = password extrait depuis l’URL
     - |
@@ -102,15 +103,18 @@ deploy:staging:
         URL='"$URL"'
         CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
         PASS=${CREDS#*:}
-        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | sudo tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
-        sudo chmod 600 "'"$DEPLOY_DIR"'/db.env"
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        chmod 600 "'"$DEPLOY_DIR"'/db.env"
       '
 
-    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose pull && sudo docker compose up -d && sudo docker compose ps"
+    # docker compose (sans sudo, utilisateur deploy dans le groupe docker)
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
 
-    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma migrate deploy"
-    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma db seed || true"
+    # migrations & seed Prisma
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma db seed || true"
 
+    # checks HTTP
     - ssh vps "curl -sfI https://api.staging.mindfulspace.be/health >/dev/null"
     - ssh vps "curl -sfI https://staging.mindfulspace.be >/dev/null"
 
@@ -122,9 +126,9 @@ deploy:prod:
     - DEPLOY_DIR="$PRODUCTION_DEPLOY_DIR"
     - URL="$PROD_DATABASE_URL"
 
-    - ssh vps "sudo mkdir -p '$DEPLOY_DIR' && sudo chown -R \$USER:'\$USER' '$DEPLOY_DIR'"
+    - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
-    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | sudo tee '$DEPLOY_DIR/api.env' >/dev/null && sudo chmod 600 '$DEPLOY_DIR/api.env'"
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
 
     - |
       ssh vps '
@@ -132,13 +136,13 @@ deploy:prod:
         URL='"$URL"'
         CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
         PASS=${CREDS#*:}
-        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | sudo tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
-        sudo chmod 600 "'"$DEPLOY_DIR"'/db.env"
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        chmod 600 "'"$DEPLOY_DIR"'/db.env"
       '
 
-    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose pull && sudo docker compose up -d && sudo docker compose ps"
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
 
-    - ssh vps "cd '$DEPLOY_DIR' && sudo docker compose exec -T api npx prisma migrate deploy"
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
 
     - ssh vps "curl -sfI https://api.mindfulspace.be/health >/dev/null"
     - ssh vps "curl -sfI https://mindfulspace.be >/dev/null"
