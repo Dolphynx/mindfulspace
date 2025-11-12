@@ -10,7 +10,8 @@ RUN corepack enable
 
 # On désactive le postinstall automatique de Prisma pendant l'install
 # (on fera le `prisma generate` nous-mêmes plus bas, quand le schéma sera présent)
-ENV PRISMA_SKIP_POSTINSTALL=1
+ENV PRISMA_SKIP_POSTINSTALL=1 \
+    DATABASE_URL="postgresql://fake:fake@localhost:5432/fake?schema=public"
 
 # Copie des fichiers racine du monorepo
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
