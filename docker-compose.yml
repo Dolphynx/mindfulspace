@@ -26,6 +26,7 @@ services:
       NODE_ENV: development
       DATABASE_URL: postgres://ms_user:ms_pass@db:5432/mindfulspace
       PORT: "3001"
+    command: ["node", "apps/api-nest/dist/src/main.js"]
     ports:
       - "3001:3001"
     depends_on:

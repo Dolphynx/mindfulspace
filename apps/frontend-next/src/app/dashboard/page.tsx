@@ -1,5 +1,6 @@
 import Image from "next/image";
 import SleepChartCard from "@/components/SleepChartCard";
+import QuickLogCard from "@/components/QuickLogCard";
 
 // Le type des objets renvoyés par l'API Nest (/test-data)
 type ChartPoint = {
@@ -137,7 +138,9 @@ export default async function HomePage() {
                 </article>
 
                 {/* Carte droite */}
+                <QuickLogCard />
                 <SleepChartCard chartData={chartData} />
+
             </section>
         </div>
     );

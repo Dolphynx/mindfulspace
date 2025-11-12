@@ -15,3 +15,36 @@ model TestData {
   metricValue Int
   createdAt   DateTime @default(now())
 }
+
+model Session {
+  id            String      @id @default(uuid())
+  value         Int
+  quality       Int?
+  dateSession   DateTime
+  dateCreated   DateTime    @default(now())
+
+  // Foreign key to SessionType
+  sessionTypeId String
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+}
+
+model SessionType {
+  id        String        @id @default(uuid())
+  name      String
+
+  // Foreign key to SessionUnit
+  sessionUnitId String
+  sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+
+  // One type can have many sessions
+  sessions  Session[]
+}
+
+model SessionUnit {
+  id      String        @id @default(uuid())
+  value   String        // e.g. "minutes", "steps"
+
+  // One unit can be used by many types
+  types   SessionType[]
+}
+
