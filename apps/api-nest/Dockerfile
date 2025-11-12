@@ -17,26 +17,22 @@ ENV PRISMA_SKIP_POSTINSTALL=1 \
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY tsconfig.base.json ./
 
-# Copie du manifeste de l'API + **schéma Prisma**
+# Copie du manifeste de l'API + schéma Prisma
 COPY apps/api-nest/package.json apps/api-nest/package.json
 COPY apps/api-nest/prisma apps/api-nest/prisma
 
-# Installe les deps au niveau monorepo
+# Installe les deps au niveau monorepo (dont celles de l'API)
 RUN pnpm install --frozen-lockfile
 
-# Copie le reste du code de l'API puis build
+# Copie le reste du code de l'API
 COPY apps/api-nest ./apps/api-nest
 WORKDIR /repo/apps/api-nest
 
 # Génère Prisma Client (maintenant que le schema est bien là)
 RUN npx prisma generate
 
-# Compile Nest
+# Compile Nest -> dist/main.js
 RUN pnpm build
-
-# Prépare un dossier d'exécution minimal avec deps prod
-WORKDIR /repo
-RUN pnpm deploy --filter ./apps/api-nest --prod /out
 
 # ---------- runner ----------
 FROM node:20-alpine AS runner
@@ -48,8 +44,12 @@ USER node
 ENV NODE_ENV=production \
     PORT=3001
 
-# Copie artefacts (dist, node_modules, prisma, package.json…)
-COPY --from=builder /out/ ./
+# On copie explicitement ce qui est nécessaire à l'exécution
+# => on garantit que /app/dist/main.js existe !
+COPY --from=builder /repo/apps/api-nest/dist ./dist
+COPY --from=builder /repo/apps/api-nest/node_modules ./node_modules
+COPY --from=builder /repo/apps/api-nest/package.json ./package.json
+COPY --from=builder /repo/apps/api-nest/prisma ./prisma
 
 EXPOSE 3001
 CMD ["node","dist/main.js"]
