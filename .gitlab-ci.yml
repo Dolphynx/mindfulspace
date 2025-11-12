@@ -47,7 +47,7 @@ verify:api:
 .build_with_kaniko:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:latest
+    name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
     DOCKER_CONFIG: /kaniko/.docker
