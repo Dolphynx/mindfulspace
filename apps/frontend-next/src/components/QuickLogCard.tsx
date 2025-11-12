@@ -58,6 +58,7 @@ export default function QuickLogCard() {
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             setMessage('✅ Logged successfully!');
+            window.location.reload();
         } catch (e) {
             console.error(e);
             setMessage('❌ Error logging session');
