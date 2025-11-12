@@ -35,7 +35,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Sécurité: user non-root
-RUN addgroup -S nodejs && adduser -S node -G nodejs
+#RUN addgroup -S nodejs && adduser -S node -G nodejs
 USER node
 
 # Variables
