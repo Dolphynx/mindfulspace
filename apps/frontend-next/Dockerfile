@@ -24,7 +24,7 @@ ENV NODE_ENV=production \
     PORT=3000
 
 # Sécurité: user non-root
-RUN addgroup -S nodejs && adduser -S node -G nodejs
+#RUN addgroup -S nodejs && adduser -S node -G nodejs
 USER node
 
 # Copie le build standalone + public
