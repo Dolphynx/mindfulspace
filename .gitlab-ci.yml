@@ -111,8 +111,8 @@ deploy:staging:
     - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
 
     # migrations & seed Prisma
-    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
-    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma db seed || true"
+    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
+    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma db seed || true"
 
     # checks HTTP
     - ssh vps "curl -sfI https://api.staging.mindfulspace.be/health >/dev/null"
