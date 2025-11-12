@@ -1,38 +1,37 @@
-# ---- Build stage ----
-FROM node:20-alpine AS build
-WORKDIR /app
+# ---------- builder ----------
+FROM node:20-alpine AS builder
+WORKDIR /repo
+RUN corepack enable
 
-# 1) Copie des manifestes racine nécessaires à PNPM
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-
-# 2) Copie des manifestes des apps dont on dépend
+# Dépendances build
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/frontend-next/package.json apps/frontend-next/package.json
+RUN pnpm install --frozen-lockfile
 
-# Étape clé :
-# On installe PNPM global, puis on installe TOUTES les deps du monorepo,
-# pas juste le filtre frontal. Pourquoi ?
-# - PNPM va créer le store partagé et les node_modules avec les bons liens.
-# - Ensuite on pourra builder juste le frontend.
-RUN npm i -g pnpm && pnpm install
-
-# 3) Maintenant qu'on a les deps, on copie le code source complet du front
+# Copie code front et build
 COPY apps/frontend-next ./apps/frontend-next
+WORKDIR /repo/apps/frontend-next
 
-# 4) Build Next.js en mode production standalone
-WORKDIR /app/apps/frontend-next
-ENV NODE_ENV=production
+# Important: next.config.js doit être en mode "output: 'standalone'"
+# et inclure les variables publiques nécessaires via process.env.* si besoin.
 RUN pnpm build
 
-# ---- Runtime stage ----
-FROM node:20-alpine AS runtime
+# ---------- runner ----------
+FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    PORT=3000
 
-# On copie uniquement ce qui est nécessaire pour faire tourner l'app
-# (le build standalone de Next embarque déjà les node_modules utiles)
-COPY --from=build /app/apps/frontend-next/.next/standalone ./
-COPY --from=build /app/apps/frontend-next/public ./apps/frontend-next/public
-COPY --from=build /app/apps/frontend-next/.next/static ./apps/frontend-next/.next/static
+# Sécurité: user non-root
+RUN addgroup -S nodejs && adduser -S node -G nodejs
+USER node
+
+# Copie le build standalone + public
+# - .next/standalone contient server.js + node_modules minimaux
+# - .next/static et public sont requis
+COPY --from=builder /repo/apps/frontend-next/.next/standalone ./
+COPY --from=builder /repo/apps/frontend-next/public ./public
+COPY --from=builder /repo/apps/frontend-next/.next/static ./.next/static
 
 EXPOSE 3000
-CMD ["node", "apps/frontend-next/server.js"]
+CMD ["node","server.js"]

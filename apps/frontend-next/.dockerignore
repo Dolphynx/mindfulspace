@@ -1,0 +1,11 @@
+node_modules
+pnpm-lock.yaml
+npm-debug.log
+Dockerfile*
+.dockerignore
+.git
+.gitignore
+dist
+.env
+.env.*
+coverage
