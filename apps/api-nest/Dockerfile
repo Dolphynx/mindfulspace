@@ -1,40 +1,48 @@
-# ---- Build stage ----
-FROM node:20-alpine AS build
-WORKDIR /app
+# ---------- builder ----------
+FROM node:20-alpine AS builder
+WORKDIR /repo
 
-# 1) Manifeste racine / workspace
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Dépendances systèmes minimales (openssl pour Prisma)
+RUN apk add --no-cache openssl
 
-# 2) Manifeste API
+# PNPM via corepack
+RUN corepack enable
+
+# Copie fichiers workspace
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/api-nest/package.json apps/api-nest/package.json
 
-# 3) Installer pnpm + toutes les deps du monorepo
-RUN npm i -g pnpm && pnpm install
+# Installe les deps au niveau monorepo
+RUN pnpm install --frozen-lockfile
 
-# 4) Copier le code source de l'API et builder
+# Copie le code de l'API (et schema Prisma) puis build
 COPY apps/api-nest ./apps/api-nest
-WORKDIR /app/apps/api-nest
-ENV NODE_ENV=production
+WORKDIR /repo/apps/api-nest
 
-# DATABASE_URL factice pour satisfaire prisma.config.ts au build
-ARG DATABASE_URL="postgresql://user:pass@localhost:5432/dummy?schema=public"
-ENV DATABASE_URL=${DATABASE_URL}
+# Génère Prisma Client (pas besoin de DB vivante)
+RUN npx prisma generate
 
+# Compile Nest
 RUN pnpm build
 
-# ---- Runtime stage ----
-FROM node:20-alpine AS runtime
+# Prépare un dossier d'exécution minimal avec deps prod
+WORKDIR /repo
+RUN pnpm deploy --filter ./apps/api-nest --prod /out
+
+# ---------- runner ----------
+FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV=production
 
-# On copie les deps telles qu'installées dans l'étape build
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api-nest/node_modules ./apps/api-nest/node_modules
+# Sécurité: user non-root
+RUN addgroup -S nodejs && adduser -S node -G nodejs
+USER node
 
-# On copie le build compilé NestJS
-COPY --from=build /app/apps/api-nest/dist ./apps/api-nest/dist
-# On doit aussi copier le dossier prisma pour migrate/seed
-COPY --from=build /app/apps/api-nest/prisma ./apps/api-nest/prisma
+# Variables
+ENV NODE_ENV=production \
+    PORT=3001
+
+# Copie artefacts (dist, node_modules, prisma, package.json…)
+COPY --from=builder /out/ ./
 
 EXPOSE 3001
-CMD ["node", "apps/api-nest/dist/main.js"]
+CMD ["node","dist/main.js"]
