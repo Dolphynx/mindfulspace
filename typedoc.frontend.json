@@ -1,0 +1,11 @@
+{
+  "entryPoints": ["apps/frontend-next/src"],
+  "entryPointStrategy": "expand",
+  "tsconfig": "apps/frontend-next/tsconfig.json",
+  "out": "docs/frontend",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "apps/frontend-next/src/app/test-fonctionnement/**"
+  ]
+}
