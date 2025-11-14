@@ -15,9 +15,11 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "check": "pnpm run lint && pnpm run test && pnpm run typecheck",
     "test:api": "pnpm --filter ./apps/api-nest test",
-    "build": "pnpm build:api && pnpm build:front"
+    "build": "pnpm build:api && pnpm build:front",
+    "docs:front": "typedoc --options typedoc.frontend.json"
   },
   "devDependencies": {
+    "typedoc": "^0.28.14",
     "typescript": "^5.5.3"
   },
   "dependencies": {
