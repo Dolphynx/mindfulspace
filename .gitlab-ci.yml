@@ -1,237 +1,445 @@
-stages:
-  - verify
-  - build
-  - deploy
+# ************************************************************
+# Pipeline GitLab CI pour le projet MindfulSpace
+# - 3 stages : verify -> build -> deploy
+# - verify : on vérifie que le front et l'API compilent
+# - build : on construit les images Docker via Kaniko
+# - deploy : on déploie sur le VPS (staging ou prod)
+# ************************************************************
 
+# ---- Pipeline MindfulSpace ----
+stages: [verify, build, deploy]
+
+# ************************************************************
+# VARIABLES GLOBALES
+# ------------------------------------------------------------
+# Elles sont disponibles dans tous les jobs, sauf override local.
+# ************************************************************
+# Variables globales
 variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  FRONTEND_CONTEXT: "apps/frontend-next"
-  API_CONTEXT: "apps/api-nest"
+  # Évite l'échec de "prisma generate" en verify (pas de vraie DB en CI)
+  DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy?schema=public"
+  # Utilisé par Kaniko pour le fichier d'auth docker
+  DOCKER_CONFIG: /kaniko/.docker
 
-# -------------------------------------------------
-# 0. VERIFY (MR / feature / dev)
-# -------------------------------------------------
-verify_build:
+# ************************************************************
+# DEFAULT : paramètres appliqués à tous les jobs (sauf override)
+# ------------------------------------------------------------
+# Ici on impose que tous les jobs tournent sur des runners
+# tagués "docker" et "linux".
+# ************************************************************
+# Paramètres par défaut des jobs
+default:
+  tags: [docker, linux]
+
+# ************************************************************
+# STAGE VERIFY
+# ------------------------------------------------------------
+# Objectif : s'assurer que le code compile (front + API).
+# Ces jobs tournent pour :
+# - les merge requests (CI_PIPELINE_SOURCE == "merge_request_event")
+# - les commits sur des branches ≠ main
+# ************************************************************
+
+# -------- VERIFY (toutes branches & MR) --------
+verify:frontend:
+  # Ce job appartient au stage "verify"
   stage: verify
-  image: docker:27
-  services:
-    - name: docker:dind
-      command: ["--tls=false"]
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH =~ /^(dev|feature\/.*)$/'
-    - when: never
+  # Image Docker utilisée pour le job (Node.js 20 sur Alpine Linux)
+  image: node:20-alpine
   script:
-    - echo "Building FRONTEND image locally for validation only..."
-    - >
-      docker build
-      --file "$FRONTEND_CONTEXT/Dockerfile"
-      --tag "temp-frontend-check"
-      .
-    - echo "Building API image locally for validation only..."
-    - >
-      docker build
-      --file "$API_CONTEXT/Dockerfile"
-      --tag "temp-api-check"
-      .
-
-# -------------------------------------------------
-# 1. BUILD & PUSH (main / tags)
-# -------------------------------------------------
-build_images:
-  stage: build
-  image: docker:27
-  services:
-    - name: docker:dind
-      command: ["--tls=false"]
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+    # ----------------------------------------------------------
+    # active Corepack (gestionnaire pour pnpm, yarn, etc.)
+    # ----------------------------------------------------------
+    - corepack enable
+    # ----------------------------------------------------------
+    # Vérifie si pnpm est disponible (pnpm -v).
+    # Si la commande échoue (pnpm non installé), on installe pnpm
+    # globalement avec "npm i -g pnpm".
+    # ----------------------------------------------------------
+    - pnpm -v || npm i -g pnpm
+    # ----------------------------------------------------------
+    # Installe les dépendances de tout le monorepo, en respectant
+    # strictement le fichier pnpm-lock.yaml :
+    #   --frozen-lockfile => échoue si le lockfile n'est pas en phase.
+    # ----------------------------------------------------------
+    - pnpm install --frozen-lockfile
+    # ----------------------------------------------------------
+    # Lance le script "build" UNIQUEMENT pour le package
+    # ./apps/frontend-next dans le monorepo :
+    #   --filter ./apps/frontend-next => cible le front Next.js.
+    # ----------------------------------------------------------
+    - pnpm --filter ./apps/frontend-next build
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-    - when: never
+    # ----------------------------------------------------------
+    # 1ère règle : exécuter ce job si le pipeline est déclenché
+    # par un évènement "merge_request_event" (MR).
+    # ----------------------------------------------------------
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # ----------------------------------------------------------
+    # 2ème règle : exécuter ce job si :
+    # - on est sur une branche (CI_COMMIT_BRANCH non vide)
+    # - et que cette branche est différente de "main"
+    # => couvre par ex. feature/*, dev, etc.
+    # ----------------------------------------------------------
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
+
+verify:api:
+  # Job de vérification pour l'API NestJS
+  stage: verify
+  image: node:20-alpine
+  script:
+    # Même logique que pour le front :
+    #  - Corepack
+    #  - pnpm
+    #  - install des dépendances
+    #  - build ciblé
+    - corepack enable
+    - pnpm -v || npm i -g pnpm
+    - pnpm install --frozen-lockfile
+    # Ici on cible le package ./apps/api-nest (API NestJS)
+    - pnpm --filter ./apps/api-nest build
+  rules:
+    # Même conditions d'exécution que verify:frontend :
+    # - Merge requests
+    # - Branches ≠ main
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"'
+
+# ************************************************************
+# STAGE BUILD
+# ------------------------------------------------------------
+# Objectif : construire les images Docker (frontend + API) grâce
+# à Kaniko, et les pousser dans le GitLab Container Registry.
+#
+# - Sur "main" : on push des images taguées "staging".
+# - Sur un tag Git : on push des images taguées "prod".
+# ************************************************************
+
+# -------- BUILD (main & tags) --------
+.build_with_kaniko:
+  # Les jobs qui étendent ce template font partie du stage "build"
+  stage: build
+  image:
+    # Image officielle Kaniko (version "debug" qui contient /bin/sh)
+    name: gcr.io/kaniko-project/executor:debug   # contient /bin/sh
+    # On neutralise l'entrypoint de l'image pour pouvoir exécuter
+    # notre propre script (sinon l'image lancerait Kaniko directement).
+    entrypoint: [""]                             # ne pas écraser notre script
   before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+    # ----------------------------------------------------------
+    # Prépare le dossier qui contiendra le fichier d'auth Docker.
+    # DOCKER_CONFIG = /kaniko/.docker (variable globale ci-dessus).
+    # ----------------------------------------------------------
+    - mkdir -p "$DOCKER_CONFIG"
+    # ----------------------------------------------------------
+    # Création du fichier /kaniko/.docker/config.json contenant
+    # les credentials pour le registry GitLab, au format attendu
+    # par Docker/Kaniko :
+    #
+    # {
+    #   "auths": {
+    #     "$CI_REGISTRY": {
+    #       "username": "$CI_REGISTRY_USER",
+    #       "password": "$CI_REGISTRY_PASSWORD"
+    #     }
+    #   }
+    # }
+    #
+    # - $CI_REGISTRY        : URL du registry GitLab
+    # - $CI_REGISTRY_USER   : utilisateur CI pour le registry
+    # - $CI_REGISTRY_PASSWORD : mot de passe/tokens CI pour le registry
+    # ----------------------------------------------------------
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > "$DOCKER_CONFIG/config.json"
+
+build:images:
+  # Ce job hérite de .build_with_kaniko (image, stage, before_script)
+  extends: .build_with_kaniko
+  rules:
+    # ----------------------------------------------------------
+    # Exécuter ce job pour chaque commit sur la branche "main"
+    # => build & push des images "staging".
+    # ----------------------------------------------------------
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    # ----------------------------------------------------------
+    # Exécuter ce job pour chaque pipeline déclenché par un tag
+    # => build & push des images "prod".
+    # ----------------------------------------------------------
+    - if: '$CI_COMMIT_TAG'
+  script:
+    # ----------------------------------------------------------
+    # Bloc shell multi-ligne (|-style) :
+    # - Si CI_COMMIT_TAG est non vide => pipeline de tag => prod.
+    # - Sinon => pipeline sur main => staging.
+    #
+    # Variables définies :
+    # - FRONT_TAG = prod|staging
+    # - API_TAG   = prod|staging
+    # - API_URL   = URL de l'API (prod ou staging)
+    # Puis on exporte NEXT_PUBLIC_API_URL (consommée par le Dockerfile
+    # du frontend comme build-arg).
+    # ----------------------------------------------------------
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        export FRONT_TAG="prod"
-        export API_TAG="prod"
+        FRONT_TAG=prod
+        API_TAG=prod
+        API_URL="https://api.mindfulspace.be"
       else
-        export FRONT_TAG="staging"
-        export API_TAG="staging"
+        FRONT_TAG=staging
+        API_TAG=staging
+        API_URL="https://api.staging.mindfulspace.be"
       fi
-      echo "FRONT_TAG=$FRONT_TAG"
-      echo "API_TAG=$API_TAG"
-  script:
+      export NEXT_PUBLIC_API_URL="$API_URL"
+    # Frontend
+    # ----------------------------------------------------------
+    # Appel de Kaniko pour builder l'image FRONTEND :
+    # - /kaniko/executor : binaire principal
+    # - --context "${CI_PROJECT_DIR}" :
+    #       Contexte de build = racine du repo (monorepo).
+    # - --dockerfile "apps/frontend-next/Dockerfile" :
+    #       Chemin du Dockerfile du front.
+    # - --destination "${CI_REGISTRY_IMAGE}/frontend:${FRONT_TAG}" :
+    #       Nom complet de l'image dans le registry (frontend:staging/prod).
+    # - --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" :
+    #       Passe la variable au Dockerfile (ARG NEXT_PUBLIC_API_URL).
+    # - --cache=true :
+    #       Active le cache Kaniko (réutilise les layers).
+    # - --cache-repo="${KANIKO_CACHE_REPO}" :
+    #       Repository dédié pour stocker le cache.
+    # ----------------------------------------------------------
     - >
-      docker build
-      --file "$FRONTEND_CONTEXT/Dockerfile"
-      --tag "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
-      .
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "apps/frontend-next/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/frontend:${FRONT_TAG}"
+      --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}"
+      --cache=true --cache-repo="${KANIKO_CACHE_REPO}"
+    # API
+    # ----------------------------------------------------------
+    # Même principe pour l'API :
+    # - Dockerfile : apps/api-nest/Dockerfile
+    # - destination : .../api:${API_TAG}
+    # - On ne transmet pas d'ARG spécifique ici.
+    # ----------------------------------------------------------
     - >
-      docker build
-      --file "$API_CONTEXT/Dockerfile"
-      --tag "$CI_REGISTRY_IMAGE/api:$API_TAG"
-      .
-    - docker push "$CI_REGISTRY_IMAGE/frontend:$FRONT_TAG"
-    - docker push "$CI_REGISTRY_IMAGE/api:$API_TAG"
-  needs: []
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "apps/api-nest/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}/api:${API_TAG}"
+      --cache=true --cache-repo="${KANIKO_CACHE_REPO}"
 
-# -------------------------------------------------
-# 2. DEPLOY STAGING
-# -------------------------------------------------
-deploy_staging:
-  stage: deploy
-  image: alpine:3.20
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - when: never
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-  script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/staging &&
-      docker compose pull &&
-      docker compose up -d --remove-orphans
-      "
-  needs:
-    - build_images
+# ************************************************************
+# STAGE DEPLOY
+# ------------------------------------------------------------
+# Objectif : déployer les images sur le VPS via SSH, exécuter
+# docker compose, lancer les migrations Prisma (et seed en staging),
+# puis vérifier que l'API et le front répondent.
+#
+# Deux jobs :
+# - deploy:staging (pour main)
+# - deploy:prod    (pour les tags)
+# ************************************************************
 
-# -------------------------------------------------
-# 2.bis. MIGRATE STAGING
-# -------------------------------------------------
-migrate_staging:
-  stage: deploy
+# -------- DEPLOY (staging=main, prod=tag) --------
+.deploy_base:
+  # Tous les jobs de déploiement utilisent cette base
   image: alpine:3.20
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - when: never
+  stage: deploy
+  # "needs" assure que ce job ne s'exécute que si build:images a réussi.
+  needs: ["build:images"]
   before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
+    # ----------------------------------------------------------
+    # Installation des clients SSH et curl dans l'image Alpine.
+    #   - apk : gestionnaire de paquets d'Alpine
+    #   - add --no-cache : installe sans garder le cache des index
+    # ----------------------------------------------------------
+    - apk add --no-cache openssh-client curl
+    # Préparation du dossier ~/.ssh pour stocker la clé
+    - mkdir -p ~/.ssh
+    # ----------------------------------------------------------
+    # On écrit la clé privée (stockée dans la variable GitLab SSH_KEY)
+    # dans ~/.ssh/id_ed25519
+    # ----------------------------------------------------------
+    - echo "$SSH_KEY" > ~/.ssh/id_ed25519
+    # ----------------------------------------------------------
+    # Permissions strictes sur la clé privée (lecture seule pour le user)
+    # ----------------------------------------------------------
+    - chmod 600 ~/.ssh/id_ed25519
+    # ----------------------------------------------------------
+    # Création d'un fichier ~/.ssh/config pour définir un alias "vps"
+    # et paramétrer :
+    #   - HostName : IP ou FQDN du VPS
+    #   - Port     : port SSH (souvent 22)
+    #   - User     : utilisateur (deploy, etc.)
+    #   - IdentityFile : chemin vers la clé privée
+    #   - StrictHostKeyChecking no :
+    #         évite les prompts interactifs de confirmation d'empreinte.
+    # ----------------------------------------------------------
+    - printf "Host vps\n  HostName %s\n  Port %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  StrictHostKeyChecking no\n" \
+      "$SSH_HOST" "$SSH_PORT" "$SSH_USER" > ~/.ssh/config
+
+deploy:staging:
+  # Extension de la base de déploiement (.deploy_base)
+  extends: .deploy_base
+  rules:
+    # ----------------------------------------------------------
+    # Le déploiement STAGING est déclenché pour chaque commit
+    # sur la branche main.
+    # ----------------------------------------------------------
+    - if: '$CI_COMMIT_BRANCH == "main"'
   script:
+    # ----------------------------------------------------------
+    # DEPLOY_DIR : répertoire de déploiement côté VPS
+    # ex: /srv/mindfulspace/staging
+    # ----------------------------------------------------------
+    - DEPLOY_DIR="$STAGING_DEPLOY_DIR"
+    # ----------------------------------------------------------
+    # URL : URL de connexion à la base de données STAGING
+    # ex: postgresql://user:pass@host:port/db?schema=public
+    # ----------------------------------------------------------
+    - URL="$STAGING_DATABASE_URL"
+
+    # dossier de déploiement (déjà possédé par l'utilisateur deploy)
+    # => création si nécessaire (mkdir -p est idempotent)
+    - ssh vps "mkdir -p '$DEPLOY_DIR'"
+
+    # api.env = DATABASE_URL complète
+    # ----------------------------------------------------------
+    # On génère un fichier api.env sur le VPS contenant une seule ligne :
+    #   DATABASE_URL=<URL>
+    # tee écrit dans le fichier, la redirection >/dev/null supprime la sortie.
+    # chmod 600 : permissions strictes.
+    # ----------------------------------------------------------
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+
+    # db.env = password extrait depuis l’URL
+    # ----------------------------------------------------------
+    # Bloc multi-ligne exécuté sur le VPS via ssh.
+    # Objectif : extraire le mot de passe Postgres de l'URL
+    # STAGING_DATABASE_URL et le stocker dans un fichier db.env
+    # sous la forme :
+    #   POSTGRES_PASSWORD=<mot_de_passe>
+    #
+    # Détails dans le script :
+    # - set -euo pipefail :
+    #     -e  : stop en cas d'erreur
+    #     -u  : erreur si variable non définie utilisée
+    #     -o pipefail : le pipeline est en échec si une commande échoue
+    # - sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#"
+    #     récupère la partie user:password de l'URL (avant le @)
+    # - PASS=${CREDS#*:}
+    #     supprime tout avant le ":" => ne garde que le password
+    # ----------------------------------------------------------
     - |
-      ssh ms-deploy@"$VPS_IP" "
-        set -e
-        cd /srv/mindfulspace/staging &&
-        until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_staging 2>/dev/null)\" = \"healthy\" ]; do
-          echo 'waiting for db (staging)...'; sleep 2;
-        done &&
-        docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
-      "
-  needs:
-    - deploy_staging
+      ssh vps '
+        set -euo pipefail
+        URL='"$URL"'
+        CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
+        PASS=${CREDS#*:}
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        chmod 600 "'"$DEPLOY_DIR"'/db.env"
+      '
 
-# Seed STAGING (manuel, 1ʳᵉ init)
-seed_staging:
-  stage: deploy
-  image: alpine:3.20
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-    - when: never
-  allow_failure: false
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-  script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/staging &&
-      docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma db seed'
-      "
-  needs:
-    - migrate_staging
+    # docker compose (sans sudo, utilisateur deploy dans le groupe docker)
+    # ----------------------------------------------------------
+    # Sur le VPS, dans le répertoire DEPLOY_DIR :
+    # - docker compose pull :
+    #       récupère les dernières images (api:staging, frontend:staging, db, etc.)
+    # - docker compose up -d :
+    #       applique les changements (recrée les conteneurs si l'image a changé),
+    #       et tourne en arrière-plan (daemon).
+    # - docker compose ps :
+    #       affiche l'état des services (diagnostic dans les logs CI).
+    # ----------------------------------------------------------
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
 
-# -------------------------------------------------
-# 3. DEPLOY PRODUCTION
-# -------------------------------------------------
-deploy_production:
-  stage: deploy
-  image: alpine:3.20
+    # migrations & seed Prisma
+    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
+    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma db seed || true"
+    # migrations & seed Prisma (staging)
+    # ----------------------------------------------------------
+    # Lancement des migrations Prisma dans le conteneur "api" :
+    # - docker compose exec -T api :
+    #       exécute une commande dans le conteneur API sans TTY.
+    # - sh -lc 'cd /app/apps/api-nest && npx prisma migrate deploy' :
+    #       ouvre un shell, se place dans le dossier de l'app API
+    #       et applique toutes les migrations en attente.
+    # ----------------------------------------------------------
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api sh -lc 'cd /app/apps/api-nest && npx prisma migrate deploy'"
+    # ----------------------------------------------------------
+    # Lancement du seed Prisma en staging :
+    # - npx prisma db seed :
+    #       remplit la base avec des données de test.
+    # - || true :
+    #       même si le seed échoue (par ex. données déjà seedées),
+    #       on n'échoue pas le déploiement.
+    # ----------------------------------------------------------
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api sh -lc 'cd /app/apps/api-nest && npx prisma db seed || true'"
+
+    # checks HTTP
+    #- ssh vps "curl -k -sfI https://api.staging.mindfulspace.be/health >/dev/null"
+    #- ssh vps "curl -k -sfI https://staging.mindfulspace.be >/dev/null"
+    # ----------------------------------------------------------
+    # Vérifications HTTP :
+    # - curl -sfI :
+    #       -s : silencieux
+    #       -f : échoue en cas de code HTTP >= 400
+    #       -I : requête HEAD (en-têtes seulement)
+    # - --retry 10 :
+    #       réessaie jusqu'à 10 fois
+    # - --retry-delay 5 :
+    #       5 secondes entre les tentatives
+    # - --retry-all-errors :
+    #       réessaie aussi en cas d'erreur réseau/DNS, pas que HTTP
+    # - >/dev/null :
+    #       on ignore la sortie, seul le code de retour compte.
+    # ----------------------------------------------------------
+    - ssh vps "curl -sfI --retry 10 --retry-delay 5 --retry-all-errors https://api.staging.mindfulspace.be/health >/dev/null"
+    - ssh vps "curl -sfI --retry 10 --retry-delay 5 --retry-all-errors https://staging.mindfulspace.be >/dev/null"
+
+deploy:prod:
+  # Déploiement PRODUCTION (sur tag)
+  extends: .deploy_base
   rules:
+    # ----------------------------------------------------------
+    # Ce job ne s'exécute QUE lorsqu'un tag Git est présent
+    # (CI_COMMIT_TAG non vide).
+    # ----------------------------------------------------------
     - if: '$CI_COMMIT_TAG'
-    - when: never
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
   script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/production &&
-      docker compose pull &&
-      docker compose up -d --remove-orphans
-      "
-  needs:
-    - build_images
+    # Répertoire de déploiement PROD (ex: /srv/mindfulspace/prod)
+    - DEPLOY_DIR="$PRODUCTION_DEPLOY_DIR"
+    # URL de la base de données PROD
+    - URL="$PROD_DATABASE_URL"
 
-# -------------------------------------------------
-# 3.bis. MIGRATE PRODUCTION
-# -------------------------------------------------
-migrate_production:
-  stage: deploy
-  image: alpine:3.20
-  rules:
-    - if: '$CI_COMMIT_TAG'
-    - when: never
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-  script:
+    # Création du répertoire si nécessaire
+    - ssh vps "mkdir -p '$DEPLOY_DIR'"
+
+    # Fichier api.env PROD
+    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+
+    # Extraction du mot de passe DB PROD dans db.env
     - |
-      ssh ms-deploy@"$VPS_IP" "
-        set -e
-        cd /srv/mindfulspace/production &&
-        until [ \"\$(docker inspect -f '{{.State.Health.Status}}' mindfulspace_db_prod 2>/dev/null)\" = \"healthy\" ]; do
-          echo 'waiting for db (prod)...'; sleep 2;
-        done &&
-        docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma migrate deploy'
-      "
-  needs:
-    - deploy_production
+      ssh vps '
+        set -euo pipefail
+        URL='"$URL"'
+        CREDS=$(printf "%s" "$URL" | sed -E "s#^[a-zA-Z0-9+.-]+://([^@]+)@.*#\1#")
+        PASS=${CREDS#*:}
+        printf "POSTGRES_PASSWORD=%s\n" "$PASS" | tee "'"$DEPLOY_DIR"'/db.env" >/dev/null
+        chmod 600 "'"$DEPLOY_DIR"'/db.env"
+      '
 
-# Seed PROD (manuel, 1ʳᵉ init)
-seed_production:
-  stage: deploy
-  image: alpine:3.20
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: manual
-    - when: never
-  allow_failure: false
-  before_script:
-    - apk add --no-cache openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$VPS_IP" >> ~/.ssh/known_hosts
-  script:
-    - ssh ms-deploy@"$VPS_IP" "
-      set -e
-      cd /srv/mindfulspace/production &&
-      docker compose exec -T api sh -lc 'cd apps/api-nest && npx prisma db seed'
-      "
-  needs:
-    - migrate_production
+    # Mise à jour des conteneurs PROD
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
+
+    # Prisma migrations (prod) => pas de seed en prod
+    # ----------------------------------------------------------
+    # Même logique que pour staging, mais en production :
+    # - on applique uniquement les migrations
+    # - PAS de seed en production (données réelles).
+    # ----------------------------------------------------------
+    - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api sh -lc 'cd /app/apps/api-nest && npx prisma migrate deploy'"
+
+    # Vérification de l'API et du front en PROD, avec le même mécanisme
+    # de retry que pour staging.
+    - ssh vps "curl -sfI --retry 10 --retry-delay 5 --retry-all-errors https://api.mindfulspace.be/health >/dev/null"
+    - ssh vps "curl -sfI --retry 10 --retry-delay 5 --retry-all-errors https://mindfulspace.be >/dev/null"
