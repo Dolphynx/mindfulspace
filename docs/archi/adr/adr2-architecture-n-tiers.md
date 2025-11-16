@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace
 **Date :** 02/10/2025
 **Statut :** accepté
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
+**Auteur :** Équipe MindfulSpace
 
 # ADR 2 : Architecture N-tiers
 

@@ -1,9 +1,9 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace
-**Date :** 10/10/2025
-**Statut :** accepté
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
+**Projet :** MindfulSpace  
+**Date :** 10/10/2025  
+**Statut :** Accepté  
+**Auteur :** Équipe MindfulSpace
 
 # ADR 5 : Reverse proxy avec Traefik
 
@@ -11,17 +11,34 @@
 Accepted
 
 ## Context
-L’application comporte plusieurs services Docker (frontend, API, base de données).  
-Il faut exposer uniquement les services publics via HTTPS, avec un certificat automatique.
+L'application MindfulSpace comporte plusieurs services Docker :
+- frontend Next.js
+- API NestJS
+- base de données PostgreSQL (interne)
+
+Seuls certains services doivent être exposés publiquement.  
+L'équipe souhaite également :
+- une terminaison TLS automatique,
+- un routage par nom de domaine,
+- une séparation claire des environnements **staging** et **production**.
 
 ## Decision
-Nous utilisons **Traefik v3.1** comme reverse proxy et gestionnaire TLS.  
-- Écoute sur les ports 80 et 443 du VPS.  
-- Routage automatique basé sur les labels Docker (`Host(mindfulspace.be)` etc.).  
-- Certificats **Let's Encrypt** via résolveur ACME et challenge HTTP.  
-- Traefik tourne dans son propre conteneur avec un volume `/letsencrypt` persistant.
+Nous utilisons **Traefik v3.x** comme reverse-proxy principal et gestionnaire TLS.
+
+### Architecture mise en place
+- Traefik écoute sur les ports **80** (HTTP) et **443** (HTTPS) du VPS.
+- Les services frontend/API sont connectés au réseau Docker externe **`web`**, partagé avec Traefik.
+- Le routage s’effectue via **labels Docker**, par exemple :
+    - `Host("mindfulspace.be")` → frontend prod
+    - `Host("api.mindfulspace.be")` → API prod
+    - `Host("staging.mindfulspace.be")` → frontend staging
+    - `Host("api.staging.mindfulspace.be")` → API staging
+- Certificats **Let's Encrypt** via un certresolver ACME (stocké dans un volume `/letsencrypt`).
+- Les services internes (PostgreSQL, réseau `internal`) ne sont **pas exposés**.
 
 ## Consequences
-- HTTPS automatique et renouvelé.  
-- Isolation des services internes.  
-- Une seule porte d’entrée publique pour l’ensemble de la stack.
+- **HTTPS automatique et renouvelé** sans intervention humaine.
+- **Isolation stricte** des services : seuls frontend/API sont publics, la base reste privée.
+- **Support multi-environnements** avec sous-domaines séparés.
+- **Une seule porte d’entrée publique**, réduisant la surface d’attaque et facilitant la maintenance.
+

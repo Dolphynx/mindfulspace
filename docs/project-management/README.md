@@ -4,8 +4,11 @@ Ce dossier regroupe les documents liés à la **planification**, au **suivi** et
 la **gestion du projet MindfulSpace**.
 
 ## Contenu
-- [`clickup.md`](./clickup.md) — liens et organisation du projet sur ClickUp
-- Journal de bord ou autres documents de suivi (à venir)
+
+- [`clickup.md`](./clickup.md) — Organisation du projet sur ClickUp (workflow, listes, bonnes pratiques)
+- [`CONTRIBUTING_EXTENDED.md`](./CONTRIBUTING_EXTENDED.md) — Version détaillée du workflow Git et CI/CD
+- [`README_Git_Workflow.md`](./README_Git_Workflow.md) — Guide structuré du workflow Git (version synthétique + schéma visuel)
+- [`images/`](./images) — Ressources visuelles (schémas Gitflow, illustrations)
 
 ---
 
