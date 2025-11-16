@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace  
 **Date :** 22/10/2025  
 **Statut :** En cours  
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
+**Auteur :** Équipe MindfulSpace
 
 # Qualité : lint, format, tests
 

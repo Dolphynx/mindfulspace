@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import FooterCookiesLink from "@/components/layout/FooterCookiesLink";
+import { FooterCookiesLink } from "@/components/layout/";
 
 type FooterProps = {
     onOpenPreferencesAction: () => void;

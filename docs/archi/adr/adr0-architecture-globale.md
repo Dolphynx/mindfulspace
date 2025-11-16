@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace  
 **Date :** 23/10/2025  
 **Statut :** accepté  
-**Auteur :** Équipe MindfulSpace (S. Gouvars)  
+**Auteur :** Équipe MindfulSpace 
 
 # ADR 0 : Architecture globale et pipeline MindfulSpace
 
@@ -32,7 +32,7 @@ L’architecture globale repose sur les principes suivants :
 - Un `package.json` racine et un `pnpm-lock.yaml` unique assurent la cohérence des dépendances.  
 
 ### 2️ Infrastructure serveur
-- **VPS Debian 13 (Trixie)** hébergeant **Docker 28.5.1**.  
+- **VPS Debian 12 ** hébergeant **Docker 29.0.0**.  
 - Conteneurs :  
   - `frontend` (Next.js buildé en production),  
   - `api` (NestJS),  
