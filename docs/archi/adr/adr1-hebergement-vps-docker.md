@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace
 **Date :** 01/10/2025
 **Statut :** accepté
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
+**Auteur :** Équipe MindfulSpace
 
 # ADR 1 : Hébergement sur VPS avec Docker
 

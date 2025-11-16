@@ -3,7 +3,7 @@
 **Projet :** MindfulSpace
 **Date :** 10/10/2025
 **Statut :** accepté
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
+**Auteur :** Équipe MindfulSpace
 
 # ADR 7 : Sécurité réseau et isolation
 

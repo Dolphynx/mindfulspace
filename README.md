@@ -17,14 +17,14 @@ L’application permet aux utilisateurs de :
 
 ## Architecture technique
 
-| Composant | Technologie | Description |
-|------------|-------------|-------------|
+| Composant | Technologie                    | Description |
+|------------|--------------------------------|-------------|
 | Frontend | Next.js (React 18 + TypeScript) | Interface utilisateur |
-| Backend API | NestJS + Prisma | Logique métier & accès DB |
-| Base de données | PostgreSQL 16-alpine | Données utilisateurs, contenu |
-| Conteneurisation | Docker Compose | Orchestration multi-service |
-| CI/CD | GitLab CI | Build, test, déploiement auto |
-| OS cible | Debian 13 (Trixie) | VPS / environnements locaux |
+| Backend API | NestJS + Prisma                | Logique métier & accès DB |
+| Base de données | PostgreSQL 16-alpine           | Données utilisateurs, contenu |
+| Conteneurisation | Docker Compose                 | Orchestration multi-service |
+| CI/CD | GitLab CI                      | Build, test, déploiement auto |
+| OS cible | Debian 12              | VPS / environnements locaux |
 
 ---
 
@@ -87,12 +87,12 @@ pnpm install
 
 ---
 
-### 4. Docker : structure actuelle
+### 4. Docker : structure actuelle
 
-| Fichier | Rôle | Description |
-|----------|------|-------------|
-| `docker-compose.yml` | Utilisé | Lance les trois services : API, frontend et base de données |
-| `docker-compose-db.yml` | Utilisé | Lance uniquement la base de données pour le dev local |
+| Fichier                  | Rôle | Description |
+|--------------------------|------|-------------|
+| `docker-compose.dev.yml` | Utilisé | Lance les trois services : API, frontend et base de données |
+| `docker-compose.db.yml`  | Utilisé | Lance uniquement la base de données pour le dev local |
 
 Remarque : sous Windows il faut installer Docker Desktop (et le composant Linux) et il doit tourner pour lancer les containers (la DB notamment).
 
@@ -319,12 +319,17 @@ vMAJOR.MINOR.PATCH
 
 ## Documentation
 
-- Architecture & ADR → [`docs/archi/`](./docs/archi)
-- Gestion de projet → [`docs/project-management/`](./docs/project-management)
+- Générale : [`./docs/`](./docs/README.md)
+- Architecture & ADR → [`docs/archi/`](./docs/cicd/DEV_TO_PROD_FULL_FLOW.md)
+- CI/CD → [`docs/cicd/`](./docs/archi/README.md)
+- Gestion de projet → [`docs/project-management/`](./docs/project-management/README.md)
 - Workflow Git complet → [`docs/project-management/README_Git_Workflow.md`](./docs/project-management/README_Git_Workflow.md)
+- Frontend → [`docs/frontend/`](./docs/frontend/index.html)
 
 ---
 
 ## Auteurs
 Projet MindfulSpace – HELMo Liège  
 Développement réalisé par les étudiants de 3e année – Cours Framework & Archilog.
+
+Eve HOUSSA - Jules CORNETTE - Adrien WATRELOT - Sébastien GOUVARS
