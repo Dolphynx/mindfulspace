@@ -61,6 +61,16 @@ async function main() {
     { name: meditationType.name, unit: "Minutes" },
   ]);
 
+  console.log("🌱 Creating demo user...");
+  const demoUser = await prisma.user.upsert({
+    where: { email: "demo@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "demo@mindfulspace.app",
+      displayName: "Demo User",
+    },
+  });
+
   console.log("✅ Seeding complete!");
 }
 

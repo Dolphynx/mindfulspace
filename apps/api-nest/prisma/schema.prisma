@@ -17,20 +17,24 @@ model TestData {
 }
 
 model Session {
-  id            String      @id @default(uuid())
-  value         Int
-  quality       Int?
-  dateSession   DateTime
-  dateCreated   DateTime    @default(now())
+  id          String   @id @default(uuid())
+  value       Int
+  quality     Int?
+  dateSession DateTime
+  dateCreated DateTime @default(now())
 
   // Foreign key to SessionType
   sessionTypeId String
   sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  // user
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
 }
 
 model SessionType {
-  id        String        @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
   // Foreign key to SessionUnit
   sessionUnitId String
@@ -38,13 +42,67 @@ model SessionType {
 
   // One type can have many sessions
   sessions  Session[]
+  Objective Objective[]
 }
 
 model SessionUnit {
-  id      String        @id @default(uuid())
-  value   String        // e.g. "minutes", "steps"
+  id    String @id @default(uuid())
+  value String // e.g. "minutes", "steps"
 
   // One unit can be used by many types
-  types   SessionType[]
+  types      SessionType[]
+  objectives Objective[]
 }
 
+model User {
+  id          String  @id @default(cuid())
+  email       String  @unique
+  displayName String?
+
+  // relations
+  sessions   Session[]
+  objectives Objective[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Objective {
+  id String @id @default(cuid())
+
+  // À quel user appartient l’objectif (demoUser ou user réel plus tard)
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  // Sur quel type de session porte l’objectif (sleep, exercise, etc.)
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+  sessionTypeId String
+
+  // Valeur cible dans l’unité du SessionType (ex: 8 (heures), 20 (minutes))
+  value Float
+
+  // Fréquence : par jour, par semaine, par mois
+  frequency ObjectiveFrequency
+
+  // Durée de l’objectif : ex. 7 jours, 4 semaines, 1 mois
+  durationUnit  ObjectiveDurationUnit
+  durationValue Int
+
+  startsAt      DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  SessionUnit   SessionUnit? @relation(fields: [sessionUnitId], references: [id])
+  sessionUnitId String?
+}
+
+enum ObjectiveFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ObjectiveDurationUnit {
+  DAY
+  WEEK
+  MONTH
+}

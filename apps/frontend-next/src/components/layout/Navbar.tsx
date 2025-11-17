@@ -76,11 +76,21 @@ export default function Navbar() {
                     />
 
                     {/* bouton AI mantras */}
+                    {/*
                     <NavButton
                         href="/mantra"
                         label="IA mantras"
                         icon={<span aria-label="IA mantras" title="IA mantras">💬</span>}
                     />
+                    */}
+
+                    {/* bouton Objectives */}
+                    <NavButton
+                        href="/objectives"
+                        label="Objectives"
+                        icon={<span aria-label="Objectives" title="Objectives">🎯</span>}
+                    />
+
 
                     {/* bouton contact */}
                     <NavButton
