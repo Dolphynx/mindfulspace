@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ObjectiveDurationUnit, ObjectiveFrequency } from '@prisma/client';
-
-type ObjectiveLevel = 'easy' | 'normal' | 'challenge';
+import type { ObjectiveLevel } from './objectives.types';
 
 @Injectable()
 export class ObjectivesService {

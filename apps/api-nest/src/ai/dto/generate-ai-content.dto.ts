@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 /**
  * DTO (Data Transfer Object) pour les requêtes IA.
@@ -13,5 +14,7 @@ export class GenerateAiContentDto {
       'Permet à l’IA de personnaliser le contenu.',
     example: 'gestion du stress',
   })
+  @IsOptional()
+  @IsString()
   theme?: string;
 }

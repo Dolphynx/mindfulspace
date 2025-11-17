@@ -61,18 +61,18 @@ export default function Navbar() {
 
                 <nav className="flex items-center gap-4">
 
-                    {/* bouton dashbaord */}
-                    <NavButton
-                        href="/dashboard"
-                        label="Dashboard"
-                        icon={<span>📊</span>}
-                    />
-
                     {/* bouton respiration */}
                     <NavButton
                         href="/seance/respiration"
                         label="Respiration"
                         icon={<span aria-label="Respiration" title="Lancer respiration">🌬️</span>}
+                    />
+
+                    {/* bouton dashbaord */}
+                    <NavButton
+                        href="/dashboard"
+                        label="Dashboard"
+                        icon={<span>📊</span>}
                     />
 
                     {/* bouton AI mantras */}

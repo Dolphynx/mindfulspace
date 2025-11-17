@@ -13,6 +13,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 /**
  * Fonction bootstrap :
@@ -71,6 +72,14 @@ async function bootstrap(): Promise<void> {
         : true, // en dev: autorise tout
     credentials: true,
   });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // === Lancement serveur ===
   /**
