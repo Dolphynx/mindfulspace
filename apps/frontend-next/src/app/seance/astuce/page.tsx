@@ -1,40 +1,68 @@
 /**
- * Page Astuce
- * -----------
- * Cette page affiche une astuce / conseil bien-être récupéré depuis la fonction
- * utilitaire `getTip()` située dans la librairie du projet.
+ * Page Astuce + Mantra IA
+ * ------------------------
+ * Cette page affiche :
+ *  - une astuce / conseil bien-être récupéré depuis `getTip()` (lib locale)
+ *  - un mini-mantra généré par le module IA (endpoint Nest : POST /ai/mantra)
  *
- * Fonctionnement :
- * - `AstucePage` est un composant serveur (pas de "use client").
- * - `getTip()` renvoie une astuce (string), généralement choisie de manière
- *   pseudo-aléatoire parmi une liste ou générée dynamiquement.
- * - Une fois l’astuce affichée, l'utilisateur peut passer à la page de récapitulatif.
+ * Composant serveur :
+ *  - pas de "use client"
+ *  - appels effectués côté serveur (aucune clé d’API exposée au navigateur)
  */
 
 import { getTip } from "@/lib";
 import Link from "next/link";
 
-/**
- * Page serveur : `/seance/astuce`
- *
- * @returns L’astuce du jour + un lien vers la suite du parcours ("recap").
- *
- * Notes :
- * - Appel serveur direct à `getTip()`.
- * - Aucune interaction ou état local : affichage purement statique basé sur les données reçues.
- */
 export default async function AstucePage() {
     /**
-     * Récupère l’astuce via une fonction utilitaire asynchrone.
+     * 1️⃣ Astuce locale (JSON / lib)
      *
      * `getTip()` peut :
-     * - lire une base de données
-     * - choisir une entrée dans une liste statique
-     * - générer un texte aléatoire
+     *  - lire une base de données
+     *  - choisir une entrée dans une liste statique
+     *  - générer un texte aléatoire
      *
      * Le résultat est une simple chaîne de caractères.
      */
     const tip = await getTip();
+
+    /**
+     * 2️⃣ Mantra IA (API Nest)
+     *
+     * On appelle le contrôleur IA :
+     *   POST /ai/mantra
+     *   body: { theme?: string }
+     *   response: { mantra: string }
+     *
+     * L’appel se fait côté serveur, via NEXT_PUBLIC_API_URL.
+     * En cas d’erreur, on loggue juste côté serveur et on n’affiche
+     * pas le bloc mantra (pour ne pas casser la page).
+     */
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+    let mantra: string | null = null;
+
+    if (apiBaseUrl) {
+        try {
+            const res = await fetch(`${apiBaseUrl}/ai/mantra`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // Pas de thème spécifique ici, on laisse l’IA proposer un mantra générique
+                body: JSON.stringify({}),
+                cache: "no-store",
+            });
+
+            if (res.ok) {
+                const data: { mantra?: string } = await res.json();
+                mantra = data.mantra ?? null;
+            } else {
+                console.error("Erreur API /ai/mantra:", res.status, res.statusText);
+            }
+        } catch (err) {
+            console.error("Erreur lors de l'appel à /ai/mantra:", err);
+        }
+    } else {
+        console.error("NEXT_PUBLIC_API_URL manquant : impossible d'appeler /ai/mantra.");
+    }
 
     return (
         /**
@@ -52,13 +80,32 @@ export default async function AstucePage() {
              * - bordure, ombre et arrondis
              * - texte centré et lisible
              */}
+
             <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-10 max-w-2xl text-2xl text-brandText-soft">
-                {tip}
+                « {tip} »
+                <br />
+                <small className="top-0 text-xs">Astuce venant du JSON</small>
             </div>
 
             {/**
+             * Bloc optionnel : mantra généré par l’IA
+             *
+             * Affiché uniquement si l’appel à /ai/mantra a abouti.
+             * Mise en forme légèrement différente (italique, guillemets) pour
+             * distinguer visuellement l’astuce “fixe” du mantra IA.
+             */}
+            {mantra && (
+                <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-8 max-w-2xl text-xl italic text-brandText-soft">
+                    « {mantra} »
+                    <br />
+                    <small className="top-0 text-xs">Astuce venant de Groq (IA)</small>
+                </div>
+            )}
+
+            {/**
              * Bouton → page de récap
-             * Permet de terminer la séance après avoir pris connaissance de l’astuce.
+             * Permet de terminer la séance après avoir pris connaissance
+             * de l’astuce et éventuellement du mantra IA.
              */}
             <Link
                 href="/seance/recap"

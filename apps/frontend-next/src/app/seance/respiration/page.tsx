@@ -96,6 +96,9 @@ export default function RespirationPage() {
      * Fonction du bouton "Skip" : permet au user de passer directement au dashboard.
      */
     const handleSkip = () => {
+        if (aliveRef.current) router.push("/seance/astuce");
+    };
+    const handleSkipAll = () => {
         if (aliveRef.current) router.push("/dashboard");
     };
 
@@ -179,7 +182,14 @@ export default function RespirationPage() {
                 onClick={handleSkip}
                 className="absolute top-4 right-4 px-4 py-2 rounded-full bg-brandGreen/20 text-brandGreen hover:bg-brandGreen/30 transition"
             >
-                Skip ⏩
+                Skip Respi ⏩
+            </button>
+
+            <button
+                onClick={handleSkipAll}
+                className="absolute top-4 right-40 px-4 py-2 rounded-full bg-brandGreen/20 text-brandGreen hover:bg-brandGreen/30 transition"
+            >
+                Skip All ⏩
             </button>
 
             <h1 className="text-4xl md:text-5xl text-brandText">Respiration guidée</h1>
