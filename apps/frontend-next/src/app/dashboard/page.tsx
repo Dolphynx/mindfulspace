@@ -1,4 +1,4 @@
-import Image from "next/image";
+import PageHero from "@/components/PageHero";
 import SleepChartCard from "@/components/SleepChartCard";
 
 // Le type des objets renvoyés par l'API Nest (/test-data)
@@ -41,31 +41,10 @@ export default async function HomePage() {
     return (
         <div className="text-brandText flex flex-col">
             {/* HERO */}
-            <section className="w-full border-b border-brandBorder bg-white">
-                <div className="relative w-full h-[220px] overflow-hidden">
-                    <Image
-                        src="/images/wellness-hero3.jpg"
-                        alt="Calm lake at sunrise"
-                        width={1600}
-                        height={600}
-                        className="w-full h-full object-cover object-center"
-                        priority
-                    />
-
-                    {/* garde ton voile doux */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/10 pointer-events-none" />
-
-                    {/* texte du hero en blanc */}
-                    <div className="absolute inset-0 flex flex-col justify-center px-4 mx-auto max-w-7xl">
-                        <h1 className="text-2xl font-semibold text-white">
-                            Welcome back !
-                        </h1>
-                        <p className="text-white text-sm mt-1">
-                            Votre suivi bien-être du jour !
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <PageHero
+                title="Welcome back !!!"
+                subtitle="Votre suivi bien-être du jour !"
+            />
 
             {/* DASHBOARD */}
             <section className="mx-auto max-w-7xl w-full px-4 py-8 grid gap-6 md:grid-cols-2">

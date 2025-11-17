@@ -1,3 +1,42 @@
+# ============================================================================
+# pnpm-workspace.yaml
+# ----------------------------------------------------------------------------
+# Ce fichier indique à PNPM que le projet est un **monorepo**.
+#
+# Concrètement :
+# - PNPM va détecter plusieurs "projets" (packages) dans le même dépôt.
+# - Chaque app / package a son propre package.json,
+#   mais PNPM gère un seul store global + des liens entre eux.
+#
+# Avantages du monorepo avec PNPM :
+# - partage plus facile de code entre apps (ex: libs internes dans /packages)
+# - installation plus rapide (un seul pnpm-lock.yaml, store partagé)
+# - résolution cohérente des versions de dépendances
+# ============================================================================
+
 packages:
+  # --------------------------------------------------------------------------
+  # apps/* :
+  # - Regroupe les applications finales (runnables)
+  # - Par ex. :
+  #   - apps/api-nest         → backend NestJS
+  #   - apps/frontend-next    → frontend Next.js
+  #
+  # Chaque dossier sous "apps/" est vu comme un package PNPM
+  # avec son propre package.json.
+  # --------------------------------------------------------------------------
   - "apps/*"
+
+  # --------------------------------------------------------------------------
+  # packages/* :
+  # - Regroupe les bibliothèques partagées (code réutilisable).
+  # - Typiquement :
+  #   - packages/ui           → composants React partagés
+  #   - packages/config       → config ESLint, TS, etc.
+  #   - packages/lib          → fonctions utilitaires communes
+  #
+  # Ces packages peuvent être importés dans les apps via
+  # leur nom de package (ex: "@mindfulspace/ui") et PNPM
+  # crée des liens locaux (symlinks) plutôt que des copies.
+  # --------------------------------------------------------------------------
   - "packages/*"
