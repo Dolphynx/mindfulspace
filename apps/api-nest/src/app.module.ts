@@ -7,9 +7,10 @@ import { TestDataModule } from './test-data/test-data.module';
 import { PrefsModule } from "./prefs/prefs.module";
 import { TipsModule } from "./tips/tips.module";
 import { AiModule } from './ai/ai.module';
+import { SessionsModule } from '@mindfulspace/api/sessions/sessions.module';
 
 @Module({
-  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule, AiModule],
+  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule, SessionsModule, AiModule],
   controllers: [AppController, HealthController],
   providers: [AppService],
 })
