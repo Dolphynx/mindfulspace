@@ -24,6 +24,40 @@ export class ObjectivesService {
   }
 
   /**
+   * Retourne tous les objectifs du user de démo,
+   * avec les infos nécessaires pour l’affichage front.
+   */
+  async getObjectivesForDemoUser() {
+    const demoUser = await this.getDemoUser();
+
+    const objectives = await this.prisma.objective.findMany({
+      where: {
+        userId: demoUser.id,
+      },
+      include: {
+        sessionType: {
+          include: { sessionUnit: true },
+        },
+        //sessionUnit: true,
+      },
+    });
+
+    return objectives.map((o) => ({
+      id: o.id,
+      sessionTypeId: o.sessionTypeId,
+      sessionTypeName: o.sessionType?.name ?? 'Type de session',
+      //unitLabel:
+      //  o.sessionType?.sessionUnit?.value ?? o.sessionUnit?.value ?? '',
+      unitLabel: o.sessionType?.sessionUnit?.value ?? '',
+      value: o.value,
+      frequency: o.frequency,
+      durationUnit: o.durationUnit,
+      durationValue: o.durationValue,
+      // on ne retourne pas level ici, il n’est pas stocké en DB
+    }));
+  }
+
+  /**
    * Calcule la moyenne sur les X derniers jours pour un type de session
    * et propose easy / normal / challenge.
    */
@@ -135,5 +169,4 @@ export class ObjectivesService {
       objective,
     };
   }
-
 }

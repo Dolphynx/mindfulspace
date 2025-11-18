@@ -34,6 +34,18 @@ type ObjectivesProposal = {
     };
 };
 
+type SavedObjective = {
+    id: string;
+    sessionTypeId: string;
+    sessionTypeName: string;
+    unitLabel: string;
+    value: number;
+    frequency: Frequency;
+    durationUnit: DurationUnit;
+    durationValue: number;
+    level?: ObjectiveLevel; // pas stocké en DB pour les anciens, mais connu pour ceux créés durant la session
+};
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 function buildUrl(path: string) {
@@ -67,10 +79,40 @@ function durationUnitLabel(unit: DurationUnit, value: number) {
     }
 }
 
+function levelLabel(level: ObjectiveLevel) {
+    switch (level) {
+        case 'easy':
+            return 'Facile';
+        case 'normal':
+            return 'Standard';
+        case 'challenge':
+            return 'Challenge';
+    }
+}
+
+function levelBadgeClasses(level: ObjectiveLevel) {
+    switch (level) {
+        case 'easy':
+            return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+        case 'normal':
+            return 'bg-sky-50 text-sky-700 border-sky-100';
+        case 'challenge':
+            return 'bg-amber-50 text-amber-700 border-amber-100';
+    }
+}
+
+function sessionTypeIcon(name?: string) {
+    const n = (name ?? '').toLowerCase();
+    if (n.includes('sleep') || n.includes('sommeil')) return '😴';
+    if (n.includes('exercice') || n.includes('sport') || n.includes('exercise')) return '🏃‍♂️';
+    if (n.includes('medit') || n.includes('médit')) return '🧘';
+    return '🎯';
+}
+
 export default function ObjectivesPage() {
     const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
     const [selectedSessionTypeId, setSelectedSessionTypeId] = useState('');
-    const [loadingTypes, setLoadingTypes] = useState(false);
+    const [loadingInit, setLoadingInit] = useState(false);
 
     const [proposal, setProposal] = useState<ObjectivesProposal | null>(null);
     const [loadingProposal, setLoadingProposal] = useState(false);
@@ -79,28 +121,46 @@ export default function ObjectivesPage() {
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Charger les SessionTypes au montage
+    const [savedObjectives, setSavedObjectives] = useState<SavedObjective[]>([]);
+
+    // Chargement initial : types de session + objectifs déjà encodés
     useEffect(() => {
         if (!apiBaseUrl) return;
 
-        async function fetchTypes() {
-            setLoadingTypes(true);
+        async function fetchInitial() {
+            setLoadingInit(true);
             setError(null);
 
             try {
-                const res = await fetch(buildUrl('/sessions/types'));
-                if (!res.ok) throw new Error('Erreur lors du chargement des types');
-                const data: SessionType[] = await res.json();
-                setSessionTypes(data);
+                const [typesRes, objectivesRes] = await Promise.all([
+                    fetch(buildUrl('/sessions/types')),
+                    fetch(buildUrl('/objectives')),
+                ]);
+
+                if (!typesRes.ok) {
+                    throw new Error('Erreur lors du chargement des types');
+                }
+                if (!objectivesRes.ok) {
+                    throw new Error('Erreur lors du chargement des objectifs');
+                }
+
+                const typesData: SessionType[] = await typesRes.json();
+                const objectivesData: SavedObjective[] =
+                    await objectivesRes.json();
+
+                setSessionTypes(typesData);
+                setSavedObjectives(objectivesData);
             } catch (e) {
                 console.error(e);
-                setError("Impossible de charger les types de session.");
+                setError(
+                    "Impossible de charger les types de session et/ou les objectifs.",
+                );
             } finally {
-                setLoadingTypes(false);
+                setLoadingInit(false);
             }
         }
 
-        fetchTypes();
+        fetchInitial();
     }, []);
 
     async function handlePropose() {
@@ -159,9 +219,38 @@ export default function ObjectivesPage() {
                 throw new Error('Réponse serveur non OK');
             }
 
-            const data = await res.json();
-            console.log('Objective saved:', data);
-            setMessage(`Objectif "${level}" enregistré avec succès.`);
+            const data: {
+                message: string;
+                level: ObjectiveLevel;
+                objective: {
+                    id: string;
+                    sessionTypeId: string;
+                    value: number;
+                    frequency: Frequency;
+                    durationUnit: DurationUnit;
+                    durationValue: number;
+                };
+            } = await res.json();
+
+            setMessage(
+                `Objectif "${levelLabel(level)}" enregistré avec succès.`,
+            );
+
+            // Ajouter immédiatement dans la colonne de gauche
+            setSavedObjectives((prev) => [
+                {
+                    id: data.objective.id,
+                    sessionTypeId: data.objective.sessionTypeId,
+                    sessionTypeName: proposal.sessionTypeName,
+                    unitLabel: proposal.unitLabel,
+                    value: data.objective.value,
+                    frequency: data.objective.frequency,
+                    durationUnit: data.objective.durationUnit,
+                    durationValue: data.objective.durationValue,
+                    level: data.level,
+                },
+                ...prev,
+            ]);
         } catch (e) {
             console.error(e);
             setError("Impossible d'enregistrer cet objectif.");
@@ -177,130 +266,227 @@ export default function ObjectivesPage() {
                 subtitle="Propose des objectifs réalistes à partir de l’historique de sessions du user de démo."
             />
 
-            <section className="mx-auto max-w-5xl w-full px-4 py-8 space-y-6">
-                {/* Sélection du type de session */}
-                <div className="space-y-2">
-                    <label className="block space-y-1">
-            <span className="text-sm font-medium">
-              Type de session pour les objectifs
-            </span>
-                        <select
-                            value={selectedSessionTypeId}
-                            onChange={(e) => setSelectedSessionTypeId(e.target.value)}
-                            className="w-full rounded-xl border px-3 py-2 text-sm bg-white"
-                            disabled={loadingTypes}
-                        >
-                            <option value="">
-                                {loadingTypes
-                                    ? 'Chargement des types...'
-                                    : 'Choisir un type de session'}
-                            </option>
-                            {sessionTypes.map((type) => (
-                                <option key={type.id} value={type.id}>
-                                    {type.name}
-                                    {type.sessionUnit?.value
-                                        ? ` (${type.sessionUnit.value})`
-                                        : ''}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+            <section className="mx-auto max-w-5xl w-full px-4 py-8">
+                <div className="grid gap-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                    {/* Colonne gauche : objectifs déjà encodés */}
+                    <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 flex flex-col gap-4">
+                        <header className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                    <span>🎯 Objectifs enregistrés</span>
+                                </h2>
+                                <p className="text-sm text-brandMuted">
+                                    Pour le user de démonstration.
+                                </p>
+                            </div>
+                        </header>
 
-                    <button
-                        type="button"
-                        onClick={handlePropose}
-                        disabled={!selectedSessionTypeId || loadingProposal}
-                        className="inline-flex items-center rounded-xl bg-brandGreen px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                    >
-                        {loadingProposal ? 'Calcul en cours...' : 'Proposer des objectifs'}
-                    </button>
-                </div>
+                        {savedObjectives.length === 0 ? (
+                            <p className="text-sm text-brandMuted border border-dashed rounded-xl px-4 py-3 text-center">
+                                Aucun objectif pour le moment. Propose un objectif à droite
+                                puis enregistre celui qui te convient.
+                            </p>
+                        ) : (
+                            <div className="space-y-3">
+                                {savedObjectives.map((obj) => (
+                                    <div
+                                        key={obj.id}
+                                        className="flex items-start gap-3 rounded-2xl border bg-gradient-to-r from-white to-brandBg/40 px-4 py-3 shadow-xs"
+                                    >
+                                        <div className="text-2xl pt-1">
+                                            {sessionTypeIcon(obj.sessionTypeName)}
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div>
+                                                    <p className="text-sm font-semibold">
+                                                        {obj.sessionTypeName}
+                                                    </p>
+                                                    <p className="text-xs text-brandMuted">
+                                                        Objectif{' '}
+                                                        {frequencyLabel(obj.frequency)}{' '}
+                                                        pendant {obj.durationValue}{' '}
+                                                        {durationUnitLabel(
+                                                            obj.durationUnit,
+                                                            obj.durationValue,
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                {obj.level && (
+                                                    <span
+                                                        className={
+                                                            'text-[11px] px-2 py-1 rounded-full border font-medium uppercase tracking-wide ' +
+                                                            levelBadgeClasses(obj.level)
+                                                        }
+                                                    >
+                                                        {levelLabel(obj.level)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm font-semibold">
+                                                {obj.value} {obj.unitLabel}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                {/* Messages */}
-                {error && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                        {error}
-                    </p>
-                )}
-
-                {message && (
-                    <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                        {message}
-                    </p>
-                )}
-
-                {/* Propositions d’objectifs */}
-                {proposal && (
+                    {/* Colonne droite : formulaire + propositions */}
                     <div className="space-y-4">
-                        <div>
+                        {/* Carte formulaire */}
+                        <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
                             <h2 className="text-lg font-semibold">
-                                Objectifs pour {proposal.sessionTypeName}{' '}
-                                {proposal.unitLabel && `(${proposal.unitLabel})`}
+                                Proposer des objectifs
                             </h2>
                             <p className="text-sm text-brandMuted">
-                                Basé sur une moyenne de {proposal.average}{' '}
-                                {proposal.unitLabel} sur les dernières sessions du user de
-                                démo.
+                                Choisis un type de session puis laisse MindfulSpace te
+                                suggérer un objectif réaliste pour le user de démo.
                             </p>
-                            <p className="text-sm text-brandMuted mt-1">
-                                Chaque objectif est exprimé en {proposal.unitLabel}{' '}
-                                {frequencyLabel(proposal.frequency)} pendant{' '}
-                                {proposal.durationValue}{' '}
-                                {durationUnitLabel(
-                                    proposal.durationUnit,
-                                    proposal.durationValue,
-                                )}
-                                .
-                            </p>
+
+                            <label className="block space-y-1">
+                                <span className="text-sm font-medium">
+                                    Type de session pour les objectifs
+                                </span>
+                                <select
+                                    value={selectedSessionTypeId}
+                                    onChange={(e) =>
+                                        setSelectedSessionTypeId(e.target.value)
+                                    }
+                                    className="w-full rounded-xl border px-3 py-2 text-sm bg-white"
+                                    disabled={loadingInit}
+                                >
+                                    <option value="">
+                                        {loadingInit
+                                            ? 'Chargement...'
+                                            : 'Choisir un type de session'}
+                                    </option>
+                                    {sessionTypes.map((type) => (
+                                        <option key={type.id} value={type.id}>
+                                            {type.name}
+                                            {type.sessionUnit?.value
+                                                ? ` (${type.sessionUnit.value})`
+                                                : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <button
+                                type="button"
+                                onClick={handlePropose}
+                                disabled={
+                                    !selectedSessionTypeId || loadingProposal
+                                }
+                                className="inline-flex items-center rounded-xl bg-brandGreen px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                            >
+                                {loadingProposal
+                                    ? 'Calcul en cours...'
+                                    : 'Proposer des objectifs'}
+                            </button>
+
+                            {/* Messages */}
+                            {error && (
+                                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                                    {error}
+                                </p>
+                            )}
+
+                            {message && (
+                                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                    {message}
+                                </p>
+                            )}
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-3">
-                            {(
-                                [
-                                    ['easy', 'Facile'],
-                                    ['normal', 'Standard'],
-                                    ['challenge', 'Challenge'],
-                                ] as [ObjectiveLevel, string][]
-                            ).map(([level, label]) => {
-                                const obj = proposal.objectives[level];
-                                return (
-                                    <div
-                                        key={level}
-                                        className="rounded-2xl border bg-white px-4 py-3 shadow-sm space-y-2"
-                                    >
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-sm font-medium">{label}</span>
-                                            <span className="text-sm text-brandMuted capitalize">
-                        {level}
-                      </span>
-                                        </div>
-                                        <p className="text-xl font-semibold">
-                                            {obj.value} {proposal.unitLabel}
-                                        </p>
-                                        <p className="text-xs text-brandMuted">
-                                            {frequencyLabel(proposal.frequency)}, pendant{' '}
-                                            {proposal.durationValue}{' '}
-                                            {durationUnitLabel(
-                                                proposal.durationUnit,
-                                                proposal.durationValue,
-                                            )}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleSave(level)}
-                                            disabled={savingLevel === level}
-                                            className="mt-1 inline-flex items-center rounded-xl border border-brandGreen px-3 py-1.5 text-xs font-medium text-brandGreen hover:bg-brandGreen hover:text-white transition-colors disabled:opacity-60"
-                                        >
-                                            {savingLevel === level
-                                                ? 'Enregistrement...'
-                                                : 'Enregistrer cet objectif'}
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        {/* Propositions sous le formulaire, version compacte */}
+                        {proposal && (
+                            <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
+                                <div>
+                                    <h3 className="text-md font-semibold">
+                                        Objectifs pour {proposal.sessionTypeName}{' '}
+                                        {proposal.unitLabel &&
+                                            `(${proposal.unitLabel})`}
+                                    </h3>
+                                    <p className="text-xs text-brandMuted">
+                                        Basé sur une moyenne de {proposal.average}{' '}
+                                        {proposal.unitLabel} sur les dernières
+                                        sessions du user de démo.
+                                    </p>
+                                    <p className="text-xs text-brandMuted mt-1">
+                                        Chaque objectif est exprimé en{' '}
+                                        {proposal.unitLabel}{' '}
+                                        {frequencyLabel(proposal.frequency)}{' '}
+                                        pendant {proposal.durationValue}{' '}
+                                        {durationUnitLabel(
+                                            proposal.durationUnit,
+                                            proposal.durationValue,
+                                        )}
+                                        .
+                                    </p>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-3">
+                                    {(
+                                        [
+                                            ['easy', 'Facile'],
+                                            ['normal', 'Standard'],
+                                            ['challenge', 'Challenge'],
+                                        ] as [ObjectiveLevel, string][]
+                                    ).map(([level, label]) => {
+                                        const obj =
+                                            proposal.objectives[level];
+                                        return (
+                                            <div
+                                                key={level}
+                                                className="rounded-2xl border bg-brandBg px-3 py-3 space-y-1"
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-semibold">
+                                                        {label}
+                                                    </span>
+                                                    <span className="text-[11px] text-brandMuted capitalize">
+                                                        {level}
+                                                    </span>
+                                                </div>
+                                                <p className="text-lg font-semibold">
+                                                    {obj.value}{' '}
+                                                    {proposal.unitLabel}
+                                                </p>
+                                                <p className="text-[11px] text-brandMuted">
+                                                    {frequencyLabel(
+                                                        proposal.frequency,
+                                                    )}
+                                                    , pendant{' '}
+                                                    {proposal.durationValue}{' '}
+                                                    {durationUnitLabel(
+                                                        proposal.durationUnit,
+                                                        proposal.durationValue,
+                                                    )}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleSave(level)
+                                                    }
+                                                    disabled={
+                                                        savingLevel === level
+                                                    }
+                                                    className="mt-1 inline-flex items-center rounded-xl border border-brandGreen px-3 py-1.5 text-[11px] font-medium text-brandGreen hover:bg-brandGreen hover:text-white transition-colors disabled:opacity-60"
+                                                >
+                                                    {savingLevel === level
+                                                        ? 'Enregistrement...'
+                                                        : 'Enregistrer cet objectif'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </section>
         </div>
     );

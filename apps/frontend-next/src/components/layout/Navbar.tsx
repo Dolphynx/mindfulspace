@@ -92,6 +92,14 @@ export default function Navbar() {
                     />
 
 
+                    {/* bouton Coach */}
+                    <NavButton
+                        href="/coach"
+                        label="Become a coach"
+                        icon={<span aria-label="Become a coach" title="Become a coach">🎓</span>}
+                    />
+
+
                     {/* bouton contact */}
                     <NavButton
                         href="/contact"
