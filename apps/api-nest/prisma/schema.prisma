@@ -23,28 +23,40 @@ model Session {
   dateSession   DateTime
   dateCreated   DateTime    @default(now())
 
-  // Foreign key to SessionType
   sessionTypeId String
   sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
 }
 
 model SessionType {
-  id        String        @id @default(uuid())
+  id        String               @id @default(uuid())
   name      String
 
-  // Foreign key to SessionUnit
-  sessionUnitId String
-  sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+  // Jointure vers plusieurs unités
+  units     SessionTypeUnit[]
 
-  // One type can have many sessions
   sessions  Session[]
 }
 
 model SessionUnit {
-  id      String        @id @default(uuid())
-  value   String        // e.g. "minutes", "steps"
+  id      String               @id @default(uuid())
+  value   String               // e.g. "minutes", "steps"
 
-  // One unit can be used by many types
-  types   SessionType[]
+  // Jointure vers plusieurs types
+  types   SessionTypeUnit[]
 }
+
+//
+// TABLE DE JOINTURE M:N EXPLICITE
+//
+model SessionTypeUnit {
+  priority Int
+  sessionTypeId String
+  sessionUnitId String
+
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+  sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+
+  @@id([sessionTypeId, sessionUnitId]) // Clé primaire composée
+}
+
 

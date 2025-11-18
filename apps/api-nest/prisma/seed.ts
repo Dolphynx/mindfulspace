@@ -6,9 +6,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🔄 Clearing existing data...");
   await prisma.session.deleteMany();
+  await prisma.sessionTypeUnit.deleteMany();
   await prisma.sessionType.deleteMany();
   await prisma.sessionUnit.deleteMany();
-  await prisma.testData.deleteMany(); // keep from your old seed
+  await prisma.testData.deleteMany();
 
   console.log("🌱 Seeding TestData...");
   const demoData = [
@@ -20,7 +21,6 @@ async function main() {
     { metricName: "daily_meditation_minutes", label: "Sam", metricValue: 5 },
     { metricName: "daily_meditation_minutes", label: "Dim", metricValue: 11 },
   ];
-
   await prisma.testData.createMany({ data: demoData });
 
   console.log("🌱 Seeding SessionUnits...");
@@ -33,35 +33,68 @@ async function main() {
   });
 
   console.log("🌱 Seeding SessionTypes...");
-  const sleepType = await prisma.sessionType.create({
+  const sleepType = await prisma.sessionType.create({ data: { name: "Sleep" } });
+  const exerciseType = await prisma.sessionType.create({ data: { name: "Exercise" } });
+  const meditationType = await prisma.sessionType.create({ data: { name: "Meditation" } });
+
+  console.log("🌱 Linking SessionTypes ↔ SessionUnits with priority...");
+
+  // Sleep: priority 1 = Hours, priority 2 = Minutes
+  await prisma.sessionTypeUnit.create({
     data: {
-      name: "Sleep",
+      sessionTypeId: sleepType.id,
       sessionUnitId: hoursUnit.id,
+      priority: 1,
     },
   });
-
-  const exerciseType = await prisma.sessionType.create({
+  await prisma.sessionTypeUnit.create({
     data: {
-      name: "Exercise",
+      sessionTypeId: sleepType.id,
       sessionUnitId: minutesUnit.id,
+      priority: 2,
     },
   });
 
-  const meditationType = await prisma.sessionType.create({
+  // Exercise: priority 1 = Minutes, priority 2 = Hours
+  await prisma.sessionTypeUnit.create({
     data: {
-      name: "Meditation",
-      sessionUnitId: minutesUnit.id, // reuse same "Minutes" unit
+      sessionTypeId: exerciseType.id,
+      sessionUnitId: minutesUnit.id,
+      priority: 1,
+    },
+  });
+  await prisma.sessionTypeUnit.create({
+    data: {
+      sessionTypeId: exerciseType.id,
+      sessionUnitId: hoursUnit.id,
+      priority: 2,
     },
   });
 
-  console.log("✅ Created session types:");
+  // Meditation: priority 1 = Minutes, priority 2 = Hours
+  await prisma.sessionTypeUnit.create({
+    data: {
+      sessionTypeId: meditationType.id,
+      sessionUnitId: minutesUnit.id,
+      priority: 1,
+    },
+  });
+  await prisma.sessionTypeUnit.create({
+    data: {
+      sessionTypeId: meditationType.id,
+      sessionUnitId: hoursUnit.id,
+      priority: 2,
+    },
+  });
+
+  console.log("✅ Created session types with ordered units:");
   console.table([
-    { name: sleepType.name, unit: "Hours" },
-    { name: exerciseType.name, unit: "Minutes" },
-    { name: meditationType.name, unit: "Minutes" },
+    { name: "Sleep", units: "Hours(1), Minutes(2)" },
+    { name: "Exercise", units: "Minutes(1), Hours(2)" },
+    { name: "Meditation", units: "Minutes(1), Hours(2)" },
   ]);
 
-  console.log("✅ Seeding complete!");
+  console.log("🎉 Seeding complete!");
 }
 
 main()

@@ -6,37 +6,41 @@ import { CreateSessionDto } from './dto/create-session.dto';
 export class SessionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Create a session for a given SessionType.
-   * - Validates that SessionType exists
-   * - (Optional) Validates the expected unit matches the type’s unit
-   */
   async create(dto: CreateSessionDto) {
-    // 1️⃣ Resolve the type + its unit
+    // 1️⃣ Resolve the type + ordered units
     const type = await this.prisma.sessionType.findUnique({
       where: { id: dto.sessionTypeId },
-      include: { sessionUnit: true },
+      include: {
+        units: {
+          include: { sessionUnit: true },
+          orderBy: { priority: 'asc' },   // ⭐ added
+        },
+      },
     });
 
     if (!type) {
       throw new NotFoundException('SessionType not found');
     }
 
-    // 2️⃣ Optional: guard against unit mismatch
-    if (dto.expectedUnit && dto.expectedUnit !== type.sessionUnit.value) {
-      throw new BadRequestException(
-        `Unit mismatch: expected ${dto.expectedUnit} but SessionType uses ${type.sessionUnit.value}`,
-      );
+    // 2️⃣ Validate unit consistency (optional)
+    if (dto.expectedUnit) {
+      const allowedUnits = type.units.map(u => u.sessionUnit.value);
+
+      if (!allowedUnits.includes(dto.expectedUnit)) {
+        throw new BadRequestException(
+          `Unit mismatch: expected one of [${allowedUnits.join(", ")}] but received ${dto.expectedUnit}`,
+        );
+      }
     }
 
-    // 3️⃣ Parse date and compute the day boundaries (00:00 → 23:59)
+    // 3️⃣ Parse date boundaries
     const date = new Date(dto.dateSession);
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 4️⃣ Check if a session already exists for this type & date
+    // 4️⃣ Check for an existing session for that day
     const existing = await this.prisma.session.findFirst({
       where: {
         sessionTypeId: dto.sessionTypeId,
@@ -45,7 +49,6 @@ export class SessionsService {
     });
 
     if (existing) {
-      // ✅ 5️⃣ If found, update it instead of creating a duplicate
       return this.prisma.session.update({
         where: { id: existing.id },
         data: {
@@ -56,7 +59,7 @@ export class SessionsService {
       });
     }
 
-    // 6️⃣ Otherwise, create a new session
+    // 6️⃣ Create a new session
     return this.prisma.session.create({
       data: {
         value: dto.value,
@@ -67,15 +70,16 @@ export class SessionsService {
     });
   }
 
-
   async findAll() {
-    // Retrieve all sessions, with their type and unit
     return this.prisma.session.findMany({
       orderBy: { dateSession: 'desc' },
       include: {
         sessionType: {
           include: {
-            sessionUnit: true,
+            units: {
+              include: { sessionUnit: true },
+              orderBy: { priority: 'asc' },  // ⭐ added
+            },
           },
         },
       },
@@ -85,7 +89,12 @@ export class SessionsService {
   async getAllSessionTypes() {
     return this.prisma.sessionType.findMany({
       include: {
-        sessionUnit: true, // include the unit (Minutes, Hours)
+        units: {
+          include: {
+            sessionUnit: true,
+          },
+          orderBy: { priority: 'asc' },       // ⭐ added
+        },
       },
     });
   }
@@ -94,7 +103,6 @@ export class SessionsService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Find the matching session type by name (case-insensitive)
     const sessionType = await this.prisma.sessionType.findFirst({
       where: { name: { equals: typeName, mode: 'insensitive' } },
     });
@@ -118,26 +126,28 @@ export class SessionsService {
   }
 
   async getYesterdaySummary() {
-    // Compute yesterday's date range (00:00 → 23:59)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(0, 0, 0, 0);
+
     const today = new Date(yesterday);
     today.setDate(yesterday.getDate() + 1);
 
-    // Fetch all session types
-    const sessionTypes = await this.prisma.sessionType.findMany();
+    const sessionTypes = await this.prisma.sessionType.findMany({
+      include: {
+        units: {
+          include: { sessionUnit: true },
+          orderBy: { priority: 'asc' },   // ⭐ added
+        },
+      },
+    });
 
-    // For each type, find the last session from yesterday
-    const results = await Promise.all(
+    return Promise.all(
       sessionTypes.map(async (type) => {
         const session = await this.prisma.session.findFirst({
           where: {
             sessionTypeId: type.id,
-            dateSession: {
-              gte: yesterday,
-              lt: today,
-            },
+            dateSession: { gte: yesterday, lt: today },
           },
           orderBy: { dateSession: 'desc' },
         });
@@ -145,16 +155,9 @@ export class SessionsService {
         return {
           name: type.name,
           value: session?.value ?? null,
-          unit: (await this.prisma.sessionUnit.findUnique({
-            where: { id: type.sessionUnitId },
-          }))?.value,
+          units: type.units.map((u) => u.sessionUnit.value), // already ordered
         };
       })
     );
-
-    return results;
   }
-
-
-
 }
