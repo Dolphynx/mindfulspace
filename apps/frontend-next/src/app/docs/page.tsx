@@ -1,6 +1,6 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
     title: "Documentation développeur | MindfulSpace",
 };
 
@@ -185,7 +185,7 @@ export function MoodPicker(props: {
                 </p>
             </section>
 
-            {/* Section liens / ressources */}
+            {/* Section liens / resources */}
             <section className="rounded-xl border border-brandBorder bg-white p-5 shadow-sm">
                 <h2 className="mb-3 text-xl font-semibold">
                     4. Où trouver quoi ?

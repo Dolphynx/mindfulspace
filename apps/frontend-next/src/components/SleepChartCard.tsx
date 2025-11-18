@@ -1,24 +1,66 @@
 "use client";
 
+/**
+ * Carte de visualisation du sommeil (SleepChartCard)
+ *
+ * - Affiche un graphique de type line chart basé sur Recharts.
+ * - Permet de visualiser l'évolution du sommeil (en heures) sur une période.
+ * - Le composant est "stateless" : il reçoit les données déjà agrégées via `chartData`.
+ *
+ * Structure :
+ * - Header : titre, sous-titre, et plage de dates affichée.
+ * - Graphique : ligne représentant le nombre d'heures de sommeil par jour.
+ *
+ * Remarques :
+ * - L’UI est stylée pour être cohérente avec le design MindfulSpace (couleurs, bordures, ombres).
+ * - Les données affichées dans `displayedRange` sont pour l’instant statiques,
+ *   mais peuvent être dynamiques selon l’utilisation dans le parent.
+ */
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DotProps } from "recharts";
 
+/**
+ * Point de données de sommeil pour le graphique.
+ * - `day`  : étiquette du jour (ex: "Lun", "Mar", "27/10", etc.).
+ * - `hours`: nombre d'heures de sommeil pour ce jour.
+ *
+ * ⚠️ Type défini pour documentation / clarté mais pas utilisé directement plus bas.
+ */
 type SleepPoint = {
     day: string;
     hours: number;
 };
 
+/**
+ * Type minimal pour les props de Dot actif (état hover) dans Recharts.
+ *
+ * On ne dépend pas ici du type complet de Recharts, uniquement des coordonnées.
+ */
 type ActiveDotPropsLike = {
     cx?: number;
     cy?: number;
 };
 
-// Type des props
+/**
+ * Type des props attendues par le composant SleepChartCard.
+ *
+ * `chartData` est un tableau d’objets génériques :
+ * - label : étiquette de l’axe X (ex: date ou jour).
+ * - value : valeur numérique (heures de sommeil).
+ */
 type SleepChartCardProps = {
     chartData: { label: string; value: number }[];
 };
 
-// Custom Dot for the normal state
+/**
+ * CustomDot – Dot personnalisé utilisé pour l’état « normal » de la courbe.
+ *
+ * - Dessine un cercle vert (#4da884) au niveau de chaque point de données.
+ * - Ne rend rien si les coordonnées ne sont pas numériques (sécurité).
+ *
+ * Utilisé via la prop `dot` de `<Line />`.
+ */
 function CustomDot(props: DotProps) {
     const { cx, cy } = props;
     if (typeof cx !== "number" || typeof cy !== "number") return null;
@@ -34,7 +76,16 @@ function CustomDot(props: DotProps) {
     );
 }
 
-// Custom Dot for the active (hover) state
+/**
+ * CustomActiveDot – Dot personnalisé pour l’état actif (hover).
+ *
+ * - Utilisé lorsqu’un point est survolé dans le graphique.
+ * - Affiche un cercle légèrement plus grand avec un contour blanc.
+ * - En cas de coordonnées invalides, rend un cercle invisible
+ *   pour éviter des erreurs de rendu.
+ *
+ * Utilisé via la prop `activeDot` de `<Line />`.
+ */
 function CustomActiveDot(props: ActiveDotPropsLike) {
     const { cx, cy } = props;
     if (typeof cx !== "number" || typeof cy !== "number") {
@@ -61,6 +112,21 @@ function CustomActiveDot(props: ActiveDotPropsLike) {
     );
 }
 
+/**
+ * Composant principal SleepChartCard.
+ *
+ * @param chartData - Données brutes du sommeil (label + value) à transformer pour Recharts.
+ *
+ * Fonctionnement :
+ * - Transforme `chartData` en `sleepData` avec les propriétés `day` et `hours`
+ *   attendues par Recharts.
+ * - Encapsule un LineChart dans un ResponsiveContainer pour s’adapter à la largeur.
+ * - Configure :
+ *   - grille (`CartesianGrid`)
+ *   - axes X/Y (`XAxis`, `YAxis`)
+ *   - tooltip personnalisé (`Tooltip`)
+ *   - ligne principale (`Line`) avec dots custom.
+ */
 export default function SleepChartCard({ chartData }: SleepChartCardProps) {
     // Transformation des données pour correspondre au format requis par le graphique
     const sleepData = chartData.map((data) => ({
@@ -68,6 +134,7 @@ export default function SleepChartCard({ chartData }: SleepChartCardProps) {
         hours: data.value,
     }));
 
+    // Plage de dates affichée dans le header (statique pour l’instant)
     const displayedRange = "27/10 → 02/11";
 
     return (
@@ -95,12 +162,14 @@ export default function SleepChartCard({ chartData }: SleepChartCardProps) {
                         data={sleepData}
                         margin={{ top: 10, right: 20, left: 20, bottom: 20 }}
                     >
+                        {/* Grille de fond avec lignes horizontales uniquement */}
                         <CartesianGrid
                             strokeDasharray="3 3"
                             stroke="#d9eadf"
                             vertical={false}
                         />
 
+                        {/* Axe des X : jours / labels */}
                         <XAxis
                             dataKey="day"
                             stroke="#4b5563"
@@ -109,6 +178,7 @@ export default function SleepChartCard({ chartData }: SleepChartCardProps) {
                             axisLine={{ stroke: "#4b5563" }}
                         />
 
+                        {/* Axe des Y : heures de sommeil */}
                         <YAxis
                             stroke="#4b5563"
                             tick={{ fontSize: 16, fill: "#4b5563" }}
@@ -118,6 +188,7 @@ export default function SleepChartCard({ chartData }: SleepChartCardProps) {
                             ticks={[0, 3, 6, 9, 12]}
                         />
 
+                        {/* Tooltip au survol des points */}
                         <Tooltip
                             cursor={{
                                 stroke: "#94c5a9",
@@ -138,6 +209,7 @@ export default function SleepChartCard({ chartData }: SleepChartCardProps) {
                             formatter={(value) => [`${value} h`, "Sleep"]}
                         />
 
+                        {/* Ligne principale représentant les heures de sommeil */}
                         <Line
                             type="monotone"
                             dataKey="hours"
