@@ -91,6 +91,13 @@ export default function Navbar() {
                         icon={<span aria-label="Objectives" title="Objectives">🎯</span>}
                     />
 
+                    {/* bouton Ressources */}
+                    <NavButton
+                        href="/resources"
+                        label="Ressources"
+                        icon={<span aria-label="Ressources" title="Ressources">📚</span>}
+                    />
+
 
                     {/* bouton Coach */}
                     <NavButton

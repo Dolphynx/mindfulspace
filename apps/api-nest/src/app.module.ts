@@ -9,9 +9,10 @@ import { TipsModule } from "./tips/tips.module";
 import { AiModule } from './ai/ai.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { ObjectivesModule } from './objectives/objectives.module';
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({
-  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule, SessionsModule, AiModule, ObjectivesModule],
+  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule, SessionsModule, AiModule, ObjectivesModule, ResourcesModule],
   controllers: [AppController, HealthController],
   providers: [AppService],
 })

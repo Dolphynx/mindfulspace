@@ -122,7 +122,7 @@ export default function FormationPage() {
                             "Programme complet",
                             "Apprentissage autonome",
                             "Certification digitale",
-                            "Accès à la bibliothèque de ressources",
+                            "Accès à la bibliothèque de resources",
                             "Accès au forum de la communauté",
                         ]}
                         button="Commencer"

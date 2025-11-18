@@ -127,3 +127,62 @@ enum ObjectiveDurationUnit {
   WEEK
   MONTH
 }
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  MEDITATION
+  GUIDE
+}
+
+model ResourceCategory {
+  id        String  @id @default(uuid())
+  name      String
+  slug      String  @unique
+  iconEmoji String? // ex: "📄", "🎧" si tu veux
+
+  resources Resource[]
+}
+
+model ResourceTag {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  resources ResourceTagOnResource[]
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  title       String
+  slug        String       @unique
+  summary     String // petit résumé pour les cartes
+  content     String // markdown / texte long
+  type        ResourceType
+  isPremium   Boolean      @default(false) // pour le badge Premium + champ "gratuit"
+  isFeatured  Boolean      @default(false) // pour "Featured resources"
+  authorName  String?
+  readTimeMin Int? // pour les articles, ex: 8
+  externalUrl String? // si un jour tu linkes vers un autre site
+
+  categoryId String
+  category   ResourceCategory @relation(fields: [categoryId], references: [id])
+
+  tags ResourceTagOnResource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+  @@index([summary])
+}
+
+model ResourceTagOnResource {
+  resourceId String
+  tagId      String
+
+  resource Resource    @relation(fields: [resourceId], references: [id])
+  tag      ResourceTag @relation(fields: [tagId], references: [id])
+
+  @@id([resourceId, tagId])
+}
