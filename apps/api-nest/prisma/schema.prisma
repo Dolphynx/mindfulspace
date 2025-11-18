@@ -33,11 +33,11 @@ model Session {
 }
 
 model SessionType {
-  id        String               @id @default(uuid())
-  name      String
+  id   String @id @default(uuid())
+  name String
 
   // Jointure vers plusieurs unités
-  units     SessionTypeUnit[]
+  units SessionTypeUnit[]
 
   // Foreign key to SessionUnit
   //sessionUnitId String
@@ -49,25 +49,26 @@ model SessionType {
 }
 
 model SessionUnit {
-  id      String               @id @default(uuid())
-  value   String               // e.g. "minutes", "steps"
+  id    String @id @default(uuid())
+  value String // e.g. "minutes", "steps"
 
   // One unit can be used by many types
-  types   SessionTypeUnit[]
+  types     SessionTypeUnit[]
   //types      SessionType[]
   //objectives Objective[]
+  Objective Objective[]
 }
 
 //
 // TABLE DE JOINTURE M:N EXPLICITE
 //
 model SessionTypeUnit {
-  priority Int
+  priority      Int
   sessionTypeId String
   sessionUnitId String
 
-  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
-  sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+  sessionUnit SessionUnit @relation(fields: [sessionUnitId], references: [id])
 
   @@id([sessionTypeId, sessionUnitId]) // Clé primaire composée
 }
@@ -84,9 +85,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   // Jointure vers plusieurs types
-  types   SessionTypeUnit[]
+  //types   SessionTypeUnit[]
 }
-
 
 model Objective {
   id String @id @default(cuid())

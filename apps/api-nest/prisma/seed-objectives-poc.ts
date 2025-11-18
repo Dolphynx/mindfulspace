@@ -22,7 +22,9 @@ async function main() {
   });
 
   if (!sleepType || !meditationType || !exerciseType) {
-    console.error("❌ Impossible de trouver les SessionTypes 'Sleep' ou 'Meditation'.");
+    console.error(
+      "❌ Impossible de trouver les SessionTypes 'Sleep', 'Meditation' ou 'Exercise'."
+    );
     console.error(
       "   → Vérifie les noms dans la table SessionType ou adapte ce script."
     );
@@ -32,6 +34,33 @@ async function main() {
   console.log("✅ SessionTypes récupérés :", {
     sleepType: sleepType.name,
     meditationType: meditationType.name,
+    exerciseType: exerciseType.name,
+  });
+
+  // 1️⃣ bis – Récupérer les unités prioritaires (SessionTypeUnit) pour ces types
+  // On prend le premier trié par priority ASC, comme dans le refactor de ton collègue.
+  const sleepPrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
+    where: { sessionTypeId: sleepType.id },
+    orderBy: { priority: "asc" },
+    include: { sessionUnit: true },
+  });
+
+  const meditationPrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
+    where: { sessionTypeId: meditationType.id },
+    orderBy: { priority: "asc" },
+    include: { sessionUnit: true },
+  });
+
+  const exercisePrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
+    where: { sessionTypeId: exerciseType.id },
+    orderBy: { priority: "asc" },
+    include: { sessionUnit: true },
+  });
+
+  console.log("✅ Unités prioritaires trouvées :", {
+    sleepUnit: sleepPrimaryTypeUnit?.sessionUnit?.value,
+    meditationUnit: meditationPrimaryTypeUnit?.sessionUnit?.value,
+    exerciseUnit: exercisePrimaryTypeUnit?.sessionUnit?.value,
   });
 
   // 2️⃣ Créer / récupérer le user de démo
@@ -92,7 +121,7 @@ async function main() {
     });
 
     // Exercice : par ex. 10–90 minutes
-    const exerciseMinutes = 10 + Math.floor(Math.random() * 81); // 10–40
+    const exerciseMinutes = 10 + Math.floor(Math.random() * 81); // 10–90
     sessionsData.push({
       value: exerciseMinutes,
       quality: null,
@@ -114,7 +143,9 @@ async function main() {
     where: { userId: demoUser.id },
   });
 
-  console.log("🌱 Création d’un objectif de sommeil (8h/jour pendant 7 jours)...");
+  console.log(
+    "🌱 Création d’un objectif de sommeil (8h/jour pendant 7 jours)..."
+  );
 
   await prisma.objective.create({
     data: {
@@ -124,6 +155,8 @@ async function main() {
       frequency: "DAILY", // ObjectiveFrequency
       durationUnit: "DAY", // ObjectiveDurationUnit
       durationValue: 7, // pendant 7 jours
+      // On stocke l’unité prioritaire de Sleep (heures normalement)
+      sessionUnitId: sleepPrimaryTypeUnit?.sessionUnitId ?? null,
       // startsAt: laissé par défaut (now) si tu as un default(now())
     },
   });
