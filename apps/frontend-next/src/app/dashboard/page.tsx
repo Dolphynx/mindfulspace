@@ -4,7 +4,7 @@ import Image from "next/image";
 import QuickLogCard from "@/components/QuickLogCard";
 import SessionChartCard from "@/components/SessionChartCard";
 
-async function getYesterdaySummary() {
+async function getYesterdaySummary(): Promise<YesterdaySummaryItem[]> {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const res = await fetch(`${baseUrl}/sessions/summary/yesterday`, {
         cache: "no-store",
@@ -12,6 +12,12 @@ async function getYesterdaySummary() {
     if (!res.ok) throw new Error("Failed to fetch yesterday summary");
     return res.json();
 }
+
+type YesterdaySummaryItem = {
+    name: string;          // ou "Sleep" | "Meditation" | "Exercise" si tu veux être plus strict
+    value: number | null;
+    units?: string[];
+};
 
 export default async function HomePage() {
     // Récupérer les données du backend
@@ -53,7 +59,7 @@ export default async function HomePage() {
 
                     <div className="p-5 text-sm text-brandText-soft">
                         <ul className="space-y-4">
-                            {yesterdaySummary.map((item: any) => (
+                            {yesterdaySummary.map((item) => (
                                 <li key={item.name} className="flex items-center justify-between">
                                     <span className="flex items-center gap-2">
                                         <span className="text-xl" aria-hidden="true">

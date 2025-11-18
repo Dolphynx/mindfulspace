@@ -19,6 +19,7 @@ type SessionPoint = {
 
 type SessionChartCardProps = {
     type: 'sleep' | 'meditation' | 'exercise';
+    unit?: string;
 };
 
 type SessionType = {
