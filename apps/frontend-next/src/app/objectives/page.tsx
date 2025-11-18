@@ -1,24 +1,56 @@
+/**
+ * Page Objectifs
+ * ---------------
+ * Composant client React (Next.js) qui permet :
+ * - d'afficher les objectifs déjà enregistrés pour le user de démo
+ * - de vérifier si ce user a des sessions encodées (sinon : message explicatif)
+ * - de proposer des objectifs (easy / normal / challenge) à partir de l'historique
+ * - d’enregistrer un objectif choisi parmi ces propositions
+ *
+ * Cette page dialogue avec l’API Nest via plusieurs endpoints :
+ * - GET    /sessions/types
+ * - GET    /objectives
+ * - GET    /objectives/has-sessions
+ * - POST   /objectives/propose
+ * - POST   /objectives/save
+ *
+ * Toute la logique métier est côté backend ; ici on gère l’UX, les appels réseau
+ * et l’affichage des différents états (loading, erreur, succès).
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import PageHero from '@/components/PageHero';
 
+/**
+ * Types pour refléter les objets renvoyés par l’API backend.
+ * Ils permettent de sécuriser les accès aux propriétés dans le composant.
+ */
+
+// Unité de session (ex: minutes, heures...)
 type SessionUnit = {
     id: string;
     value: string;
 };
 
+// Type de session (ex: Méditation, Sommeil, Sport...)
 type SessionType = {
     id: string;
     name: string;
     sessionUnit?: SessionUnit | null;
 };
 
+// Niveau d’objectif, aligné avec le backend
 type ObjectiveLevel = 'easy' | 'normal' | 'challenge';
 
+// Fréquence de l’objectif (alignée sur l’enum Prisma côté backend)
 type Frequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+
+// Unité de durée de l’objectif (alignée sur l’enum Prisma côté backend)
 type DurationUnit = 'DAY' | 'WEEK' | 'MONTH';
 
+// Structure renvoyée par POST /objectives/propose
 type ObjectivesProposal = {
     sessionTypeId: string;
     sessionTypeName: string;
@@ -34,6 +66,7 @@ type ObjectivesProposal = {
     };
 };
 
+// Structure d’un objectif déjà enregistré (GET /objectives)
 type SavedObjective = {
     id: string;
     sessionTypeId: string;
@@ -46,12 +79,22 @@ type SavedObjective = {
     level?: ObjectiveLevel; // pas stocké en DB pour les anciens, mais connu pour ceux créés durant la session
 };
 
+// Structure de la réponse GET /objectives/has-sessions
 type HasSessionsResponse = {
     hasSessions: boolean;
 };
 
+/**
+ * Base URL de l’API backend, injectée via la config Next (variables d’environnement).
+ * On ne fait que la lire ici, et on laisse `buildUrl` gérer l’erreur si elle est absente.
+ */
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
 
+/**
+ * Construit une URL complète vers le backend à partir d’un path.
+ * - Vérifie que NEXT_PUBLIC_API_URL est défini (côté front).
+ * - Si ce n’est pas le cas, throw une Error explicite pour faciliter le debug.
+ */
 function buildUrl(path: string) {
     if (!apiBaseUrl) {
         throw new Error(
@@ -61,6 +104,9 @@ function buildUrl(path: string) {
     return `${apiBaseUrl}${path}`;
 }
 
+/**
+ * Traduit la fréquence (enum) vers un label en français pour l’affichage.
+ */
 function frequencyLabel(freq: Frequency) {
     switch (freq) {
         case 'DAILY':
@@ -72,6 +118,10 @@ function frequencyLabel(freq: Frequency) {
     }
 }
 
+/**
+ * Traduit l’unité de durée + valeur numérique vers un label français
+ * en gérant le singulier/pluriel.
+ */
 function durationUnitLabel(unit: DurationUnit, value: number) {
     switch (unit) {
         case 'DAY':
@@ -83,6 +133,9 @@ function durationUnitLabel(unit: DurationUnit, value: number) {
     }
 }
 
+/**
+ * Retourne un label lisible pour le niveau (UI).
+ */
 function levelLabel(level: ObjectiveLevel) {
     switch (level) {
         case 'easy':
@@ -94,6 +147,10 @@ function levelLabel(level: ObjectiveLevel) {
     }
 }
 
+/**
+ * Retourne les classes Tailwind utilisées pour afficher un badge coloré
+ * selon le niveau de l’objectif.
+ */
 function levelBadgeClasses(level: ObjectiveLevel) {
     switch (level) {
         case 'easy':
@@ -105,6 +162,10 @@ function levelBadgeClasses(level: ObjectiveLevel) {
     }
 }
 
+/**
+ * Choisit un emoji en fonction du nom du type de session.
+ * Petit détail d’UX pour rendre la liste d’objectifs plus visuelle.
+ */
 function sessionTypeIcon(name?: string) {
     const n = (name ?? '').toLowerCase();
     if (n.includes('sleep') || n.includes('sommeil')) return '😴';
@@ -113,23 +174,53 @@ function sessionTypeIcon(name?: string) {
     return '🎯';
 }
 
+/**
+ * Composant principal de la page Objectifs.
+ * -----------------------------------------
+ * Gère tout le cycle de vie :
+ * - chargement initial (types de session, objectifs existants, info hasSessions)
+ * - sélection du type de session
+ * - appel à l’API pour proposer des objectifs
+ * - appel à l’API pour enregistrer un objectif
+ * - affichage des différents états (chargement, erreur, succès, "pas de sessions")
+ */
 export default function ObjectivesPage() {
+    // Liste des types de session disponibles (chargée depuis /sessions/types)
     const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
+    // Id du type de session sélectionné dans le <select>
     const [selectedSessionTypeId, setSelectedSessionTypeId] = useState('');
+    // État de chargement global pour l’init (types + objectifs + hasSessions)
     const [loadingInit, setLoadingInit] = useState(false);
 
+    // Proposition d’objectifs renvoyée par l’API (/objectives/propose)
     const [proposal, setProposal] = useState<ObjectivesProposal | null>(null);
+    // État de chargement spécifique au calcul de proposition
     const [loadingProposal, setLoadingProposal] = useState(false);
 
+    // Niveau actuellement en cours d’enregistrement (pour désactiver le bouton)
     const [savingLevel, setSavingLevel] = useState<ObjectiveLevel | null>(null);
+    // Message d’information / succès
     const [message, setMessage] = useState<string | null>(null);
+    // Message d’erreur générique pour la page
     const [error, setError] = useState<string | null>(null);
 
+    // Liste des objectifs déjà enregistrés pour le user de démo
     const [savedObjectives, setSavedObjectives] = useState<SavedObjective[]>([]);
+    // Indique si le user de démo a au moins une session encodée
     const [hasSessions, setHasSessions] = useState<boolean | null>(null);
 
-    // Chargement initial : types de session + objectifs déjà encodés + info "hasSessions"
+    /**
+     * useEffect de chargement initial.
+     * --------------------------------
+     * Au montage du composant :
+     * - on charge les types de session
+     * - on charge les objectifs existants
+     * - on vérifie si le user de démo a des sessions
+     *
+     * On fait les trois requêtes en parallèle via Promise.all pour aller plus vite.
+     */
     useEffect(() => {
+        // Si la base URL d’API n’est pas définie, on ne tente pas d’appeler le backend.
         if (!apiBaseUrl) return;
 
         async function fetchInitial() {
@@ -137,12 +228,14 @@ export default function ObjectivesPage() {
             setError(null);
 
             try {
+                // Appels parallèles : types de session, objectifs, info hasSessions
                 const [typesRes, objectivesRes, sessionsRes] = await Promise.all([
                     fetch(buildUrl('/sessions/types')),
                     fetch(buildUrl('/objectives')),
                     fetch(buildUrl('/objectives/has-sessions')),
                 ]);
 
+                // Vérification des réponses HTTP
                 if (!typesRes.ok) {
                     throw new Error('Erreur lors du chargement des types de session.');
                 }
@@ -153,18 +246,22 @@ export default function ObjectivesPage() {
                     throw new Error('Erreur lors de la vérification des sessions.');
                 }
 
+                // Parsing JSON typé
                 const typesData: SessionType[] = await typesRes.json();
                 const objectivesData: SavedObjective[] = await objectivesRes.json();
                 const sessionsData: HasSessionsResponse = await sessionsRes.json();
 
+                // Mise à jour du state avec les données récupérées
                 setSessionTypes(typesData);
                 setSavedObjectives(objectivesData);
                 setHasSessions(sessionsData.hasSessions);
             } catch (error: unknown) {
                 console.error(error);
+                // Message d’erreur global pour la zone formulaire
                 setError(
                     "Impossible de charger les types de session, les objectifs et/ou les informations sur les sessions.",
                 );
+                // On met hasSessions à null pour signifier "état inconnu"
                 setHasSessions(null);
             } finally {
                 setLoadingInit(false);
@@ -174,11 +271,21 @@ export default function ObjectivesPage() {
         fetchInitial();
     }, []);
 
+    /**
+     * Gestion du clic sur "Proposer des objectifs".
+     * ---------------------------------------------
+     * - Vérifie qu’un type de session est sélectionné
+     * - Appelle POST /objectives/propose
+     * - Gère les erreurs HTTP, en essayant de récupérer le message du backend (404, etc.)
+     * - Stocke la proposition dans le state pour l’afficher ensuite
+     */
     async function handlePropose() {
+        // On remet à zéro les messages et la proposition
         setMessage(null);
         setError(null);
         setProposal(null);
 
+        // Pas de type sélectionné => message d’erreur UX
         if (!selectedSessionTypeId) {
             setError('Choisis d’abord un type de session.');
             return;
@@ -193,9 +300,11 @@ export default function ObjectivesPage() {
             });
 
             if (!res.ok) {
+                // Message d’erreur par défaut
                 let errorMessage = "Impossible de proposer des objectifs pour l'instant.";
 
                 try {
+                    // On tente de lire un JSON d’erreur renvoyé par le backend
                     const errJson: unknown = await res.json();
                     if (
                         res.status === 404 &&
@@ -204,6 +313,7 @@ export default function ObjectivesPage() {
                         'message' in errJson &&
                         typeof (errJson as { message: string }).message === 'string'
                     ) {
+                        // Si c’est une 404 avec un message lisible, on l’utilise
                         errorMessage = (errJson as { message: string }).message;
                     }
                 } catch {
@@ -213,10 +323,12 @@ export default function ObjectivesPage() {
                 throw new Error(errorMessage);
             }
 
+            // Si tout va bien, on parse la proposition d’objectifs
             const data: ObjectivesProposal = await res.json();
             setProposal(data);
         } catch (error: unknown) {
             console.error(error);
+            // Message d’erreur plus parlant si c’est une Error standard
             setError(
                 error instanceof Error
                     ? error.message
@@ -227,7 +339,15 @@ export default function ObjectivesPage() {
         }
     }
 
+    /**
+     * Gestion de l’enregistrement d’un objectif à partir d’un niveau.
+     * ----------------------------------------------------------------
+     * - Nécessite qu’une proposition soit déjà présente
+     * - Appelle POST /objectives/save avec sessionTypeId + level
+     * - Si succès, ajoute l’objectif en haut de la liste des objectifs enregistrés
+     */
     async function handleSave(level: ObjectiveLevel) {
+        // Si pas de proposition calculée, on ne fait rien (sécurité)
         if (!proposal) return;
         setSavingLevel(level);
         setMessage(null);
@@ -247,6 +367,7 @@ export default function ObjectivesPage() {
                 throw new Error("Impossible d'enregistrer cet objectif.");
             }
 
+            // Structure de la réponse attendue depuis le backend
             const data: {
                 message: string;
                 level: ObjectiveLevel;
@@ -260,11 +381,12 @@ export default function ObjectivesPage() {
                 };
             } = await res.json();
 
+            // Message de succès utilisateur
             setMessage(
                 `Objectif "${levelLabel(level)}" enregistré avec succès.`,
             );
 
-            // Ajouter immédiatement dans la colonne de gauche
+            // On ajoute immédiatement l’objectif en haut de la liste existante
             setSavedObjectives((prev) => [
                 {
                     id: data.objective.id,
@@ -291,10 +413,15 @@ export default function ObjectivesPage() {
         }
     }
 
+    /**
+     * Permet de désactiver tout le formulaire si l’API a répondu
+     * que le user de démo n’a aucune session encodée.
+     */
     const isFormDisabled = hasSessions === false;
 
     return (
         <div className="text-brandText flex flex-col">
+            {/* Bandeau d’en-tête réutilisable */}
             <PageHero
                 title="Objectifs personnalisés"
                 subtitle="Propose des objectifs réalistes à partir de l’historique de sessions du user de démo."
@@ -315,18 +442,21 @@ export default function ObjectivesPage() {
                             </div>
                         </header>
 
+                        {/* Si aucun objectif : message informatif */}
                         {savedObjectives.length === 0 ? (
                             <p className="text-sm text-brandMuted border border-dashed rounded-xl px-4 py-3 text-center">
                                 Aucun objectif pour le moment. Propose un objectif à droite
                                 puis enregistre celui qui te convient.
                             </p>
                         ) : (
+                            // Sinon : liste des objectifs
                             <div className="space-y-3">
                                 {savedObjectives.map((obj) => (
                                     <div
                                         key={obj.id}
                                         className="flex items-start gap-3 rounded-2xl border bg-gradient-to-r from-white to-brandBg/40 px-4 py-3 shadow-xs"
                                     >
+                                        {/* Emoji à gauche, dépendant du type de session */}
                                         <div className="text-2xl pt-1">
                                             {sessionTypeIcon(obj.sessionTypeName)}
                                         </div>
@@ -346,6 +476,7 @@ export default function ObjectivesPage() {
                                                         )}
                                                     </p>
                                                 </div>
+                                                {/* Badge de niveau si on le connaît (ceux créés via cette page) */}
                                                 {obj.level && (
                                                     <span
                                                         className={
@@ -371,6 +502,7 @@ export default function ObjectivesPage() {
                     <div className="space-y-4">
                         {/* Carte formulaire ou message si pas de sessions */}
                         {isFormDisabled ? (
+                            // Cas où le backend indique qu’il n’y a aucune session pour le user de démo
                             <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3 text-center">
                                 <h2 className="text-lg font-semibold">
                                     Objectifs indisponibles
@@ -386,6 +518,7 @@ export default function ObjectivesPage() {
                                 </p>
                             </div>
                         ) : (
+                            // Cas normal : formulaire actif
                             <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
                                 <h2 className="text-lg font-semibold">
                                     Proposer des objectifs
@@ -395,6 +528,7 @@ export default function ObjectivesPage() {
                                     suggérer un objectif réaliste pour le user de démo.
                                 </p>
 
+                                {/* Sélecteur de type de session */}
                                 <label className="block space-y-1">
                                     <span className="text-sm font-medium">
                                         Type de session pour les objectifs
@@ -423,6 +557,7 @@ export default function ObjectivesPage() {
                                     </select>
                                 </label>
 
+                                {/* Bouton pour déclencher la proposition */}
                                 <button
                                     type="button"
                                     onClick={handlePropose}
@@ -436,7 +571,7 @@ export default function ObjectivesPage() {
                                         : 'Proposer des objectifs'}
                                 </button>
 
-                                {/* Messages */}
+                                {/* Messages d’erreur / succès */}
                                 {error && (
                                     <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                                         {error}
@@ -478,6 +613,7 @@ export default function ObjectivesPage() {
                                     </p>
                                 </div>
 
+                                {/* Les 3 cartes : Facile / Standard / Challenge */}
                                 <div className="grid gap-3 md:grid-cols-3">
                                     {(
                                         [

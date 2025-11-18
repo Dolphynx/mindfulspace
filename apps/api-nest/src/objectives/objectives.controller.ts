@@ -1,3 +1,19 @@
+/**
+ * ObjectivesController
+ * --------------------
+ * Ce contrôleur expose toutes les routes HTTP liées aux objectifs
+ * pour l’utilisateur de démonstration.
+ *
+ * Rôles :
+ * - Fournir l'accès aux objectifs existants
+ * - Indiquer si le user de démo possède déjà des sessions encodées
+ * - Générer une proposition d’objectifs (easy / normal / challenge)
+ * - Enregistrer un objectif sélectionné par le front
+ *
+ * Toute la logique métier est déléguée à `ObjectivesService`.
+ * Ce contrôleur sert uniquement d’interface HTTP + Swagger docs.
+ */
+
 import {
   Body,
   Controller,
@@ -15,11 +31,30 @@ import {
 import { ObjectivesService } from './objectives.service';
 import type { ObjectiveLevel } from './objectives.types';
 
+/**
+ * Le tag Swagger "objectives" regroupe toutes les routes dans Swagger UI.
+ * Le contrôleur répond sous /objectives.
+ */
 @ApiTags('objectives')
 @Controller('objectives')
 export class ObjectivesController {
+  /**
+   * Injection du ObjectivesService.
+   * --------------------------------
+   * Le contrôleur ne fait aucune logique métier : il délègue tout
+   * au service et ne fait que gérer :
+   * - la structure des endpoints
+   * - les DTO / paramètres
+   * - la documentation Swagger
+   */
   constructor(private readonly objectivesService: ObjectivesService) {}
 
+  /**
+   * GET /objectives
+   * ----------------
+   * Retourne la liste complète des objectifs pour le user de démo.
+   * Utilisé pour l'affichage dans la page Objectifs.
+   */
   @Get()
   @ApiOperation({
     summary: "Liste les objectifs du user de démo",
@@ -33,6 +68,15 @@ export class ObjectivesController {
     return this.objectivesService.getObjectivesForDemoUser();
   }
 
+  /**
+   * GET /objectives/has-sessions
+   * ----------------------------
+   * Vérifie si le user de démo possède au moins une session encodée.
+   *
+   * Utile pour le front :
+   * - si false → afficher un message "aucune session" + désactiver les formulaires
+   * - si true  → le front peut appeler l'API de proposition d’objectifs
+   */
   @Get('has-sessions')
   @ApiOperation({
     summary: 'Indique si le user de démo possède au moins une session',
@@ -52,6 +96,29 @@ export class ObjectivesController {
     return this.objectivesService.hasSessionsForDemoUser();
   }
 
+  /**
+   * POST /objectives/propose
+   * -------------------------
+   * Génère une proposition d’objectifs basée sur les sessions récentes.
+   *
+   * Corps attendu :
+   * {
+   *   "sessionTypeId": "id-du-type-de-session"
+   * }
+   *
+   * Retour :
+   * - moyenne calculée
+   * - unité et nom du type de session
+   * - les trois propositions :
+   *   easy / normal / challenge
+   *
+   * Gestion d’erreurs :
+   * - 400 si sessionTypeId manquant
+   * - 404 si :
+   *     - user de démo introuvable
+   *     - type de session inexistant
+   *     - aucune session récente pour ce type
+   */
   @Post('propose')
   @ApiOperation({
     summary: 'Propose des objectifs à partir des sessions récentes',
@@ -70,6 +137,26 @@ export class ObjectivesController {
     return this.objectivesService.proposeForSessionType(sessionTypeId);
   }
 
+  /**
+   * POST /objectives/save
+   * ----------------------
+   * Enregistre un objectif à partir d'un niveau sélectionné.
+   *
+   * Corps attendu :
+   * {
+   *   "sessionTypeId": "id",
+   *   "level": "easy" | "normal" | "challenge"
+   * }
+   *
+   * Le service :
+   * - recalcule d'abord la proposition (pour être sûr qu'elle est à jour)
+   * - sélectionne la bonne valeur selon le niveau
+   * - crée l'objectif en base
+   *
+   * Gestion d’erreurs :
+   * - 400 si un paramètre est invalide/manquant
+   * - 500 si une erreur inattendue arrive (ex: problème DB)
+   */
   @Post('save')
   @ApiOperation({
     summary:
