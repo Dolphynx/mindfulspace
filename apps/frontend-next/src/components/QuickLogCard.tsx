@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 type SessionType = {
     id: string;
     name: string;
-    sessionUnit: { value: string };
+    units: { sessionUnit: { value: string } }[];   // ✅ UPDATED
 };
 
 export default function QuickLogCard() {
@@ -18,7 +18,6 @@ export default function QuickLogCard() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
-    // 🧠 Fetch session types once on mount
     useEffect(() => {
         async function fetchTypes() {
             try {
@@ -26,7 +25,7 @@ export default function QuickLogCard() {
                 if (!res.ok) throw new Error('Failed to fetch session types');
                 const data = await res.json();
                 setSessionTypes(data);
-                setSelectedType(data[0]); // select the first one by default
+                setSelectedType(data[0]);
             } catch (e) {
                 console.error(e);
             }
@@ -52,7 +51,7 @@ export default function QuickLogCard() {
                             ? new Date().toISOString()
                             : new Date(Date.now() - 86400000).toISOString(),
                     sessionTypeId: selectedType.id,
-                    expectedUnit: selectedType.sessionUnit.value,
+                    expectedUnit: selectedType.units?.[0]?.sessionUnit.value, // ✅ UPDATED
                 }),
             });
 
@@ -91,7 +90,7 @@ export default function QuickLogCard() {
                 ))}
             </div>
 
-            {/* Tabs from DB */}
+            {/* Tabs */}
             <div className="flex justify-between mb-6">
                 {sessionTypes.map((type) => (
                     <button
@@ -112,7 +111,7 @@ export default function QuickLogCard() {
             <div className="mb-4">
                 <label className="block text-gray-700 text-sm mb-2">
                     {selectedType
-                        ? `${selectedType.name} (${selectedType.sessionUnit.value}) : ${value}`
+                        ? `${selectedType.name} (${selectedType.units?.[0]?.sessionUnit.value}) : ${value}`
                         : `Value: ${value}`}
                 </label>
                 <input

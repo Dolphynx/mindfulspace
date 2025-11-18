@@ -66,7 +66,7 @@ export default async function HomePage() {
                                         <span className="font-medium text-brandText">{item.name}</span>
                                     </span>
                                     <span className="font-medium text-brandText">
-                                        {item.value !== null ? `${item.value} ${item.unit}` : "—"}
+                                        {item.value !== null ? `${item.value} ${item.units?.[0] ?? ""}` : "—"}
                                     </span>
                                 </li>
                             ))}
