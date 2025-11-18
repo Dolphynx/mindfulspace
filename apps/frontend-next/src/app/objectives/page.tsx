@@ -46,6 +46,10 @@ type SavedObjective = {
     level?: ObjectiveLevel; // pas stocké en DB pour les anciens, mais connu pour ceux créés durant la session
 };
 
+type HasSessionsResponse = {
+    hasSessions: boolean;
+};
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 function buildUrl(path: string) {
@@ -122,8 +126,9 @@ export default function ObjectivesPage() {
     const [error, setError] = useState<string | null>(null);
 
     const [savedObjectives, setSavedObjectives] = useState<SavedObjective[]>([]);
+    const [hasSessions, setHasSessions] = useState<boolean | null>(null);
 
-    // Chargement initial : types de session + objectifs déjà encodés
+    // Chargement initial : types de session + objectifs déjà encodés + info "hasSessions"
     useEffect(() => {
         if (!apiBaseUrl) return;
 
@@ -132,29 +137,35 @@ export default function ObjectivesPage() {
             setError(null);
 
             try {
-                const [typesRes, objectivesRes] = await Promise.all([
+                const [typesRes, objectivesRes, sessionsRes] = await Promise.all([
                     fetch(buildUrl('/sessions/types')),
                     fetch(buildUrl('/objectives')),
+                    fetch(buildUrl('/objectives/has-sessions')),
                 ]);
 
                 if (!typesRes.ok) {
-                    throw new Error('Erreur lors du chargement des types');
+                    throw new Error('Erreur lors du chargement des types de session.');
                 }
                 if (!objectivesRes.ok) {
-                    throw new Error('Erreur lors du chargement des objectifs');
+                    throw new Error('Erreur lors du chargement des objectifs.');
+                }
+                if (!sessionsRes.ok) {
+                    throw new Error('Erreur lors de la vérification des sessions.');
                 }
 
                 const typesData: SessionType[] = await typesRes.json();
-                const objectivesData: SavedObjective[] =
-                    await objectivesRes.json();
+                const objectivesData: SavedObjective[] = await objectivesRes.json();
+                const sessionsData: HasSessionsResponse = await sessionsRes.json();
 
                 setSessionTypes(typesData);
                 setSavedObjectives(objectivesData);
-            } catch (e) {
-                console.error(e);
+                setHasSessions(sessionsData.hasSessions);
+            } catch (error: unknown) {
+                console.error(error);
                 setError(
-                    "Impossible de charger les types de session et/ou les objectifs.",
+                    "Impossible de charger les types de session, les objectifs et/ou les informations sur les sessions.",
                 );
+                setHasSessions(null);
             } finally {
                 setLoadingInit(false);
             }
@@ -182,18 +193,35 @@ export default function ObjectivesPage() {
             });
 
             if (!res.ok) {
-                const errJson = await res.json().catch(() => null);
-                if (res.status === 404 && errJson?.message) {
-                    throw new Error(errJson.message);
+                let errorMessage = "Impossible de proposer des objectifs pour l'instant.";
+
+                try {
+                    const errJson: unknown = await res.json();
+                    if (
+                        res.status === 404 &&
+                        errJson &&
+                        typeof errJson === 'object' &&
+                        'message' in errJson &&
+                        typeof (errJson as { message: string }).message === 'string'
+                    ) {
+                        errorMessage = (errJson as { message: string }).message;
+                    }
+                } catch {
+                    // ignore JSON parsing errors, garder le message par défaut
                 }
-                throw new Error('Réponse serveur non OK');
+
+                throw new Error(errorMessage);
             }
 
             const data: ObjectivesProposal = await res.json();
             setProposal(data);
-        } catch (e) {
-            console.error(e);
-            setError("Impossible de proposer des objectifs pour l'instant.");
+        } catch (error: unknown) {
+            console.error(error);
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Impossible de proposer des objectifs pour l'instant.",
+            );
         } finally {
             setLoadingProposal(false);
         }
@@ -216,7 +244,7 @@ export default function ObjectivesPage() {
             });
 
             if (!res.ok) {
-                throw new Error('Réponse serveur non OK');
+                throw new Error("Impossible d'enregistrer cet objectif.");
             }
 
             const data: {
@@ -251,13 +279,19 @@ export default function ObjectivesPage() {
                 },
                 ...prev,
             ]);
-        } catch (e) {
-            console.error(e);
-            setError("Impossible d'enregistrer cet objectif.");
+        } catch (error: unknown) {
+            console.error(error);
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Impossible d'enregistrer cet objectif.",
+            );
         } finally {
             setSavingLevel(null);
         }
     }
+
+    const isFormDisabled = hasSessions === false;
 
     return (
         <div className="text-brandText flex flex-col">
@@ -335,73 +369,90 @@ export default function ObjectivesPage() {
 
                     {/* Colonne droite : formulaire + propositions */}
                     <div className="space-y-4">
-                        {/* Carte formulaire */}
-                        <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
-                            <h2 className="text-lg font-semibold">
-                                Proposer des objectifs
-                            </h2>
-                            <p className="text-sm text-brandMuted">
-                                Choisis un type de session puis laisse MindfulSpace te
-                                suggérer un objectif réaliste pour le user de démo.
-                            </p>
+                        {/* Carte formulaire ou message si pas de sessions */}
+                        {isFormDisabled ? (
+                            <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3 text-center">
+                                <h2 className="text-lg font-semibold">
+                                    Objectifs indisponibles
+                                </h2>
+                                <p className="text-sm text-brandMuted">
+                                    Impossible de proposer des objectifs car aucune session
+                                    n’a encore été encodée pour le user de démonstration.
+                                </p>
+                                <p className="text-sm text-brandMuted">
+                                    Enregistrez quelques sessions (ou lancez le seed de
+                                    démonstration) puis revenez sur cette page pour générer
+                                    des objectifs personnalisés.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
+                                <h2 className="text-lg font-semibold">
+                                    Proposer des objectifs
+                                </h2>
+                                <p className="text-sm text-brandMuted">
+                                    Choisis un type de session puis laisse MindfulSpace te
+                                    suggérer un objectif réaliste pour le user de démo.
+                                </p>
 
-                            <label className="block space-y-1">
-                                <span className="text-sm font-medium">
-                                    Type de session pour les objectifs
-                                </span>
-                                <select
-                                    value={selectedSessionTypeId}
-                                    onChange={(e) =>
-                                        setSelectedSessionTypeId(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border px-3 py-2 text-sm bg-white"
-                                    disabled={loadingInit}
-                                >
-                                    <option value="">
-                                        {loadingInit
-                                            ? 'Chargement...'
-                                            : 'Choisir un type de session'}
-                                    </option>
-                                    {sessionTypes.map((type) => (
-                                        <option key={type.id} value={type.id}>
-                                            {type.name}
-                                            {type.sessionUnit?.value
-                                                ? ` (${type.sessionUnit.value})`
-                                                : ''}
+                                <label className="block space-y-1">
+                                    <span className="text-sm font-medium">
+                                        Type de session pour les objectifs
+                                    </span>
+                                    <select
+                                        value={selectedSessionTypeId}
+                                        onChange={(e) =>
+                                            setSelectedSessionTypeId(e.target.value)
+                                        }
+                                        className="w-full rounded-xl border px-3 py-2 text-sm bg-white"
+                                        disabled={loadingInit}
+                                    >
+                                        <option value="">
+                                            {loadingInit
+                                                ? 'Chargement...'
+                                                : 'Choisir un type de session'}
                                         </option>
-                                    ))}
-                                </select>
-                            </label>
+                                        {sessionTypes.map((type) => (
+                                            <option key={type.id} value={type.id}>
+                                                {type.name}
+                                                {type.sessionUnit?.value
+                                                    ? ` (${type.sessionUnit.value})`
+                                                    : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
 
-                            <button
-                                type="button"
-                                onClick={handlePropose}
-                                disabled={
-                                    !selectedSessionTypeId || loadingProposal
-                                }
-                                className="inline-flex items-center rounded-xl bg-brandGreen px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                            >
-                                {loadingProposal
-                                    ? 'Calcul en cours...'
-                                    : 'Proposer des objectifs'}
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={handlePropose}
+                                    disabled={
+                                        !selectedSessionTypeId || loadingProposal
+                                    }
+                                    className="inline-flex items-center rounded-xl bg-brandGreen px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                                >
+                                    {loadingProposal
+                                        ? 'Calcul en cours...'
+                                        : 'Proposer des objectifs'}
+                                </button>
 
-                            {/* Messages */}
-                            {error && (
-                                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                                    {error}
-                                </p>
-                            )}
+                                {/* Messages */}
+                                {error && (
+                                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                                        {error}
+                                    </p>
+                                )}
 
-                            {message && (
-                                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                                    {message}
-                                </p>
-                            )}
-                        </div>
+                                {message && (
+                                    <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                        {message}
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Propositions sous le formulaire, version compacte */}
-                        {proposal && (
+                        {proposal && !isFormDisabled && (
                             <div className="rounded-2xl bg-white shadow-sm border px-5 py-4 space-y-3">
                                 <div>
                                     <h3 className="text-md font-semibold">

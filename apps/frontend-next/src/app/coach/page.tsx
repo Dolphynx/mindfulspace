@@ -24,7 +24,7 @@ export default function FormationPage() {
             />
 
             {/* SECTION : Pourquoi devenir coach ? */}
-            <section className="mx-auto max-w-6xl w-full px-4 py-16">
+            <section className="mx-auto max-w-6xl w-full px-4 py-8">
                 <h2 className="text-3xl font-semibold text-center mb-10">
                     Pourquoi devenir coach ?
                 </h2>
@@ -54,7 +54,7 @@ export default function FormationPage() {
             </section>
 
             {/* SECTION : Programme complet */}
-            <section className="bg-white/50 py-16 px-4">
+            <section className="bg-white/50 py-8 px-4">
                 <div className="mx-auto max-w-6xl">
                     <h2 className="text-3xl font-semibold text-center mb-6">
                         Programme de formation complet
@@ -109,7 +109,7 @@ export default function FormationPage() {
             </section>
 
             {/* SECTION : Tarification */}
-            <section className="mx-auto max-w-6xl w-full px-4 py-16">
+            <section className="mx-auto max-w-6xl w-full px-4 py-8">
                 <h2 className="text-3xl font-semibold text-center mb-10">
                     Choisissez votre parcours
                 </h2>

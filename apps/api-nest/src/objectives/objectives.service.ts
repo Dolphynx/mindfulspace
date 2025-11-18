@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ObjectiveDurationUnit, ObjectiveFrequency } from '@prisma/client';
 import type { ObjectiveLevel } from './objectives.types';
@@ -7,6 +11,10 @@ import type { ObjectiveLevel } from './objectives.types';
 export class ObjectivesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Récupère le user de démo à partir de l’email configuré.
+   * Lance une NotFoundException s’il n’existe pas.
+   */
   private async getDemoUser() {
     const email = process.env.DEMO_USER_EMAIL ?? 'demo@mindfulspace.app';
 
@@ -24,6 +32,20 @@ export class ObjectivesService {
   }
 
   /**
+   * Indique si le user de démo possède au moins une session encodée.
+   * Utilisé par le front pour savoir s’il peut proposer des objectifs.
+   */
+  async hasSessionsForDemoUser() {
+    const demoUser = await this.getDemoUser();
+
+    const count = await this.prisma.session.count({
+      where: { userId: demoUser.id },
+    });
+
+    return { hasSessions: count > 0 };
+  }
+
+  /**
    * Retourne tous les objectifs du user de démo,
    * avec les infos nécessaires pour l’affichage front.
    */
@@ -38,7 +60,6 @@ export class ObjectivesService {
         sessionType: {
           include: { sessionUnit: true },
         },
-        //sessionUnit: true,
       },
     });
 
@@ -46,8 +67,6 @@ export class ObjectivesService {
       id: o.id,
       sessionTypeId: o.sessionTypeId,
       sessionTypeName: o.sessionType?.name ?? 'Type de session',
-      //unitLabel:
-      //  o.sessionType?.sessionUnit?.value ?? o.sessionUnit?.value ?? '',
       unitLabel: o.sessionType?.sessionUnit?.value ?? '',
       value: o.value,
       frequency: o.frequency,
@@ -131,7 +150,10 @@ export class ObjectivesService {
    * Enregistre un objectif à partir d’un niveau (easy/normal/challenge).
    * On recalcule les valeurs pour être cohérents.
    */
-  async saveObjectiveFromLevel(sessionTypeId: string, level: ObjectiveLevel) {
+  async saveObjectiveFromLevel(
+    sessionTypeId: string,
+    level: ObjectiveLevel,
+  ) {
     const proposal = await this.proposeForSessionType(sessionTypeId);
     const demoUser = await this.getDemoUser();
 
