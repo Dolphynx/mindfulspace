@@ -6,9 +6,13 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TestDataModule } from './test-data/test-data.module';
 import { PrefsModule } from "./prefs/prefs.module";
 import { TipsModule } from "./tips/tips.module";
+import { AiModule } from './ai/ai.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { ObjectivesModule } from './objectives/objectives.module';
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({
-  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule],
+  imports: [PrefsModule, TipsModule,PrismaModule, TestDataModule, SessionsModule, AiModule, ObjectivesModule, ResourcesModule],
   controllers: [AppController, HealthController],
   providers: [AppService],
 })

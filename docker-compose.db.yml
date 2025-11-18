@@ -1,17 +1,30 @@
+# ============================================================================
+# Docker Compose – Environnement DEV MindfulSpace (version simple)
+# ----------------------------------------------------------------------------
+# Ce fichier lance UNIQUEMENT la base de données PostgreSQL en local.
+# Utilisé pour travailler sur l’API ou le frontend sans containeriser tout le projet.
+# ============================================================================
+
 name: mindfulspace_dev
+
 services:
   db:
-    image: postgres:16-alpine
-    container_name: mindfulspace_db_dev
-    restart: unless-stopped
+    image: postgres:16-alpine               # Image légère et optimisée
+    container_name: mindfulspace_db_dev     # Nom explicite du container
+    restart: unless-stopped                 # Redémarre automatiquement sauf arrêt volontaire
+
     environment:
-      POSTGRES_USER: ms_user
-      POSTGRES_PASSWORD: ms_pass
-      POSTGRES_DB: mindfulspace
+      POSTGRES_USER: ms_user                # Utilisateur Postgres (dev)
+      POSTGRES_PASSWORD: ms_pass            # Mot de passe Postgres (dev)
+      POSTGRES_DB: mindfulspace             # Nom de la base utilisée par Nest
+
     ports:
-      - "5432:5432"
+      - "5432:5432"                         # Exposition locale → Postgres accessible via localhost:5432
+
     volumes:
-      - db_data_dev:/var/lib/postgresql/data
+      - db_data_dev:/var/lib/postgresql/data  # Volume persistant pour la DB
+
+    # Healthcheck pour garantir que la DB est prête avant de lancer les services dépendants
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ms_user -d mindfulspace"]
       interval: 5s
@@ -19,4 +32,4 @@ services:
       retries: 10
 
 volumes:
-  db_data_dev:
+  db_data_dev:                               # Volume persistant Dev

@@ -47,7 +47,7 @@ export default function Navbar() {
 
             <div className="mx-auto max-w-7xl flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                    <Link href="/apps/frontend-next/public" className="flex items-center gap-2">
+                    <Link href="/dashboard" className="flex items-center gap-2">
                         <Image
                             src="/images/MindfulSpace_logo.jpg"
                             alt="MindfulSpace logo"
@@ -60,18 +60,59 @@ export default function Navbar() {
                 </div>
 
                 <nav className="flex items-center gap-4">
-                    <NavButton
-                        href="/dashboard"
-                        label="Dashboard"
-                        icon={<span>🏠</span>}
-                    />
-                    {/* bouton compact respiration */}
+
+                    {/* bouton respiration */}
                     <NavButton
                         href="/seance/respiration"
                         label="Respiration"
-                        icon={<span aria-label="Respiration" title="Lancer respiration">🫁</span>}
+                        icon={<span aria-label="Respiration" title="Lancer respiration">🌬️</span>}
                     />
-                    <NavButton href="/contact" label="Contact" />
+
+                    {/* bouton dashbaord */}
+                    <NavButton
+                        href="/dashboard"
+                        label="Dashboard"
+                        icon={<span>📊</span>}
+                    />
+
+                    {/* bouton AI mantras */}
+                    {/*
+                    <NavButton
+                        href="/mantra"
+                        label="IA mantras"
+                        icon={<span aria-label="IA mantras" title="IA mantras">💬</span>}
+                    />
+                    */}
+
+                    {/* bouton Objectives */}
+                    <NavButton
+                        href="/objectives"
+                        label="Objectives"
+                        icon={<span aria-label="Objectives" title="Objectives">🎯</span>}
+                    />
+
+                    {/* bouton Ressources */}
+                    <NavButton
+                        href="/resources"
+                        label="Ressources"
+                        icon={<span aria-label="Ressources" title="Ressources">📚</span>}
+                    />
+
+
+                    {/* bouton Coach */}
+                    <NavButton
+                        href="/coach"
+                        label="Become a coach"
+                        icon={<span aria-label="Become a coach" title="Become a coach">🎓</span>}
+                    />
+
+
+                    {/* bouton contact */}
+                    <NavButton
+                        href="/contact"
+                        label="Contact"
+                        icon={<span aria-label="Contact" title="Contact">✉️</span>}
+                    />
                 </nav>
             </div>
         </header>

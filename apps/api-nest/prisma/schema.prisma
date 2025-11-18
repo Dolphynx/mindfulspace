@@ -15,3 +15,174 @@ model TestData {
   metricValue Int
   createdAt   DateTime @default(now())
 }
+
+model Session {
+  id          String   @id @default(uuid())
+  value       Int
+  quality     Int?
+  dateSession DateTime
+  dateCreated DateTime @default(now())
+
+  // Foreign key to SessionType
+  sessionTypeId String
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  // user
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+}
+
+model SessionType {
+  id   String @id @default(uuid())
+  name String
+
+  // Jointure vers plusieurs unités
+  units SessionTypeUnit[]
+
+  // Foreign key to SessionUnit
+  //sessionUnitId String
+  //sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+
+  // One type can have many sessions
+  sessions  Session[]
+  Objective Objective[]
+}
+
+model SessionUnit {
+  id    String @id @default(uuid())
+  value String // e.g. "minutes", "steps"
+
+  // One unit can be used by many types
+  types     SessionTypeUnit[]
+  //types      SessionType[]
+  //objectives Objective[]
+  Objective Objective[]
+}
+
+//
+// TABLE DE JOINTURE M:N EXPLICITE
+//
+model SessionTypeUnit {
+  priority      Int
+  sessionTypeId String
+  sessionUnitId String
+
+  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
+  sessionUnit SessionUnit @relation(fields: [sessionUnitId], references: [id])
+
+  @@id([sessionTypeId, sessionUnitId]) // Clé primaire composée
+}
+
+model User {
+  id          String  @id @default(cuid())
+  email       String  @unique
+  displayName String?
+
+  // relations
+  sessions   Session[]
+  objectives Objective[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Jointure vers plusieurs types
+  //types   SessionTypeUnit[]
+}
+
+model Objective {
+  id String @id @default(cuid())
+
+  // À quel user appartient l’objectif (demoUser ou user réel plus tard)
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  // Sur quel type de session porte l’objectif (sleep, exercise, etc.)
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+  sessionTypeId String
+
+  // Valeur cible dans l’unité du SessionType (ex: 8 (heures), 20 (minutes))
+  value Float
+
+  // Fréquence : par jour, par semaine, par mois
+  frequency ObjectiveFrequency
+
+  // Durée de l’objectif : ex. 7 jours, 4 semaines, 1 mois
+  durationUnit  ObjectiveDurationUnit
+  durationValue Int
+
+  startsAt      DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  SessionUnit   SessionUnit? @relation(fields: [sessionUnitId], references: [id])
+  sessionUnitId String?
+}
+
+enum ObjectiveFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ObjectiveDurationUnit {
+  DAY
+  WEEK
+  MONTH
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  MEDITATION
+  GUIDE
+}
+
+model ResourceCategory {
+  id        String  @id @default(uuid())
+  name      String
+  slug      String  @unique
+  iconEmoji String? // ex: "📄", "🎧" si tu veux
+
+  resources Resource[]
+}
+
+model ResourceTag {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  resources ResourceTagOnResource[]
+}
+
+model Resource {
+  id          String       @id @default(uuid())
+  title       String
+  slug        String       @unique
+  summary     String // petit résumé pour les cartes
+  content     String // markdown / texte long
+  type        ResourceType
+  isPremium   Boolean      @default(false) // pour le badge Premium + champ "gratuit"
+  isFeatured  Boolean      @default(false) // pour "Featured resources"
+  authorName  String?
+  readTimeMin Int? // pour les articles, ex: 8
+  externalUrl String? // si un jour tu linkes vers un autre site
+
+  categoryId String
+  category   ResourceCategory @relation(fields: [categoryId], references: [id])
+
+  tags ResourceTagOnResource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
+  @@index([summary])
+}
+
+model ResourceTagOnResource {
+  resourceId String
+  tagId      String
+
+  resource Resource    @relation(fields: [resourceId], references: [id])
+  tag      ResourceTag @relation(fields: [tagId], references: [id])
+
+  @@id([resourceId, tagId])
+}

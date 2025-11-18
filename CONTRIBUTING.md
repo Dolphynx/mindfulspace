@@ -18,6 +18,59 @@ aucun push direct, Merge Requests uniquement.
 
 ---
 
+------------------------------------------------------------------------
+
+## Règles Prisma : modifications du `schema.prisma` & migrations
+
+Lorsque vous modifiez le fichier **`prisma/schema.prisma`**, vous devez
+**OBLIGATOIREMENT** créer une migration Prisma.
+
+### 1. Celui qui modifie le schéma → crée une migration
+
+``` bash
+npx prisma migrate dev --name nom_de_la_migration
+```
+
+Cela :
+
+-   génère une migration dans `prisma/migrations`
+-   met à jour la base locale
+-   garantit que la CI/CD pourra appliquer la migration en staging /
+    production
+
+**La migration doit être commitée dans votre branche.**
+
+---
+
+### 2. Tous les autres développeurs → appliquent les migrations
+
+Quand une branche contenant des migrations est mergée :
+
+``` bash
+git pull
+npx prisma migrate dev
+```
+
+Cela met votre base locale en phase avec le repo.
+
+Astuce : si problème ou base locale trop sale
+
+``` bash
+npx prisma migrate reset
+```
+
+---
+
+### ⚠️ Important
+
+-   **NE JAMAIS** modifier directement la DB en staging ou production.
+-   **NE PAS supprimer / renommer manuellement** un dossier dans
+    `prisma/migrations`.
+-   La CI utilise `prisma migrate deploy` → elle applique **toutes** les
+    migrations dans l'ordre.
+
+---
+
 ## Règle essentielle : garder les branches à jour avec `main`
 
 Afin d’éviter les conflits tardifs et les divergences importantes dans le code,  
