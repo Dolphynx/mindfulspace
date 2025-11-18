@@ -98,7 +98,7 @@ async function main() {
   for (let i = 0; i < daysBack; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    d.setHours(0, 0, 0, 0);
+    d.setHours(12, 0, 0, 0);
 
     // Sommeil : 6–9 heures
     const sleepHours = 6 + Math.floor(Math.random() * 4);

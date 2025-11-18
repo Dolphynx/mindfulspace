@@ -33,11 +33,11 @@ export type MoodOption = {
  *   - affichage des entrées DB
  */
 export const MOOD_OPTIONS: MoodOption[] = [
-    { value: 1, emoji: "🥲", label: "Difficile" },
+    { value: 1, emoji: "😣", label: "Difficile" },
     { value: 2, emoji: "🙁", label: "Pas top" },
     { value: 3, emoji: "😐", label: "Correct" },
     { value: 4, emoji: "🙂", label: "Bien" },
-    { value: 5, emoji: "😊", label: "Excellent" },
+    { value: 5, emoji: "🤩", label: "Excellent" }, // yeux étoilés
 ];
 
 /**
