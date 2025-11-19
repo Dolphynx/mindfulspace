@@ -24,6 +24,9 @@ import "@/globals.css";
 
 import AppChrome from "@/components/AppChrome";
 
+import ServiceWorkerRegister from "../../pwa/ServiceWorkerRegister";
+
+
 /**
  * Déclaration des polices utilisées dans l’application.
  * - Next.js gère automatiquement le chargement et l’optimisation.
@@ -56,6 +59,7 @@ export const metadata: Metadata = {
         index: false,
         follow: false,
     },
+    manifest: "/manifest.json",
 };
 
 /**
@@ -89,6 +93,7 @@ export default function RootLayout({
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+        <ServiceWorkerRegister/>
         <AppChrome>{children}</AppChrome>
         </body>
         </html>
