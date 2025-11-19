@@ -60,7 +60,6 @@ export const metadata: Metadata = {
         follow: false,
     },
     manifest: "/manifest.json",
-    themeColor: "#000000",
 };
 
 /**

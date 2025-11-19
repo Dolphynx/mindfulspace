@@ -1,7 +1,8 @@
 export async function registerServiceWorker() {
 
     // to disable in dev mode
-    if (process.env.NODE_ENV !== "production") return;
+    //if (process.env.NODE_ENV !== "production") return;
+    if (process.env.NODE_ENV === "development") return;
 
     if ('serviceWorker' in navigator) {
         // console.log ('Window detected, attempting SW registration...');

@@ -109,7 +109,7 @@ self.addEventListener("fetch", (event) => {
                 if (cached) return cached;
 
                 // Si la requête est une navigation (HTML),
-                // et que même là le cache n’a rien, on renvoie "/" par défaut.
+                // et que même là le cache n’a rien, on renvoie "/offline" par défaut.
                 // Cela permet à l'app de rester "navigable" hors-ligne.
                 if (request.mode === "navigate") {
                     return caches.match("/offline");
