@@ -298,7 +298,7 @@ deploy:staging:
     # ----------------------------------------------------------
     - URL="$STAGING_DATABASE_URL"
 
-    # dossier de déploiement (déjà possédé par l'utilisateur deploy)
+    # 1) dossier de déploiement (déjà possédé par l'utilisateur deploy)
     # => création si nécessaire (mkdir -p est idempotent)
     - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
@@ -309,8 +309,21 @@ deploy:staging:
     # tee écrit dans le fichier, la redirection >/dev/null supprime la sortie.
     # chmod 600 : permissions strictes.
     # ----------------------------------------------------------
-    - ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
-      | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+    #- ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
+    #  | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+
+    # 2) on génère le fichier EN LOCAL dans le job CI
+    - echo "DATABASE_URL=$URL" > api.env
+    - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+
+    # 3) on l’envoie sur le VPS
+    - scp api.env vps:"$DEPLOY_DIR/api.env"
+
+    # 4) droits
+    - ssh vps "chmod 600 '$DEPLOY_DIR/api.env'"
+
+    # 5) nettoyage local
+    - rm api.env
 
     # db.env = password extrait depuis l’URL
     # ----------------------------------------------------------
@@ -416,8 +429,12 @@ deploy:prod:
     - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
     # Fichier api.env PROD
-    - ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
-      | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+    - echo "DATABASE_URL=$URL" > api.env
+    - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+
+    - scp api.env vps:"$DEPLOY_DIR/api.env"
+    - ssh vps "chmod 600 '$DEPLOY_DIR/api.env'"
+    - rm api.env
 
     # Extraction du mot de passe DB PROD dans db.env
     - |
