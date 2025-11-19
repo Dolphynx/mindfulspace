@@ -309,10 +309,8 @@ deploy:staging:
     # tee écrit dans le fichier, la redirection >/dev/null supprime la sortie.
     # chmod 600 : permissions strictes.
     # ----------------------------------------------------------
-    - ssh vps "
-        printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \ 
-        | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'
-      "
+    - ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
+      | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
 
     # db.env = password extrait depuis l’URL
     # ----------------------------------------------------------
@@ -418,7 +416,8 @@ deploy:prod:
     - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
     # Fichier api.env PROD
-    - ssh vps "printf 'DATABASE_URL=%s\n' '$URL' | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
+    - ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
+      | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
 
     # Extraction du mot de passe DB PROD dans db.env
     - |
