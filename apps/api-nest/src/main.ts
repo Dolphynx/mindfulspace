@@ -58,20 +58,50 @@ async function bootstrap(): Promise<void> {
 
   // === CORS ===
   /**
-   * Autorise le frontend Next.js à appeler l’API.
+   * Configuration CORS
+   * -------------------
+   * Autorise uniquement les domaines officiels à accéder à l’API.
    *
    * En production :
-   *   - FRONTEND_URL doit être défini dans les variables d'environnement.
+   *   - Seuls les domaines suivants sont autorisés :
+   *       • https://mindfulspace.be
+   *       • https://www.mindfulspace.be
+   *       • https://staging.mindfulspace.be
+   *       • (optionnel) FRONTEND_URL si défini dans les variables d’environnement.
+   *
    * En développement :
-   *   - CORS = true → tout est autorisé pour faciliter les tests.
+   *   - Seul http://localhost:3000 est autorisé (frontend Next.js en mode dev).
+   *
+   * Note :
+   *   Cette configuration évite les accès non autorisés depuis des domaines externes
+   *   et renforce la sécurité tout en gardant la flexibilité pour le staging.
    */
+
+  const allowedOrigins =
+    process.env.NODE_ENV === 'production'
+      ? [
+        process.env.FRONTEND_URL, // si défini dans l’environnement
+        'https://mindfulspace.be',
+        'https://www.mindfulspace.be',
+        'https://staging.mindfulspace.be',
+      ].filter(Boolean) // évite les undefined
+      : ['http://localhost:3000'];
+
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL // ex: https://mindfulspace.app
-        : true, // en dev: autorise tout
+    origin: allowedOrigins,
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
   });
+
+  /*app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://staging.mindfulspace.be',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
+  });/*
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -86,14 +116,6 @@ async function bootstrap(): Promise<void> {
    * Par défaut, le port est 3001 si non précisé.
    */
   const port = process.env.PORT ? Number(process.env.PORT) : 3001;
-  app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://staging.mindfulspace.be',
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
-  });
   await app.listen(port);
 
   // === Log clair au démarrage ===
