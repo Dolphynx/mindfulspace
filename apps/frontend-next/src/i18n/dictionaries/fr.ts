@@ -383,6 +383,14 @@ const fr = {
         medium: "Correct",
         good: "Bien",
         open: "Excellent",
+
+        labels: {
+            very_bad: "Très mal",
+            bad: "Mal",
+            neutral: "Neutre",
+            good: "Bien",
+            very_good: "Très bien",
+        },
     },
 
     cookieBanner: {
@@ -411,6 +419,28 @@ const fr = {
 
         cancel: "Annuler",
         save: "Enregistrer",
+    },
+
+    quickLogCard: {
+        title: "Quick Log",
+        subtitle: "Enregistre rapidement tes indicateurs de bien-être du jour.",
+
+        loggingFor: "Encodage pour",
+        todaySuffix: "aujourd’hui",
+        yesterdaySuffix: "hier",
+
+        today: "Aujourd’hui",
+        yesterday: "Hier",
+        chooseAnotherDate: "Choisir une autre date",
+
+        valueLabel: "Valeur",
+        qualityLabel: "Qualité",
+
+        saving: "Enregistrement…",
+        submit: "Enregistrer",
+
+        success: "Séance enregistrée avec succès.",
+        error: "Erreur lors de l’enregistrement de la séance.",
     },
 
 };
