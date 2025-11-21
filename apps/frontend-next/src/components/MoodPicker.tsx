@@ -143,7 +143,7 @@ export default function MoodPicker({
                             className="w-16 h-16 mx-auto"
                         />
 
-                        <span className="text-brandText">{t(opt.label)}</span>
+                        {/*<span className="text-brandText">{t(opt.label)}</span>*/}
                     </button>
                 );
             })}
