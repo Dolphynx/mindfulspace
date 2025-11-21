@@ -17,8 +17,15 @@
 //    et de maintenir une architecture claire du dossier `components/layout`.
 // ============================================================
 
-export { default as Navbar } from "./Navbar";                         // Barre de navigation principale
-export { default as Footer } from "./Footer";                         // Footer général du site
-export { default as FooterCookiesLink } from "./FooterCookiesLink";   // Lien vers les préférences cookies, affiché dans le footer
-export { default as CookieBanner } from "./CookieBanner";             // Bandeau cookies affiché aux nouveaux visiteurs
-export { default as CookiePreferencesModal } from "./CookiePreferencesModal"; // Modal permettant de gérer les préférences cookies
+export { default as CookieBanner } from "./CookieBanner";
+export { default as CookiePreferencesModal } from "./CookiePreferencesModal";
+export { default as Footer } from "./Footer";
+export { default as FooterCookiesLink } from "./FooterCookiesLink";
+
+export { ClientNavbar } from "./Navbar";
+export { PublicNavbar } from "./PublicNavbar";
+export { CoachNavbar } from "./CoachNavbar";
+export { AdminNavbar } from "./AdminNavbar";
+export { MainNavbar } from "./MainNavbar";
+
+export { default as AppShell } from "./AppShell";

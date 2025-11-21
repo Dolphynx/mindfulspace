@@ -19,7 +19,12 @@
  *   passe en production réelle.
  */
 
+import { useTranslations } from "@/i18n/TranslationContext";
+
 export default function GlobalNotice() {
+    // Namespace dédié aux textes de ce bandeau
+    const t = useTranslations("globalNotice");
+
     return (
         <div className="sticky top-0 z-[10000] w-full bg-red-600 text-white text-xs flex items-center justify-center px-3 py-1 gap-2 text-center shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
             {/* Petite icône visuelle "!" dans un carré jaune (style alerte) */}
@@ -27,11 +32,8 @@ export default function GlobalNotice() {
                 !
             </span>
 
-            {/* Message explicatif affiché à l’utilisateur */}
-            <p>
-                Ceci est une application de projet scolaire. Toutes les données,
-                contenus et fonctionnalités sont fictifs.
-            </p>
+            {/* Message explicatif affiché à l’utilisateur (issu de l’i18n) */}
+            <p>{t("message")}</p>
         </div>
     );
 }

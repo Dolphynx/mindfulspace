@@ -1,47 +1,45 @@
 "use client";
 
 /**
- * Modal de gestion détaillée des préférences de cookies.
+ * Modale de gestion avancée des préférences cookies.
  *
- * - Affiche une fenêtre modale centrée avec différents types de cookies.
- * - Permet à l'utilisateur d'activer / désactiver :
- *   - les cookies analytiques,
- *   - la personnalisation.
- * - Les cookies essentiels sont toujours activés (case cochée et désactivée).
+ * Fonctionnalités :
+ * - Permet d’activer / désactiver les cookies analytiques et de personnalisation.
+ * - Les cookies essentiels sont affichés comme obligatoires (non modifiables).
+ * - Conserve le focus au sein de la modale (meilleure accessibilité).
+ * - Ferme la modale lorsqu’on clique en dehors ou sur Escape.
  *
- * Accessibilité :
- * - Focus trap (le focus reste dans le modal tant qu'il est ouvert).
- * - Fermeture via la touche `Escape`.
- * - Fermeture en cliquant sur le fond (overlay) autour du modal.
+ * Ce composant :
+ * - NE gère PAS la persistance → confiée au parent via onSaveAction().
+ * - NE gère PAS l'état d’ouverture → confié au parent via isOpen + onCloseAction().
  */
 
 import { useEffect, useRef } from "react";
 import { CookiePrefs } from "@/lib/cookieConsent";
+import { useTranslations } from "@/i18n/TranslationContext";
 
 /**
- * Propriétés attendues par le composant CookiePreferencesModal.
+ * Propriétés du composant CookiePreferencesModal.
  */
 type CookiePreferencesModalProps = {
-    /** Indique si le modal est visible (true) ou caché (false). */
+    /** La modale est-elle visible ? */
     isOpen: boolean;
-    /** Callback appelé lorsqu'on souhaite fermer le modal (clic fond, bouton Annuler, Escape, etc.). */
+
+    /** Fonction pour fermer la modale */
     onCloseAction: () => void;
-    /** Préférences de cookies actuellement sélectionnées. */
+
+    /** Objet des préférences actuelles */
     prefs: CookiePrefs;
-    /** Callback pour mettre à jour les préférences dans le state parent. */
+
+    /** Fonction pour modifier les préférences (case cochée / décochée) */
     onChangePrefsAction: (next: CookiePrefs) => void;
-    /** Callback appelé lorsqu'on clique sur "Enregistrer" (persistance des prefs côté parent). */
+
+    /** Fonction appelée lorsqu'on clique sur “Enregistrer” */
     onSaveAction: () => void;
 };
 
 /**
- * Composant modal de préférences cookies.
- *
- * @param isOpen - Contrôle la visibilité du modal.
- * @param onCloseAction - Fonction appelée pour fermer le modal.
- * @param prefs - Valeurs actuelles des préférences cookies.
- * @param onChangePrefsAction - Fonction de mise à jour des préférences.
- * @param onSaveAction - Fonction de sauvegarde des préférences.
+ * Composant principal : Modale de préférences cookies.
  */
 export default function CookiePreferencesModal({
                                                    isOpen,
@@ -51,46 +49,26 @@ export default function CookiePreferencesModal({
                                                    onSaveAction,
                                                }: CookiePreferencesModalProps) {
     /**
-     * Référence vers le premier élément focusable dans le modal
-     * (ici, la checkbox "Cookies analytiques").
-     *
-     * Utilisé pour :
-     * - donner le focus au premier élément à l'ouverture,
-     * - gérer le "focus trap" avec Shift+Tab.
+     * Références au premier et au dernier élément focusable de la modale.
+     * Ces références servent à “capturer” le focus clavier dans la modale
+     * (accessibilité : empêcher Tab de sortir de la boîte).
      */
     const firstFocusableRef = useRef<HTMLElement | null>(null);
-
-    /**
-     * Référence vers le dernier élément focusable dans le modal
-     * (ici, le bouton "Enregistrer").
-     *
-     * Utilisé pour :
-     * - gérer le "focus trap" avec Tab (sans Shift),
-     * - boucler le focus de la fin vers le début.
-     */
     const lastFocusableRef = useRef<HTMLElement | null>(null);
 
-    /**
-     * Setter dédié pour la première ref focusable
-     * (permet de l'utiliser directement sur `ref={...}` dans le JSX).
-     */
+    /** Fonctions utilitaires pour attribuer les refs */
     const setFirstFocusableRef = (el: HTMLElement | null) => {
         firstFocusableRef.current = el;
     };
-
-    /**
-     * Setter dédié pour la dernière ref focusable.
-     */
     const setLastFocusableRef = (el: HTMLElement | null) => {
         lastFocusableRef.current = el;
     };
 
+    /** Hook i18n pour les textes spécifiques à cette modale */
+    const t = useTranslations("cookieModal");
+
     /**
-     * Effet qui gère la fermeture du modal avec la touche Escape.
-     *
-     * - N'est actif que lorsque le modal est ouvert.
-     * - Ajoute un listener sur `window` à l'ouverture,
-     *   et le retire au démontage / fermeture.
+     * Effet : fermeture de la modale sur “Escape”.
      */
     useEffect(() => {
         if (!isOpen) return;
@@ -107,20 +85,14 @@ export default function CookiePreferencesModal({
     }, [isOpen, onCloseAction]);
 
     /**
-     * Effet qui gère :
-     * - le focus initial dans le modal (focus sur le premier élément focusable),
-     * - le "focus trap" (Tab / Shift+Tab ne sortent pas du modal).
-     *
-     * Le focus trap fonctionne ainsi :
-     * - Si on est sur le premier élément et qu'on presse Shift+Tab,
-     *   on bloque et on renvoie le focus sur le dernier élément.
-     * - Si on est sur le dernier élément et qu'on presse Tab,
-     *   on bloque et on renvoie le focus sur le premier élément.
+     * Effet : piège du focus dans la modale
+     * - Tab / Shift+Tab restent dans la boîte
+     * - focus initial sur le premier élément interactif
      */
     useEffect(() => {
         if (!isOpen) return;
 
-        // Donne le focus au premier élément lors de l'ouverture
+        // Focus initial
         firstFocusableRef.current?.focus();
 
         const trap = (e: KeyboardEvent) => {
@@ -130,12 +102,12 @@ export default function CookiePreferencesModal({
             const firstEl = firstFocusableRef.current;
             const lastEl = lastFocusableRef.current;
 
-            // Shift+Tab depuis le premier élément → focus sur le dernier
+            // Si Shift+Tab depuis le premier, renvoyer au dernier
             if (e.shiftKey && document.activeElement === firstEl) {
                 e.preventDefault();
                 lastEl.focus();
             }
-            // Tab depuis le dernier élément → focus sur le premier
+            // Si Tab depuis le dernier, revenir au premier
             else if (!e.shiftKey && document.activeElement === lastEl) {
                 e.preventDefault();
                 firstEl.focus();
@@ -146,16 +118,19 @@ export default function CookiePreferencesModal({
         return () => document.removeEventListener("keydown", trap);
     }, [isOpen]);
 
-    // Si le modal n'est pas ouvert, ne rien rendre (optimisation + comportement attendu).
+    /** Ne rien rendre si la modale n'est pas ouverte */
     if (!isOpen) return null;
 
     return (
+        /**
+         * Backdrop (fond assombri). Ferme la modale si on clique dessus.
+         */
         <div
             className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 p-4"
             role="presentation"
             aria-hidden={false}
-            // Clic sur le fond (overlay) → fermeture du modal
             onClick={(e) => {
+                // Si on clique sur le fond (pas le contenu), fermer la modale
                 if (e.target === e.currentTarget) {
                     onCloseAction();
                 }
@@ -165,20 +140,23 @@ export default function CookiePreferencesModal({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="cookie-prefs-title"
-                className="w-full max-w-md rounded-card bg-white p-6 shadow-xl outline-none focus:outline-none border border-brandBorder"
+                className="w-full max-w-md rounded-card bg-white p-6 shadow-xl outline-none border border-brandBorder"
             >
+                {/* --- Titre de la fenêtre modale --- */}
                 <h2
                     id="cookie-prefs-title"
                     className="text-lg font-semibold text-brandText mb-4"
                 >
-                    Préférences cookies
+                    {t("title")}
                 </h2>
 
+                {/* --- Options de préférences cookie --- */}
                 <div className="space-y-4 text-sm text-brandText-soft">
-                    {/* Section : cookies analytiques */}
+
+                    {/** Option : cookies analytiques */}
                     <section className="flex items-start gap-3">
                         <input
-                            ref={setFirstFocusableRef}
+                            ref={setFirstFocusableRef} // premier élément focusable
                             id="analytics"
                             type="checkbox"
                             className="mt-1 h-4 w-4 rounded border-brandBorder"
@@ -192,16 +170,13 @@ export default function CookiePreferencesModal({
                         />
                         <label htmlFor="analytics" className="flex-1">
                             <span className="font-medium text-brandText block">
-                                Cookies analytiques
+                                {t("analyticsTitle")}
                             </span>
-                            <span className="text-brandText-soft">
-                                Nous aident à comprendre comment l’application
-                                est utilisée.
-                            </span>
+                            <span>{t("analyticsDescription")}</span>
                         </label>
                     </section>
 
-                    {/* Section : personnalisation */}
+                    {/** Option : personnalisation */}
                     <section className="flex items-start gap-3">
                         <input
                             id="personalization"
@@ -217,16 +192,13 @@ export default function CookiePreferencesModal({
                         />
                         <label htmlFor="personalization" className="flex-1">
                             <span className="font-medium text-brandText block">
-                                Personnalisation
+                                {t("personalizationTitle")}
                             </span>
-                            <span className="text-brandText-soft">
-                                Permet de personnaliser le contenu affiché pour
-                                toi.
-                            </span>
+                            <span>{t("personalizationDescription")}</span>
                         </label>
                     </section>
 
-                    {/* Section : cookies essentiels (toujours actifs, non modifiables) */}
+                    {/** Option : cookies essentiels (non modifiable) */}
                     <section className="flex items-start gap-3">
                         <input
                             id="essential"
@@ -237,37 +209,33 @@ export default function CookiePreferencesModal({
                         />
                         <label htmlFor="essential" className="flex-1">
                             <span className="font-medium text-brandText block">
-                                Cookies essentiels
+                                {t("essentialTitle")}
                             </span>
-                            <span className="text-brandText-soft">
-                                Nécessaires au fonctionnement de
-                                l’application.
-                            </span>
+                            <span>{t("essentialDescription")}</span>
                         </label>
                     </section>
                 </div>
 
-                {/* Boutons d'action du modal : Annuler / Enregistrer */}
+                {/* --- Boutons en bas de la modale --- */}
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <button
                         type="button"
                         className="rounded-md border border-brandBorder bg-white px-4 py-2 text-sm font-medium text-brandText hover:bg-brandBg"
                         onClick={onCloseAction}
                     >
-                        Annuler
+                        {t("cancel")}
                     </button>
 
                     <button
-                        ref={setLastFocusableRef}
+                        ref={setLastFocusableRef} // dernier élément focusable
                         type="button"
                         className="rounded-md bg-brandGreen px-4 py-2 text-sm font-semibold text-white shadow-subtle hover:opacity-90"
                         onClick={() => {
-                            // Sauvegarde des préférences puis fermeture du modal
-                            onSaveAction();
-                            onCloseAction();
+                            onSaveAction();    // enregistre les préférences
+                            onCloseAction();   // ferme la modale
                         }}
                     >
-                        Enregistrer
+                        {t("save")}
                     </button>
                 </div>
             </div>

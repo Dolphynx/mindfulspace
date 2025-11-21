@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 
-export function ClientNavbar() {
+export function PublicNavbar() {
     const pathname = usePathname();
     const locale = pathname.split("/")[1] || "fr";
     const [isOpen, setIsOpen] = useState(false);
@@ -15,11 +15,9 @@ export function ClientNavbar() {
 
     const NavButton = ({
                            href,
-                           icon,
                            label,
                        }: {
         href: string;
-        icon?: React.ReactNode;
         label: string;
     }) => {
         const active = pathname === href;
@@ -36,7 +34,6 @@ export function ClientNavbar() {
                         : "text-brandText border-transparent hover:bg-white/60 hover:border-brandBorder",
                 ].join(" ")}
             >
-                {icon && <span aria-hidden="true">{icon}</span>}
                 <span>{label}</span>
             </Link>
         );
@@ -47,7 +44,7 @@ export function ClientNavbar() {
             <div className="mx-auto max-w-7xl px-4 py-3">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center justify-between">
-                        <Link href={`/${locale}/member/dashboard`}>
+                        <Link href={`/${locale}`} className="flex items-center gap-2">
                             <Image
                                 src="/images/MindfulSpace_logo.jpg"
                                 alt="MindfulSpace logo"
@@ -79,41 +76,10 @@ export function ClientNavbar() {
                             "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
                         ].join(" ")}
                     >
-                        <NavButton
-                            href={`/${locale}/member/seance/respiration`}
-                            label={t("breathing")}
-                            icon={<span>🌬️</span>}
-                        />
-
-                        <NavButton
-                            href={`/${locale}/member/dashboard`}
-                            label={t("dashboard")}
-                            icon={<span>📊</span>}
-                        />
-
-                        <NavButton
-                            href={`/${locale}/member/objectives`}
-                            label={t("objectives")}
-                            icon={<span>🎯</span>}
-                        />
-
-                        <NavButton
-                            href={`/${locale}/resources`}
-                            label={t("resources")}
-                            icon={<span>📚</span>}
-                        />
-
-                        <NavButton
-                            href={`/${locale}/coach`}
-                            label={t("becomeCoach")}
-                            icon={<span>🎓</span>}
-                        />
-
-                        <NavButton
-                            href={`/${locale}/contact`}
-                            label={t("contact")}
-                            icon={<span>✉️</span>}
-                        />
+                        <NavButton href={`/${locale}/resources`} label={t("resources")} />
+                        <NavButton href={`/${locale}/coach`} label={t("coach")} />
+                        <NavButton href={`/${locale}/contact`} label={t("contact")} />
+                        <NavButton href={`/${locale}/member`} label={t("clientSpace")} />
                     </nav>
                 </div>
             </div>
