@@ -29,7 +29,7 @@ const fr = {
 
     navbar: {
         resources: "Ressources",
-        becomecoach: "Devenir coach",
+        coach: "Devenir coach",
         contact: "Contact",
         clientSpace: "Espace client",
         breathing: "Respiration",

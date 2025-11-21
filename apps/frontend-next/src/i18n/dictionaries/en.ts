@@ -17,7 +17,7 @@ const en = {
      */
     nav: {
         resources: "Resources",
-        becomecoach: "Become a coach",
+        coach: "Become a coach",
         contact: "Contact",
         clientSpace: "Client area",
 
