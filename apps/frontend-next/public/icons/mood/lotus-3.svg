@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-hidden="true">
+  <g fill="none" stroke="#14532D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- leaves -->
+    <path fill="#86EFAC" d="M22 72 C32 80 41 82 50 82 C59 82 68 80 78 72 C68 68 59 67 50 67 C41 67 32 68 22 72 Z"/>
+    <path fill="#6EE7B7" d="M36 76 C41 79 45 81 50 82 C55 81 59 79 64 76 C59 73 55 72 50 72 C45 72 41 73 36 76 Z"/>
+    <!-- petals -->
+    <path fill="#F9A8D4" d="M50 36 C46 44 44 55 44 67 C46 69 48 71 50 72 C52 71 54 69 56 67 C56 55 54 44 50 36 Z"/>
+    <path fill="#FBCFE8" d="M34 46 C34 55 36 63 40 71 C42 72 44 72 46 72 C45 62 46 53 50 45 C45 43 40 43 34 46 Z"/>
+    <path fill="#FBCFE8" d="M66 46 C60 43 55 43 50 45 C54 53 55 62 54 72 C56 72 58 72 60 71 C64 63 66 55 66 46 Z"/>
+    </g>
+</svg>

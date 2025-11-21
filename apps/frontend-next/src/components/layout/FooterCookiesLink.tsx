@@ -12,18 +12,21 @@
  * il délègue entièrement l’action au parent via `onOpenPreferencesAction`.
  */
 
+import { useTranslations } from "@/i18n/TranslationContext";
+
 export default function FooterCookiesLink({
                                               onOpenPreferencesAction,
                                           }: {
-    /** Callback déclenché par l’utilisateur pour ouvrir la modale de préférences cookies. */
     onOpenPreferencesAction: () => void;
 }) {
+    const t = useTranslations("footer");
+
     return (
         <button
             className="text-[12px] text-brandText-soft underline hover:text-brandText"
             onClick={onOpenPreferencesAction}
         >
-            Cookies
+            {t("cookiesLink")}
         </button>
     );
 }

@@ -4,12 +4,13 @@ Ce dossier contient la documentation d’architecture et de conception du projet
 
 ## Structure
 
-| Dossier                                                 | Contenu                        | Objectif                                                                                                                                                           |
-|:--------------------------------------------------------|:-------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`archi/adr/`](./archi/adr/README.md)                   | Architecture Decision Records  | Explique **les choix techniques et architecturaux** du projet : décisions, justifications, conséquences, alternatives.                                             |
-| [`archi/c4/`](./archi/c4/README.md)                     | Diagrammes C4                  | Montre **comment ces décisions s’articulent visuellement** dans le système : contexte, conteneurs, composants, flux de code.                                      |
-| [`project-management/`](./project-management/README.md) | Gestion de projet              | Informations de gestion, organisation ClickUp, workflow Git étendu, cohérence projet/technique.                                                                   |
-| [`frontend/`](./frontend/index.html)                    | Doc frontend (TypeDoc)         | Documentation **automatique** du code du frontend (générée via TypeDoc).                                                                                           |
+| Dossier                                                 | Contenu                       | Objectif                                                                                                                     |
+|:--------------------------------------------------------|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------|
+| [`archi/adr/`](./archi/adr/README.md)                   | Architecture Decision Records | Explique **les choix techniques et architecturaux** du projet : décisions, justifications, conséquences, alternatives.       |
+| [`archi/c4/`](./archi/c4/README.md)                     | Diagrammes C4                 | Montre **comment ces décisions s’articulent visuellement** dans le système : contexte, conteneurs, composants, flux de code. |
+| [`project-management/`](./project-management/README.md) | Gestion de projet             | Informations de gestion, organisation ClickUp, workflow Git étendu, cohérence projet/technique.                              |
+| [`frontend/`](./frontend/index.html)                    | Doc frontend (TypeDoc)        | Documentation **automatique** du code du frontend (générée via TypeDoc).                                                     |
+| [`I18N`](./I18N.md)                                     | I18N - Multilingue            | Documentation sur le système d'internationalisation du front.                                                                |
 
 ## Utilisation
 

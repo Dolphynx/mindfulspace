@@ -1,47 +1,53 @@
 "use client";
 
 /**
- * Bannière de consentement cookies affichée en bas de l'écran.
+ * Bannière de consentement aux cookies.
  *
- * - Apparaît uniquement si l'utilisateur n'a pas encore donné ou refusé son consentement.
- * - Propose deux actions :
- *   1. "OK pour moi" → accepte tous les cookies immédiatement.
- *   2. "Je choisis" → ouvre le modal de préférences afin de personnaliser le consentement.
+ * - Affiche un message lorsque l’utilisateur visite le site sans consentement enregistré.
+ * - Permet de :
+ *   - accepter tous les cookies directement,
+ *   - ouvrir la modale des préférences avancées.
  *
- * - Cette bannière disparaît automatiquement :
- *   - dès que l'utilisateur a donné un consentement,
- *   - ou après validation d'une option.
- *
- * Composant léger : la logique de stockage/suivi est externalisée dans lib/cookieConsent.
+ * Ce composant ne gère AUCUNE logique persistante.
+ * → Toute la persistance (save / load) est effectuée dans cookieConsent.ts
+ * → Toute l’ouverture de la modale est déléguée au parent via un callback.
  */
 
 import { useEffect, useState } from "react";
 import { hasConsent, acceptAllCookies } from "@/lib/cookieConsent";
+import { useTranslations } from "@/i18n/TranslationContext";
 
 /**
- * Props attendues par la CookieBanner.
+ * Propriétés du composant CookieBanner.
+ *
+ * @param onOpenPreferencesAction - Callback déclenché lorsqu'on clique sur
+ *                                  le bouton "Je choisis" (ouvrir la modale).
  */
 export default function CookieBanner({
                                          onOpenPreferencesAction,
                                      }: {
-    /**
-     * Callback permettant d’ouvrir la modale avancée de préférences cookies.
-     * → Transmis depuis AppChrome (le parent).
-     */
     onOpenPreferencesAction: () => void;
 }) {
     /**
-     * État local "show" : détermine si la bannière doit être affichée.
+     * État local gérant l’affichage de la bannière.
+     * - true  → visible
+     * - false → masquée
      *
-     * - false au départ → la bannière n’apparaît pas immédiatement (évite un flicker).
-     * - Après vérification (useEffect), on l’affiche si aucun consentement n’est présent.
+     * La bannière est affichée tant qu’aucun consentement n’a été enregistré.
      */
     const [show, setShow] = useState(false);
 
     /**
-     * Effet exécuté uniquement au montage du composant :
-     * - Vérifie si un consentement existe déjà via `hasConsent()`.
-     * - Si ce n’est pas le cas → affichage de la bannière.
+     * Hook i18n permettant d’obtenir les traductions :
+     * t("title"), t("description"), t("acceptAll"), ...
+     */
+    const t = useTranslations("cookieBanner");
+
+    /**
+     * Au montage du composant (client-side uniquement), on vérifie si un
+     * consentement a déjà été enregistré :
+     * - Si oui → on ne montre pas la bannière.
+     * - Si non → show = true → affichage.
      */
     useEffect(() => {
         if (!hasConsent()) {
@@ -49,49 +55,48 @@ export default function CookieBanner({
         }
     }, []);
 
-    // Si pas besoin d'afficher la bannière → ne rien rendre.
+    /** Si pas d’affichage requis → on ne rend rien */
     if (!show) return null;
 
     return (
         <div className="fixed inset-x-0 bottom-4 z-[9999] flex justify-center px-4">
             <div className="w-full max-w-md rounded-card border border-brandBorder bg-white shadow-xl p-5 text-brandText">
+
+                {/* --- Titre de la bannière --- */}
                 <p className="text-base font-semibold text-brandText">
-                    Cookies & bien-être 🍪
+                    {t("title")}
                 </p>
 
+                {/* --- Description du rôle des cookies --- */}
                 <p className="text-sm text-brandText-soft mt-2">
-                    On utilise des cookies essentiels pour faire fonctionner le
-                    site. Avec ton accord, on utilise aussi des cookies pour
-                    analyser l’usage et personnaliser ton expérience.
+                    {t("description")}
                 </p>
 
+                {/* --- Boutons d'action --- */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                    {/* Bouton principal : accepter tous les cookies */}
+                    {/* Bouton : accepter tous les cookies immédiatement */}
                     <button
                         className="flex-1 rounded-md border border-brandGreen bg-brandGreen text-white px-4 py-2 text-sm font-medium shadow-subtle hover:opacity-90"
                         onClick={() => {
-                            // Accepte toutes les catégories
-                            acceptAllCookies();
-                            // Masque la bannière après action
-                            setShow(false);
+                            acceptAllCookies(); // enregistre un consentement “full”
+                            setShow(false);      // ferme la bannière
                         }}
                     >
-                        OK pour moi
+                        {t("acceptAll")}
                     </button>
 
-                    {/* Ouvre la modale de préférences détaillées */}
+                    {/* Bouton : ouvrir la modale de préférences détaillées */}
                     <button
                         className="flex-1 rounded-md border border-brandBorder bg-white text-brandText px-4 py-2 text-sm font-medium hover:bg-brandBg"
-                        onClick={() => {
-                            onOpenPreferencesAction();
-                        }}
+                        onClick={onOpenPreferencesAction}
                     >
-                        Je choisis
+                        {t("choose")}
                     </button>
                 </div>
 
+                {/* --- Petit texte additionnel d’information --- */}
                 <p className="text-[11px] text-brandText-soft mt-3 leading-relaxed">
-                    Tu peux modifier tes choix à tout moment dans “Cookies”.
+                    {t("hint")}
                 </p>
             </div>
         </div>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-hidden="true">
+  <g stroke="#14532D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- background leaf -->
+    <path fill="#86EFAC" d="M12 80 C28 62 45 58 60 58 C75 58 92 62 108 80 C92 96 76 100 60 100 C44 100 28 96 12 80 Z"/>
+    <!-- small inner leaf -->
+    <path fill="#6EE7B7" d="M34 86 C42 81 50 79 60 79 C70 79 78 81 86 86 C78 91 70 93 60 93 C50 93 42 91 34 86 Z"/>
+    <!-- central petal -->
+    <path fill="#F9A8D4" d="M60 38 C55 47 52 60 52 75 C54 79 57 83 60 85 C63 83 66 79 68 75 C68 60 65 47 60 38 Z"/>
+    <!-- inner petals -->
+    <path fill="#FBCFE8" d="M48 42 C46 52 47 64 50 77 C52 79 54 81 56 82 C56 69 58 58 60 51 C56 47 52 44 48 42 Z"/>
+    <path fill="#FBCFE8" d="M72 42 C68 44 64 47 60 51 C62 58 64 69 64 82 C66 81 68 79 70 77 C73 64 74 52 72 42 Z"/>
+    <!-- mid outer petals -->
+    <path fill="#F9A8D4" d="M40 48 C38 58 40 70 45 82 C47 83 49 84 51 84 C50 72 52 61 56 54 C50 50 45 49 40 48 Z"/>
+    <path fill="#F9A8D4" d="M80 48 C75 49 70 50 64 54 C68 61 70 72 69 84 C71 84 73 83 75 82 C80 70 82 58 80 48 Z"/>
+    <!-- extra outer petals -->
+    <path fill="#FBCFE8" d="M32 54 C31 64 33 75 39 86 C41 87 43 88 45 88 C44 76 47 66 51 59 C45 55 39 54 32 54 Z"/>
+    <path fill="#FBCFE8" d="M88 54 C81 54 75 55 69 59 C73 66 76 76 75 88 C77 88 79 87 81 86 C87 75 89 64 88 54 Z"/>
+  </g>
+</svg>

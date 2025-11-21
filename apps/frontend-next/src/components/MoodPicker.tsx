@@ -15,6 +15,7 @@
  */
 
 import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib";
+import { useTranslations } from "@/i18n/TranslationContext";
 
 /**
  * Props du MoodPicker.
@@ -65,6 +66,9 @@ export default function MoodPicker({
                                        disabled,
                                        className = "",
                                    }: MoodPickerProps) {
+    // Namespace i18n spécifique au sélecteur d’humeur
+    const t = useTranslations("moodPicker");
+
     /**
      * Styles communs : on différencie le style "card" et le style "minimal".
      */
@@ -103,7 +107,7 @@ export default function MoodPicker({
                     : `flex items-center gap-2 ${className}`
             }
             role="listbox"
-            aria-label="Sélection de l'humeur"
+            aria-label={t("ariaLabel")}
         >
             {MOOD_OPTIONS.map((opt) => {
                 const active = value === opt.value;
@@ -126,16 +130,20 @@ export default function MoodPicker({
                         role="option"
                         aria-selected={active}
                         onClick={() => onChangeAction?.(opt.value, opt)}
-                        className={`${baseItem} ${sizeCls} ${active ? activeCls : inactiveCls}`}
+                        className={`${baseItem} ${sizeCls} ${
+                            active ? activeCls : inactiveCls
+                        }`}
                         title={opt.label}
                     >
                         {/* Émoji visuel (pas lu par lecteur d'écran) */}
-                        <span className={emojiSizeCls} aria-hidden>
-                            {opt.emoji}
-                        </span>
+                        <img
+                            src={opt.emoji}
+                            alt={t(opt.label)}
+                            aria-hidden
+                            className="w-16 h-16 mx-auto"
+                        />
 
-                        {/* Label textuel affiché sous l’émoji */}
-                        <span className="text-brandText">{opt.label}</span>
+                        <span className="text-brandText">{t(opt.label)}</span>
                     </button>
                 );
             })}
