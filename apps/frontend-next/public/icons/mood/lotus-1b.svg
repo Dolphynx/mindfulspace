@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-hidden="true">
+  <g stroke="#14532D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- background leaf -->
+    <path fill="#86EFAC" d="M20 80 C35 70 50 66 60 66 C70 66 85 70 100 80 C85 88 72 92 60 92 C48 92 35 88 20 80 Z"/>
+    <!-- small inner leaf -->
+    <path fill="#6EE7B7" d="M36 82 C44 78 52 76 60 76 C68 76 76 78 84 82 C76 86 68 88 60 88 C52 88 44 86 36 82 Z"/>
+    <!-- closed bud petals -->
+    <path fill="#F9A8D4" d="M60 26 C54 36 50 50 50 66 C52 70 56 74 60 76 C64 74 68 70 70 66 C70 50 66 36 60 26 Z"/>
+    <path fill="#FBCFE8" d="M48 36 C46 46 46 56 48 68 C50 70 52 72 54 73 C54 58 56 46 60 36 C56 34 52 34 48 36 Z"/>
+    <path fill="#FBCFE8" d="M72 36 C68 34 64 34 60 36 C64 46 66 58 66 73 C68 72 70 70 72 68 C74 56 74 46 72 36 Z"/>
+  </g>
+</svg>
