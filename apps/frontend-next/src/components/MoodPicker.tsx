@@ -1,62 +1,18 @@
 "use client";
 
-/**
- * Sélecteur d’humeur (MoodPicker)
- *
- * - Affiche une liste de boutons représentant différentes humeurs (émoticônes + libellés).
- * - Permet de sélectionner une humeur via un clic.
- * - Deux variantes d’affichage :
- *   - `cards` : cartes avec grille responsive.
- *   - `row`   : rangée compacte horizontale.
- * - Deux tailles : `sm` ou `md`.
- * - Deux tons visuels :
- *   - `card` (par défaut) : cartes avec bordure/ombre.
- *   - `minimal` : version légère (idéal dans un autre composant, comme QuickLog).
- */
-
 import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 
-/**
- * Props du MoodPicker.
- */
 type MoodPickerProps = {
-    /** Valeur d'humeur actuellement sélectionnée (contrôlé par le parent). */
     value?: MoodValue | null;
-    /**
-     * Callback appelé lorsqu'une humeur est sélectionnée.
-     * @param v - La valeur pure (MoodValue).
-     * @param opt - L'objet MoodOption complet, utile si le parent a besoin du label/emoji.
-     */
     onChangeAction?: (v: MoodValue, opt: MoodOption) => void;
-
-    /** Taille des cartes : petite (`sm`) ou normale (`md`). */
     size?: "sm" | "md";
-
-    /** Mode d’affichage : `cards` (grille) ou `row` (ligne compacte). */
     variant?: "cards" | "row";
-
-    /** Style visuel : cartes (par défaut) ou minimaliste. */
     tone?: "card" | "minimal";
-
-    /** Désactivation complète du sélecteur. */
     disabled?: boolean;
-
-    /** Classes additionnelles sur le conteneur. */
     className?: string;
 };
 
-/**
- * MoodPicker – composant stateless qui affiche un ensemble d’humeurs sélectionnables.
- *
- * @param value - Humeur sélectionnée.
- * @param onChangeAction - Callback lors d’un changement.
- * @param size - Taille des cartes.
- * @param variant - Layout global.
- * @param tone - Style visuel (card ou minimal).
- * @param disabled - Désactive les options.
- * @param className - Classes CSS supplémentaires.
- */
 export default function MoodPicker({
                                        value = null,
                                        onChangeAction,
@@ -66,12 +22,11 @@ export default function MoodPicker({
                                        disabled,
                                        className = "",
                                    }: MoodPickerProps) {
-    // Namespace i18n spécifique au sélecteur d’humeur
+
+    /** i18n moodPicker namespace */
     const t = useTranslations("moodPicker");
 
-    /**
-     * Styles communs : on différencie le style "card" et le style "minimal".
-     */
+    /** classes */
     const baseItemCard =
         "flex flex-col items-center justify-center gap-2 rounded-2xl border transition shadow-card focus:outline-none focus:ring-2 focus:ring-brandGreen";
 
@@ -80,9 +35,6 @@ export default function MoodPicker({
 
     const baseItem = tone === "minimal" ? baseItemMinimal : baseItemCard;
 
-    /**
-     * Taille dynamique des éléments.
-     */
     const sizeCls =
         size === "sm"
             ? tone === "minimal"
@@ -126,24 +78,25 @@ export default function MoodPicker({
                     <button
                         key={opt.value}
                         type="button"
-                        disabled={disabled}
                         role="option"
+                        disabled={disabled}
                         aria-selected={active}
                         onClick={() => onChangeAction?.(opt.value, opt)}
                         className={`${baseItem} ${sizeCls} ${
                             active ? activeCls : inactiveCls
                         }`}
-                        title={opt.label}
+                        title={t(`labels.${opt.label}`)} // i18n label
                     >
-                        {/* Émoji visuel (pas lu par lecteur d'écran) */}
+                        {/* image emoji */}
                         <img
                             src={opt.emoji}
-                            alt={t(opt.label)}
-                            aria-hidden
+                            alt={t(`labels.${opt.label}`)}
+                            aria-hidden="true"
                             className="w-16 h-16 mx-auto"
                         />
 
-                        {/*<span className="text-brandText">{t(opt.label)}</span>*/}
+                        {/* Texte visible si souhaité */}
+                        {/* <span className="text-brandText">{t(`labels.${opt.key}`)}</span> */}
                     </button>
                 );
             })}

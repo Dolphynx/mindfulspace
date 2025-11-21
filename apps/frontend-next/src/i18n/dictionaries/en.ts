@@ -382,6 +382,14 @@ const en = {
         medium: "Okay",
         good: "Good",
         open: "Excellent",
+
+        labels: {
+            very_bad: "Very bad",
+            bad: "Bad",
+            neutral: "Neutral",
+            good: "Good",
+            very_good: "Very good",
+        },
     },
 
     cookieBanner: {
@@ -410,6 +418,28 @@ const en = {
 
         cancel: "Cancel",
         save: "Save",
+    },
+
+    quickLogCard: {
+        title: "Quick Log",
+        subtitle: "Record your daily wellness metrics in a few seconds.",
+
+        loggingFor: "Logging for",
+        todaySuffix: "today",
+        yesterdaySuffix: "yesterday",
+
+        today: "Today",
+        yesterday: "Yesterday",
+        chooseAnotherDate: "Choose another date",
+
+        valueLabel: "Value",
+        qualityLabel: "Quality",
+
+        saving: "Saving…",
+        submit: "Save",
+
+        success: "Session logged successfully.",
+        error: "Error while logging the session.",
     },
 
 };
