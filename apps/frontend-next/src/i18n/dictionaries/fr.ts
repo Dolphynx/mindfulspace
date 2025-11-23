@@ -293,6 +293,45 @@ const fr = {
         title: "Méditation",
         subtitle: "Pratiques guidées pour apaiser votre esprit.",
         empty: "Contenu prochainement disponible…",
+
+        // Encodage manuel
+        manualForm_title: "Encoder une séance passée",
+        manualForm_description: "Indiquez la date, la durée et, si vous le souhaitez, la qualité ressentie.",
+        manualForm_dateLabel: "Date",
+        manualForm_durationLabel: "Durée",
+        manualForm_minutesSuffix: "minutes",
+        manualForm_qualityLabel: "Qualité perçue",
+        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_savingButton: "Enregistrement…",
+
+        // Player / minuteur
+        player_title: "Lancer une séance de méditation",
+        player_description: "Choisissez une durée et laissez-vous guider par le minuteur.",
+        player_startButton: "Commencer une méditation",
+        player_modalTitle: "Méditation guidée par minuteur",
+        player_configText: "Choisissez la durée de votre séance. Vous pourrez arrêter plus tôt si nécessaire.",
+        player_durationLabel: "Durée souhaitée",
+        player_startNowButton: "Lancer la séance",
+        player_runningText: "La séance est en cours. Fermez les yeux, respirez paisiblement.",
+        player_stopEarlyButton: "Terminer la séance",
+        player_finishedText: "La séance est terminée. Comment évaluez-vous la qualité de ce moment ?",
+        player_finishedQualityLabel: "Qualité de la séance",
+        player_saveButton: "Enregistrer cette séance",
+        player_savingButton: "Enregistrement…",
+
+        // 7 dernières
+        last7_title: "Vos 7 dernières séances",
+        last7_description: "Aperçu de vos méditations récentes.",
+        last7_loading: "Chargement…",
+        last7_empty: "Aucune séance enregistrée.",
+        last7_durationLabel: "Durée",
+        last7_qualityLabel: "Qualité",
+
+        errors: {
+            loadSessions: "Impossible de charger les séances.",
+            saveSession: "Erreur lors de l'enregistrement.",
+        },
+
     },
 
     publicWorld: {

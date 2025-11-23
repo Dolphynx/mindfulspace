@@ -294,6 +294,44 @@ const en = {
         title: "Meditation",
         subtitle: "Guided practices to calm your mind.",
         empty: "Content coming soon…",
+
+        // Manual entry
+        manualForm_title: "Log a past session",
+        manualForm_description: "Specify the date, duration, and optionally the perceived quality.",
+        manualForm_dateLabel: "Date",
+        manualForm_durationLabel: "Duration",
+        manualForm_minutesSuffix: "minutes",
+        manualForm_qualityLabel: "Perceived quality",
+        manualForm_saveButton: "Save session",
+        manualForm_savingButton: "Saving…",
+
+        // Player / timer
+        player_title: "Start a meditation session",
+        player_description: "Choose a duration and let the timer guide you.",
+        player_startButton: "Start meditation",
+        player_modalTitle: "Timer-guided meditation",
+        player_configText: "Choose your session duration. You may stop earlier if needed.",
+        player_durationLabel: "Chosen duration",
+        player_startNowButton: "Start session",
+        player_runningText: "Session in progress. Close your eyes and breathe calmly.",
+        player_stopEarlyButton: "End session",
+        player_finishedText: "The session is over. How would you rate its quality?",
+        player_finishedQualityLabel: "Session quality",
+        player_saveButton: "Save this session",
+        player_savingButton: "Saving…",
+
+        // Last 7
+        last7_title: "Your last 7 sessions",
+        last7_description: "Overview of your recent meditations.",
+        last7_loading: "Loading…",
+        last7_empty: "No sessions recorded.",
+        last7_durationLabel: "Duration",
+        last7_qualityLabel: "Quality",
+
+        errors: {
+            loadSessions: "Unable to load your sessions.",
+            saveSession: "An error occurred while saving.",
+        },
     },
 
     publicWorld: {
