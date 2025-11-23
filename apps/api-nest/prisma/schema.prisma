@@ -16,61 +16,60 @@ model TestData {
   createdAt   DateTime @default(now())
 }
 
-model Session {
-  id          String   @id @default(uuid())
-  value       Int
-  quality     Int?
+model SleepSession {
+  id String @id @default(uuid())
+  hours Int
+  quality Int?
   dateSession DateTime
   dateCreated DateTime @default(now())
 
-  // Foreign key to SessionType
-  sessionTypeId String
-  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
 
-  // user
+}
+
+model MeditationSession {
+  id String @id @default(uuid())
+  duration Int
+  quality Int?
+  dateSession DateTime
+  dateCreated DateTime @default(now())
+
   user   User?   @relation(fields: [userId], references: [id])
   userId String?
 }
 
-model SessionType {
-  id   String @id @default(uuid())
-  name String
+model WorkoutSession {
+  id String @id @default(uuid())
+  quality Int?
+  dateSession DateTime
+  dateCreated DateTime @default(now())
 
-  // Jointure vers plusieurs unités
-  units SessionTypeUnit[]
+  exerciceSessions ExerciceSession[]
 
-  // Foreign key to SessionUnit
-  //sessionUnitId String
-  //sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
 
-  // One type can have many sessions
-  sessions  Session[]
-  Objective Objective[]
 }
 
-model SessionUnit {
-  id    String @id @default(uuid())
-  value String // e.g. "minutes", "steps"
+model ExerciceType {
+  id String @id @default(uuid())
+  name String @unique
+  Description String
 
-  // One unit can be used by many types
-  types     SessionTypeUnit[]
-  //types      SessionType[]
-  //objectives Objective[]
-  Objective Objective[]
+  exerciceSessions ExerciceSession[]
 }
 
-//
-// TABLE DE JOINTURE M:N EXPLICITE
-//
-model SessionTypeUnit {
-  priority      Int
-  sessionTypeId String
-  sessionUnitId String
+model ExerciceSession {
+  workoutSessionId String
+  exerciceTypeId   String
 
-  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
-  sessionUnit SessionUnit @relation(fields: [sessionUnitId], references: [id])
+  workoutSession WorkoutSession @relation(fields: [workoutSessionId], references: [id])
+  exerciceType    ExerciceType  @relation(fields: [exerciceTypeId], references: [id])
 
-  @@id([sessionTypeId, sessionUnitId]) // Clé primaire composée
+  @@id([workoutSessionId, exerciceTypeId])
+
+  repetitionCount Int
 }
 
 model User {
@@ -79,8 +78,11 @@ model User {
   displayName String?
 
   // relations
-  sessions   Session[]
-  objectives Objective[]
+  workoutSessions   WorkoutSession[]
+  sleepSessions SleepSession[]
+  meditationSessions MeditationSession[]
+
+  // objectives Objective[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,7 +90,7 @@ model User {
   //types   SessionTypeUnit[]
 }
 
-model Objective {
+/* model Objective {
   id String @id @default(cuid())
 
   // À quel user appartient l’objectif (demoUser ou user réel plus tard)
@@ -114,7 +116,7 @@ model Objective {
   updatedAt     DateTime     @updatedAt
   SessionUnit   SessionUnit? @relation(fields: [sessionUnitId], references: [id])
   sessionUnitId String?
-}
+} */
 
 enum ObjectiveFrequency {
   DAILY
