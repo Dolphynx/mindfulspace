@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { MeditationSessionSource } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 
@@ -7,82 +8,116 @@ export class MeditationSessionService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateMeditationSessionDto) {
-    const date = new Date(dto.dateSession);
-
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Is there already a meditation session for this day?
-    const existing = await this.prisma.meditationSession.findFirst({
-      where: { dateSession: { gte: startOfDay, lte: endOfDay } },
+    const demoUser = await this.prisma.user.findUnique({
+      where: { email: 'demo@mindfulspace.app' },
     });
 
-    if (existing) {
-      return this.prisma.meditationSession.update({
-        where: { id: existing.id },
-        data: {
-          duration: dto.duration,
-          quality: dto.quality ?? null,
-          dateSession: date,
-        },
-      });
+    if (!demoUser) {
+      // Si le seed n'a pas tourné ou que le user a été supprimé
+      throw new Error('Demo user not found. Did you run the seed?');
     }
 
-    // Otherwise, create a new entry
+    // Date logique de la séance -> on fixe l'heure à midi pour éviter les surprises UTC
+    const date = new Date(dto.dateSession);
+    date.setHours(12, 0, 0, 0);
+
+    const startedAt = date;
+    const endedAt = new Date(startedAt.getTime() + dto.durationSeconds * 1000);
+
+    const source = dto.source ?? MeditationSessionSource.MANUAL;
+
     return this.prisma.meditationSession.create({
       data: {
-        duration: dto.duration,
-        quality: dto.quality ?? null,
-        dateSession: date,
+        userId: demoUser.id,
+        source,
+        meditationTypeId: dto.meditationTypeId,
+        meditationContentId: dto.meditationContentId ?? null,
+        startedAt,
+        endedAt,
+        durationSeconds: dto.durationSeconds,
+        moodBefore: dto.moodBefore ?? null,
+        moodAfter: dto.moodAfter ?? null,
+        notes: dto.notes ?? null,
       },
     });
   }
 
   async findAll() {
     return this.prisma.meditationSession.findMany({
-      orderBy: { dateSession: 'desc' },
+      orderBy: { startedAt: 'desc' },
+      include: {
+        meditationType: true,
+        meditationContent: true,
+      },
     });
   }
 
   async getLast7Days() {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const sessions = await this.prisma.meditationSession.findMany({
       where: {
-        dateSession: { gte: sevenDaysAgo },
+        startedAt: { gte: sevenDaysAgo },
       },
-      orderBy: { dateSession: 'asc' },
+      orderBy: { startedAt: 'asc' },
     });
 
     return sessions.map((s) => ({
-      date: s.dateSession.toISOString().split('T')[0],
-      duration: s.duration,
-      quality: s.quality,
+      date: s.startedAt ? s.startedAt.toISOString().split('T')[0] : null,
+      durationSeconds: s.durationSeconds,
+      moodAfter: s.moodAfter,
     }));
   }
 
   async getYesterdaySummary() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const today = new Date(yesterday);
-    today.setDate(yesterday.getDate() + 1);
+    const yesterdayStart = new Date(today);
+    yesterdayStart.setDate(today.getDate() - 1);
 
-    const session = await this.prisma.meditationSession.findFirst({
+    const yesterdayEnd = new Date(today);
+
+    const sessions = await this.prisma.meditationSession.findMany({
       where: {
-        dateSession: { gte: yesterday, lt: today },
+        startedAt: {
+          gte: yesterdayStart,
+          lt: yesterdayEnd,
+        },
       },
-      orderBy: { dateSession: 'desc' },
+      orderBy: { startedAt: 'asc' },
     });
 
+    const totalDurationSeconds = sessions.reduce(
+      (sum, s) => sum + s.durationSeconds,
+      0,
+    );
+
+    const lastMoodAfter =
+      sessions.length > 0 ? sessions[sessions.length - 1].moodAfter : null;
+
     return {
-      duration: session?.duration ?? null,
-      quality: session?.quality ?? null,
+      durationSeconds: totalDurationSeconds,
+      moodAfter: lastMoodAfter,
     };
+  }
+
+  async getMeditationTypes() {
+    return this.prisma.meditationType.findMany({
+      where: { isActive: true },
+      orderBy: [
+        { sortOrder: 'asc' },
+        //{ name: 'asc' },
+      ],
+      select: {
+        id: true,
+        slug: true,
+        //name: true,
+        //description: true,
+      },
+    });
   }
 }

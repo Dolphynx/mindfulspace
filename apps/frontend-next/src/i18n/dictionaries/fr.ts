@@ -303,6 +303,8 @@ const fr = {
         manualForm_qualityLabel: "Qualité perçue",
         manualForm_saveButton: "Enregistrer la séance",
         manualForm_savingButton: "Enregistrement…",
+        manualForm_typeLabel: "Type de méditation",
+        manualForm_button: "Encoder une méditation",
 
         // Player / minuteur
         player_title: "Lancer une séance de méditation",
@@ -326,12 +328,37 @@ const fr = {
         last7_empty: "Aucune séance enregistrée.",
         last7_durationLabel: "Durée",
         last7_qualityLabel: "Qualité",
+        last7_dayLabel: "Jour",
+        last7_totalLabel: "Total",
 
         errors: {
-            loadSessions: "Impossible de charger les séances.",
-            saveSession: "Erreur lors de l'enregistrement.",
+            loadTypes: "Erreur lors du chargement des types de méditation",
+            loadSessions: "Impossible de charger les séances",
+            saveSession: "Erreur lors de l'enregistrement de la séance"
         },
 
+        meditationTypes: {
+            breathing: {
+                name: "Respiration consciente",
+                description:
+                    "Focalisation sur le souffle pour apaiser le système nerveux.",
+            },
+            mindfulness: {
+                name: "Pleine conscience",
+                description:
+                    "Observer pensées, émotions et sensations sans jugement.",
+            },
+            "body-scan": {
+                name: "Body scan",
+                description:
+                    "Balayer le corps avec l'attention pour relâcher les tensions.",
+            },
+            compassion: {
+                name: "Compassion / Metta",
+                description:
+                    "Cultiver la bienveillance envers soi et les autres.",
+            },
+        },
     },
 
     publicWorld: {

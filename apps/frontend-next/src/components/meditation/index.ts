@@ -1,2 +1,2 @@
-export { default as MeditationPlayerModal } from "./MeditationPlayerModal";
-export { default as MeditationHistoryCard } from "./MeditationHistoryCard";
+export * from "./MeditationPlayerModal";
+export * from "./MeditationHistoryCard";

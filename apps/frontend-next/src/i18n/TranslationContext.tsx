@@ -17,7 +17,9 @@ type TranslationContextValue = {
  * Contexte React chargé de diffuser la configuration de traduction
  * (locale et messages) à l’ensemble de l’arbre de composants.
  */
-const TranslationContext = createContext<TranslationContextValue | null>(null);
+const TranslationContext = createContext<TranslationContextValue | null>(
+    null,
+);
 
 /**
  * Fournit le contexte de traduction aux composants descendants.
@@ -43,7 +45,30 @@ export function TranslationProvider({
     );
 }
 
-// On garde la possibilité de passer un namespace, mais on tape le retour simplement.
+/**
+ * Lit une valeur potentiellement imbriquée dans un objet
+ * à partir d'un chemin du type "a.b.c".
+ */
+function getNestedValue(obj: unknown, path: string): string | undefined {
+    const segments = path.split(".");
+
+    let current: unknown = obj;
+
+    for (const segment of segments) {
+        if (
+            current !== null &&
+            typeof current === "object" &&
+            Object.prototype.hasOwnProperty.call(current, segment)
+        ) {
+            current = (current as Record<string, unknown>)[segment];
+        } else {
+            return undefined;
+        }
+    }
+
+    return typeof current === "string" ? current : undefined;
+}
+
 /**
  * Hook utilitaire pour accéder aux traductions depuis les composants.
  * Permet éventuellement de cibler un namespace spécifique du dictionnaire.
@@ -54,24 +79,40 @@ export function TranslationProvider({
  *
  * @throws Error si le hook est utilisé en dehors de `<TranslationProvider>`.
  */
-export function useTranslations(namespace?: keyof Messages) {
+export function useTranslations(namespace?: string) {
     const ctx = useContext(TranslationContext);
 
     if (!ctx) {
-        throw new Error("useTranslations must be used inside <TranslationProvider>");
+        throw new Error(
+            "useTranslations must be used inside <TranslationProvider>",
+        );
     }
 
-    const { messages } = ctx;
+    const { locale, messages } = ctx;
 
-    const dict = namespace ? messages[namespace] : messages;
+    // On indique explicitement à TS que locale est une clé de messages
+    //const localeMessages = messages[locale as keyof Messages];
+    const localeMessages = messages;
+
+    if (!localeMessages) {
+        return (key: string) => key;
+    }
+
+    // On récupère soit la branche de namespace, soit tout l'objet de locale
+    const namespaceValue =
+        namespace != null
+            ? (localeMessages as Record<string, unknown>)[namespace]
+            : localeMessages;
+
+    const dictionary =
+        namespace != null &&
+        namespaceValue !== null &&
+        typeof namespaceValue === "object"
+            ? namespaceValue
+            : localeMessages;
 
     return (key: string): string => {
-        if (typeof dict !== "object" || dict === null) {
-            return key;
-        }
-
-        const value = (dict as Record<string, unknown>)[key];
-
-        return typeof value === "string" ? value : key;
+        const value = getNestedValue(dictionary, key);
+        return value ?? key; // fallback : on renvoie la clé brute si introuvable
     };
 }

@@ -4,6 +4,7 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import type {
     MeditationSession,
     MeditationErrorType,
+    MeditationTypeItem,
 } from "@/hooks/useMeditationSessions";
 import { getMood } from "@/lib";
 
@@ -11,140 +12,195 @@ type Props = {
     sessions: MeditationSession[];
     loading: boolean;
     errorType: MeditationErrorType;
+    types?: MeditationTypeItem[];
 };
 
-// Helpers
-function formatDate(dateStr: string): string {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const dt = new Date(y, m - 1, d);
-    return dt.toLocaleDateString();
-}
-
-function formatDuration(min: number): string {
-    if (min < 60) return `${min} min`;
-    const h = Math.floor(min / 60);
-    const rest = min % 60;
-    return rest === 0 ? `${h} h` : `${h} h ${rest} min`;
-}
-
-function groupSessionsByDay(sessions: MeditationSession[]) {
-    const groups: Record<
-        string,
-        { date: string; totalDuration: number; sessions: MeditationSession[] }
-    > = {};
+function groupSessionsByDate(sessions: MeditationSession[]) {
+    const byDate = new Map<string, MeditationSession[]>();
 
     for (const s of sessions) {
-        if (!groups[s.date]) {
-            groups[s.date] = {
-                date: s.date,
-                totalDuration: 0,
-                sessions: [],
-            };
-        }
-        groups[s.date].sessions.push(s);
-        groups[s.date].totalDuration += s.duration;
+        const list = byDate.get(s.date) ?? [];
+        list.push(s);
+        byDate.set(s.date, list);
     }
 
-    return Object.values(groups).sort((a, b) =>
-        a.date < b.date ? 1 : -1
-    );
+    return Array.from(byDate.entries())
+        .sort(([d1], [d2]) => d1.localeCompare(d2))
+        .map(([date, items]) => {
+            const total = items.reduce(
+                (sum, s) => sum + s.durationSeconds,
+                0,
+            );
+
+            const last = items[items.length - 1];
+
+            return {
+                date,
+                totalMinutes: Math.round(total / 60),
+                last,
+                items,
+            };
+        });
 }
 
-export default function MeditationHistoryCard({
-                                                  sessions,
-                                                  loading,
-                                                  errorType,
-                                              }: Props) {
+export function MeditationHistoryCard({
+                                          sessions,
+                                          loading,
+                                          errorType,
+                                          types = [],
+                                      }: Props) {
     const t = useTranslations("domainMeditation");
-    const tMood = useTranslations("moodPicker");
 
-    const loadErrorMessage =
+    // id -> type
+    const typeMap = Object.fromEntries(types.map((type) => [type.id, type]));
+    const loadError =
         errorType === "load" ? t("errors.loadSessions") : null;
 
+    const grouped = groupSessionsByDate(sessions);
+
+    const totalWeekMinutes = Math.round(
+        sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 60,
+    );
+
     return (
-        <section className="rounded-2xl bg-white/80 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-800">
-                {t("last7_title")}
-            </h2>
-            <p className="text-sm text-slate-600">
-                {t("last7_description")}
-            </p>
+        <section className="rounded-2xl bg-white/90 p-6 shadow-sm border border-slate-100">
+            {/* HEADER GLOBAL */}
+            <div className="flex items-baseline justify-between gap-2">
+                <div>
+                    <h2 className="text-lg font-semibold text-slate-800">
+                        {t("last7_title")}
+                    </h2>
+                    {!loading && sessions.length > 0 && (
+                        <p className="mt-1 text-xs text-slate-500">
+                            {sessions.length} séances · {totalWeekMinutes} min
+                        </p>
+                    )}
+                </div>
+            </div>
 
-            <div className="mt-4">
-                {loading ? (
-                    <p className="text-sm text-slate-500">
-                        {t("last7_loading")}
-                    </p>
-                ) : loadErrorMessage ? (
-                    <p className="text-sm text-red-600">{loadErrorMessage}</p>
-                ) : sessions.length === 0 ? (
-                    <p className="text-sm text-slate-500">
-                        {t("last7_empty")}
-                    </p>
-                ) : (
-                    <ul className="space-y-3">
-                        {groupSessionsByDay(sessions).map((group) => (
+            {/* ERREUR DE CHARGEMENT */}
+            {loadError && (
+                <div className="mt-3 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {loadError}
+                </div>
+            )}
+
+            {/* ÉTAT VIDE */}
+            {!loading && sessions.length === 0 && !loadError && (
+                <p className="mt-4 text-sm text-slate-500">
+                    {t("last7_empty")}
+                </p>
+            )}
+
+            {/* LISTE GROUPÉE PAR JOUR */}
+            {!loading && grouped.length > 0 && (
+                <ul className="mt-4 space-y-4">
+                    {grouped.map((g, idx) => {
+                        const sessionCount = g.items.length;
+                        const isMostRecent = idx === grouped.length - 1;
+
+                        return (
                             <li
-                                key={group.date}
-                                className="rounded-xl border border-slate-100 bg-slate-50/60 p-4"
+                                key={g.date}
+                                className={`relative rounded-2xl border px-4 py-3 shadow-sm ${
+                                    isMostRecent
+                                        ? "border-teal-100 bg-teal-50/70"
+                                        : "border-slate-100 bg-slate-50"
+                                }`}
                             >
-                                {/* HEADER DU JOUR */}
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-800">
-                                        {formatDate(group.date)}
-                                    </p>
-                                    <p className="text-xs text-slate-500">
-                                        {t("last7_durationLabel")}:{" "}
-                                        {formatDuration(group.totalDuration)}{" "}
-                                        <span className="text-[11px] text-slate-400">
-                      ({group.sessions.length}×)
-                    </span>
-                                    </p>
-                                </div>
+                                {/* petite barre verticale mindful à gauche */}
+                                <span className="pointer-events-none absolute inset-y-2 left-1 w-1 rounded-full bg-gradient-to-b from-teal-300 to-violet-300" />
 
-                                {/* LISTE DES SEANCES */}
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {group.sessions.map((s, idx) => {
-                                        const mood =
-                                            s.quality != null ? getMood(s.quality) : null;
-                                        const moodLabel =
-                                            mood != null ? tMood(mood.label) : null;
+                                <div className="pl-3">
+                                    {/* HEADER DU JOUR */}
+                                    <div className="flex items-baseline justify-between gap-2 mb-3">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                            {t("last7_dayLabel")} {g.date}
+                                        </div>
 
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className="group inline-flex items-center gap-3 rounded-full border border-slate-100 bg-sky-50/70 px-3.5 py-1.5 text-xs shadow-sm transition-colors hover:bg-sky-100/80"
-                                            >
-                                                {/* Durée */}
-                                                <span className="text-slate-700 font-medium">
-                          {formatDuration(s.duration)}
-                        </span>
+                                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                                            <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium shadow-sm">
+                                                {g.totalMinutes} min{" "}
+                                                {t("last7_totalLabel")}
+                                            </span>
+                                            <span className="text-[11px] text-slate-500">
+                                                {sessionCount} séance
+                                                {sessionCount > 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                                {/* Qualité → lotus + tooltip */}
-                                                {mood && (
-                                                    <div className="relative flex items-center">
-                                                        <img
-                                                            src={mood.emoji}
-                                                            alt={moodLabel ?? ""}
-                                                            className="h-7 w-7 drop-shadow-sm"
-                                                        />
+                                    {/* LISTE DES SÉANCES DU JOUR */}
+                                    <ul className="mt-3 space-y-2">
+                                        {g.items.map((s, index) => {
+                                            const minutes = Math.round(
+                                                s.durationSeconds / 60,
+                                            );
 
-                                                        {moodLabel && (
-                                                            <div className="pointer-events-none absolute -bottom-1 left-1/2 z-10 -translate-x-1/2 translate-y-full whitespace-nowrap rounded-md bg-slate-900/90 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                                                                {moodLabel}
-                                                            </div>
+                                            const typeSlug =
+                                                s.meditationTypeId &&
+                                                typeMap[s.meditationTypeId]
+                                                    ?.slug;
+
+                                            const typeLabel =
+                                                typeSlug != null
+                                                    ? t(
+                                                        `meditationTypes.${typeSlug}.name`,
+                                                    )
+                                                    : null;
+
+                                            const mood =
+                                                s.moodAfter != null
+                                                    ? getMood(s.moodAfter)
+                                                    : null;
+
+                                            return (
+                                                <li
+                                                    key={`${g.date}-${index}`}
+                                                    className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 shadow-[0_1px_4px_rgba(15,23,42,0.04)]"
+                                                >
+                                                    <div className="flex flex-col gap-0.5">
+                                                        {typeLabel && (
+                                                            <span className="inline-flex max-w-[180px] items-center rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+                                                                {typeLabel}
+                                                            </span>
                                                         )}
+                                                        <span className="text-sm text-slate-600">
+                                                            {minutes} min
+                                                        </span>
                                                     </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+
+                                                    {mood && (
+                                                        <button
+                                                            type="button"
+                                                            title={t(
+                                                                mood.label,
+                                                            )}
+                                                            className="group"
+                                                        >
+                                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner transition-transform group-hover:scale-105">
+                                                                <img
+                                                                    src={
+                                                                        mood.emoji
+                                                                    }
+                                                                    alt={t(
+                                                                        mood.label,
+                                                                    )}
+                                                                    className="h-6 w-6"
+                                                                />
+                                                            </div>
+                                                        </button>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
                                 </div>
                             </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+                        );
+                    })}
+                </ul>
+            )}
         </section>
     );
 }

@@ -304,6 +304,8 @@ const en = {
         manualForm_qualityLabel: "Perceived quality",
         manualForm_saveButton: "Save session",
         manualForm_savingButton: "Saving…",
+        manualForm_typeLabel: "Meditation type",
+        manualForm_button: "Encode a meditation",
 
         // Player / timer
         player_title: "Start a meditation session",
@@ -327,10 +329,36 @@ const en = {
         last7_empty: "No sessions recorded.",
         last7_durationLabel: "Duration",
         last7_qualityLabel: "Quality",
+        last7_dayLabel: "Day",
+        last7_totalLabel: "Total",
 
         errors: {
-            loadSessions: "Unable to load your sessions.",
-            saveSession: "An error occurred while saving.",
+            loadTypes: "Error loading meditation types",
+            loadSessions: "Error loading sessions",
+            saveSession: "Error saving session"
+        },
+
+        meditationTypes: {
+            breathing: {
+                name: "Conscious breathing",
+                description:
+                    "Focusing on the breath to soothe the nervous system.",
+            },
+            mindfulness: {
+                name: "Mindfulness",
+                description:
+                    "Observing thoughts, emotions and sensations without judgment.",
+            },
+            "body-scan": {
+                name: "Body scan",
+                description:
+                    "Scanning the body with attention to release tension.",
+            },
+            compassion: {
+                name: "Compassion / Metta",
+                description:
+                    "Cultivating kindness toward yourself and others.",
+            },
         },
     },
 

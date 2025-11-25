@@ -1,175 +1,118 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import type { MeditationTypeItem } from "@/lib/api/meditation";
 import { useTranslations } from "@/i18n/TranslationContext";
-import MoodPicker from "@/components/MoodPicker";
-import { MoodValue } from "@/lib";
-import { useMeditationTimer } from "@/hooks/useMeditationTimer";
 
-type MeditationPlayerModalProps = {
+type Props = {
     open: boolean;
-    onClose: () => void;
-    onSave: (params: {
+    onCloseAction: () => void;
+    onSaveAction: (data: {
         duration: number;
-        quality: MoodValue | null;
-    }) => Promise<void> | void;
+        quality: number | null;
+        meditationTypeId: string;
+    }) => Promise<void>;
+    types: MeditationTypeItem[];
 };
 
-export default function MeditationPlayerModal({
-                                                  open,
-                                                  onClose,
-                                                  onSave,
-                                              }: MeditationPlayerModalProps) {
+export function MeditationPlayerModal({
+                                          open,
+                                          onCloseAction,
+                                          onSaveAction,
+                                          types,
+                                      }: Props) {
     const t = useTranslations("domainMeditation");
 
-    const [finishedQuality, setFinishedQuality] =
-        useState<MoodValue | null>(3 as MoodValue);
-    const [saving, setSaving] = useState(false);
-
-    const chimeRef = useRef<HTMLAudioElement | null>(null);
-
-    useEffect(() => {
-        chimeRef.current = new Audio("/audio/meditation-gong.mp3");
-    }, []);
-
-    const {
-        step,
-        chosenDuration,
-        setChosenDuration,
-        remainingLabel,
-        start,
-        stopAndFinish,
-        reset,
-    } = useMeditationTimer(10, {
-        onAutoFinish: () => {
-            void chimeRef.current?.play();
-        },
-    });
-
-    const handleClose = () => {
-        reset();
-        setFinishedQuality(3 as MoodValue);
-        onClose();
-    };
-
-    const handleSave = async () => {
-        try {
-            setSaving(true);
-            await onSave({
-                duration: chosenDuration,
-                quality: finishedQuality,
-            });
-            reset();
-            setFinishedQuality(3 as MoodValue);
-            onClose();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setSaving(false);
-        }
-    };
+    const [duration, setDuration] = useState(10);
+    const [quality, setQuality] = useState<number | null>(3);
+    const [typeId, setTypeId] = useState<string>(types[0]?.id ?? "");
 
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-40 bg-slate-900/40 flex items-center justify-center backdrop-blur">
-            <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-xl">
-                {/* HEADER */}
-                <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        {t("player_modalTitle")}
-                    </h2>
-                    <button
-                        onClick={handleClose}
-                        className="text-slate-500 hover:text-slate-700"
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+            <div className="rounded-xl bg-white p-6 shadow-xl w-80">
+                <h2 className="text-lg font-semibold mb-4">
+                    {t("player_modalTitle")}
+                </h2>
+
+                <div className="mb-3">
+                    <label className="text-xs text-slate-600">
+                        {t("manualForm_typeLabel")}
+                    </label>
+                    <select
+                        className="w-full rounded-md border px-2 py-1"
+                        value={typeId}
+                        onChange={(e) => setTypeId(e.target.value)}
                     >
-                        ✕
-                    </button>
+                        {types.map((type) => (
+                            <option key={type.id} value={type.id}>
+                                {t(
+                                    `meditationTypes.${type.slug}.name`,
+                                )}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                {/* STEP: CONFIG */}
-                {step === "config" && (
-                    <div className="mt-6 space-y-6">
-                        <div>
-                            <label className="text-sm font-medium text-slate-700">
-                                {t("player_durationLabel")}:{" "}
-                                <span className="font-semibold">
-                  {chosenDuration} min
-                </span>
-                            </label>
-                            <input
-                                type="range"
-                                min={5}
-                                max={60}
-                                step={5}
-                                value={chosenDuration}
-                                onChange={(e) =>
-                                    setChosenDuration(Number(e.target.value))
-                                }
-                                className="w-full mt-2"
-                            />
-                        </div>
+                <div className="mb-3">
+                    <label className="text-xs text-slate-600">
+                        {t("player_durationLabel")} : {duration} min
+                    </label>
+                    <input
+                        type="range"
+                        min={5}
+                        max={60}
+                        value={duration}
+                        step={5}
+                        onChange={(e) =>
+                            setDuration(Number(e.target.value))
+                        }
+                        className="w-full"
+                    />
+                </div>
 
-                        <button
-                            onClick={start}
-                            className="w-full rounded-full bg-sky-500 px-5 py-2.5 text-sm font-medium text-white"
-                        >
-                            {t("player_startNowButton")}
-                        </button>
-                    </div>
-                )}
+                <div className="mb-4">
+                    <label className="text-xs text-slate-600">
+                        {t("player_finishedQualityLabel")}
+                    </label>
+                    <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={quality ?? ""}
+                        onChange={(e) =>
+                            setQuality(
+                                e.target.value
+                                    ? Number(e.target.value)
+                                    : null,
+                            )
+                        }
+                        className="w-full rounded-md border px-2 py-1"
+                    />
+                </div>
 
-                {/* STEP: RUNNING */}
-                {step === "running" && (
-                    <div className="mt-6 flex flex-col items-center gap-4">
-                        <div className="flex h-40 w-40 rounded-full items-center justify-center bg-gradient-to-b from-sky-100 to-sky-300 text-3xl font-semibold text-slate-800 shadow-inner">
-                            {remainingLabel}
-                        </div>
+                <div className="flex justify-end gap-2">
+                    <button
+                        className="px-3 py-1 text-sm"
+                        onClick={onCloseAction}
+                    >
+                        {t("player_stopEarlyButton")}
+                    </button>
 
-                        <p className="text-center text-sm text-slate-600 max-w-xs">
-                            {t("player_runningText")}
-                        </p>
-
-                        <button
-                            onClick={stopAndFinish}
-                            className="text-xs border border-slate-200 rounded-full px-4 py-1.5 bg-white hover:bg-slate-50"
-                        >
-                            {t("player_stopEarlyButton")}
-                        </button>
-                    </div>
-                )}
-
-                {/* STEP: FINISHED */}
-                {step === "finished" && (
-                    <div className="mt-8 space-y-6">
-                        <p className="text-sm text-slate-700">
-                            {t("player_finishedText")}
-                        </p>
-
-                        <div>
-                            <label className="text-xs font-medium text-slate-600">
-                                {t("player_finishedQualityLabel")}
-                            </label>
-                            <MoodPicker
-                                value={finishedQuality}
-                                onChangeAction={(v) => setFinishedQuality(v)}
-                                variant="row"
-                                size="sm"
-                                tone="minimal"
-                            />
-                        </div>
-
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="w-full rounded-full bg-teal-500 px-5 py-2.5 text-sm font-medium text-white"
-                        >
-                            {saving
-                                ? t("player_savingButton")
-                                : t("player_saveButton")}
-                        </button>
-                    </div>
-                )}
+                    <button
+                        className="px-3 py-1 bg-sky-500 text-white rounded-md text-sm"
+                        onClick={async () =>
+                            onSaveAction({
+                                duration,
+                                quality,
+                                meditationTypeId: typeId,
+                            })
+                        }
+                    >
+                        {t("player_saveButton")}
+                    </button>
+                </div>
             </div>
         </div>
     );

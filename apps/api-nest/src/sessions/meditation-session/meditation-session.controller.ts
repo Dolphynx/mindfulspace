@@ -25,4 +25,9 @@ export class MeditationSessionController {
   getYesterdaySummary() {
     return this.meditationService.getYesterdaySummary();
   }
+
+  @Get('types')
+  async getMeditationTypes() {
+    return this.meditationService.getMeditationTypes();
+  }
 }

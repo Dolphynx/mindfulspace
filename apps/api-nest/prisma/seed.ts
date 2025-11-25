@@ -1,4 +1,8 @@
-import { PrismaClient, ResourceType } from "@prisma/client";
+import {
+  PrismaClient,
+  ResourceType,
+  MeditationSessionSource,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -10,22 +14,82 @@ async function main() {
   // ---------------------------------------------------------------------------
   console.log("🔄 Clearing existing data (safe)...");
 
-  // Delete sessions first (depend on user & types)
+  // D'abord les sessions qui dépendent des users / types / contenus
   await prisma.exerciceSession.deleteMany();
   await prisma.workoutSession.deleteMany();
   await prisma.sleepSession.deleteMany();
   await prisma.meditationSession.deleteMany();
 
-  // Delete exercise types
+  // Programmes & contenus de méditation (si présents)
+  await prisma.meditationProgramItem?.deleteMany().catch(() => {});
+  await prisma.meditationProgram?.deleteMany().catch(() => {});
+  await prisma.meditationVisualConfig?.deleteMany().catch(() => {});
+  await prisma.meditationContent?.deleteMany().catch(() => {});
+  await prisma.meditationType?.deleteMany().catch(() => {});
+
+  // Types d'exercice
   await prisma.exerciceType.deleteMany();
 
-  // Delete resources (full reset)
+  // Resources (full reset)
   await prisma.resourceTagOnResource?.deleteMany().catch(() => {});
   await prisma.resource.deleteMany();
   await prisma.resourceTag.deleteMany();
   await prisma.resourceCategory.deleteMany();
 
   console.log("✔ Database cleared.");
+
+  // ---------------------------------------------------------------------------
+  // Seed MeditationType
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding meditation types...");
+
+  const meditationTypesData = [
+    {
+      slug: "breathing",
+      //name: "Respiration consciente",
+      //description: "Focalisation sur le souffle pour apaiser le système nerveux.",
+      sortOrder: 10,
+    },
+    {
+      slug: "mindfulness",
+      //name: "Pleine conscience",
+      //description: "Observer pensées, émotions et sensations sans jugement.",
+      sortOrder: 20,
+    },
+    {
+      slug: "body-scan",
+      //name: "Body scan",
+      //description: "Balayer le corps avec l'attention pour relâcher les tensions.",
+      sortOrder: 30,
+    },
+    {
+      slug: "compassion",
+      //name: "Compassion / Metta",
+      //description: "Cultiver la bienveillance envers soi et les autres.",
+      sortOrder: 40,
+    },
+  ];
+
+  const meditationTypes = [];
+
+  for (const type of meditationTypesData) {
+    const created = await prisma.meditationType.upsert({
+      where: { slug: type.slug },
+      update: {},
+      create: {
+        slug: type.slug,
+        //name: type.name,
+        //description: type.description,
+        isActive: true,
+        sortOrder: type.sortOrder,
+      },
+    });
+    meditationTypes.push(created);
+  }
+
+  console.log(`✔ ${meditationTypes.length} meditation types seeded.`);
+
+  const breathingType = meditationTypes[0]; // on utilisera celui-ci pour les seeds de sessions
 
   // ---------------------------------------------------------------------------
   // Seed Exercise Types
@@ -52,12 +116,29 @@ async function main() {
   console.log("✔ ExerciceType seeded");
 
   // ---------------------------------------------------------------------------
-  // Workout Session Demo
+  // USER DEMO
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Creating demo user...");
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: "demo@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "demo@mindfulspace.app",
+      displayName: "Demo User",
+    },
+  });
+
+  console.log("✔ Demo user ready:", demoUser.email);
+
+  // ---------------------------------------------------------------------------
+  // Workout Session Demo (optionnel, lié au user)
   // ---------------------------------------------------------------------------
   const workout = await prisma.workoutSession.create({
     data: {
       quality: 4,
       dateSession: new Date(),
+      userId: demoUser.id,
       exerciceSessions: {
         create: [
           {
@@ -76,74 +157,69 @@ async function main() {
   console.log("✔ WorkoutSession seeded:", workout.id);
 
   // ---------------------------------------------------------------------------
-  // SleepSession demo
+  // SleepSession demo (liée au user)
   // ---------------------------------------------------------------------------
   await prisma.sleepSession.create({
     data: {
       hours: 7,
       quality: 4,
       dateSession: new Date(),
+      userId: demoUser.id,
     },
   });
 
-  // ---------------------------------------------------------------------------
-  // USER DEMO
-  // ---------------------------------------------------------------------------
-  console.log("🌱 Creating demo user...");
-
-  const demoUser = await prisma.user.upsert({
-    where: { email: "demo@mindfulspace.app" },
-    update: {},
-    create: {
-      email: "demo@mindfulspace.app",
-      displayName: "Demo User",
-    },
-  });
-
-  console.log("✔ Demo user ready:", demoUser.email);
+  console.log("✔ SleepSession seeded.");
 
   // ---------------------------------------------------------------------------
-  // Meditation Sessions liées au user
+  // Meditation Sessions liées au user (nouveau modèle)
   // ---------------------------------------------------------------------------
   console.log("🌱 Seeding meditation sessions for demo user...");
 
   const meditationSeeds = [
     // Hier : 2 méditations
-    { daysAgo: 1, duration: 12, quality: 4, hour: 7, minute: 30 },
-    { daysAgo: 1, duration: 20, quality: 5, hour: 21, minute: 0 },
+    { daysAgo: 1, durationMin: 12, quality: 4, hour: 7, minute: 30 },
+    { daysAgo: 1, durationMin: 20, quality: 5, hour: 21, minute: 0 },
 
     // Il y a 2 jours : 1 méditation
-    { daysAgo: 2, duration: 8, quality: 3, hour: 12, minute: 0 },
+    { daysAgo: 2, durationMin: 8, quality: 3, hour: 12, minute: 0 },
 
     // Il y a 3 jours : 3 méditations
-    { daysAgo: 3, duration: 10, quality: 3, hour: 6, minute: 45 },
-    { daysAgo: 3, duration: 15, quality: 4, hour: 13, minute: 15 },
-    { daysAgo: 3, duration: 5, quality: 2, hour: 22, minute: 0 },
+    { daysAgo: 3, durationMin: 10, quality: 3, hour: 6, minute: 45 },
+    { daysAgo: 3, durationMin: 15, quality: 4, hour: 13, minute: 15 },
+    { daysAgo: 3, durationMin: 5, quality: 2, hour: 22, minute: 0 },
 
     // Jours suivants : 1 méditation
-    { daysAgo: 4, duration: 5, quality: 3, hour: 12, minute: 0 },
-    { daysAgo: 5, duration: 10, quality: 4, hour: 12, minute: 0 },
-    { daysAgo: 6, duration: 7, quality: 2, hour: 12, minute: 0 },
-    { daysAgo: 7, duration: 9, quality: 4, hour: 12, minute: 0 },
+    { daysAgo: 4, durationMin: 5, quality: 3, hour: 12, minute: 0 },
+    { daysAgo: 5, durationMin: 10, quality: 4, hour: 12, minute: 0 },
+    { daysAgo: 6, durationMin: 7, quality: 2, hour: 12, minute: 0 },
+    { daysAgo: 7, durationMin: 9, quality: 4, hour: 12, minute: 0 },
   ];
 
   for (const s of meditationSeeds) {
-    const d = new Date();
-    d.setDate(d.getDate() - s.daysAgo);
-    d.setHours(s.hour ?? 12, s.minute ?? 0, 0, 0);
+    const startedAt = new Date();
+    startedAt.setDate(startedAt.getDate() - s.daysAgo);
+    startedAt.setHours(s.hour ?? 12, s.minute ?? 0, 0, 0);
+
+    const durationSeconds = s.durationMin * 60;
+    const endedAt = new Date(startedAt.getTime() + durationSeconds * 1000);
 
     await prisma.meditationSession.create({
       data: {
-        duration: s.duration,
-        quality: s.quality,
-        dateSession: d,
         userId: demoUser.id,
+        source: MeditationSessionSource.MANUAL,
+        meditationTypeId: breathingType.id,
+        meditationContentId: null, // ici ce sont des saisies "manuelles"
+        startedAt,
+        endedAt,
+        durationSeconds,
+        moodBefore: null,
+        moodAfter: s.quality,
+        notes: null,
       },
     });
   }
 
   console.log(`✔ ${meditationSeeds.length} meditation sessions seeded.`);
-
 
   // ---------------------------------------------------------------------------
   // Resources (categories, tags, resources…)
@@ -215,7 +291,8 @@ async function main() {
   await createArticle({
     slug: "how-to-build-an-evening-routine",
     title: "Construire une routine du soir qui apaise le mental",
-    summary: "Une méthode en quatre étapes pour déconnecter doucement en fin de journée.",
+    summary:
+      "Une méthode en quatre étapes pour déconnecter doucement en fin de journée.",
     content: "…",
     readTimeMin: 6,
     tags: ["wellness", "mental-health"],
