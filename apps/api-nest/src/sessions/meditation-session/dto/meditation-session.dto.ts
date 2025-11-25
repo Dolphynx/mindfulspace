@@ -4,7 +4,7 @@ import { MeditationSessionSource } from '@prisma/client';
 export class CreateMeditationSessionDto {
   // 👇 on ne le prend plus dans le body
   // @IsString()
-  // userId!: string; // TODO: plus tard, récupérer depuis l'auth et ne plus le mettre dans le body
+  // userId!: string; //
 
   @IsOptional()
   @IsEnum(MeditationSessionSource)
