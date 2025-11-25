@@ -54,7 +54,7 @@ const en = {
         heroSubtitle:
             "Track your wellbeing habits, meditate, and breathe mindfully.",
 
-        welcomeTitle: "Take a moment for yourself 🌿",
+        welcomeTitle: "Take a moment for yourself",
         welcomeParagraph1:
             "MindfulSpace is a safe place to follow your wellbeing habits, take a step back on your days, and build a calmer and more balanced routine.",
         welcomeParagraph2:
@@ -65,7 +65,7 @@ const en = {
         discoverCoachs: "Learn more about the role of the coaches",
         discoverContact: "Contact the MindfulSpace team",
 
-        ctaTitle: "Ready to take action? ✨",
+        ctaTitle: "Ready to take action?",
         ctaDescription:
             "Log in to your space to follow your mood, breathe step by step, and keep track of your progress.",
 
@@ -245,6 +245,8 @@ const en = {
         phaseInhale: "Inhale",
         phaseHold: "Hold",
         phaseExhale: "Exhale",
+        hold_full: "Block respiration…",
+        hold_empty: "Release…",
 
         cycle: "Cycle",
         followInstruction: "Follow the breathing rhythm",
@@ -257,7 +259,7 @@ const en = {
 
     sessionRecap: {
         title: "Session completed",
-        progressMessage: "You are making progress on your path to calm 🌸",
+        progressMessage: "You are making progress on your path to calm",
         dashboardButton: "My tracking",
         redoButton: "Do another session",
         reminder: "Come back tomorrow to continue your practice",
@@ -282,12 +284,41 @@ const en = {
         title: "Sleep",
         subtitle: "Tools and tips to improve your sleep quality.",
         empty: "Content coming soon…",
+
+        // Manual logging (only mode for sleep)
+        manualForm_title: "Log a night of sleep",
+        manualForm_description: "Record your bedtime, wake-up time and how restful your night felt.",
+        manualForm_placeholder: "The form to log your nights of sleep will be available soon.",
+        manualForm_durationLabel: "Sleep duration",
+        manualForm_saveButton: "Save",
+        manualForm_cancelButton: "Cancel",
+
+        // History
+        history_title: "Your recent nights",
+        history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
     },
 
     domainExercice: {
         title: "Exercise",
         subtitle: "Move, breathe, and take care of your body every day.",
         empty: "Content coming soon…",
+
+        // Manual logging
+        manualForm_title: "Log a past session",
+        manualForm_description: "Enter the date, duration and type of exercise you did.",
+        manualForm_placeholder: "The form to log your exercise sessions will be available soon.",
+        manualForm_durationLabel: "Session duration",
+        manualForm_saveButton: "Save",
+        manualForm_cancelButton: "Cancel",
+
+        // Start a guided session
+        start_title: "Start an exercise session",
+        start_description: "Choose a session and let the app guide you step by step.",
+        start_placeholder: "The guided exercise starter will be available soon.",
+
+        // History
+        history_title: "Your recent exercise sessions",
+        history_placeholder: "Your exercise history will appear here as soon as you log a session.",
     },
 
     domainMeditation: {
@@ -306,6 +337,7 @@ const en = {
         manualForm_savingButton: "Saving…",
         manualForm_typeLabel: "Meditation type",
         manualForm_button: "Encode a meditation",
+        manualForm_cancelButton: "Cancel",
 
         // Player / timer
         player_title: "Start a meditation session",
@@ -360,6 +392,40 @@ const en = {
                     "Cultivating kindness toward yourself and others.",
             },
         },
+
+        wizard_loadingTypes: "Loading meditation types…",
+        wizard_errorTypes: "Unable to load meditation types.",
+
+        wizard_stepType_title: "Which type of meditation would you like to practice?",
+
+        wizard_stepDuration_title: "How much time do you have?",
+        wizard_minutes: "min",
+        wizard_backToType: "⟵ Back to type selection",
+
+        wizard_stepContent_title: "Choose your meditation",
+        wizard_loadingContents: "Loading meditations…",
+        wizard_errorContents: "Unable to load meditations.",
+        wizard_stepContent_empty: "No meditation matches these criteria yet.",
+        wizard_premium: "Premium",
+        wizard_backToDuration: "⟵ Back to duration selection",
+
+        wizard_stepMoodBefore_title: "How do you feel before starting?",
+        wizard_backToContent: "⟵ Choose another meditation",
+        wizard_startSession: "Start session",
+
+        wizard_stepPlaying_title: "Session in progress:",
+        wizard_stepPlaying_placeholder: "The player will appear here depending on the meditation type.",
+        wizard_endSession: "End session",
+
+        wizard_stepMoodAfter_title: "How do you feel now?",
+        wizard_saveError: "Unable to save your session. Please try again.",
+        wizard_saving: "Saving…",
+        wizard_save: "Save my session",
+        wizard_cancel: "Cancel",
+
+        wizard_stepDone_title: "Session saved",
+        wizard_stepDone_description: "Thank you for taking this moment for yourself.",
+        wizard_close: "Close"
     },
 
     publicWorld: {

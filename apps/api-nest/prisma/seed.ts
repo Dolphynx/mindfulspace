@@ -2,6 +2,7 @@ import {
   PrismaClient,
   ResourceType,
   MeditationSessionSource,
+  MeditationMode
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -90,6 +91,215 @@ async function main() {
   console.log(`✔ ${meditationTypes.length} meditation types seeded.`);
 
   const breathingType = meditationTypes[0]; // on utilisera celui-ci pour les seeds de sessions
+
+  // ---------------------------------------------------------------------------
+  // Seed MeditationContent
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding meditation contents...");
+
+  const mindfulnessType = meditationTypes.find((t) => t.slug === "mindfulness");
+  const bodyScanType = meditationTypes.find((t) => t.slug === "body-scan");
+  const compassionType = meditationTypes.find((t) => t.slug === "compassion");
+
+  if (!breathingType || !mindfulnessType || !bodyScanType || !compassionType) {
+    throw new Error("Meditation types not properly seeded");
+  }
+
+  type MeditationContentSeed = {
+    title: string;
+    description: string;
+    defaultMeditationTypeId: string;
+    mode: MeditationMode;
+    minDurationSeconds: number | null;
+    maxDurationSeconds: number | null;
+    defaultDurationSeconds: number | null;
+    sortOrder: number;
+    isPremium: boolean;
+    mediaUrl?: string | null;
+  };
+
+  const meditationContentsData: MeditationContentSeed[] = [
+    // ---------- BREATHING ----------
+    {
+      title: "Respiration 4-4-4 (timer)",
+      description:
+        "Inspirez, retenez et expirez en 4 temps pour apaiser le système nerveux.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
+    },
+    {
+      title: "Respiration cohérente (audio 10 min)",
+      description:
+        "Respiration guidée à 6 respirations par minute pour recentrer l’esprit.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
+    },
+    {
+      title: "Respiration en vagues (visuelle)",
+      description:
+        "Suivez le mouvement d’une vague qui se déploie au rythme de votre souffle.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
+
+    // ---------- MINDFULNESS ----------
+    {
+      title: "Pleine conscience 5 minutes (timer)",
+      description:
+        "Quelques minutes pour revenir aux sensations et à la respiration.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
+    },
+    {
+      title: "Présence au quotidien (audio 10 min)",
+      description:
+        "Une méditation guidée pour vivre une situation du quotidien en pleine conscience.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
+    },
+    {
+      title: "Flamme de présence (visuelle)",
+      description:
+        "Fixez la flamme d’une bougie et revenez doucement à l’instant présent.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
+
+    // ---------- BODY SCAN ----------
+    {
+      title: "Body scan express (timer)",
+      description:
+        "Un balayage rapide du corps pour relâcher les tensions principales.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
+    },
+    {
+      title: "Body scan complet (audio 15 min)",
+      description:
+        "Méditation guidée qui explore chaque partie du corps avec bienveillance.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 900,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 900,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
+    },
+    {
+      title: "Body scan avec silhouette (visuelle)",
+      description:
+        "Une silhouette s’illumine progressivement pour accompagner le relâchement.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 1200,
+      defaultDurationSeconds: 900,
+      sortOrder: 30,
+      isPremium: true,
+    },
+
+    // ---------- COMPASSION / METTA ----------
+    {
+      title: "Metta 5 minutes (timer)",
+      description:
+        "Quelques minutes pour envoyer des vœux de bienveillance à soi et aux autres.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
+    },
+    {
+      title: "Compassion guidée (audio 10 min)",
+      description:
+        "Une pratique audio pour ouvrir le cœur et relâcher la dureté envers soi.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: true,
+      mediaUrl: "/audio/respi_751ko.mp3",
+    },
+    {
+      title: "Cercle de bienveillance (visuelle)",
+      description:
+        "Visualisez un cercle de lumière qui s’élargit pour inclure d’autres personnes.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
+  ];
+
+  const meditationContents = [];
+
+  for (const content of meditationContentsData) {
+    const created = await prisma.meditationContent.create({
+      data: {
+        title: content.title,
+        description: content.description,
+        defaultMeditationTypeId: content.defaultMeditationTypeId,
+        mode: content.mode,
+        minDurationSeconds: content.minDurationSeconds,
+        maxDurationSeconds: content.maxDurationSeconds,
+        defaultDurationSeconds: content.defaultDurationSeconds,
+        sortOrder: content.sortOrder,
+        isActive: true,
+        isPremium: content.isPremium,
+        mediaUrl: content.mediaUrl ?? null,
+      },
+    });
+    meditationContents.push(created);
+  }
+
+  console.log(`✔ ${meditationContents.length} meditation contents seeded.`);
+
+
 
   // ---------------------------------------------------------------------------
   // Seed Exercise Types

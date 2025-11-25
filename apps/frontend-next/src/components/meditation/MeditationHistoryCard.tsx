@@ -8,13 +8,38 @@ import type {
 } from "@/hooks/useMeditationSessions";
 import { getMood } from "@/lib";
 
+/**
+ * Propriétés attendues par le composant `MeditationHistoryCard`.
+ *
+ * Ce composant affiche l’historique des séances sur les 7 derniers jours,
+ * avec regroupement par date, total de minutes, différenciation du jour le plus récent
+ * et affichage optionnel de l’humeur finale sous forme d’icône.
+ */
 type Props = {
+    /** Liste brute des séances récupérées via l’API. */
     sessions: MeditationSession[];
+
+    /** Indique si le chargement est en cours. */
     loading: boolean;
+
+    /** Type d’erreur éventuelle rencontrée lors du chargement. */
     errorType: MeditationErrorType;
+
+    /** Liste des types de méditation, utilisée pour afficher les labels. */
     types?: MeditationTypeItem[];
 };
 
+/**
+ * Regroupe les séances par date, calcule :
+ * - la liste des séances du jour
+ * - la somme totale des minutes
+ * - la dernière séance chronologique
+ *
+ * Le résultat est trié par date croissante.
+ *
+ * @param sessions Liste de séances provenant de l’API.
+ * @returns Liste de groupes par jour, enrichis avec des agrégats.
+ */
 function groupSessionsByDate(sessions: MeditationSession[]) {
     const byDate = new Map<string, MeditationSession[]>();
 
@@ -43,6 +68,19 @@ function groupSessionsByDate(sessions: MeditationSession[]) {
         });
 }
 
+/**
+ * Carte d’historique des séances sur 7 jours :
+ *
+ * - Affiche un résumé global (nombre de séances, minutes totales)
+ * - Gère les états vide / erreur / chargement
+ * - Regroupe les données par jour
+ * - Valorise le dernier jour (visuel distinct)
+ * - Affiche les humeurs finales via `getMood`
+ *
+ * Ce composant est destiné à être affiché dans un dashboard de méditation.
+ *
+ * @param props Voir {@link Props}.
+ */
 export function MeditationHistoryCard({
                                           sessions,
                                           loading,
@@ -51,13 +89,17 @@ export function MeditationHistoryCard({
                                       }: Props) {
     const t = useTranslations("domainMeditation");
 
-    // id -> type
+    // Indexation typeId -> type, pour retrouver les slugs et labels
     const typeMap = Object.fromEntries(types.map((type) => [type.id, type]));
+
+    // Message d’erreur selon le type
     const loadError =
         errorType === "load" ? t("errors.loadSessions") : null;
 
+    // Sessions regroupées par jour + stats calculées
     const grouped = groupSessionsByDate(sessions);
 
+    // Minutes cumulées sur la période (7 derniers jours)
     const totalWeekMinutes = Math.round(
         sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 60,
     );
@@ -108,7 +150,7 @@ export function MeditationHistoryCard({
                                         : "border-slate-100 bg-slate-50"
                                 }`}
                             >
-                                {/* petite barre verticale mindful à gauche */}
+                                {/* Barre verticale décorative mindful */}
                                 <span className="pointer-events-none absolute inset-y-2 left-1 w-1 rounded-full bg-gradient-to-b from-teal-300 to-violet-300" />
 
                                 <div className="pl-3">
@@ -137,6 +179,7 @@ export function MeditationHistoryCard({
                                                 s.durationSeconds / 60,
                                             );
 
+                                            // Récupération du slug pour traduction du type
                                             const typeSlug =
                                                 s.meditationTypeId &&
                                                 typeMap[s.meditationTypeId]
@@ -149,6 +192,7 @@ export function MeditationHistoryCard({
                                                     )
                                                     : null;
 
+                                            // Humeur après séance
                                             const mood =
                                                 s.moodAfter != null
                                                     ? getMood(s.moodAfter)
