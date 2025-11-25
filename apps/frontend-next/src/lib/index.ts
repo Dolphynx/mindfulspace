@@ -20,3 +20,5 @@ export * from "./getTip";
 export * from "./userPrefs";
 export * from "./mood";
 export * from "./cookieConsent";
+export * from "./utils/date";
+export * from "./utils/time";

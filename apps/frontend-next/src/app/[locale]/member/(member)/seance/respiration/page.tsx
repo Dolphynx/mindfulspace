@@ -50,7 +50,7 @@ export default function RespirationPage() {
     /** Bouton Skip → passer à l’étape astuce */
     const handleSkip = () => {
         if (aliveRef.current)
-            router.push(`/${locale}/member/seance/astuce`);
+            router.push(`/${locale}/member/seance/humeur`);
     };
 
     /** Skip All → passer au dashboard */
