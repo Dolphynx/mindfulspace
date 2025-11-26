@@ -93,7 +93,7 @@ export function WorkoutStartSessionCard({ types, onSave }: Props) {
                             Step {stepIndex + 1} / {steps.length}
                         </span>
                         <span className="text-xs font-medium text-slate-600">
-                            {selectedType.name}
+                            {selectedType?.name}
                         </span>
                     </div>
 
