@@ -47,7 +47,7 @@ export function ClientNavbar() {
             <div className="mx-auto max-w-7xl px-4 py-3">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center justify-between">
-                        <Link href={`/${locale}/member/dashboard`}>
+                        <Link href={`/${locale}/member/world`}>
                             <Image
                                 src="/images/MindfulSpace_logo.jpg"
                                 alt="MindfulSpace logo"
