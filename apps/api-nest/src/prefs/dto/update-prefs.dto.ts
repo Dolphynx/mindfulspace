@@ -5,7 +5,7 @@
  *   PATCH /prefs
  *
  * Actuellement, une seule préférence est gérée :
- * - launchBreathingOnStart : si vrai, l’exercice de respiration est lancé au démarrage.
+ * - launchBreathingOnStart : si vrai, l’exercise de respiration est lancé au démarrage.
  */
 
 import { ApiProperty } from '@nestjs/swagger';
@@ -15,7 +15,7 @@ import { ApiProperty } from '@nestjs/swagger';
  */
 export class UpdatePrefsDto {
   @ApiProperty({
-    description: "Si vrai, lance l’exercice de respiration au démarrage de MindfulSpace.",
+    description: "Si vrai, lance l’exercise de respiration au démarrage de MindfulSpace.",
     example: true,
   })
   launchBreathingOnStart!: boolean;
