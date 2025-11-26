@@ -169,7 +169,7 @@ function levelBadgeClasses(level: ObjectiveLevel) {
 function sessionTypeIcon(name?: string) {
     const n = (name ?? '').toLowerCase();
     if (n.includes('sleep') || n.includes('sommeil')) return '😴';
-    if (n.includes('exercice') || n.includes('sport') || n.includes('exercise')) return '🏃‍♂️';
+    if (n.includes('exercise') || n.includes('sport') || n.includes('exercise')) return '🏃‍♂️';
     if (n.includes('medit') || n.includes('médit')) return '🧘';
     return '🎯';
 }
