@@ -53,7 +53,7 @@ export function WorkoutStartSection({ types, onCreateSession }: Props) {
                             onSave={async ({ exerciceTypeId, repetitionCount, quality }) => {
                                 await onCreateSession({
                                     dateSession: new Date().toISOString(),
-                                    quality,
+                                    quality: quality ?? undefined,
                                     exercices: [{ exerciceTypeId, repetitionCount }],
                                 });
 
