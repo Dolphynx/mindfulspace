@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type {
     MeditationSession,
@@ -7,13 +8,18 @@ import type {
     MeditationTypeItem,
 } from "@/hooks/useMeditationSessions";
 import { getMood } from "@/lib";
+import { ChevronDown } from "lucide-react";
 
 /**
  * Propriétés attendues par le composant `MeditationHistoryCard`.
  *
- * Ce composant affiche l’historique des séances sur les 7 derniers jours,
- * avec regroupement par date, total de minutes, différenciation du jour le plus récent
- * et affichage optionnel de l’humeur finale sous forme d’icône.
+ * Ce composant affiche l’historique des séances sur les 7 derniers jours
+ * (au sens de « 7 derniers jours où il y a eu au moins une séance »),
+ * avec regroupement par date.
+ *
+ * Par défaut la carte est "fermée" : on ne voit que les infos globales
+ * (total de minutes, nombre de séances, lotus moyen).
+ * Un bouton en haut à droite permet de développer / replier la liste détaillée.
  */
 type Props = {
     /** Liste brute des séances récupérées via l’API. */
@@ -71,13 +77,13 @@ function groupSessionsByDate(sessions: MeditationSession[]) {
 /**
  * Carte d’historique des séances sur 7 jours :
  *
- * - Affiche un résumé global (nombre de séances, minutes totales)
- * - Gère les états vide / erreur / chargement
- * - Regroupe les données par jour
- * - Valorise le dernier jour (visuel distinct)
- * - Affiche les humeurs finales via `getMood`
- *
- * Ce composant est destiné à être affiché dans un dashboard de méditation.
+ * - Affiche un résumé global (nombre de séances, minutes totales, lotus moyen)
+ *   sur les 7 derniers jours.
+ * - Gère les états vide / erreur / chargement.
+ * - Regroupe les données par jour.
+ * - Ne conserve que les 7 derniers jours de pratique.
+ * - Propose un bouton en haut à droite pour développer / replier
+ *   la liste détaillée.
  *
  * @param props Voir {@link Props}.
  */
@@ -88,6 +94,7 @@ export function MeditationHistoryCard({
                                           types = [],
                                       }: Props) {
     const t = useTranslations("domainMeditation");
+    const [expanded, setExpanded] = useState(false);
 
     // Indexation typeId -> type, pour retrouver les slugs et labels
     const typeMap = Object.fromEntries(types.map((type) => [type.id, type]));
@@ -96,28 +103,79 @@ export function MeditationHistoryCard({
     const loadError =
         errorType === "load" ? t("errors.loadSessions") : null;
 
-    // Sessions regroupées par jour + stats calculées
-    const grouped = groupSessionsByDate(sessions);
+    // Sessions regroupées par jour (toutes)
+    const groupedAll = groupSessionsByDate(sessions);
 
-    // Minutes cumulées sur la période (7 derniers jours)
-    const totalWeekMinutes = Math.round(
-        sessions.reduce((sum, s) => sum + s.durationSeconds, 0) / 60,
+    // ⚠️ Limitation UI : on ne garde que les 7 derniers jours (7 groupes de dates max)
+    const grouped = groupedAll.slice(-7);
+
+    // Données réellement prises en compte pour le résumé (7 derniers jours)
+    const sessionsForSummary: MeditationSession[] = grouped.reduce(
+        (all, g) => all.concat(g.items),
+        [] as MeditationSession[],
     );
+
+    const totalWeekMinutes = Math.round(
+        sessionsForSummary.reduce((sum, s) => sum + s.durationSeconds, 0) /
+        60,
+    );
+
+    const totalSessionsCount = sessionsForSummary.length;
+
+    // Calcul du lotus moyen (mood moyen sur les 7 derniers jours)
+    const moodValues = sessionsForSummary
+        .map((s) => s.moodAfter)
+        .filter((value): value is number => value != null);
+
+    const averageMoodValue =
+        moodValues.length > 0
+            ? Math.round(
+                moodValues.reduce((sum, value) => sum + value, 0) /
+                moodValues.length,
+            )
+            : null;
+
+    const averageMood =
+        averageMoodValue != null ? getMood(averageMoodValue) : null;
+
+    const hasData = !loading && totalSessionsCount > 0 && !loadError;
 
     return (
         <section className="rounded-2xl bg-white/90 p-6 shadow-sm border border-slate-100">
             {/* HEADER GLOBAL */}
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-lg font-semibold text-slate-800">
                         {t("last7_title")}
                     </h2>
-                    {!loading && sessions.length > 0 && (
+                    {hasData && (
                         <p className="mt-1 text-xs text-slate-500">
-                            {sessions.length} séances · {totalWeekMinutes} min
+                            {totalSessionsCount} {t("last7_summary_sessions")} ·{" "}
+                            {totalWeekMinutes} {t("last7_summary_minutes")}
                         </p>
                     )}
                 </div>
+
+                {/* Bouton développer/replier */}
+                {hasData && (
+                    <button
+                        type="button"
+                        onClick={() => setExpanded((prev) => !prev)}
+                        aria-expanded={expanded}
+                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 shadow-sm hover:bg-slate-50"
+                    >
+                        <span className="hidden sm:inline">
+                            {expanded
+                                ? t("last7_toggle_collapse")
+                                : t("last7_toggle_expand")}
+                        </span>
+                        <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                                expanded ? "rotate-180" : ""
+                            }`}
+                        />
+                    </button>
+                )}
             </div>
 
             {/* ERREUR DE CHARGEMENT */}
@@ -128,14 +186,57 @@ export function MeditationHistoryCard({
             )}
 
             {/* ÉTAT VIDE */}
-            {!loading && sessions.length === 0 && !loadError && (
+            {!loading && totalSessionsCount === 0 && !loadError && (
                 <p className="mt-4 text-sm text-slate-500">
                     {t("last7_empty")}
                 </p>
             )}
 
-            {/* LISTE GROUPÉE PAR JOUR */}
-            {!loading && grouped.length > 0 && (
+            {/* RÉSUMÉ GLOBAL (toujours visible quand il y a des données) */}
+            {hasData && (
+                <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+                    <div className="flex flex-col text-sm text-slate-700">
+                        <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                            {t("last7_totalMeditationLabel")}
+                        </span>
+                        <span className="font-semibold">
+                            {totalWeekMinutes} min
+                        </span>
+                    </div>
+
+                    <div className="h-6 w-px bg-slate-200" />
+
+                    <div className="flex flex-col text-sm text-slate-700">
+                        <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                            {t("last7_totalSessionsLabel")}
+                        </span>
+                        <span className="font-semibold">
+                            {totalSessionsCount}
+                        </span>
+                    </div>
+
+                    {averageMood && (
+                        <>
+                            <div className="h-6 w-px bg-slate-200" />
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                                    {t("last7_averageMoodLabel")}
+                                </span>
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
+                                    <img
+                                        src={averageMood.emoji}
+                                        alt={t(averageMood.label)}
+                                        className="h-6 w-6"
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* LISTE GROUPÉE PAR JOUR (max 7 jours) – visible uniquement en mode "déployé" */}
+            {hasData && expanded && grouped.length > 0 && (
                 <ul className="mt-4 space-y-4">
                     {grouped.map((g, idx) => {
                         const sessionCount = g.items.length;
@@ -155,7 +256,7 @@ export function MeditationHistoryCard({
 
                                 <div className="pl-3">
                                     {/* HEADER DU JOUR */}
-                                    <div className="flex items-baseline justify-between gap-2 mb-3">
+                                    <div className="mb-3 flex items-baseline justify-between gap-2">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                             {t("last7_dayLabel")} {g.date}
                                         </div>
