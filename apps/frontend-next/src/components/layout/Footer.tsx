@@ -13,7 +13,9 @@
  */
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FooterCookiesLink } from "@/components/layout/";
+import { useTranslations } from "@/i18n/TranslationContext";
 
 /**
  * Propriétés du composant Footer.
@@ -38,26 +40,25 @@ type FooterProps = {
  * - Le parent reste responsable de l'état d'ouverture du modal.
  */
 export default function Footer({ onOpenPreferencesAction }: FooterProps) {
+    const pathname = usePathname();
+    const locale = pathname.split("/")[1] || "fr";
+    const t = useTranslations("footer");
+
     return (
         <footer className="w-full bg-transparent border-t border-brandBorder py-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-[12px] text-brandText-soft max-w-7xl mx-auto px-4">
-                {/* Message de crédit / déploiement */}
                 <p className="text-center">
-                    Déployé avec ❤️ et sérénité grâce à CI/CD GitLab 🌿
+                    {t("deployMessage")}
                 </p>
 
                 <div className="flex items-center gap-3">
-                    {/* Bouton / lien qui ouvre la modale de préférences cookies.
-                       → Délégué à FooterCookiesLink pour garder le Footer simple. */}
                     <FooterCookiesLink onOpenPreferencesAction={onOpenPreferencesAction} />
 
-                    {/* Lien vers la page de politique de cookies.
-                       → Page statique ou CMS selon l'implémentation du projet. */}
                     <Link
-                        href="/cookies-policy"
+                        href={`/${locale}/cookies-policy`}
                         className="hover:text-brandText transition-colors"
                     >
-                        Politique de cookies
+                        {t("cookiePolicy")}
                     </Link>
                 </div>
             </div>

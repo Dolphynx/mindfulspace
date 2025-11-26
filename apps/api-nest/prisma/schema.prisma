@@ -1,180 +1,285 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client-js" // génère le client TypeScript Prisma
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"       // base cible : PostgreSQL
+  url      = env("DATABASE_URL") // chaîne de connexion injectée via l'env
 }
 
-// Home page test graph
+enum MeditationMode {
+  TIMER   // séance minutée, sans média
+  AUDIO   // lecture audio (fichiers mp3, etc.)
+  VIDEO   // lecture vidéo (YouTube, autres)
+  VISUAL  // exercice purement visuel (animations, SVG, etc.)
+}
+
+enum MeditationSessionSource {
+  GUIDED      // séance guidée via un contenu (audio / visuel)
+  MANUAL      // séance encodée manuellement
+  QUICK_TIMER // séance créée via un simple timer rapide
+}
+
+enum MeditationVisualType {
+  BREATHING_WAVE // animation type vague de respiration
+  LOTUS_OPENING  // lotus qui s’ouvre / se ferme
+  CIRCLE_PULSE   // cercle qui pulse au rythme de la respiration
+}
+
+// Données de test pour un graphique sur la home
 model TestData {
   id          String   @id @default(uuid())
-  metricName  String
-  label       String
-  metricValue Int
+  metricName  String        // nom logique de la métrique
+  label       String        // libellé affiché dans le graphique
+  metricValue Int           // valeur numérique à tracer
   createdAt   DateTime @default(now())
 }
 
-model Session {
+model SleepSession {
   id          String   @id @default(uuid())
-  value       Int
-  quality     Int?
-  dateSession DateTime
+  hours       Int           // nombre d'heures de sommeil
+  quality     Int?          // évaluation subjective (échelle simple)
+  dateSession DateTime      // date réelle de la nuit
+  dateCreated DateTime @default(now()) // date d’encodage en DB
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? // utilisateur propriétaire (nullable pour tests)
+}
+
+model MeditationSession {
+  id String @id @default(cuid())
+
+  userId String                    // FK vers l'utilisateur
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Origine de la séance (wizard, manuel, quick timer…)
+  source MeditationSessionSource
+
+  // TYPE choisi par l'utilisateur
+  meditationTypeId String
+  meditationType   MeditationType @relation("SessionActualType", fields: [meditationTypeId], references: [id])
+
+  // Contenu GUIDED (optionnel : TIMER simple n'en a pas)
+  meditationContentId String?
+  meditationContent   MeditationContent? @relation(fields: [meditationContentId], references: [id])
+
+  startedAt       DateTime? // début effectif de la séance
+  endedAt         DateTime? // fin effective de la séance
+  durationSeconds Int       // durée stockée en secondes
+
+  moodBefore Int? // humeur avant la séance (1–5)
+  moodAfter  Int? // humeur après la séance (1–5)
+  notes      String? // notes libres éventuelles
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])              // requêtes filtrées par utilisateur
+  @@index([meditationTypeId])    // analytics par type de méditation
+  @@index([meditationContentId]) // lien rapide vers le contenu utilisé
+  @@map("meditation_session")    // nom de table explicite en DB
+}
+
+model MeditationType {
+  id        String  @id @default(cuid())
+  slug      String  @unique         // identifiant stable pour i18n & front
+  //name        String
+  //description String?
+  isActive  Boolean @default(true)  // permet de masquer un type sans le supprimer
+  sortOrder Int?                    // ordre d’affichage dans le catalogue
+
+  contents MeditationContent[] @relation("ContentDefaultType") // contenus dont c’est le type par défaut
+  sessions MeditationSession[] @relation("SessionActualType")  // séances réellement associées à ce type
+
+  @@map("meditation_type")
+}
+
+model MeditationContent {
+  id          String  @id @default(cuid())
+  title       String        // titre visible côté front
+  description String?       // description courte du contenu
+
+  // Mode : TIMER / AUDIO / VIDEO / VISUAL
+  mode MeditationMode
+
+  // Type par défaut pour les sessions lancées par ce contenu
+  defaultMeditationTypeId String
+  defaultMeditationType   MeditationType @relation("ContentDefaultType", fields: [defaultMeditationTypeId], references: [id])
+
+  // Durées (suggestions / bornes) pour filtrage et UX
+  defaultDurationSeconds Int? // durée suggérée par défaut
+  minDurationSeconds     Int? // durée minimale sensée pour ce contenu
+  maxDurationSeconds     Int? // durée maximale sensée pour ce contenu
+
+  // Media unique (audio OU vidéo), optionnel si TIMER/VISUAL
+  mediaUrl String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
+
+  isActive  Boolean @default(true)   // pour masquer un contenu sans le supprimer
+  isPremium Boolean  @default(false) // restreint aux utilisateurs premium
+  sortOrder Int?                     // tri dans les listes (wizard, catalogue)
+
+  // Relations
+  visualConfig MeditationVisualConfig? // config JSON spécifique si VISUAL
+  sessions     MeditationSession[]     // sessions GUIDED basées sur ce contenu
+  programItems MeditationProgramItem[] // utilisé dans des programmes
+
+  @@map("meditation_content")
+}
+
+model MeditationVisualConfig {
+  id String @id @default(cuid())
+
+  meditationContentId String            @unique // un visuel config par contenu
+  meditationContent   MeditationContent @relation(fields: [meditationContentId], references: [id])
+
+  visualType MeditationVisualType // type d'animation (lotus, vagues, etc.)
+  configJson Json // ex: { "breathIn": 5, "breathOut": 5, "cycles": 12 }
+
+  @@map("meditation_visual_config")
+}
+
+/**
+ * Programmes de méditation (séquences de MeditationContent)
+ */
+model MeditationProgram {
+  id          String  @id @default(cuid())
+  title       String        // nom du programme (ex: "Débuter la méditation")
+  description String?
+  isActive    Boolean @default(true)  // permet de cacher un programme
+  isPremium   Boolean @default(false) // programme réservé aux abonnés
+  sortOrder   Int?                    // ordre d’affichage dans les listes
+
+  items     MeditationProgramItem[]
+  resources Resource[] // ressources éditoriales qui pointent vers ce programme
+
+  @@map("meditation_program")
+}
+
+model MeditationProgramItem {
+  id                  String @id @default(cuid())
+  meditationProgramId String // FK vers le programme
+  meditationContentId String // FK vers le contenu de méditation
+  order               Int    // position dans la séquence (1, 2, 3…)
+
+  meditationProgram MeditationProgram @relation(fields: [meditationProgramId], references: [id])
+  meditationContent MeditationContent @relation(fields: [meditationContentId], references: [id])
+
+  @@map("meditation_program_item")
+}
+
+model WorkoutSession {
+  id          String   @id @default(uuid())
+  quality     Int?          // évaluation subjective de la séance
+  dateSession DateTime      // jour de l’entraînement
   dateCreated DateTime @default(now())
 
-  // Foreign key to SessionType
-  sessionTypeId String
-  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+  exerciceSessions ExerciceSession[] // exercices détaillés composant la séance
 
-  // user
   user   User?   @relation(fields: [userId], references: [id])
-  userId String?
+  userId String? // utilisateur propriétaire
 }
 
-model SessionType {
-  id   String @id @default(uuid())
-  name String
+model ExerciceType {
+  id          String @id @default(uuid())
+  name        String @unique // nom d'exercice unique (ex: "Pompes")
+  Description String         // description plus détaillée
 
-  // Jointure vers plusieurs unités
-  units SessionTypeUnit[]
-
-  // Foreign key to SessionUnit
-  //sessionUnitId String
-  //sessionUnit   SessionUnit @relation(fields: [sessionUnitId], references: [id])
-
-  // One type can have many sessions
-  sessions  Session[]
-  Objective Objective[]
+  exerciceSessions ExerciceSession[]
 }
 
-model SessionUnit {
-  id    String @id @default(uuid())
-  value String // e.g. "minutes", "steps"
+model ExerciceSession {
+  workoutSessionId String // FK vers la séance globale
+  exerciceTypeId   String // FK vers le type d'exercice
 
-  // One unit can be used by many types
-  types     SessionTypeUnit[]
-  //types      SessionType[]
-  //objectives Objective[]
-  Objective Objective[]
-}
+  workoutSession WorkoutSession @relation(fields: [workoutSessionId], references: [id])
+  exerciceType   ExerciceType   @relation(fields: [exerciceTypeId], references: [id])
 
-//
-// TABLE DE JOINTURE M:N EXPLICITE
-//
-model SessionTypeUnit {
-  priority      Int
-  sessionTypeId String
-  sessionUnitId String
+  repetitionCount Int // nombre de répétitions / unités pour cet exercice
 
-  sessionType SessionType @relation(fields: [sessionTypeId], references: [id])
-  sessionUnit SessionUnit @relation(fields: [sessionUnitId], references: [id])
-
-  @@id([sessionTypeId, sessionUnitId]) // Clé primaire composée
+  @@id([workoutSessionId, exerciceTypeId]) // clé composite (un type par séance)
 }
 
 model User {
   id          String  @id @default(cuid())
-  email       String  @unique
-  displayName String?
+  email       String  @unique       // identifiant unique de connexion
+  displayName String?               // nom affiché dans l'UI
 
-  // relations
-  sessions   Session[]
-  objectives Objective[]
+  workoutSessions    WorkoutSession[]
+  sleepSessions      SleepSession[]
+  meditationSessions MeditationSession[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  // Jointure vers plusieurs types
-  //types   SessionTypeUnit[]
+  updatedAt DateTime @updatedAt     // mis à jour automatiquement à chaque write
 }
 
-model Objective {
-  id String @id @default(cuid())
-
-  // À quel user appartient l’objectif (demoUser ou user réel plus tard)
-  user   User?   @relation(fields: [userId], references: [id])
-  userId String?
-
-  // Sur quel type de session porte l’objectif (sleep, exercise, etc.)
-  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
-  sessionTypeId String
-
-  // Valeur cible dans l’unité du SessionType (ex: 8 (heures), 20 (minutes))
-  value Float
-
-  // Fréquence : par jour, par semaine, par mois
-  frequency ObjectiveFrequency
-
-  // Durée de l’objectif : ex. 7 jours, 4 semaines, 1 mois
-  durationUnit  ObjectiveDurationUnit
-  durationValue Int
-
-  startsAt      DateTime     @default(now())
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  SessionUnit   SessionUnit? @relation(fields: [sessionUnitId], references: [id])
-  sessionUnitId String?
-}
+/**
+ * model Objective { ... }
+ */
 
 enum ObjectiveFrequency {
-  DAILY
-  WEEKLY
-  MONTHLY
+  DAILY   // objectif journalier
+  WEEKLY  // objectif hebdomadaire
+  MONTHLY // objectif mensuel
 }
 
 enum ObjectiveDurationUnit {
-  DAY
-  WEEK
-  MONTH
+  DAY   // unité jour
+  WEEK  // unité semaine
+  MONTH // unité mois
 }
 
 enum ResourceType {
-  ARTICLE
-  VIDEO
-  MEDITATION
-  GUIDE
+  ARTICLE          // article texte long
+  VIDEO            // ressource vidéo
+  MEDITATION_PROGRAM // lien vers un programme de méditation
+  WORKOUT_PROGRAM  // futur : programme d'entraînement
+  GUIDE            // guide / fiche pratique structurée
 }
 
 model ResourceCategory {
   id        String  @id @default(uuid())
-  name      String
-  slug      String  @unique
-  iconEmoji String? // ex: "📄", "🎧" si tu veux
+  name      String        // nom de la catégorie (ex: "Sommeil")
+  slug      String  @unique // identifiant stable pour routing / filtres
+  iconEmoji String? // petit pictogramme dans l’UI (optionnel)
 
   resources Resource[]
 }
 
 model ResourceTag {
   id   String @id @default(uuid())
-  name String
-  slug String @unique
+  name String        // libellé lisible (ex: "Stress")
+  slug String @unique // identifiant pour filtres / URL
 
   resources ResourceTagOnResource[]
 }
 
 model Resource {
   id          String       @id @default(uuid())
-  title       String
-  slug        String       @unique
-  summary     String // petit résumé pour les cartes
-  content     String // markdown / texte long
-  type        ResourceType
-  isPremium   Boolean      @default(false) // pour le badge Premium + champ "gratuit"
-  isFeatured  Boolean      @default(false) // pour "Featured resources"
-  authorName  String?
-  readTimeMin Int? // pour les articles, ex: 8
-  externalUrl String? // si un jour tu linkes vers un autre site
+  title       String             // titre éditorial
+  slug        String       @unique // slug pour URL
+  summary     String             // résumé court (teaser)
+  content     String             // contenu complet (markdown, HTML…)
+  type        ResourceType       // type de ressource (article, vidéo…)
+  isPremium   Boolean      @default(false) // contenu premium ou non
+  isFeatured  Boolean      @default(false) // mis en avant sur la home
+  authorName  String?             // nom de l’auteur si pertinent
+  readTimeMin Int?               // estimation du temps de lecture
+  externalUrl String?            // lien externe éventuel (YouTube, blog…)
 
   categoryId String
   category   ResourceCategory @relation(fields: [categoryId], references: [id])
 
-  tags ResourceTagOnResource[]
+  // Lien optionnel vers un programme de méditation
+  meditationProgramId String?
+  meditationProgram   MeditationProgram? @relation(fields: [meditationProgramId], references: [id])
+
+  // (WorkoutProgram => à mettre en place)
+  tags ResourceTagOnResource[] // jonction N-N avec les tags
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([title])
-  @@index([summary])
+  @@index([title])   // recherche plein texte partielle sur le titre
+  @@index([summary]) // idem pour le résumé
 }
 
 model ResourceTagOnResource {
@@ -184,5 +289,5 @@ model ResourceTagOnResource {
   resource Resource    @relation(fields: [resourceId], references: [id])
   tag      ResourceTag @relation(fields: [tagId], references: [id])
 
-  @@id([resourceId, tagId])
+  @@id([resourceId, tagId]) // table de jonction N-N (clé composite)
 }
