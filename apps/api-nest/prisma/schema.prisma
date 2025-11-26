@@ -132,6 +132,18 @@ model MeditationVisualConfig {
   meditationContent   MeditationContent @relation(fields: [meditationContentId], references: [id])
 
   visualType MeditationVisualType // type d'animation (lotus, vagues, etc.)
+
+    /// Configuration sérialisée, adaptée au type de visuel.
+    /// Pour le cercle qui "respire", on utilise par exemple :
+    /// {
+    ///   "totalCycles": 3,
+    ///   "inhaleMs": 4000,
+    ///   "holdFullMs": 4000,
+    ///   "exhaleMs": 4000,
+    ///   "holdEmptyMs": 0,
+    ///   "minScale": 0.9,
+    ///   "maxScale": 1.1
+    /// }
   configJson Json // ex: { "breathIn": 5, "breathOut": 5, "cycles": 12 }
 
   @@map("meditation_visual_config")

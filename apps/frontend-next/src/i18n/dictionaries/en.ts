@@ -335,6 +335,68 @@ const en = {
     },
 
     domainMeditation: {
+        // --- Wizard: types ---
+        wizard_loadingTypes: "Loading meditation types…",
+        wizard_errorTypes: "Unable to load meditation types.",
+        wizard_stepType_title: "Which kind of meditation would you like to practice?",
+
+        // --- Wizard: duration ---
+        wizard_stepDuration_title: "Choose your session length",
+        wizard_minutes: "minutes",
+        wizard_backToType: "Back to type selection",
+
+        // --- Wizard: content ---
+        wizard_stepContent_title: "Choose a content",
+        wizard_loadingContents: "Loading meditation contents…",
+        wizard_errorContents: "Unable to load meditation contents.",
+        wizard_stepContent_empty: "No content available for this type and duration.",
+        wizard_premium: "Premium",
+        wizard_backToDuration: "Back to duration selection",
+
+        // --- Wizard: mood before ---
+        wizard_stepMoodBefore_title: "How do you feel before this session?",
+        wizard_backToContent: "Back to content selection",
+        wizard_startSession: "Start session",
+
+        // --- Wizard: playing (audio / timer / visual) ---
+        wizard_stepPlaying_title: "Your session:",
+        wizard_stepPlaying_placeholder: "This practice is not available yet in this version of the app.",
+        wizard_endSession: "End session",
+        wizard_cancel: "Cancel session",
+
+        // --- Wizard: mood after ---
+        wizard_stepMoodAfter_title: "How do you feel after this session?",
+        wizard_saveError: "An error occurred while saving your session.",
+        wizard_saving: "Saving…",
+        wizard_save: "Save my session",
+
+        // --- Wizard: done ---
+        wizard_stepDone_title: "Nice job, your session has been saved!",
+        wizard_stepDone_description: "Keep practising regularly to support your well-being every day.",
+        wizard_close: "Close",
+
+        // --- Wizard timer ---
+        wizard_timer_remainingLabel: "Time remaining",
+        wizard_timer_pause: "Pause",
+        wizard_timer_resume: "Resume",
+        wizard_timer_reset: "Reset",
+        wizard_timer_finished: "Session finished",
+
+        // --- History last 7 days ---
+        last7_title: "Your last 7 days of meditation",
+        last7_empty: "No session recorded in the last 7 days.",
+        last7_toggle_expand: "Show details",
+        last7_toggle_collapse: "Hide details",
+        last7_totalMeditationLabel: "Total meditation",
+        last7_totalSessionsLabel: "Number of sessions",
+        last7_averageMoodLabel: "Average mood",
+        last7_dayLabel: "Day",
+        last7_totalLabel: "in total",
+
+        // Generic labels if you want to use them
+        sessionsLabel: "sessions",
+        minutesLabel: "minutes",
+
         title: "Meditation",
         subtitle: "Guided practices to calm your mind.",
         empty: "Content coming soon…",
@@ -368,15 +430,10 @@ const en = {
         player_savingButton: "Saving…",
 
         // Last 7
-        last7_title: "Your last 7 sessions",
         last7_description: "Overview of your recent meditations.",
         last7_loading: "Loading…",
-        last7_empty: "No sessions recorded.",
         last7_durationLabel: "Duration",
         last7_qualityLabel: "Quality",
-        last7_dayLabel: "Day",
-        last7_totalLabel: "Total",
-
         errors: {
             loadTypes: "Error loading meditation types",
             loadSessions: "Error loading sessions",
@@ -404,41 +461,16 @@ const en = {
                 description:
                     "Cultivating kindness toward yourself and others.",
             },
+
+            wizard_timer_remainingLabel: "Time remaining",
+            wizard_timer_pause: "Pause",
+            wizard_timer_resume: "Resume",
+            wizard_timer_reset: "Reset",
+            wizard_timer_finished: "Session finished, well done!"
         },
 
-        wizard_loadingTypes: "Loading meditation types…",
-        wizard_errorTypes: "Unable to load meditation types.",
-
-        wizard_stepType_title: "Which type of meditation would you like to practice?",
-
-        wizard_stepDuration_title: "How much time do you have?",
-        wizard_minutes: "min",
-        wizard_backToType: "⟵ Back to type selection",
-
-        wizard_stepContent_title: "Choose your meditation",
-        wizard_loadingContents: "Loading meditations…",
-        wizard_errorContents: "Unable to load meditations.",
-        wizard_stepContent_empty: "No meditation matches these criteria yet.",
-        wizard_premium: "Premium",
-        wizard_backToDuration: "⟵ Back to duration selection",
-
-        wizard_stepMoodBefore_title: "How do you feel before starting?",
-        wizard_backToContent: "⟵ Choose another meditation",
-        wizard_startSession: "Start session",
-
-        wizard_stepPlaying_title: "Session in progress:",
-        wizard_stepPlaying_placeholder: "The player will appear here depending on the meditation type.",
-        wizard_endSession: "End session",
-
-        wizard_stepMoodAfter_title: "How do you feel now?",
-        wizard_saveError: "Unable to save your session. Please try again.",
-        wizard_saving: "Saving…",
-        wizard_save: "Save my session",
-        wizard_cancel: "Cancel",
-
-        wizard_stepDone_title: "Session saved",
-        wizard_stepDone_description: "Thank you for taking this moment for yourself.",
-        wizard_close: "Close"
+        last7_summary_sessions: "sessions",
+        last7_summary_minutes: "minutes"
     },
 
     publicWorld: {

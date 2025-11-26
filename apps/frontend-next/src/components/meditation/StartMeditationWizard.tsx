@@ -11,6 +11,26 @@ import { MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { createMeditationSession } from "@/lib/api/meditation";
 import WizardAudioPlayer from "./players/WizardAudioPlayer";
+import WizardVisualBreathing, {
+    type VisualBreathingConfig,
+} from "./players/WizardVisualBreathing";
+import WizardTimerPlayer from "./players/WizardTimerPlayer";
+
+/**
+ * Version étendue de {@link MeditationContent} pour le wizard de démarrage.
+ *
+ * On y ajoute une éventuelle configuration visuelle (`visualConfig`) pour les
+ * méditations de type VISUAL, en conservant la compatibilité avec le typage
+ * existant du reste de l’application.
+ */
+type WizardMeditationContent = MeditationContent & {
+    /**
+     * Configuration spécifique pour les visualisations de respiration.
+     * Peut être `null` ou `undefined` si aucune configuration n’est fournie
+     * par le backend.
+     */
+    visualConfig?: VisualBreathingConfig | null;
+};
 
 /**
  * Étapes successives du wizard de démarrage de méditation.
@@ -44,58 +64,98 @@ type StartMeditationWizardProps = {
 };
 
 /**
- * Wizard guidant l’utilisateur à travers une séance de méditation :
+ * Wizard guidant l’utilisateur à travers une séance de méditation.
  *
- * 1. Choix du type de méditation
- * 2. Choix de la durée
- * 3. Sélection d’un contenu
- * 4. Humeur avant
- * 5. Lecture / pratique
- * 6. Humeur après
- * 7. Sauvegarde et écran de fin
- *
- * Le composant orchestre :
- * - la navigation entre les étapes
- * - le chargement des types et contenus de méditation via les hooks dédiés
- * - la collecte des données nécessaires pour créer une séance
- * - l’appel à l’API pour la sauvegarde
- *
- * @param props Voir {@link StartMeditationWizardProps}.
- * @returns JSX du wizard de démarrage de méditation.
+ * Ce composant orchestre l’ensemble du flux :
+ * - choix du type et de la durée
+ * - choix d’un contenu adapté
+ * - saisie des humeurs avant/après
+ * - lecture (audio, timer ou visuel)
+ * - sauvegarde de la séance via l’API
  */
 export default function StartMeditationWizard({
                                                   onCloseAction,
                                               }: StartMeditationWizardProps) {
     const t = useTranslations("domainMeditation");
 
+    /**
+     * Étape courante du wizard.
+     * Permet de contrôler la section affichée à l’écran.
+     */
     const [step, setStep] = useState<Step>("TYPE");
 
-    // Types de méditation disponibles (ex : respiration, scan corporel, etc.)
+    /**
+     * Liste des types de méditation disponibles (ex : respiration, scan corporel, etc.)
+     * fournie par le hook métier `useMeditationTypes`.
+     */
     const { types, loading: loadingTypes, error: errorTypes } =
         useMeditationTypes();
 
+    /**
+     * Identifiant du type de méditation sélectionné.
+     * Utilisé pour filtrer les contenus et pour la persistance de la session.
+     */
     const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>(
         undefined,
     );
+
+    /**
+     * Durée de la séance exprimée en secondes.
+     * Cette valeur est dérivée de la sélection de l’utilisateur (en minutes).
+     */
     const [durationSeconds, setDurationSeconds] = useState<
         number | undefined
     >(undefined);
 
-    // Contenus filtrés par type + durée souhaitée
+    /**
+     * Type actuellement sélectionné, dérivé de `selectedTypeId`.
+     * Sert notamment à distinguer certains comportements (ex. type "breathing").
+     */
+    const selectedType = types.find((t) => t.id === selectedTypeId);
+
+    /**
+     * Contenus de méditation filtrés par type et durée.
+     * Gérés par le hook métier `useMeditationContents`.
+     */
     const {
         contents,
         loading: loadingContents,
         error: errorContents,
     } = useMeditationContents(selectedTypeId, durationSeconds);
 
+    /**
+     * Contenu de méditation sélectionné par l’utilisateur.
+     * C’est ce contenu qui sera effectivement joué (audio, timer, visuel…).
+     */
     const [selectedContent, setSelectedContent] =
-        useState<MeditationContent | null>(null);
+        useState<WizardMeditationContent | null>(null);
+
+    /**
+     * Humeur de l’utilisateur avant la séance, sélectionnée via `MoodPicker`.
+     */
     const [moodBefore, setMoodBefore] = useState<MoodValue | null>(null);
+
+    /**
+     * Humeur de l’utilisateur après la séance, sélectionnée via `MoodPicker`.
+     */
     const [moodAfter, setMoodAfter] = useState<MoodValue | null>(null);
+
+    /**
+     * Indique si une opération de sauvegarde de la séance est en cours.
+     * Utilisé pour désactiver le bouton et afficher un état de chargement.
+     */
     const [saving, setSaving] = useState(false);
+
+    /**
+     * Indique si une erreur s’est produite lors de la sauvegarde de la séance.
+     * Permet d’afficher un message d’erreur à l’utilisateur.
+     */
     const [saveError, setSaveError] = useState(false);
 
-    // Durées proposées (en minutes) pour la séance
+    /**
+     * Durées proposées (en minutes) pour la séance.
+     * Ces options sont converties en secondes lors de la sélection.
+     */
     const DURATION_OPTIONS_MIN = [5, 10, 15, 20];
 
     // --- RESET GLOBAL ---
@@ -103,6 +163,9 @@ export default function StartMeditationWizard({
     /**
      * Réinitialise complètement l’état du wizard pour revenir
      * au début du flux (étape TYPE).
+     *
+     * Cette fonction ne ferme pas le composant ; elle ne fait que
+     * remettre tous les états internes à zéro.
      */
     const resetWizardState = () => {
         setStep("TYPE");
@@ -119,6 +182,9 @@ export default function StartMeditationWizard({
      * Gère l’annulation globale :
      * - réinitialise l’état interne
      * - notifie le parent via `onCloseAction` si fourni
+     *
+     * À utiliser lorsque l’utilisateur souhaite abandonner la séance
+     * sans rien enregistrer.
      */
     const handleCancelAll = () => {
         resetWizardState();
@@ -129,6 +195,8 @@ export default function StartMeditationWizard({
 
     /**
      * Sélectionne un type de méditation et passe à l’étape de durée.
+     *
+     * @param typeId Identifiant du type de méditation choisi.
      */
     const handleSelectType = (typeId: string) => {
         setSelectedTypeId(typeId);
@@ -141,6 +209,11 @@ export default function StartMeditationWizard({
 
     /**
      * Sélectionne une durée (en minutes) et passe à l’étape de contenu.
+     *
+     * Réinitialise également le contenu et les humeurs afin d’éviter
+     * des incohérences si la durée change en cours de flux.
+     *
+     * @param minutes Durée choisie en minutes.
      */
     const handleSelectDuration = (minutes: number) => {
         setDurationSeconds(minutes * 60);
@@ -152,8 +225,10 @@ export default function StartMeditationWizard({
 
     /**
      * Sélectionne un contenu de méditation et passe à l’étape "humeur avant".
+     *
+     * @param content Contenu de méditation choisi dans la liste filtrée.
      */
-    const handleSelectContent = (content: MeditationContent) => {
+    const handleSelectContent = (content: WizardMeditationContent) => {
         setSelectedContent(content);
         setMoodBefore(null);
         setMoodAfter(null);
@@ -161,9 +236,10 @@ export default function StartMeditationWizard({
     };
 
     /**
-     * Démarre la séance de méditation :
-     * vérifie qu’un type, une durée et un contenu sont définis
-     * puis passe à l’étape PLAYING.
+     * Démarre la séance de méditation : passe à l’étape PLAYING.
+     *
+     * Ne fait rien si les prérequis (type, contenu, durée) ne sont pas définis,
+     * afin d’éviter un état incohérent du wizard.
      */
     const handleStartSession = () => {
         if (!selectedContent || !selectedTypeId || !durationSeconds) return;
@@ -171,8 +247,8 @@ export default function StartMeditationWizard({
     };
 
     /**
-     * Indique la fin de la séance (soit via le player, soit via l’utilisateur)
-     * et passe à l’étape "humeur après".
+     * Indique la fin de la séance (via player ou bouton) :
+     * passe à l’étape "humeur après".
      */
     const handleEndSession = () => {
         setStep("MOOD_AFTER");
@@ -181,14 +257,11 @@ export default function StartMeditationWizard({
     /**
      * Sauvegarde la séance de méditation en appelant l’API.
      *
-     * Enregistre :
-     * - type de méditation
-     * - contenu choisi
-     * - durée réelle de la séance
-     * - date/heure de la séance (now)
-     * - humeur avant et après (si renseignées)
+     * Les humeurs sont facultatives : si elles ne sont pas renseignées,
+     * elles ne sont pas envoyées (undefined).
      *
-     * En cas d’erreur, un message est affiché à l’utilisateur.
+     * En cas de succès, le wizard passe à l’étape `DONE`.
+     * En cas d’erreur, un message informatif est affiché.
      */
     const handleSaveSession = async () => {
         if (!selectedContent || !selectedTypeId || !durationSeconds) return;
@@ -216,8 +289,10 @@ export default function StartMeditationWizard({
     };
 
     /**
-     * Ferme le wizard sans réinitialiser explicitement l’état.
-     * Utilisé à la fin du flux (étape DONE).
+     * Ferme le wizard à la fin du flux.
+     *
+     * Cette fonction ne réinitialise pas l’état interne ; elle se contente
+     * de signaler au parent que le wizard peut être masqué.
      */
     const handleClose = () => {
         onCloseAction?.();
@@ -320,7 +395,9 @@ export default function StartMeditationWizard({
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    handleSelectContent(c)
+                                                    handleSelectContent(
+                                                        c as WizardMeditationContent,
+                                                    )
                                                 }
                                                 className="flex w-full flex-col items-start gap-1 rounded-xl border border-slate-200 px-4 py-3 text-left shadow-sm transition hover:border-indigo-400 hover:shadow-md"
                                             >
@@ -409,17 +486,52 @@ export default function StartMeditationWizard({
                             />
                         )}
 
-                    {/* TIMER / VISUAL placeholders pour la suite */}
-                    {selectedContent.mode === "TIMER" && (
-                        <p className="text-sm text-slate-500">
-                            {t("wizard_stepPlaying_placeholder")}
-                        </p>
-                    )}
-                    {selectedContent.mode === "VISUAL" && (
-                        <p className="text-sm text-slate-500">
-                            {t("wizard_stepPlaying_placeholder")}
-                        </p>
-                    )}
+                    {/* TIMER */}
+                    {selectedContent.mode === "TIMER" &&
+                        (() => {
+                            const effectiveSeconds =
+                                durationSeconds ??
+                                selectedContent.defaultDurationSeconds ??
+                                0;
+
+                            if (effectiveSeconds <= 0) {
+                                return (
+                                    <p className="text-sm text-slate-500">
+                                        {t(
+                                            "wizard_stepPlaying_placeholder",
+                                        )}
+                                    </p>
+                                );
+                            }
+
+                            return (
+                                <WizardTimerPlayer
+                                    title={selectedContent.title}
+                                    totalSeconds={effectiveSeconds}
+                                    onEnd={handleEndSession}
+                                />
+                            );
+                        })()}
+
+                    {/* VISUAL – pour l’instant seulement pour le type "breathing" */}
+                    {selectedContent.mode === "VISUAL" &&
+                        selectedType?.slug === "breathing" && (
+                            <WizardVisualBreathing
+                                title={selectedContent.title}
+                                config={
+                                    selectedContent.visualConfig ?? undefined
+                                }
+                                onEnd={handleEndSession}
+                            />
+                        )}
+
+                    {/* VISUAL – placeholder pour les autres types */}
+                    {selectedContent.mode === "VISUAL" &&
+                        selectedType?.slug !== "breathing" && (
+                            <p className="text-sm text-slate-500">
+                                {t("wizard_stepPlaying_placeholder")}
+                            </p>
+                        )}
 
                     <div className="flex gap-3">
                         <button

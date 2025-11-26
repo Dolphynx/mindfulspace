@@ -1,8 +1,9 @@
-import {
+  import {
   PrismaClient,
   ResourceType,
   MeditationSessionSource,
-  MeditationMode
+  MeditationMode,
+  MeditationVisualType,
 } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -151,7 +152,7 @@ async function main() {
       description:
         "Suivez le mouvement d’une vague qui se déploie au rythme de votre souffle.",
       defaultMeditationTypeId: breathingType.id,
-      mode: MeditationMode.VISUAL,
+      mode: MeditationMode.VISUAL, // 👈 la seule entrée VISUAL
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -186,11 +187,11 @@ async function main() {
       mediaUrl: "/audio/respi_751ko.mp3",
     },
     {
-      title: "Flamme de présence (visuelle)",
+      title: "Flamme de présence (timer)",
       description:
         "Fixez la flamme d’une bougie et revenez doucement à l’instant présent.",
       defaultMeditationTypeId: mindfulnessType.id,
-      mode: MeditationMode.VISUAL,
+      mode: MeditationMode.TIMER, // 👈 changé de VISUAL -> TIMER
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -225,11 +226,11 @@ async function main() {
       mediaUrl: "/audio/respi_751ko.mp3",
     },
     {
-      title: "Body scan avec silhouette (visuelle)",
+      title: "Body scan avec silhouette (timer)",
       description:
         "Une silhouette s’illumine progressivement pour accompagner le relâchement.",
       defaultMeditationTypeId: bodyScanType.id,
-      mode: MeditationMode.VISUAL,
+      mode: MeditationMode.TIMER, // 👈 VISUAL -> TIMER
       minDurationSeconds: 600,
       maxDurationSeconds: 1200,
       defaultDurationSeconds: 900,
@@ -264,11 +265,11 @@ async function main() {
       mediaUrl: "/audio/respi_751ko.mp3",
     },
     {
-      title: "Cercle de bienveillance (visuelle)",
+      title: "Cercle de bienveillance (timer)",
       description:
         "Visualisez un cercle de lumière qui s’élargit pour inclure d’autres personnes.",
       defaultMeditationTypeId: compassionType.id,
-      mode: MeditationMode.VISUAL,
+      mode: MeditationMode.TIMER, // 👈 VISUAL -> TIMER
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -300,17 +301,45 @@ async function main() {
 
   console.log(`✔ ${meditationContents.length} meditation contents seeded.`);
 
+  // ---------------------------------------------------------------------------
+  // Seed MeditationVisualConfig pour les contenus VISUAL
+  // (pour le moment : cercle qui grandit / rapetisse pour la respiration)
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding visual configs for meditation contents...");
 
+  const breathingVisual = meditationContents.find(
+    (c) => c.title === "Respiration en vagues (visuelle)",
+  );
+
+  if (breathingVisual) {
+    await prisma.meditationVisualConfig.create({
+      data: {
+        meditationContentId: breathingVisual.id,
+        visualType: MeditationVisualType.CIRCLE_PULSE,
+        configJson: {
+          totalCycles: 3,
+          inhaleMs: 4000,
+          holdFullMs: 4000,
+          exhaleMs: 4000,
+          holdEmptyMs: 0,
+          minScale: 0.9,
+          maxScale: 1.1,
+        },
+      },
+    });
+    console.log("✔ Visual config seeded for breathing visual content.");
+  } else {
+    console.warn(
+      "⚠ Breathing visual content not found, visual config not seeded.",
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // Seed Exercise Types
   // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// Seed Exercise Types
-// ---------------------------------------------------------------------------
   console.log("🌱 Seeding exercise types...");
 
-// First seed your existing simple exercises
+  // First seed your existing simple exercises
   const baseExercises = [
     { name: "Push Ups", Description: "Upper-body bodyweight press" },
     { name: "Pull Ups", Description: "Back and biceps bodyweight pull" },
@@ -330,10 +359,9 @@ async function main() {
 
   console.log("✔ Base exercises seeded.");
 
-
-// ---------------------------------------------------------------------------
-// Seed Exercise Type: Sun Salutation (Surya Namaskar)
-// ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Seed Exercise Type: Sun Salutation (Surya Namaskar)
+  // ---------------------------------------------------------------------------
   console.log("🌞 Seeding Sun Salutation...");
 
   const sunSalutation = await prisma.exerciceType.create({
@@ -370,7 +398,6 @@ async function main() {
   }
 
   console.log("✔ Sun Salutation seeded with 11 steps.");
-
 
   console.log("✔ ExerciceType seeded");
 
