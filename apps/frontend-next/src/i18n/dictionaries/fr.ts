@@ -290,10 +290,14 @@ const fr = {
         manualForm_durationLabel: "Durée du sommeil",
         manualForm_saveButton: "Enregistrer",
         manualForm_cancelButton: "Annuler",
+        manualForm_dateLabel: "Date",
+        manualForm_qualityLabel: "Qualité perçue",
 
         // Historique
         history_title: "Vos dernières nuits",
         history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
+        history_nights: "nuits",
+        history_average: "heures en moyenne"
     },
 
     domainExercice: {
