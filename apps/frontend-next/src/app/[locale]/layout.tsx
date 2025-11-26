@@ -8,6 +8,7 @@ import { ReactNode } from "react";
 import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { TranslationProvider } from "@/i18n/TranslationContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -63,7 +64,9 @@ export default async function RootLayout({
         >
         <ServiceWorkerRegister />
         <TranslationProvider locale={locale} messages={messages}>
-            {children}
+            <AuthProvider>
+                {children}
+            </AuthProvider>
         </TranslationProvider>
         </body>
         </html>
