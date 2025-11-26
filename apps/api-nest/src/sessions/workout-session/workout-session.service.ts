@@ -28,14 +28,11 @@ export class WorkoutSessionService {
     });
 
     const existingTypeIds = new Set(existingTypes.map((t) => t.id));
-
-    const invalidIds = exerciceTypeIds.filter(
-      (id) => !existingTypeIds.has(id),
-    );
+    const invalidIds = exerciceTypeIds.filter((id) => !existingTypeIds.has(id));
 
     if (invalidIds.length > 0) {
       throw new BadRequestException(
-        `Invalid exerciceTypeId(s): ${invalidIds.join(', ')}`,
+        `Invalid exerciceTypeId(s): ${invalidIds.join(", ")}`
       );
     }
 
@@ -46,26 +43,19 @@ export class WorkoutSessionService {
       },
     });
 
-    // 3️⃣ Use a transaction to update/create + reset exercices safely
+    // 3️⃣ Create or update workout + exerciceSessions
     return this.prisma.$transaction(async (tx) => {
       let workout;
 
       if (existingWorkout) {
-        // Update existing
         workout = await tx.workoutSession.update({
           where: { id: existingWorkout.id },
           data: {
-            quality: dto.quality ?? null,
+            quality: dto.quality ?? existingWorkout.quality,
             dateSession: date,
           },
         });
-
-        // Remove old exercices
-        await tx.exerciceSession.deleteMany({
-          where: { workoutSessionId: workout.id },
-        });
       } else {
-        // Create new workout
         workout = await tx.workoutSession.create({
           data: {
             quality: dto.quality ?? null,
@@ -74,30 +64,46 @@ export class WorkoutSessionService {
         });
       }
 
-      // Create new exercise sessions
-      if (dto.exercices.length > 0) {
-        await tx.exerciceSession.createMany({
-          data: dto.exercices.map((e) => ({
+      // 4️⃣ UPSERT exercise entries (update if exists, otherwise create)
+      for (const e of dto.exercices) {
+        await tx.exerciceSession.upsert({
+          where: {
+            workoutSessionId_exerciceTypeId: {
+              workoutSessionId: workout.id,
+              exerciceTypeId: e.exerciceTypeId,
+            },
+          },
+          update: {
+            repetitionCount: e.repetitionCount, // override 💪
+          },
+          create: {
             workoutSessionId: workout.id,
             exerciceTypeId: e.exerciceTypeId,
             repetitionCount: e.repetitionCount,
-          })),
+          },
         });
       }
 
-      // Return workout with exercices + exercise types
-      const fullWorkout = await tx.workoutSession.findUnique({
+      // 5️⃣ Return full workout with exerciceSessions and steps
+      return tx.workoutSession.findUnique({
         where: { id: workout.id },
         include: {
           exerciceSessions: {
-            include: { exerciceType: true },
+            include: {
+              exerciceType: {
+                include: {
+                  steps: {
+                    orderBy: { order: "asc" },
+                  },
+                },
+              },
+            },
           },
         },
       });
-
-      return fullWorkout;
     });
   }
+
 
   async findAll() {
     return this.prisma.workoutSession.findMany({
@@ -199,4 +205,17 @@ export class WorkoutSessionService {
       })),
     };
   }
+
+  async getExerciceTypes() {
+    return this.prisma.exerciceType.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        steps: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+  }
+
+
 }

@@ -301,26 +301,34 @@ const fr = {
     },
 
     domainExercice: {
-        title: "Exercice physique",
-        subtitle: "Bougez, respirez et entretenez votre corps au quotidien.",
-        empty: "Contenu prochainement disponible…",
+        title: "Exercice",
+        subtitle: "Suivez et enregistrez vos séances d’exercice.",
 
         // Encodage manuel
         manualForm_title: "Encoder une séance passée",
-        manualForm_description: "Indiquez la date, la durée et le type d’exercice réalisé.",
-        manualForm_placeholder: "Le formulaire pour encoder vos séances sera bientôt disponible.",
-        manualForm_durationLabel: "Durée de la séance",
-        manualForm_saveButton: "Enregistrer",
+        manualForm_description: "Indiquez la date, le type d’exercice et le nombre de répétitions.",
+        manualForm_dateLabel: "Date de la séance",
+        manualForm_typeLabel: "Type d’exercice",
+        manualForm_repetitionsLabel: "Nombre de répétitions",
+        manualForm_qualityLabel: "Qualité / effort ressenti",
+        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_savingButton: "Enregistrement…",
         manualForm_cancelButton: "Annuler",
+        manualForm_repetitionLabel: "Nombre de séries",
+        manualForm_button: "Encoder une session",
 
         // Lancer une séance guidée
         start_title: "Lancer une séance d’exercice",
-        start_description: "Choisissez une séance et laissez-vous guider pas à pas.",
+        start_button: "Commencer exercice",
+        start_description: "Choisissez un exercice et laissez-vous guider pas à pas.",
         start_placeholder: "Le démarrage guidé d’une séance d’exercice sera bientôt disponible.",
+        start_nextButton: "Suivant",
+        start_prevButton: "Précédent",
+        start_finishButton: "Terminé",
 
         // Historique
         history_title: "Vos dernières séances d’exercice",
-        history_placeholder: "L’historique de vos séances apparaîtra ici dès que vous en aurez enregistré.",
+        history_placeholder: "Votre historique apparaîtra ici dès que vous aurez enregistré des séances."
     },
 
     domainMeditation: {

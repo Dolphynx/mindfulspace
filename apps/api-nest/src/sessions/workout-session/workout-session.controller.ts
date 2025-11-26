@@ -27,8 +27,14 @@ export class WorkoutSessionController {
     return this.workoutService.getYesterdaySummary();
   }
 
+  @Get("exercice-types")
+  getExerciceTypes() {
+    return this.workoutService.getExerciceTypes();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.workoutService.findOne(id);
   }
+
 }

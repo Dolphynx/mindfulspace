@@ -5,7 +5,7 @@
  *
  * Représente les préférences locales de l’utilisateur récupérées via l’API Nest.
  *
- * - `launchBreathingOnStart` : détermine si l’exercice de respiration doit
+ * - `launchBreathingOnStart` : détermine si l’exercise de respiration doit
  *   se lancer automatiquement lorsque l’utilisateur ouvre l’application.
  *
  * Ce type peut évoluer si d’autres préférences utilisateur sont ajoutées côté backend.
