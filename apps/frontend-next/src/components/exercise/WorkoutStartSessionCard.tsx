@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { WorkoutTypeItem } from "@/lib/api/workout";
 import { useTranslations } from "@/i18n/TranslationContext";
-import MoodPicker from "@/components/MoodPicker";   // ✅ use the real one
+import MoodPicker from "@/components/MoodPicker";
+import {MoodValue} from "@/lib";   // ✅ use the real one
 
 type Props = {
     types: WorkoutTypeItem[];
@@ -20,7 +21,7 @@ export function WorkoutStartSessionCard({ types, onSave }: Props) {
     const [selectedId, setSelectedId] = useState("");
     const [stepIndex, setStepIndex] = useState(0);
     const [repetitionCount, setRepetitionCount] = useState(10);
-    const [quality, setQuality] = useState<number | null>(3);
+    const [quality, setQuality] = useState<MoodValue | null>(3 as MoodValue);
 
     const selectedType = types.find((t) => t.id === selectedId);
     const steps = selectedType?.steps ?? [];
