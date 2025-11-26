@@ -100,43 +100,47 @@ function normalizeWorkoutSession(
         typeof raw.quality === "number" ? raw.quality : null;
 
     const exercices = Array.isArray(raw.exercices)
-        ? raw.exercices
-            .map((e: any) => ({
-                exerciceTypeId: String(e.exerciceTypeId ?? ""),
-                exerciceTypeName: String(e.exerciceTypeName ?? ""),
-                repetitionCount: Number(e.repetitionCount ?? 0),
-            }))
+        ? raw.exercices.map((e: any) => ({
+            exerciceTypeId: String(e.exerciceTypeId ?? ""),
+            exerciceTypeName: String(e.exerciceTypeName ?? ""),
+            repetitionCount: Number(e.repetitionCount ?? 0),
+        }))
         : [];
 
     return {
-        id: raw.id,
-        date: raw.date,
+        id: String(raw.id),         // <-- FIXED HERE
+        date: String(raw.date),     // <-- FIXED HERE
         quality,
         exercices,
     };
 }
+
 
 function normalizeWorkoutType(
     raw: RawWorkoutType,
 ): WorkoutTypeItem | null {
     if (!isRawWorkoutType(raw)) return null;
 
-    const steps = raw.steps
-        .filter((s: any) => typeof s.order === "number")
-        .map((s: any) => ({
-            id: String(s.id ?? ""),
-            order: Number(s.order),
-            title: typeof s.title === "string" ? s.title : null,
-            description: String(s.description ?? ""),
-            imageUrl: typeof s.imageUrl === "string" ? s.imageUrl : null,
-        }));
+    const steps = Array.isArray(raw.steps)
+        ? raw.steps
+            .filter((s: any) => s && typeof s.order === "number")
+            .map((s: any) => ({
+                id: String(s.id ?? ""),
+                order: Number(s.order),
+                title: typeof s.title === "string" ? s.title : null,
+                description: String(s.description ?? ""),
+                imageUrl: typeof s.imageUrl === "string" ? s.imageUrl : null,
+            }))
+        : [];
+
 
     return {
-        id: raw.id,
-        name: raw.name,
-        Description: raw.Description,
+        id: String(raw.id),
+        name: String(raw.name),
+        Description: String(raw.Description),
         steps,
     };
+
 }
 
 /* -------------------------------------------------------------------------- */
