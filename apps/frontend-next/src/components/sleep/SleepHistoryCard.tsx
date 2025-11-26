@@ -59,7 +59,7 @@ export function SleepHistoryCard({
             <div className="flex items-baseline justify-between gap-2">
                 <div>
                     <h2 className="text-lg font-semibold text-slate-800">
-                        {t("last7_title")}
+                        {t("history_title")}
                     </h2>
                     {!loading && sessions.length > 0 && (
                         <p className="mt-1 text-xs text-slate-500">

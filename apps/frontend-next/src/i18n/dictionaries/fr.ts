@@ -290,6 +290,8 @@ const fr = {
         manualForm_durationLabel: "Durée du sommeil",
         manualForm_saveButton: "Enregistrer",
         manualForm_cancelButton: "Annuler",
+        manualForm_dateLabel: "Date",
+        manualForm_qualityLabel: "Qualité perçue",
 
         // Historique
         history_title: "Vos dernières nuits",

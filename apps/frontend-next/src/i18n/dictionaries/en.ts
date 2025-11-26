@@ -293,9 +293,9 @@ const en = {
         manualForm_saveButton: "Save",
         manualForm_cancelButton: "Cancel",
         manualForm_dateLabel: "Date",
+        manualForm_qualityLabel: "Perceived quality",
 
         // History
-        last7_title: "Your last 7 nights",
         history_title: "Your recent nights",
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
         history_nights: "nights",
