@@ -294,6 +294,8 @@ const fr = {
         // Historique
         history_title: "Vos dernières nuits",
         history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
+        history_nights: "nuits",
+        history_average: "heures en moyenne"
     },
 
     domainExercice: {

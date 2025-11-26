@@ -292,10 +292,14 @@ const en = {
         manualForm_durationLabel: "Sleep duration",
         manualForm_saveButton: "Save",
         manualForm_cancelButton: "Cancel",
+        manualForm_dateLabel: "Date",
 
         // History
+        last7_title: "Your last 7 nights",
         history_title: "Your recent nights",
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
+        history_nights: "nights",
+        history_average: "hours in average"
     },
 
     domainExercice: {
