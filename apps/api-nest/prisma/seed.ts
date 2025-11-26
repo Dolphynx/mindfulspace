@@ -17,6 +17,7 @@ async function main() {
 
   // D'abord les sessions qui dépendent des users / types / contenus
   await prisma.exerciceSession.deleteMany();
+  await prisma.exerciceStep.deleteMany();
   await prisma.workoutSession.deleteMany();
   await prisma.sleepSession.deleteMany();
   await prisma.meditationSession.deleteMany();
@@ -28,7 +29,7 @@ async function main() {
   await prisma.meditationContent?.deleteMany().catch(() => {});
   await prisma.meditationType?.deleteMany().catch(() => {});
 
-  // Types d'exercice
+  // Types d'exercise
   await prisma.exerciceType.deleteMany();
 
   // Resources (full reset)
@@ -304,7 +305,13 @@ async function main() {
   // ---------------------------------------------------------------------------
   // Seed Exercise Types
   // ---------------------------------------------------------------------------
-  const exerciceTypes = [
+// ---------------------------------------------------------------------------
+// Seed Exercise Types
+// ---------------------------------------------------------------------------
+  console.log("🌱 Seeding exercise types...");
+
+// First seed your existing simple exercises
+  const baseExercises = [
     { name: "Push Ups", Description: "Upper-body bodyweight press" },
     { name: "Pull Ups", Description: "Back and biceps bodyweight pull" },
     { name: "Squats", Description: "Lower-body compound movement" },
@@ -315,13 +322,55 @@ async function main() {
     { name: "Overhead Press", Description: "Shoulder barbell press" },
   ];
 
-  for (const type of exerciceTypes) {
-    await prisma.exerciceType.upsert({
-      where: { name: type.name },
-      update: {},
-      create: type,
+  for (const type of baseExercises) {
+    await prisma.exerciceType.create({
+      data: type,
     });
   }
+
+  console.log("✔ Base exercises seeded.");
+
+
+// ---------------------------------------------------------------------------
+// Seed Exercise Type: Sun Salutation (Surya Namaskar)
+// ---------------------------------------------------------------------------
+  console.log("🌞 Seeding Sun Salutation...");
+
+  const sunSalutation = await prisma.exerciceType.create({
+    data: {
+      name: "Sun Salutation",
+      Description: "A traditional flowing sequence of yoga postures.",
+    },
+  });
+
+  const sunSalutationSteps = [
+    { order: 1, title: "Pranamasana — Prayer Pose", description: "Stand at the front of your mat, palms together, grounding your breath.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step1_yg3zqf.png"},
+    { order: 2, title: "Hasta Uttanasana — Raised Arms Pose", description: "Lift your arms overhead, gently arching your spine.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step2_a8nuxy.png"},
+    { order: 3, title: "Uttanasana — Standing Forward Bend", description: "Fold forward from the hips, bringing hands toward the floor.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step3_juamaz.png"},
+    { order: 4, title: "Ashwa Sanchalanasana — Low Lunge", description: "Step your right foot back, lowering the knee to the mat, gaze forward.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step4_pt4yqs.png"},
+    { order: 5, title: "Plank Pose", description: "Step back into a strong plank, engaging the core.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step5_cm0aiy.png"},
+    { order: 6, title: "Ashtanga Namaskara — Eight-Limbed Pose", description: "Lower knees, chest, and chin to the mat while hips stay raised.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step6_xuj9pj.png"},
+    { order: 7, title: "Bhujangasana — Cobra Pose", description: "Lift your chest into a gentle backbend, elbows close to your ribs.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step7_fwjut5.png"},
+    { order: 8, title: "Adho Mukha Svanasana — Downward Dog", description: "Lift hips up, forming an inverted V-shape with your body.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step8_tfmvoh.png"},
+    { order: 9, title: "Ashwa Sanchalanasana — Low Lunge (other side)", description: "Step your right foot forward this time, gaze ahead.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step9_mmp9ls.png"},
+    { order: 10, title: "Uttanasana — Standing Forward Bend", description: "Fold forward again from the hips, relaxing your neck.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step10_fcuivq.png"},
+    { order: 11, title: "Hasta Uttanasana → Pranamasana", description: "Rise up with arms overhead, then return palms to heart center.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step11_gkfzr7.png"},
+  ];
+
+  for (const step of sunSalutationSteps) {
+    await prisma.exerciceStep.create({
+      data: {
+        exerciceTypeId: sunSalutation.id,
+        order: step.order,
+        title: step.title,
+        description: step.description,
+        imageUrl: step.imageUrl,
+      },
+    });
+  }
+
+  console.log("✔ Sun Salutation seeded with 11 steps.");
+
 
   console.log("✔ ExerciceType seeded");
 

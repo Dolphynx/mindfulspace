@@ -11,7 +11,7 @@ enum MeditationMode {
   TIMER   // séance minutée, sans média
   AUDIO   // lecture audio (fichiers mp3, etc.)
   VIDEO   // lecture vidéo (YouTube, autres)
-  VISUAL  // exercice purement visuel (animations, SVG, etc.)
+  VISUAL  // exercise purement visuel (animations, SVG, etc.)
 }
 
 enum MeditationSessionSource {
@@ -179,21 +179,36 @@ model WorkoutSession {
 }
 
 model ExerciceType {
-  id          String @id @default(uuid())
-  name        String @unique // nom d'exercice unique (ex: "Pompes")
-  Description String         // description plus détaillée
+  id          String         @id @default(uuid())
+  name        String         @unique
+  Description String
 
   exerciceSessions ExerciceSession[]
+  steps            ExerciceStep[]   // 👈 all the steps for this exercise type
 }
+
+model ExerciceStep {
+  id             String        @id @default(uuid())
+  exerciceTypeId String
+  exerciceType   ExerciceType  @relation(fields: [exerciceTypeId], references: [id])
+
+  order          Int           // step number: 1, 2, 3, ...
+  title          String?       // optional, e.g. "Starting position"
+  description    String        // explanation for this step
+  imageUrl       String?       // URL of the image (e.g. S3, Cloudinary, /public, etc.)
+
+  @@unique([exerciceTypeId, order]) // ensures you don’t have two “step 1” for the same exercise
+}
+
 
 model ExerciceSession {
   workoutSessionId String // FK vers la séance globale
-  exerciceTypeId   String // FK vers le type d'exercice
+  exerciceTypeId   String // FK vers le type d'exercise
 
   workoutSession WorkoutSession @relation(fields: [workoutSessionId], references: [id])
   exerciceType   ExerciceType   @relation(fields: [exerciceTypeId], references: [id])
 
-  repetitionCount Int // nombre de répétitions / unités pour cet exercice
+  repetitionCount Int // nombre de répétitions / unités pour cet exercise
 
   @@id([workoutSessionId, exerciceTypeId]) // clé composite (un type par séance)
 }

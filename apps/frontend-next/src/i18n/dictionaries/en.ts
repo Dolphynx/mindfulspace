@@ -300,25 +300,30 @@ const en = {
 
     domainExercice: {
         title: "Exercise",
-        subtitle: "Move, breathe, and take care of your body every day.",
-        empty: "Content coming soon…",
+        subtitle: "Track and log your exercise sessions.",
 
         // Manual logging
         manualForm_title: "Log a past session",
-        manualForm_description: "Enter the date, duration and type of exercise you did.",
-        manualForm_placeholder: "The form to log your exercise sessions will be available soon.",
-        manualForm_durationLabel: "Session duration",
-        manualForm_saveButton: "Save",
+        manualForm_description: "Select the date, exercise type and repetitions.",
+        manualForm_dateLabel: "Session date",
+        manualForm_typeLabel: "Exercise type",
+        manualForm_typePlaceholder: "Choose an exercise",
+        manualForm_repetitionsLabel: "Repetitions",
+        manualForm_qualityLabel: "Quality / perceived effort",
+        manualForm_saveButton: "Save session",
+        manualForm_savingButton: "Saving…",
         manualForm_cancelButton: "Cancel",
+        manualForm_repetitionLabel: "Repetitions number",
+        manualForm_button: "Log past session",
 
-        // Start a guided session
+        // Guided session
         start_title: "Start an exercise session",
-        start_description: "Choose a session and let the app guide you step by step.",
-        start_placeholder: "The guided exercise starter will be available soon.",
+        start_description: "Choose an exercise and follow the step-by-step guidance.",
+        start_placeholder: "Guided exercise mode will be available soon.",
 
         // History
         history_title: "Your recent exercise sessions",
-        history_placeholder: "Your exercise history will appear here as soon as you log a session.",
+        history_placeholder: "Your session history will appear here once you record some."
     },
 
     domainMeditation: {
