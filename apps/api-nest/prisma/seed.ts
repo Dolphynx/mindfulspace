@@ -1,128 +1,335 @@
-// prisma/seed.ts
-import "dotenv/config";
-import { PrismaClient, ResourceType } from "@prisma/client";
+import {
+  PrismaClient,
+  ResourceType,
+  MeditationSessionSource,
+  MeditationMode
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🔄 Clearing existing data...");
-
-  // On nettoie dans un ordre safe vis-à-vis des FKs
-  // 1. Données qui dépendent des types / unités / user
-  await prisma.session.deleteMany();
-  await prisma.objective.deleteMany();
-
-  // 2. Données de démo pour le graphe d'accueil
-  await prisma.testData.deleteMany();
-
-  // 3. Jointures puis types / unités
-  await prisma.sessionTypeUnit.deleteMany();
-  await prisma.sessionType.deleteMany();
-  await prisma.sessionUnit.deleteMany();
-
-  // ⚠️ On NE TOUCHE PAS aux users existants ni aux resources ici.
-  // Les resources sont upsert plus bas → pas de doublons.
+  console.log("🌱 Seeding database...");
 
   // ---------------------------------------------------------------------------
-  // 1️⃣ TestData – données de démo pour le graphe de la home
+  // CLEAN DATABASE (SAFE)
   // ---------------------------------------------------------------------------
-  console.log("🌱 Seeding TestData...");
-  const demoData = [
-    { metricName: "daily_meditation_minutes", label: "Lun", metricValue: 12 },
-    { metricName: "daily_meditation_minutes", label: "Mar", metricValue: 9 },
-    { metricName: "daily_meditation_minutes", label: "Mer", metricValue: 15 },
-    { metricName: "daily_meditation_minutes", label: "Jeu", metricValue: 7 },
-    { metricName: "daily_meditation_minutes", label: "Ven", metricValue: 14 },
-    { metricName: "daily_meditation_minutes", label: "Sam", metricValue: 5 },
-    { metricName: "daily_meditation_minutes", label: "Dim", metricValue: 11 },
+  console.log("🔄 Clearing existing data (safe)...");
+
+  // D'abord les sessions qui dépendent des users / types / contenus
+  await prisma.exerciceSession.deleteMany();
+  await prisma.workoutSession.deleteMany();
+  await prisma.sleepSession.deleteMany();
+  await prisma.meditationSession.deleteMany();
+
+  // Programmes & contenus de méditation (si présents)
+  await prisma.meditationProgramItem?.deleteMany().catch(() => {});
+  await prisma.meditationProgram?.deleteMany().catch(() => {});
+  await prisma.meditationVisualConfig?.deleteMany().catch(() => {});
+  await prisma.meditationContent?.deleteMany().catch(() => {});
+  await prisma.meditationType?.deleteMany().catch(() => {});
+
+  // Types d'exercice
+  await prisma.exerciceType.deleteMany();
+
+  // Resources (full reset)
+  await prisma.resourceTagOnResource?.deleteMany().catch(() => {});
+  await prisma.resource.deleteMany();
+  await prisma.resourceTag.deleteMany();
+  await prisma.resourceCategory.deleteMany();
+
+  console.log("✔ Database cleared.");
+
+  // ---------------------------------------------------------------------------
+  // Seed MeditationType
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding meditation types...");
+
+  const meditationTypesData = [
+    {
+      slug: "breathing",
+      //name: "Respiration consciente",
+      //description: "Focalisation sur le souffle pour apaiser le système nerveux.",
+      sortOrder: 10,
+    },
+    {
+      slug: "mindfulness",
+      //name: "Pleine conscience",
+      //description: "Observer pensées, émotions et sensations sans jugement.",
+      sortOrder: 20,
+    },
+    {
+      slug: "body-scan",
+      //name: "Body scan",
+      //description: "Balayer le corps avec l'attention pour relâcher les tensions.",
+      sortOrder: 30,
+    },
+    {
+      slug: "compassion",
+      //name: "Compassion / Metta",
+      //description: "Cultiver la bienveillance envers soi et les autres.",
+      sortOrder: 40,
+    },
   ];
 
-  await prisma.testData.createMany({ data: demoData });
+  const meditationTypes = [];
+
+  for (const type of meditationTypesData) {
+    const created = await prisma.meditationType.upsert({
+      where: { slug: type.slug },
+      update: {},
+      create: {
+        slug: type.slug,
+        //name: type.name,
+        //description: type.description,
+        isActive: true,
+        sortOrder: type.sortOrder,
+      },
+    });
+    meditationTypes.push(created);
+  }
+
+  console.log(`✔ ${meditationTypes.length} meditation types seeded.`);
+
+  const breathingType = meditationTypes[0]; // on utilisera celui-ci pour les seeds de sessions
 
   // ---------------------------------------------------------------------------
-  // 2️⃣ Units + SessionTypes + mapping des unités par priorité
+  // Seed MeditationContent
   // ---------------------------------------------------------------------------
-  console.log("🌱 Seeding SessionUnits...");
-  const hoursUnit = await prisma.sessionUnit.create({
-    data: { value: "Hours" },
-  });
+  console.log("🌱 Seeding meditation contents...");
 
-  const minutesUnit = await prisma.sessionUnit.create({
-    data: { value: "Minutes" },
-  });
+  const mindfulnessType = meditationTypes.find((t) => t.slug === "mindfulness");
+  const bodyScanType = meditationTypes.find((t) => t.slug === "body-scan");
+  const compassionType = meditationTypes.find((t) => t.slug === "compassion");
 
-  console.log("🌱 Seeding SessionTypes...");
-  const sleepType = await prisma.sessionType.create({
-    data: { name: "Sleep" },
-  });
-  const exerciseType = await prisma.sessionType.create({
-    data: { name: "Exercise" },
-  });
-  const meditationType = await prisma.sessionType.create({
-    data: { name: "Meditation" },
-  });
+  if (!breathingType || !mindfulnessType || !bodyScanType || !compassionType) {
+    throw new Error("Meditation types not properly seeded");
+  }
 
-  console.log("🌱 Linking SessionTypes ↔ SessionUnits with priority...");
+  type MeditationContentSeed = {
+    title: string;
+    description: string;
+    defaultMeditationTypeId: string;
+    mode: MeditationMode;
+    minDurationSeconds: number | null;
+    maxDurationSeconds: number | null;
+    defaultDurationSeconds: number | null;
+    sortOrder: number;
+    isPremium: boolean;
+    mediaUrl?: string | null;
+  };
 
-  // Sleep: priority 1 = Hours, priority 2 = Minutes
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: sleepType.id,
-      sessionUnitId: hoursUnit.id,
-      priority: 1,
+  const meditationContentsData: MeditationContentSeed[] = [
+    // ---------- BREATHING ----------
+    {
+      title: "Respiration 4-4-4 (timer)",
+      description:
+        "Inspirez, retenez et expirez en 4 temps pour apaiser le système nerveux.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
     },
-  });
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: sleepType.id,
-      sessionUnitId: minutesUnit.id,
-      priority: 2,
+    {
+      title: "Respiration cohérente (audio 10 min)",
+      description:
+        "Respiration guidée à 6 respirations par minute pour recentrer l’esprit.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
     },
-  });
+    {
+      title: "Respiration en vagues (visuelle)",
+      description:
+        "Suivez le mouvement d’une vague qui se déploie au rythme de votre souffle.",
+      defaultMeditationTypeId: breathingType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
 
-  // Exercise: priority 1 = Minutes, priority 2 = Hours
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: exerciseType.id,
-      sessionUnitId: minutesUnit.id,
-      priority: 1,
+    // ---------- MINDFULNESS ----------
+    {
+      title: "Pleine conscience 5 minutes (timer)",
+      description:
+        "Quelques minutes pour revenir aux sensations et à la respiration.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
     },
-  });
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: exerciseType.id,
-      sessionUnitId: hoursUnit.id,
-      priority: 2,
+    {
+      title: "Présence au quotidien (audio 10 min)",
+      description:
+        "Une méditation guidée pour vivre une situation du quotidien en pleine conscience.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
     },
-  });
+    {
+      title: "Flamme de présence (visuelle)",
+      description:
+        "Fixez la flamme d’une bougie et revenez doucement à l’instant présent.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
 
-  // Meditation: priority 1 = Minutes, priority 2 = Hours
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: meditationType.id,
-      sessionUnitId: minutesUnit.id,
-      priority: 1,
+    // ---------- BODY SCAN ----------
+    {
+      title: "Body scan express (timer)",
+      description:
+        "Un balayage rapide du corps pour relâcher les tensions principales.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
     },
-  });
-  await prisma.sessionTypeUnit.create({
-    data: {
-      sessionTypeId: meditationType.id,
-      sessionUnitId: hoursUnit.id,
-      priority: 2,
+    {
+      title: "Body scan complet (audio 15 min)",
+      description:
+        "Méditation guidée qui explore chaque partie du corps avec bienveillance.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 900,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 900,
+      sortOrder: 20,
+      isPremium: false,
+      mediaUrl: "/audio/respi_751ko.mp3",
     },
-  });
+    {
+      title: "Body scan avec silhouette (visuelle)",
+      description:
+        "Une silhouette s’illumine progressivement pour accompagner le relâchement.",
+      defaultMeditationTypeId: bodyScanType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 1200,
+      defaultDurationSeconds: 900,
+      sortOrder: 30,
+      isPremium: true,
+    },
 
-  console.log("✅ Created session types with ordered units:");
-  console.table([
-    { name: "Sleep", units: "Hours(1), Minutes(2)" },
-    { name: "Exercise", units: "Minutes(1), Hours(2)" },
-    { name: "Meditation", units: "Minutes(1), Hours(2)" },
-  ]);
+    // ---------- COMPASSION / METTA ----------
+    {
+      title: "Metta 5 minutes (timer)",
+      description:
+        "Quelques minutes pour envoyer des vœux de bienveillance à soi et aux autres.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.TIMER,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 300,
+      sortOrder: 10,
+      isPremium: false,
+    },
+    {
+      title: "Compassion guidée (audio 10 min)",
+      description:
+        "Une pratique audio pour ouvrir le cœur et relâcher la dureté envers soi.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 20,
+      isPremium: true,
+      mediaUrl: "/audio/respi_751ko.mp3",
+    },
+    {
+      title: "Cercle de bienveillance (visuelle)",
+      description:
+        "Visualisez un cercle de lumière qui s’élargit pour inclure d’autres personnes.",
+      defaultMeditationTypeId: compassionType.id,
+      mode: MeditationMode.VISUAL,
+      minDurationSeconds: 300,
+      maxDurationSeconds: 900,
+      defaultDurationSeconds: 600,
+      sortOrder: 30,
+      isPremium: true,
+    },
+  ];
+
+  const meditationContents = [];
+
+  for (const content of meditationContentsData) {
+    const created = await prisma.meditationContent.create({
+      data: {
+        title: content.title,
+        description: content.description,
+        defaultMeditationTypeId: content.defaultMeditationTypeId,
+        mode: content.mode,
+        minDurationSeconds: content.minDurationSeconds,
+        maxDurationSeconds: content.maxDurationSeconds,
+        defaultDurationSeconds: content.defaultDurationSeconds,
+        sortOrder: content.sortOrder,
+        isActive: true,
+        isPremium: content.isPremium,
+        mediaUrl: content.mediaUrl ?? null,
+      },
+    });
+    meditationContents.push(created);
+  }
+
+  console.log(`✔ ${meditationContents.length} meditation contents seeded.`);
+
+
 
   // ---------------------------------------------------------------------------
-  // 3️⃣ User de démo
+  // Seed Exercise Types
+  // ---------------------------------------------------------------------------
+  const exerciceTypes = [
+    { name: "Push Ups", Description: "Upper-body bodyweight press" },
+    { name: "Pull Ups", Description: "Back and biceps bodyweight pull" },
+    { name: "Squats", Description: "Lower-body compound movement" },
+    { name: "Plank", Description: "Core stabilization exercise" },
+    { name: "Burpees", Description: "Full-body conditioning move" },
+    { name: "Bench Press", Description: "Chest compound barbell lift" },
+    { name: "Deadlift", Description: "Posterior chain barbell lift" },
+    { name: "Overhead Press", Description: "Shoulder barbell press" },
+  ];
+
+  for (const type of exerciceTypes) {
+    await prisma.exerciceType.upsert({
+      where: { name: type.name },
+      update: {},
+      create: type,
+    });
+  }
+
+  console.log("✔ ExerciceType seeded");
+
+  // ---------------------------------------------------------------------------
+  // USER DEMO
   // ---------------------------------------------------------------------------
   console.log("🌱 Creating demo user...");
+
   const demoUser = await prisma.user.upsert({
     where: { email: "demo@mindfulspace.app" },
     update: {},
@@ -132,170 +339,124 @@ async function main() {
     },
   });
 
+  console.log("✔ Demo user ready:", demoUser.email);
+
   // ---------------------------------------------------------------------------
-  // 4️⃣ POC Objectives + sessions de démo pour ce user
-  //    (fusion de prisma/seed-objectives-poc.ts)
+  // Workout Session Demo (optionnel, lié au user)
   // ---------------------------------------------------------------------------
-  console.log("🌱 POC Objectives – démarrage...");
-
-  // On récupère les unités prioritaires configurées juste au-dessus
-  const sleepPrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
-    where: { sessionTypeId: sleepType.id },
-    orderBy: { priority: "asc" },
-    include: { sessionUnit: true },
-  });
-
-  const meditationPrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
-    where: { sessionTypeId: meditationType.id },
-    orderBy: { priority: "asc" },
-    include: { sessionUnit: true },
-  });
-
-  const exercisePrimaryTypeUnit = await prisma.sessionTypeUnit.findFirst({
-    where: { sessionTypeId: exerciseType.id },
-    orderBy: { priority: "asc" },
-    include: { sessionUnit: true },
-  });
-
-  if (!sleepPrimaryTypeUnit || !meditationPrimaryTypeUnit || !exercisePrimaryTypeUnit) {
-    console.error("❌ Impossible de trouver les SessionTypeUnit prioritaires");
-    process.exit(1);
-  }
-
-  console.log("✅ Unités prioritaires trouvées :", {
-    sleepUnit: sleepPrimaryTypeUnit.sessionUnit?.value,
-    meditationUnit: meditationPrimaryTypeUnit.sessionUnit?.value,
-    exerciseUnit: exercisePrimaryTypeUnit.sessionUnit?.value,
-  });
-
-  // On nettoie les anciennes sessions pour CE user (sans toucher aux autres)
-  console.log("🔄 Suppression des sessions existantes du demoUser...");
-  await prisma.session.deleteMany({
-    where: { userId: demoUser.id },
-  });
-
-  console.log("🌱 Création de sessions de démo (14 derniers jours)...");
-  const today = new Date();
-  const daysBack = 14;
-
-  const sessionsData: {
-    value: number;
-    quality: number | null;
-    dateSession: Date;
-    sessionTypeId: string;
-    userId: string | null;
-  }[] = [];
-
-  for (let i = 0; i < daysBack; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    d.setHours(12, 0, 0, 0);
-
-    // Sommeil : 6–9 heures
-    const sleepHours = 6 + Math.floor(Math.random() * 4);
-    sessionsData.push({
-      value: sleepHours,
-      quality: null,
-      dateSession: new Date(d),
-      sessionTypeId: sleepType.id,
-      userId: demoUser.id,
-    });
-
-    // Méditation : progression 5 → 5 + i minutes
-    const meditationMinutes = 5 + i;
-    sessionsData.push({
-      value: meditationMinutes,
-      quality: null,
-      dateSession: new Date(d),
-      sessionTypeId: meditationType.id,
-      userId: demoUser.id,
-    });
-
-    // Exercice : 10–90 minutes
-    const exerciseMinutes = 10 + Math.floor(Math.random() * 81);
-    sessionsData.push({
-      value: exerciseMinutes,
-      quality: null,
-      dateSession: new Date(d),
-      sessionTypeId: exerciseType.id,
-      userId: demoUser.id,
-    });
-  }
-
-  await prisma.session.createMany({
-    data: sessionsData,
-  });
-
-  console.log(`✅ ${sessionsData.length} sessions créées pour le demoUser`);
-
-  console.log("🔄 Suppression des anciens objectifs du demoUser...");
-  await prisma.objective.deleteMany({
-    where: { userId: demoUser.id },
-  });
-
-  console.log("🌱 Création d’un objectif de sommeil (8h/jour pendant 7 jours)...");
-  await prisma.objective.create({
+  const workout = await prisma.workoutSession.create({
     data: {
+      quality: 4,
+      dateSession: new Date(),
       userId: demoUser.id,
-      sessionTypeId: sleepType.id,
-      value: 8, // 8 heures de sommeil
-      frequency: "DAILY", // ObjectiveFrequency
-      durationUnit: "DAY", // ObjectiveDurationUnit
-      durationValue: 7, // pendant 7 jours
-      // On stocke l’unité prioritaire de Sleep (heures normalement)
-      sessionUnitId: sleepPrimaryTypeUnit.sessionUnitId ?? null,
-      // startsAt: laissé par défaut (now) si tu as un default(now())
+      exerciceSessions: {
+        create: [
+          {
+            exerciceType: { connect: { name: "Push Ups" } },
+            repetitionCount: 20,
+          },
+          {
+            exerciceType: { connect: { name: "Squats" } },
+            repetitionCount: 15,
+          },
+        ],
+      },
     },
   });
 
-  console.log("✅ Objectif créé pour le demoUser");
+  console.log("✔ WorkoutSession seeded:", workout.id);
 
   // ---------------------------------------------------------------------------
-  // 5️⃣ Resources (fusion de prisma/seed-resources.ts)
+  // SleepSession demo (liée au user)
   // ---------------------------------------------------------------------------
-  console.log("🌱 Seeding resources...");
-
-  // --- catégories ---
-  const articleCat = await prisma.resourceCategory.upsert({
-    where: { slug: "articles" },
-    update: {},
-    create: {
-      name: "Articles",
-      slug: "articles",
-      iconEmoji: "📄",
+  await prisma.sleepSession.create({
+    data: {
+      hours: 7,
+      quality: 4,
+      dateSession: new Date(),
+      userId: demoUser.id,
     },
   });
 
-  const guideCat = await prisma.resourceCategory.upsert({
-    where: { slug: "guides" },
-    update: {},
-    create: {
-      name: "Guides",
-      slug: "guides",
-      iconEmoji: "📘",
-    },
+  console.log("✔ SleepSession seeded.");
+
+  // ---------------------------------------------------------------------------
+  // Meditation Sessions liées au user (nouveau modèle)
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding meditation sessions for demo user...");
+
+  const meditationSeeds = [
+    // Hier : 2 méditations
+    { daysAgo: 1, durationMin: 12, quality: 4, hour: 7, minute: 30 },
+    { daysAgo: 1, durationMin: 20, quality: 5, hour: 21, minute: 0 },
+
+    // Il y a 2 jours : 1 méditation
+    { daysAgo: 2, durationMin: 8, quality: 3, hour: 12, minute: 0 },
+
+    // Il y a 3 jours : 3 méditations
+    { daysAgo: 3, durationMin: 10, quality: 3, hour: 6, minute: 45 },
+    { daysAgo: 3, durationMin: 15, quality: 4, hour: 13, minute: 15 },
+    { daysAgo: 3, durationMin: 5, quality: 2, hour: 22, minute: 0 },
+
+    // Jours suivants : 1 méditation
+    { daysAgo: 4, durationMin: 5, quality: 3, hour: 12, minute: 0 },
+    { daysAgo: 5, durationMin: 10, quality: 4, hour: 12, minute: 0 },
+    { daysAgo: 6, durationMin: 7, quality: 2, hour: 12, minute: 0 },
+    { daysAgo: 7, durationMin: 9, quality: 4, hour: 12, minute: 0 },
+  ];
+
+  for (const s of meditationSeeds) {
+    const startedAt = new Date();
+    startedAt.setDate(startedAt.getDate() - s.daysAgo);
+    startedAt.setHours(s.hour ?? 12, s.minute ?? 0, 0, 0);
+
+    const durationSeconds = s.durationMin * 60;
+    const endedAt = new Date(startedAt.getTime() + durationSeconds * 1000);
+
+    await prisma.meditationSession.create({
+      data: {
+        userId: demoUser.id,
+        source: MeditationSessionSource.MANUAL,
+        meditationTypeId: breathingType.id,
+        meditationContentId: null, // ici ce sont des saisies "manuelles"
+        startedAt,
+        endedAt,
+        durationSeconds,
+        moodBefore: null,
+        moodAfter: s.quality,
+        notes: null,
+      },
+    });
+  }
+
+  console.log(`✔ ${meditationSeeds.length} meditation sessions seeded.`);
+
+  // ---------------------------------------------------------------------------
+  // Resources (categories, tags, resources…)
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding resource categories, tags & resources...");
+
+  const articleCat = await prisma.resourceCategory.create({
+    data: { name: "Articles", slug: "articles", iconEmoji: "📄" },
   });
 
-  // --- tags ---
-  const meditationTag = await prisma.resourceTag.upsert({
-    where: { slug: "meditation" },
-    update: {},
-    create: { name: "Meditation", slug: "meditation" },
+  const guideCat = await prisma.resourceCategory.create({
+    data: { name: "Guides", slug: "guides", iconEmoji: "📘" },
   });
 
-  const mentalHealthTag = await prisma.resourceTag.upsert({
-    where: { slug: "mental-health" },
-    update: {},
-    create: { name: "Mental health", slug: "mental-health" },
+  const meditationTag = await prisma.resourceTag.create({
+    data: { name: "Meditation", slug: "meditation" },
   });
 
-  const wellnessTag = await prisma.resourceTag.upsert({
-    where: { slug: "wellness" },
-    update: {},
-    create: { name: "Wellness", slug: "wellness" },
+  const mentalHealthTag = await prisma.resourceTag.create({
+    data: { name: "Mental health", slug: "mental-health" },
   });
 
-  // Petite fonction utilitaire pour éviter les répétitions
+  const wellnessTag = await prisma.resourceTag.create({
+    data: { name: "Wellness", slug: "wellness" },
+  });
+
+  // Article utilitaire
   const createArticle = (data: {
     slug: string;
     title: string;
@@ -306,10 +467,8 @@ async function main() {
     readTimeMin?: number;
     tags: string[];
   }) =>
-    prisma.resource.upsert({
-      where: { slug: data.slug },
-      update: {},
-      create: {
+    prisma.resource.create({
+      data: {
         title: data.title,
         slug: data.slug,
         summary: data.summary,
@@ -326,7 +485,6 @@ async function main() {
           })),
         },
       },
-      include: { tags: { include: { tag: true } } },
     });
 
   await createArticle({
@@ -334,8 +492,7 @@ async function main() {
     title: "10 bienfaits de la méditation prouvés par la science",
     summary:
       "Un tour d’horizon des effets de la méditation sur le stress, le sommeil et la concentration.",
-    content:
-      "De nombreuses études montrent que quelques minutes de méditation par jour peuvent réduire le stress, améliorer le sommeil et renforcer l’attention. Dans cet article, nous passons en revue dix conclusions clés et des pistes très concrètes pour démarrer sans pression.",
+    content: "…",
     isFeatured: true,
     readTimeMin: 8,
     tags: ["meditation", "mental-health", "wellness"],
@@ -346,40 +503,32 @@ async function main() {
     title: "Construire une routine du soir qui apaise le mental",
     summary:
       "Une méthode en quatre étapes pour déconnecter doucement en fin de journée.",
-    content:
-      "Il est difficile de s’endormir quand la journée ne s’est jamais vraiment arrêtée. Cette routine du soir, simple et réaliste, aide à poser des limites douces entre travail, écrans et repos. Voici comment la mettre en place en moins de 20 minutes.",
+    content: "…",
     readTimeMin: 6,
     tags: ["wellness", "mental-health"],
   });
 
-  await prisma.resource.upsert({
-    where: { slug: "mindfulspace-starter-guide" },
-    update: {},
-    create: {
+  await prisma.resource.create({
+    data: {
       title: "Guide de démarrage MindfulSpace",
       slug: "mindfulspace-starter-guide",
-      summary:
-        "Comprendre en 5 minutes comment utiliser MindfulSpace pour suivre votre bien-être.",
-      content:
-        "Dans ce guide, nous expliquons comment enregistrer vos humeurs, suivre votre sommeil, vos méditations et vos objectifs. C’est le point de départ recommandé pour les nouveaux utilisateurs.",
+      summary: "Comprendre en 5 minutes comment utiliser MindfulSpace...",
+      content: "…",
       type: ResourceType.GUIDE,
-      isPremium: false,
       isFeatured: true,
       readTimeMin: 5,
       authorName: "Équipe MindfulSpace",
       categoryId: guideCat.id,
       tags: {
-        create: [
-          { tag: { connect: { slug: "wellness" } } },
-        ],
+        create: [{ tag: { connect: { slug: "wellness" } } }],
       },
     },
   });
 
-  console.log("✅ Resources seeded.");
+  console.log("✔ Resources seeded.");
 
   // ---------------------------------------------------------------------------
-  console.log("✅ Global seed MindfulSpace complet !");
+  console.log("🌱 Seeding done.");
 }
 
 main()

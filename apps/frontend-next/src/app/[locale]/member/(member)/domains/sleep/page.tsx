@@ -1,37 +1,53 @@
-import { getDictionary } from "@/i18n/get-dictionary";
-import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+"use client";
 
-/**
- * Page Domain – Sleep
- * --------------------
- * Page vide prête pour le contenu du domaine "Sommeil".
- *
- * i18n :
- * - Tous les textes viennent du namespace `domainSleep`.
- * - La locale est déterminée via les params `[locale]`.
- */
-export default async function SleepPage({
-                                            params,
-                                        }: {
-    params: Promise<{ locale: string }>;
-}) {
-    // 1️⃣ Récupération de la locale
-    const { locale: rawLocale } = await params;
-    const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+import PageHero from "@/components/PageHero";
+import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
+import { SessionCard } from "@/components/session/SessionCard";
+import SleepManualForm from "@/components/sleep/SleepManualForm";
+import {useSleepSessions} from "@/hooks/useSleepSessions";
+import {useTranslations} from "@/i18n/TranslationContext";
+import {SleepHistoryCard} from "@/components/sleep/SleepHistoryCard";
 
-    // 2️⃣ Chargement du dictionnaire
-    const dict = await getDictionary(locale);
-    const t = dict.domainSleep;
+export default function SleepPage() {
+    const t = useTranslations("domainSleep");
+
+    const {
+        sessions,
+        loading,
+        errorType,
+        createSession,
+    } = useSleepSessions();
 
     return (
-        <main className="mx-auto max-w-4xl px-4 py-10 text-brandText">
-            <h1 className="text-3xl font-semibold mb-4">{t.title}</h1>
-            <p className="text-brandText-soft mb-6">{t.subtitle}</p>
+        <SessionDashboardLayout
+            hero={
+                <PageHero
+                    title={t("title")}
+                    subtitle={t("subtitle")}
+                />
+            }
+            leftTop={
+                <SessionCard>
+                    <div className="flex flex-col gap-4">
+                        <h2 className="text-lg font-semibold text-slate-800">
+                            {t("manualForm_title")}
+                        </h2>
+                        <p className="text-sm text-slate-700">
+                            {t("manualForm_description")}
+                        </p>
 
-            {/* Zone de contenu — ajoute ton UI ici */}
-            <div className="border border-dashed rounded-xl p-6 text-center text-brandText-soft">
-                {t.empty}
-            </div>
-        </main>
+                        <SleepManualForm
+                        onCreateSession={createSession}/>
+                    </div>
+                </SessionCard>
+            }
+            rightColumn={
+                <SleepHistoryCard
+                    sessions={sessions}
+                    loading={loading}
+                    errorType={errorType}
+                />
+            }
+        />
     );
 }

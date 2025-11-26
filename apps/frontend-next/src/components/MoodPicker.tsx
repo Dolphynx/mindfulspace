@@ -85,18 +85,18 @@ export default function MoodPicker({
                         className={`${baseItem} ${sizeCls} ${
                             active ? activeCls : inactiveCls
                         }`}
-                        title={t(`labels.${opt.label}`)} // i18n label
+                        title={t(`${opt.label}`)} // i18n label
                     >
                         {/* image emoji */}
                         <img
                             src={opt.emoji}
-                            alt={t(`labels.${opt.label}`)}
+                            alt={t(`${opt.label}`)}
                             aria-hidden="true"
                             className="w-16 h-16 mx-auto"
                         />
 
                         {/* Texte visible si souhaité */}
-                        {/* <span className="text-brandText">{t(`labels.${opt.key}`)}</span> */}
+                        <span className="text-brandText">{t(`${opt.label}`)}</span>
                     </button>
                 );
             })}
