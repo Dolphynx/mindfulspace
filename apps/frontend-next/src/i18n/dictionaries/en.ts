@@ -318,8 +318,12 @@ const en = {
 
         // Guided session
         start_title: "Start an exercise session",
+        start_button: "Start exercice",
         start_description: "Choose an exercise and follow the step-by-step guidance.",
         start_placeholder: "Guided exercise mode will be available soon.",
+        start_nextButton: "Next",
+        start_prevButton: "Previous",
+        start_finishButton: "Done",
 
         // History
         history_title: "Your recent exercise sessions",

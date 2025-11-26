@@ -315,8 +315,12 @@ const fr = {
 
         // Lancer une séance guidée
         start_title: "Lancer une séance d’exercice",
+        start_button: "Commencer exercice",
         start_description: "Choisissez un exercice et laissez-vous guider pas à pas.",
         start_placeholder: "Le démarrage guidé d’une séance d’exercice sera bientôt disponible.",
+        start_nextButton: "Suivant",
+        start_prevButton: "Précédent",
+        start_finishButton: "Terminé",
 
         // Historique
         history_title: "Vos dernières séances d’exercice",

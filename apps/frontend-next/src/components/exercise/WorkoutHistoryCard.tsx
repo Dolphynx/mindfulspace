@@ -104,7 +104,7 @@ export function WorkoutHistoryCard({
                                     {/* DATE HEADER */}
                                     <div className="flex items-baseline justify-between mb-2">
                                         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                            {t("history_dayLabel")} {g.date}
+                                            {g.date}
                                         </span>
 
                                         <span className="text-xs text-slate-600">

@@ -7,6 +7,8 @@ import { WorkoutHistoryCard } from "@/components/exercise/WorkoutHistoryCard";
 import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
+import {WorkoutStartSessionCard} from "@/components/exercise/WorkoutStartSessionCard";
+import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -52,21 +54,17 @@ export default function ExercicePage() {
                         />
                     </SessionCard>
                 }
+
                 leftBottom={
                     <SessionCard>
-                        <div className="flex flex-col gap-4">
-                            <h2 className="text-lg font-semibold text-slate-800">
-                                {t("start_title")}
-                            </h2>
-                            <p className="text-sm text-slate-700">
-                                {t("start_description")}
-                            </p>
-                            <div className="rounded-xl bg-white/80 p-4 shadow-sm border border-dashed text-brandText-soft text-center">
-                                {t("start_placeholder")}
-                            </div>
-                        </div>
+                        <WorkoutStartSection
+                            types={types}
+                            onCreateSession={createSession}
+                        />
                     </SessionCard>
                 }
+
+
                 rightColumn={
                     <WorkoutHistoryCard
                         sessions={sessions}
