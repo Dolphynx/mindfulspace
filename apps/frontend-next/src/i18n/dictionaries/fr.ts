@@ -53,7 +53,7 @@ const fr = {
         heroTitle: "Bienvenue sur MindfulSpace",
         heroSubtitle: "Suivez vos habitudes de bien-être, méditez, respirez.",
 
-        welcomeTitle: "Prends un moment pour toi 🌿",
+        welcomeTitle: "Prends un moment pour toi",
         welcomeParagraph1:
             "MindfulSpace est un espace pour suivre tes habitudes de bien-être, prendre du recul sur tes journées et installer une routine plus sereine.",
         welcomeParagraph2:
@@ -64,7 +64,7 @@ const fr = {
         discoverCoachs: "En savoir plus sur le rôle des coachs",
         discoverContact: "Contacter l'équipe MindfulSpace",
 
-        ctaTitle: "Prêt·e à passer à l'action ? ✨",
+        ctaTitle: "Prêt·e à passer à l'action ?",
         ctaDescription:
             "Connecte-toi à ton espace pour suivre ton humeur, respirer guidé·e pas à pas et garder une trace de tes progrès.",
 
@@ -237,13 +237,14 @@ const fr = {
         premiumBadge: "Premium",
         readTimeSuffix: "min",
     },
-
     breathingSession: {
         title: "Respiration guidée",
 
         phaseInhale: "Inspirez",
         phaseHold: "Bloquez",
         phaseExhale: "Expirez",
+        hold_full: "Bloquez la respiration…",
+        hold_empty: "Relâchez…",
 
         cycle: "Cycle",
         followInstruction: "Suivez le rythme de respiration",
@@ -256,7 +257,7 @@ const fr = {
 
     sessionRecap: {
         title: "Séance terminée",
-        progressMessage: "Vous progressez sur le chemin de la paix 🌸",
+        progressMessage: "Vous progressez sur le chemin de la paix",
         dashboardButton: "Mon suivi",
         redoButton: "Refaire une séance",
         reminder: "Revenez demain pour continuer votre pratique",
@@ -281,18 +282,148 @@ const fr = {
         title: "Sommeil",
         subtitle: "Conseils et outils pour améliorer la qualité de votre sommeil.",
         empty: "Contenu prochainement disponible…",
+
+        // Encodage manuel (unique pour le sommeil)
+        manualForm_title: "Encoder une nuit de sommeil",
+        manualForm_description: "Notez vos heures de coucher et de lever, ainsi que la qualité de votre nuit.",
+        manualForm_placeholder: "Le formulaire pour encoder vos nuits de sommeil sera bientôt disponible.",
+        manualForm_durationLabel: "Durée du sommeil",
+        manualForm_saveButton: "Enregistrer",
+        manualForm_cancelButton: "Annuler",
+
+        // Historique
+        history_title: "Vos dernières nuits",
+        history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
     },
 
     domainExercice: {
         title: "Exercice physique",
         subtitle: "Bougez, respirez et entretenez votre corps au quotidien.",
         empty: "Contenu prochainement disponible…",
+
+        // Encodage manuel
+        manualForm_title: "Encoder une séance passée",
+        manualForm_description: "Indiquez la date, la durée et le type d’exercice réalisé.",
+        manualForm_placeholder: "Le formulaire pour encoder vos séances sera bientôt disponible.",
+        manualForm_durationLabel: "Durée de la séance",
+        manualForm_saveButton: "Enregistrer",
+        manualForm_cancelButton: "Annuler",
+
+        // Lancer une séance guidée
+        start_title: "Lancer une séance d’exercice",
+        start_description: "Choisissez une séance et laissez-vous guider pas à pas.",
+        start_placeholder: "Le démarrage guidé d’une séance d’exercice sera bientôt disponible.",
+
+        // Historique
+        history_title: "Vos dernières séances d’exercice",
+        history_placeholder: "L’historique de vos séances apparaîtra ici dès que vous en aurez enregistré.",
     },
 
     domainMeditation: {
         title: "Méditation",
         subtitle: "Pratiques guidées pour apaiser votre esprit.",
         empty: "Contenu prochainement disponible…",
+
+        // Encodage manuel
+        manualForm_title: "Encoder une séance passée",
+        manualForm_description: "Indiquez la date, la durée et, si vous le souhaitez, la qualité ressentie.",
+        manualForm_dateLabel: "Date",
+        manualForm_durationLabel: "Durée",
+        manualForm_minutesSuffix: "minutes",
+        manualForm_qualityLabel: "Qualité perçue",
+        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_savingButton: "Enregistrement…",
+        manualForm_typeLabel: "Type de méditation",
+        manualForm_button: "Encoder une méditation",
+        manualForm_cancelButton: "Annuler",
+
+        // Player / minuteur
+        player_title: "Lancer une séance de méditation",
+        player_description: "Choisissez une durée et laissez-vous guider par le minuteur.",
+        player_startButton: "Commencer une méditation",
+        player_modalTitle: "Méditation guidée par minuteur",
+        player_configText: "Choisissez la durée de votre séance. Vous pourrez arrêter plus tôt si nécessaire.",
+        player_durationLabel: "Durée souhaitée",
+        player_startNowButton: "Lancer la séance",
+        player_runningText: "La séance est en cours. Fermez les yeux, respirez paisiblement.",
+        player_stopEarlyButton: "Terminer la séance",
+        player_finishedText: "La séance est terminée. Comment évaluez-vous la qualité de ce moment ?",
+        player_finishedQualityLabel: "Qualité de la séance",
+        player_saveButton: "Enregistrer cette séance",
+        player_savingButton: "Enregistrement…",
+
+        // 7 dernières
+        last7_title: "Vos 7 dernières séances",
+        last7_description: "Aperçu de vos méditations récentes.",
+        last7_loading: "Chargement…",
+        last7_empty: "Aucune séance enregistrée.",
+        last7_durationLabel: "Durée",
+        last7_qualityLabel: "Qualité",
+        last7_dayLabel: "Jour",
+        last7_totalLabel: "Total",
+
+        errors: {
+            loadTypes: "Erreur lors du chargement des types de méditation",
+            loadSessions: "Impossible de charger les séances",
+            saveSession: "Erreur lors de l'enregistrement de la séance"
+        },
+
+        meditationTypes: {
+            breathing: {
+                name: "Respiration consciente",
+                description:
+                    "Focalisation sur le souffle pour apaiser le système nerveux.",
+            },
+            mindfulness: {
+                name: "Pleine conscience",
+                description:
+                    "Observer pensées, émotions et sensations sans jugement.",
+            },
+            "body-scan": {
+                name: "Body scan",
+                description:
+                    "Balayer le corps avec l'attention pour relâcher les tensions.",
+            },
+            compassion: {
+                name: "Compassion / Metta",
+                description:
+                    "Cultiver la bienveillance envers soi et les autres.",
+            },
+        },
+
+        wizard_loadingTypes: "Chargement des types de méditation…",
+        wizard_errorTypes: "Impossible de charger les types de méditation.",
+
+        wizard_stepType_title: "Quel type de méditation veux-tu pratiquer ?",
+
+        wizard_stepDuration_title: "Combien de temps as-tu ?",
+        wizard_minutes: "min",
+        wizard_backToType: "⟵ Revenir au choix du type",
+
+        wizard_stepContent_title: "Choisis ta méditation",
+        wizard_loadingContents: "Chargement des méditations…",
+        wizard_errorContents: "Impossible de charger les méditations.",
+        wizard_stepContent_empty: "Aucune méditation ne correspond encore à ces critères.",
+        wizard_premium: "Premium",
+        wizard_backToDuration: "⟵ Revenir au choix de la durée",
+
+        wizard_stepMoodBefore_title: "Comment te sens-tu avant de commencer ?",
+        wizard_backToContent: "⟵ Choisir une autre méditation",
+        wizard_startSession: "Commencer la séance",
+
+        wizard_stepPlaying_title: "Séance en cours :",
+        wizard_stepPlaying_placeholder: "Le player apparaîtra ici selon le type de méditation choisi.",
+        wizard_endSession: "Terminer la séance",
+
+        wizard_stepMoodAfter_title: "Comment te sens-tu maintenant ?",
+        wizard_saveError: "Impossible d'enregistrer ta séance. Réessaie dans un instant.",
+        wizard_saving: "Enregistrement…",
+        wizard_save: "Enregistrer ma séance",
+        wizard_cancel: "Annuler",
+
+        wizard_stepDone_title: "Séance enregistrée",
+        wizard_stepDone_description: "Merci d'avoir pris ce moment pour toi.",
+        wizard_close: "Fermer"
     },
 
     publicWorld: {
@@ -442,7 +573,6 @@ const fr = {
         success: "Séance enregistrée avec succès.",
         error: "Erreur lors de l’enregistrement de la séance.",
     },
-
 };
 
 export default fr;
