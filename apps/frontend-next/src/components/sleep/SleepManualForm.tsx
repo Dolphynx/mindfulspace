@@ -2,19 +2,71 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
+import {MoodValue} from "@/lib";
+import MoodPicker from "@/components/MoodPicker";
 
-export default function SleepManualForm() {
+type SleepManualFormProps = {
+    onCreateSession: (payload: {
+        hours: number;
+        quality?: MoodValue;
+        dateSession: string;
+    }) => Promise<void>;
+};
+
+function buildTodayDateInput(): string {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = `${now.getMonth() + 1}`.padStart(2, "0");
+    const d = `${now.getDate()}`.padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+export default function SleepManualForm({onCreateSession}: SleepManualFormProps) {
     const t = useTranslations("domainSleep");
 
     const [durationHours, setDurationHours] = useState<number>(8);
+    const [savingManual, setSavingManual] = useState(false);
+    const [manualQuality, setManualQuality] =
+        useState<MoodValue | null>(3 as MoodValue);
+    const [dateInput, setDateInput] = useState<string>(() =>
+        buildTodayDateInput(),
+    );
 
-    function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         // future API call
+
+        try {
+            await onCreateSession({
+                hours: durationHours,
+                quality: manualQuality ?? undefined,
+                dateSession: dateInputToNoonIso(dateInput),
+            });
+
+            resetForm();
+        } finally {
+            setSavingManual(false);
+        }
+    }
+
+    function dateInputToNoonIso(dateStr: string): string {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const date = new Date();
+        date.setFullYear(y);
+        date.setMonth(m - 1);
+        date.setDate(d);
+        date.setHours(12, 0, 0, 0);
+        return date.toISOString();
     }
 
     function handleCancel() {
         setDurationHours(8);
+    }
+
+    function resetForm() {
+        setDateInput(buildTodayDateInput());
+        setDurationHours(8);
+        setManualQuality(3 as MoodValue);
     }
 
     return (
@@ -22,6 +74,19 @@ export default function SleepManualForm() {
             onSubmit={handleSubmit}
             className="space-y-4 rounded-2xl bg-white/80 p-4 shadow-sm"
         >
+            {/* DATE */}
+            <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-600">
+                    {t("manualForm_dateLabel")}
+                </label>
+                <input
+                    type="date"
+                    value={dateInput}
+                    onChange={(e) => setDateInput(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm"
+                />
+            </div>
+
             <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-slate-600">
                     {t("manualForm_durationLabel")}:{" "}
@@ -37,6 +102,20 @@ export default function SleepManualForm() {
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
                     className="w-full"
+                />
+            </div>
+
+            {/* MOOD */}
+            <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-slate-600">
+                    {t("manualForm_qualityLabel")}
+                </label>
+                <MoodPicker
+                    value={manualQuality}
+                    onChangeAction={(v) => setManualQuality(v)}
+                    variant="row"
+                    size="sm"
+                    tone="minimal"
                 />
             </div>
 
