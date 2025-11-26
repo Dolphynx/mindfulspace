@@ -19,7 +19,7 @@ export class WorkoutSessionService {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 1️⃣ Validate exercice types
+    // 1️⃣ Validate exercise types
     const exerciceTypeIds = dto.exercices.map((e) => e.exerciceTypeId);
 
     const existingTypes = await this.prisma.exerciceType.findMany({
@@ -74,7 +74,7 @@ export class WorkoutSessionService {
         });
       }
 
-      // Create new exercice sessions
+      // Create new exercise sessions
       if (dto.exercices.length > 0) {
         await tx.exerciceSession.createMany({
           data: dto.exercices.map((e) => ({
@@ -85,7 +85,7 @@ export class WorkoutSessionService {
         });
       }
 
-      // Return workout with exercices + exercice types
+      // Return workout with exercices + exercise types
       const fullWorkout = await tx.workoutSession.findUnique({
         where: { id: workout.id },
         include: {
