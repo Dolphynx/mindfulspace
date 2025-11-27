@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export function ClientNavbar() {
     const pathname = usePathname();
@@ -86,14 +87,8 @@ export function ClientNavbar() {
                         />
 
                         <NavButton
-                            href={`/${locale}/member/dashboard`}
-                            label={t("dashboard")}
-                            icon={<span>📊</span>}
-                        />
-
-                        <NavButton
                             href={`/${locale}/member/objectives`}
-                            label={t("objectives")}
+                            label={t("Goals")}
                             icon={<span>🎯</span>}
                         />
 
@@ -114,6 +109,8 @@ export function ClientNavbar() {
                             label={t("contact")}
                             icon={<span>✉️</span>}
                         />
+
+                        <LanguageSwitcher />
                     </nav>
                 </div>
             </div>

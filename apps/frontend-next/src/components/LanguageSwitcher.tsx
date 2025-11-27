@@ -48,9 +48,9 @@ export default function LanguageSwitcher() {
 
     return (
         <div className="inline-flex items-center gap-2 rounded-full border border-brandBorder bg-white/70 px-3 py-1 text-xs">
-            <span className="text-brandText-soft">
+            {/*<span className="text-brandText-soft">
                 {t("label")}
-            </span>
+            </span>*/}
             <div className="flex items-center gap-1">
                 {LOCALES.map((loc) => (
                     <button
