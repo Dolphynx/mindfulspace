@@ -14,6 +14,7 @@ import {
 import { SessionCard } from "@/components/session/SessionCard";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
 import { useState } from "react";
+import DomainSwitcher from "@/components/DomainSwitcher";
 
 /**
  * Calcule un message d'erreur global à partir du type d'erreur métier.
@@ -38,15 +39,6 @@ function getErrorMessage(
 
 /**
  * Page principale de gestion de la méditation.
- *
- * Elle orchestre :
- * - le chargement des séances et types via `useMeditationSessions`
- * - l'affichage du formulaire manuel de saisie de séance
- * - le wizard guidé de démarrage de méditation
- * - l’historique des 7 derniers jours de séances
- *
- * La page s'appuie sur un layout générique de tableau de bord (`SessionDashboardLayout`)
- * pour organiser les colonnes et le hero.
  */
 export default function MeditationPage() {
     const t = useTranslations("domainMeditation");
@@ -59,10 +51,6 @@ export default function MeditationPage() {
         createSession,
     } = useMeditationSessions();
 
-    /**
-     * Indique si le wizard de démarrage de méditation est actuellement ouvert.
-     * Sert à piloter les transitions d’animation et l’affichage conditionnel.
-     */
     const [isStartWizardOpen, setIsStartWizardOpen] = useState(false);
 
     const globalErrorMessage = getErrorMessage(t, errorType);
@@ -71,10 +59,14 @@ export default function MeditationPage() {
         <main className="text-brandText flex flex-col">
             <SessionDashboardLayout
                 hero={
-                    <PageHero
-                        title={t("title")}
-                        subtitle={t("subtitle")}
-                    />
+                    <div className="flex flex-col items-center">
+                        <PageHero
+                            title={t("title")}
+                            subtitle={t("subtitle")}
+                        />
+                        {/* Sélecteur des 3 domaines sous le hero */}
+                        <DomainSwitcher current="meditation" />
+                    </div>
                 }
                 globalErrorMessage={globalErrorMessage}
                 leftTop={
