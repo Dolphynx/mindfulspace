@@ -683,6 +683,42 @@ const en = {
         myWorld: "My World",
         profileSettings: "Profile Settings",
         signOut: "Sign Out",
+
+        // Email verification
+        verifyEmailLoading: "Verifying...",
+        verifyEmailSuccess: "Email Verified!",
+        verifyEmailFailed: "Verification Failed",
+        verifyEmailInvalidLink: "Invalid verification link",
+        verifyEmailSuccessMessage: "Email verified successfully!",
+        verifyEmailVerificationFailed: "Verification failed",
+        verifyEmailCanSignIn: "You can now sign in to your account.",
+        verifyEmailLinkExpired: "The link may have expired or is invalid.",
+        verifyEmailGoToLogin: "Go to Login",
+        verifyEmailRegisterAgain: "Register Again",
+
+        // Forgot password
+        forgotPasswordTitle: "Forgot Password?",
+        forgotPasswordSubtitle: "Enter your email to receive reset instructions",
+        forgotPasswordSendButton: "Send Reset Link",
+        forgotPasswordCheckEmail: "Check Your Email",
+        forgotPasswordInstructionsSent: "Password reset instructions sent",
+        forgotPasswordCheckEmailMessage: "If an account exists with {email}, you will receive password reset instructions.",
+        forgotPasswordCheckSpam: "Didn't receive the email? Check your spam folder or try again.",
+        forgotPasswordTryAnother: "Try Another Email",
+        forgotPasswordFailedToSend: "Failed to send reset email",
+
+        // Reset password
+        resetPasswordTitle: "Reset Password",
+        resetPasswordSubtitle: "Enter your new password",
+        resetPasswordNewPasswordLabel: "New Password",
+        resetPasswordConfirmPasswordLabel: "Confirm New Password",
+        resetPasswordButton: "Reset Password",
+        resetPasswordInvalidLink: "Invalid Link",
+        resetPasswordLinkExpired: "The reset link is invalid or has expired.",
+        resetPasswordRequestNew: "Request New Link",
+        resetPasswordComplete: "Password Reset Complete",
+        resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
+        resetPasswordFailed: "Password reset failed",
     },
 
 };

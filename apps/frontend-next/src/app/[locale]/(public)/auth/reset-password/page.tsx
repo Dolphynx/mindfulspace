@@ -6,15 +6,19 @@
  */
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { resetPassword } from '@/lib/api/auth';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
+import { useTranslations } from '@/i18n/TranslationContext';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'fr';
+  const t = useTranslations('auth');
   const token = searchParams.get('token');
 
   const [password, setPassword] = useState('');
@@ -25,19 +29,19 @@ export default function ResetPasswordPage() {
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters';
+      return t('passwordMinLength');
     }
     if (!/[A-Z]/.test(password)) {
-      return 'Password must contain an uppercase letter';
+      return t('passwordUppercase');
     }
     if (!/[a-z]/.test(password)) {
-      return 'Password must contain a lowercase letter';
+      return t('passwordLowercase');
     }
     if (!/[0-9]/.test(password)) {
-      return 'Password must contain a number';
+      return t('passwordNumber');
     }
     if (!/[@$!%*?&]/.test(password)) {
-      return 'Password must contain a special character (@$!%*?&)';
+      return t('passwordSpecial');
     }
     return null;
   };
@@ -47,7 +51,7 @@ export default function ResetPasswordPage() {
     setError('');
 
     if (!token) {
-      setError('Invalid reset link');
+      setError(t('resetPasswordInvalidLink'));
       return;
     }
 
@@ -58,7 +62,7 @@ export default function ResetPasswordPage() {
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('passwordsNoMatch'));
       return;
     }
 
@@ -68,7 +72,7 @@ export default function ResetPasswordPage() {
       await resetPassword(token, password);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Password reset failed');
+      setError(err.message || t('resetPasswordFailed'));
     } finally {
       setLoading(false);
     }
@@ -77,11 +81,11 @@ export default function ResetPasswordPage() {
   if (!token) {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-        <AuthCard title="Invalid Link">
+        <AuthCard title={t('resetPasswordInvalidLink')}>
           <div className="space-y-4 text-center">
-            <p className="text-sm text-red-600">The reset link is invalid or has expired.</p>
-            <AuthButton onClick={() => router.push('/auth/forgot-password')}>
-              Request New Link
+            <p className="text-sm text-red-600">{t('resetPasswordLinkExpired')}</p>
+            <AuthButton onClick={() => router.push(`/${locale}/auth/forgot-password`)}>
+              {t('resetPasswordRequestNew')}
             </AuthButton>
           </div>
         </AuthCard>
@@ -92,7 +96,7 @@ export default function ResetPasswordPage() {
   if (success) {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-        <AuthCard title="Password Reset Complete">
+        <AuthCard title={t('resetPasswordComplete')}>
           <div className="space-y-4 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brandGreen/10">
               <svg className="h-8 w-8 text-brandGreen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,10 +104,10 @@ export default function ResetPasswordPage() {
               </svg>
             </div>
             <p className="text-sm text-brandText/70">
-              Your password has been successfully reset. You can now sign in with your new password.
+              {t('resetPasswordSuccess')}
             </p>
-            <AuthButton onClick={() => router.push('/auth/login')}>
-              Go to Login
+            <AuthButton onClick={() => router.push(`/${locale}/auth/login`)}>
+              {t('verifyEmailGoToLogin')}
             </AuthButton>
           </div>
         </AuthCard>
@@ -114,8 +118,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
       <AuthCard
-        title="Reset Password"
-        subtitle="Enter your new password"
+        title={t('resetPasswordTitle')}
+        subtitle={t('resetPasswordSubtitle')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -125,31 +129,31 @@ export default function ResetPasswordPage() {
           )}
 
           <AuthInput
-            label="New Password"
+            label={t('resetPasswordNewPasswordLabel')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             required
             autoComplete="new-password"
           />
 
           <AuthInput
-            label="Confirm New Password"
+            label={t('resetPasswordConfirmPasswordLabel')}
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             required
             autoComplete="new-password"
           />
 
           <p className="text-xs text-brandText/60">
-            Password must be at least 8 characters with uppercase, lowercase, number, and special character.
+            {t('passwordRequirements')}
           </p>
 
           <AuthButton type="submit" loading={loading}>
-            Reset Password
+            {t('resetPasswordButton')}
           </AuthButton>
         </form>
       </AuthCard>

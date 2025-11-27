@@ -103,28 +103,52 @@ Body: Hello User, Please verify your email by clicking this link: ...
    - Application type: "Web application"
    - Name: `MindfulSpace Web`
    - Authorized JavaScript origins:
-     - `http://localhost:3001`
-     - `http://localhost:3000`
+     - `http://localhost:3001` (API server)
+     - `http://localhost:3000` (Frontend)
    - Authorized redirect URIs:
-     - `http://localhost:3001/auth/google/callback`
+     - `http://localhost:3001/auth/google/callback` (API receives OAuth callback)
    - Click "Create"
 
 6. **Copy credentials:**
    - Client ID: `xxxxxx.apps.googleusercontent.com`
    - Client Secret: `GOCSPX-xxxxxxxxxxxxxxxx`
 
-7. **Add to `.env`:**
+7. **Add to API `.env`:**
    ```bash
    GOOGLE_CLIENT_ID=xxxxxx.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxxxxxx
    GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
+   FRONTEND_URL=http://localhost:3000
    ```
+
+### How OAuth Flow Works:
+
+1. User clicks "Sign in with Google" on frontend (`http://localhost:3000`)
+2. Frontend redirects to API: `http://localhost:3001/auth/google`
+3. API redirects to Google with callback URL
+4. User authenticates with Google
+5. **Google redirects to API:** `http://localhost:3001/auth/google/callback` ← **This is the callback URL in `.env`**
+6. API processes OAuth, then redirects to frontend: `http://localhost:3000/auth/callback`
+7. Frontend detects success and redirects to dashboard
 
 ### For Production:
 
-Add your production URLs to "Authorized redirect URIs":
-- `https://yourdomain.com/auth/google/callback`
-- `https://api.yourdomain.com/auth/google/callback`
+**Local Development:**
+- Callback URL: `http://localhost:3001/auth/google/callback`
+- Frontend URL: `http://localhost:3000`
+
+**Staging:**
+- Callback URL: `https://api.staging.mindfulspace.be/auth/google/callback`
+- Frontend URL: `https://staging.mindfulspace.be`
+
+**Production:**
+- Callback URL: `https://api.mindfulspace.be/auth/google/callback`
+- Frontend URL: `https://mindfulspace.be`
+
+Add these to Google Cloud Console "Authorized redirect URIs":
+- `http://localhost:3001/auth/google/callback` (local dev)
+- `https://api.staging.mindfulspace.be/auth/google/callback` (staging)
+- `https://api.mindfulspace.be/auth/google/callback` (production)
 
 ---
 
@@ -143,8 +167,8 @@ Add your production URLs to "Authorized redirect URIs":
 
 3. **Fill in details:**
    - Application name: `MindfulSpace`
-   - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3001/auth/github/callback`
+   - Homepage URL: `http://localhost:3000` (Frontend URL)
+   - Authorization callback URL: `http://localhost:3001/auth/github/callback` (API receives callback)
    - Click "Register application"
 
 4. **Get credentials:**
@@ -153,18 +177,39 @@ Add your production URLs to "Authorized redirect URIs":
      - Copy the secret (shown only once!)
      - `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-5. **Add to `.env`:**
+5. **Add to API `.env`:**
    ```bash
    GITHUB_CLIENT_ID=Iv1.xxxxxxxxxxxxxxxx
    GITHUB_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    GITHUB_CALLBACK_URL=http://localhost:3001/auth/github/callback
+   FRONTEND_URL=http://localhost:3000
    ```
+
+### How OAuth Flow Works:
+
+1. User clicks "Sign in with GitHub" on frontend (`http://localhost:3000`)
+2. Frontend redirects to API: `http://localhost:3001/auth/github`
+3. API redirects to GitHub with callback URL
+4. User authenticates with GitHub
+5. **GitHub redirects to API:** `http://localhost:3001/auth/github/callback` ← **This is the callback URL in `.env`**
+6. API processes OAuth, then redirects to frontend: `http://localhost:3000/auth/callback`
+7. Frontend detects success and redirects to dashboard
 
 ### For Production:
 
-Create a separate OAuth App for production:
-- Homepage URL: `https://yourdomain.com`
-- Authorization callback URL: `https://api.yourdomain.com/auth/github/callback`
+**Local Development:**
+- Callback URL: `http://localhost:3001/auth/github/callback`
+- Frontend URL: `http://localhost:3000`
+
+**Staging:**
+- Callback URL: `https://api.staging.mindfulspace.be/auth/github/callback`
+- Frontend URL: `https://staging.mindfulspace.be`
+
+**Production:**
+- Callback URL: `https://api.mindfulspace.be/auth/github/callback`
+- Frontend URL: `https://mindfulspace.be`
+
+Create separate OAuth Apps for each environment in GitHub with the appropriate callback URLs.
 
 ---
 

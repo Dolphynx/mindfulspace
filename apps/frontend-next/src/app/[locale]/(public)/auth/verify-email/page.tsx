@@ -5,45 +5,56 @@
  * Verifies user email with token from URL
  */
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { verifyEmail } from '@/lib/api/auth';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthButton from '@/components/auth/AuthButton';
+import { useTranslations } from '@/i18n/TranslationContext';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'fr';
+  const t = useTranslations('auth');
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
+  const hasVerified = useRef(false);
 
   useEffect(() => {
+    // Prevent multiple verification attempts (React Strict Mode in dev)
+    if (hasVerified.current) return;
+
     const token = searchParams.get('token');
 
     if (!token) {
       setStatus('error');
-      setMessage('Invalid verification link');
+      setMessage(t('verifyEmailInvalidLink'));
       return;
     }
+
+    hasVerified.current = true;
 
     const verify = async () => {
       try {
         await verifyEmail(token);
         setStatus('success');
-        setMessage('Email verified successfully!');
+        setMessage(t('verifyEmailSuccessMessage'));
       } catch (err: any) {
         setStatus('error');
-        setMessage(err.message || 'Verification failed');
+        setMessage(err.message || t('verifyEmailVerificationFailed'));
       }
     };
 
     verify();
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
       <AuthCard
-        title={status === 'loading' ? 'Verifying...' : status === 'success' ? 'Email Verified!' : 'Verification Failed'}
+        title={status === 'loading' ? t('verifyEmailLoading') : status === 'success' ? t('verifyEmailSuccess') : t('verifyEmailFailed')}
       >
         <div className="space-y-6 text-center">
           {status === 'loading' && (
@@ -61,10 +72,10 @@ export default function VerifyEmailPage() {
               </div>
               <p className="text-sm text-brandText/70">{message}</p>
               <p className="text-sm text-brandText/70">
-                You can now sign in to your account.
+                {t('verifyEmailCanSignIn')}
               </p>
-              <AuthButton onClick={() => router.push('/auth/login')}>
-                Go to Login
+              <AuthButton onClick={() => router.push(`/${locale}/auth/login`)}>
+                {t('verifyEmailGoToLogin')}
               </AuthButton>
             </>
           )}
@@ -78,14 +89,14 @@ export default function VerifyEmailPage() {
               </div>
               <p className="text-sm text-red-600">{message}</p>
               <p className="text-sm text-brandText/70">
-                The link may have expired or is invalid.
+                {t('verifyEmailLinkExpired')}
               </p>
               <div className="space-y-2">
-                <AuthButton onClick={() => router.push('/auth/register')} variant="secondary">
-                  Register Again
+                <AuthButton onClick={() => router.push(`/${locale}/auth/register`)} variant="secondary">
+                  {t('verifyEmailRegisterAgain')}
                 </AuthButton>
-                <AuthButton onClick={() => router.push('/auth/login')} variant="ghost">
-                  Back to Login
+                <AuthButton onClick={() => router.push(`/${locale}/auth/login`)} variant="ghost">
+                  {t('backToLogin')}
                 </AuthButton>
               </div>
             </>

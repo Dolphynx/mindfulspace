@@ -684,6 +684,42 @@ const fr = {
         myWorld: "Mon monde",
         profileSettings: "Paramètres du profil",
         signOut: "Se déconnecter",
+
+        // Vérification d'email
+        verifyEmailLoading: "Vérification...",
+        verifyEmailSuccess: "Email vérifié !",
+        verifyEmailFailed: "Échec de la vérification",
+        verifyEmailInvalidLink: "Lien de vérification invalide",
+        verifyEmailSuccessMessage: "Email vérifié avec succès !",
+        verifyEmailVerificationFailed: "Échec de la vérification",
+        verifyEmailCanSignIn: "Vous pouvez maintenant vous connecter à votre compte.",
+        verifyEmailLinkExpired: "Le lien a peut-être expiré ou est invalide.",
+        verifyEmailGoToLogin: "Aller à la connexion",
+        verifyEmailRegisterAgain: "S'inscrire à nouveau",
+
+        // Mot de passe oublié
+        forgotPasswordTitle: "Mot de passe oublié ?",
+        forgotPasswordSubtitle: "Entrez votre email pour recevoir les instructions",
+        forgotPasswordSendButton: "Envoyer le lien de réinitialisation",
+        forgotPasswordCheckEmail: "Vérifiez votre email",
+        forgotPasswordInstructionsSent: "Instructions de réinitialisation envoyées",
+        forgotPasswordCheckEmailMessage: "Si un compte existe avec {email}, vous recevrez les instructions de réinitialisation du mot de passe.",
+        forgotPasswordCheckSpam: "Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam ou réessayez.",
+        forgotPasswordTryAnother: "Essayer un autre email",
+        forgotPasswordFailedToSend: "Échec de l'envoi de l'email de réinitialisation",
+
+        // Réinitialisation du mot de passe
+        resetPasswordTitle: "Réinitialiser le mot de passe",
+        resetPasswordSubtitle: "Entrez votre nouveau mot de passe",
+        resetPasswordNewPasswordLabel: "Nouveau mot de passe",
+        resetPasswordConfirmPasswordLabel: "Confirmer le nouveau mot de passe",
+        resetPasswordButton: "Réinitialiser le mot de passe",
+        resetPasswordInvalidLink: "Lien invalide",
+        resetPasswordLinkExpired: "Le lien de réinitialisation est invalide ou a expiré.",
+        resetPasswordRequestNew: "Demander un nouveau lien",
+        resetPasswordComplete: "Réinitialisation terminée",
+        resetPasswordSuccess: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+        resetPasswordFailed: "Échec de la réinitialisation du mot de passe",
     },
 };
 

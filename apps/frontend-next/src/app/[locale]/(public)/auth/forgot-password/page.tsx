@@ -6,13 +6,18 @@
  */
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { forgotPassword } from '@/lib/api/auth';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
+import { useTranslations } from '@/i18n/TranslationContext';
 
 export default function ForgotPasswordPage() {
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'fr';
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -27,7 +32,7 @@ export default function ForgotPasswordPage() {
       await forgotPassword(email);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to send reset email');
+      setError(err.message || t('forgotPasswordFailedToSend'));
     } finally {
       setLoading(false);
     }
@@ -37,8 +42,8 @@ export default function ForgotPasswordPage() {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
         <AuthCard
-          title="Check Your Email"
-          subtitle="Password reset instructions sent"
+          title={t('forgotPasswordCheckEmail')}
+          subtitle={t('forgotPasswordInstructionsSent')}
         >
           <div className="space-y-4 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brandGreen/10">
@@ -48,20 +53,22 @@ export default function ForgotPasswordPage() {
             </div>
 
             <p className="text-sm text-brandText/70">
-              If an account exists with <strong className="text-brandText">{email}</strong>, you will receive password reset instructions.
+              {t('forgotPasswordCheckEmailMessage').split('{email}')[0]}
+              <strong className="text-brandText">{email}</strong>
+              {t('forgotPasswordCheckEmailMessage').split('{email}')[1]}
             </p>
 
             <p className="text-xs text-brandText/60">
-              Didn't receive the email? Check your spam folder or try again.
+              {t('forgotPasswordCheckSpam')}
             </p>
 
             <div className="space-y-2">
               <AuthButton onClick={() => setSuccess(false)} variant="secondary">
-                Try Another Email
+                {t('forgotPasswordTryAnother')}
               </AuthButton>
-              <Link href="/auth/login">
+              <Link href={`/${locale}/auth/login`}>
                 <AuthButton variant="ghost">
-                  Back to Login
+                  {t('backToLogin')}
                 </AuthButton>
               </Link>
             </div>
@@ -74,8 +81,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
       <AuthCard
-        title="Forgot Password?"
-        subtitle="Enter your email to receive reset instructions"
+        title={t('forgotPasswordTitle')}
+        subtitle={t('forgotPasswordSubtitle')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -85,22 +92,22 @@ export default function ForgotPasswordPage() {
           )}
 
           <AuthInput
-            label="Email"
+            label={t('emailLabel')}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="your@email.com"
+            placeholder={t('emailPlaceholder')}
             required
             autoComplete="email"
           />
 
           <AuthButton type="submit" loading={loading}>
-            Send Reset Link
+            {t('forgotPasswordSendButton')}
           </AuthButton>
 
           <div className="text-center">
-            <Link href="/auth/login" className="text-sm text-brandGreen hover:underline">
-              Back to Login
+            <Link href={`/${locale}/auth/login`} className="text-sm text-brandGreen hover:underline">
+              {t('backToLogin')}
             </Link>
           </div>
         </form>
