@@ -1,43 +1,112 @@
-interface IslandProps {
-    type: "sleep" | "meditation" | "exercise";
+"use client";
+
+import Image from "next/image";
+
+export type IslandKind = "sleep" | "meditation" | "exercise";
+
+export interface IslandProps {
+    type: IslandKind;
     label: string;
-    onClick: () => void;
-    icon: string;
+    iconSrc: string;
+    onClick?: () => void;
 }
 
-export const Island = ({ type, label, onClick, icon }: IslandProps) => {
-    const getIslandColor = () => {
-        switch (type) {
-            case "sleep":
-                return "from-[hsl(var(--secondary))] to-[hsl(var(--magic-purple))]";
-            case "meditation":
-                return "from-[hsl(var(--primary))] to-[hsl(var(--ocean-mid))]";
-            case "exercise":
-                return "from-[hsl(var(--accent))] to-[hsl(var(--island-glow))]";
-        }
-    };
+function getGradient(type: IslandKind): string {
+    switch (type) {
+        case "sleep":
+            return "from-[#d7c7ff] to-[#b79aff]";
+        case "meditation":
+            return "from-[#b9e7ff] to-[#7bc9f3]";
+        case "exercise":
+            return "from-[#ffd6a7] to-[#ffb88c]";
+        default:
+            return "from-[#d7c7ff] to-[#b79aff]";
+    }
+}
+
+export default function Island({ type, label, iconSrc, onClick }: IslandProps) {
+    const gradient = getGradient(type);
 
     return (
-        <div className="flex items-center justify-center h-full animate-float group">
-            <button
-                onClick={onClick}
-                className="relative h-40 w-40 rounded-full p-0 overflow-hidden
-                transition-all duration-500
-                hover:scale-110
-                hover:shadow-[0_0_40px_hsl(var(--island-glow)/0.6)] border-4 border-white/20 backdrop-blur-sm"
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={label}
+            className="
+                group
+                cursor-pointer
+                select-none
+                flex flex-col items-center
+                animate-float
+                relative
+            "
+        >
+            {/* Cercle ULTRA FIN */}
+            <div
+                className={`
+                    relative
+                    flex items-center justify-center
+                    rounded-full
+                    w-44 h-44 md:w-48 md:h-48      /* diamètre global */
+                    bg-gradient-to-b ${gradient}
+                    shadow-md
+                    transition-all duration-300
+                    group-hover:scale-[1.07]
+                `}
             >
+                {/* Halo interne très léger */}
                 <div
-                    className={`absolute inset-0 bg-gradient-to-br ${getIslandColor()} opacity-80 group-hover:opacity-100 transition-opacity duration-500`}
+                    className="
+                        pointer-events-none
+                        absolute inset-0 rounded-full
+                        bg-[radial-gradient(circle_at_40%_30%,rgba(255,255,255,0.35),transparent_70%)]
+                        opacity-60
+                        mix-blend-screen
+                    "
                 />
-                <div className="relative z-10 flex flex-col items-center justify-center gap-2">
-          <span className="text-5xl group-hover:scale-125 transition-transform duration-500">
-            {icon}
-          </span>
-                    <span className="text-sm font-light text-white tracking-wider">
-            {label}
-          </span>
-                </div>
-            </button>
-        </div>
+
+                {/* Icône agrandie */}
+                <Image
+                    src={iconSrc}
+                    alt={label}
+                    width={160}
+                    height={160}
+                    className="
+                        relative
+                        w-[80%] h-[80%]
+                        object-contain
+                    "
+                />
+            </div>
+
+            {/* Halo EXTERNE au hover (retour du design original) */}
+            <div
+                className="
+                    absolute top-0 left-0 right-0 bottom-0
+                    rounded-full
+                    blur-xl
+                    opacity-0
+                    transition-all duration-300
+                    group-hover:opacity-60
+                    pointer-events-none
+                    bg-[radial-gradient(circle,rgba(255,255,255,0.9)_0%,transparent_70%)]
+                "
+            />
+
+            {/* TEXTE bleu très foncé */}
+            <span
+                className="
+                    mt-4
+                    text-base md:text-lg
+                    font-semibold
+                    text-[#233045]                    /* bleu très foncé */
+                    drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]   /* ombre douce */
+                    transition-all
+                    group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.8)]
+                "
+            >
+                {label}
+            </span>
+        </button>
     );
-};
+}
