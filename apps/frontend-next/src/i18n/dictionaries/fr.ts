@@ -276,6 +276,7 @@ const fr = {
         mantraSourceLabel: "Astuce venant de Groq (IA)",
         finishButton: "Terminer la séance",
         keepThought: "Gardez cette pensée avec vous aujourd'hui",
+        fallbackTip: "Prenez une grande respiration et souriez 🌿",
     },
 
     domainSleep: {
