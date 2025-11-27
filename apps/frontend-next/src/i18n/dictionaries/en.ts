@@ -23,7 +23,7 @@ const en = {
 
         breathing: "Breathing",
         dashboard: "Dashboard",
-        objectives: "Objectives",
+        objectives: "Goals",
         becomeCoach: "Become a coach",
     },
 
