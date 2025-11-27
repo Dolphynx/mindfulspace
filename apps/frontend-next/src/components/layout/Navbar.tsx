@@ -109,7 +109,6 @@ export function ClientNavbar() {
                             label={t("contact")}
                             icon={<span>✉️</span>}
                         />
-
                         <LanguageSwitcher />
                     </nav>
                 </div>

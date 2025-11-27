@@ -34,7 +34,7 @@ const en = {
         clientSpace: "Client space",
         breathing: "Breathing",
         dashboard: "Dashboard",
-        objectives: "Objectives",
+        objectives: "Goals",
         mobileToggle: "Open menu",
     },
 
