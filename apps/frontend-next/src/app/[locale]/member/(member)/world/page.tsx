@@ -31,8 +31,20 @@ export default function SerenityLanding() {
             "
         >
             {/* WAVES */}
-            <div className="absolute bottom-0 left-0 w-full h-[40vh] pointer-events-none z-0">
-                <svg
+            <div
+                className="
+                    absolute
+                    bottom-0
+                    left-0
+                    w-full
+                    h-[80vh]        /* ocean fills half screen */
+                    pointer-events-none
+                    z-0
+                  "
+            >
+
+
+            <svg
                     viewBox="0 0 1200 700"
                     className="w-full h-full object-fill"
                     preserveAspectRatio="none"
