@@ -1,10 +1,22 @@
 {
-  "tips": [
-    "Offrez-vous une pause sans écran de 5 minutes aujourd'hui.",
-    "Buvez un grand verre d’eau en pleine conscience.",
-    "Notez une chose pour laquelle vous êtes reconnaissant·e.",
-    "Prenez quelques respirations profondes avant une réunion importante.",
-    "Étirez doucement vos épaules et votre cou pendant 30 secondes.",
-    "Marchez lentement quelques instants en observant votre environnement."
-  ]
+  "fr": {
+    "tips": [
+      "Offrez-vous une pause sans écran de 5 minutes aujourd'hui.",
+      "Buvez un grand verre d’eau en pleine conscience.",
+      "Notez une chose pour laquelle vous êtes reconnaissant·e.",
+      "Prenez quelques respirations profondes avant une réunion importante.",
+      "Étirez doucement vos épaules et votre cou pendant 30 secondes.",
+      "Marchez lentement quelques instants en observant votre environnement."
+    ]
+  },
+  "en": {
+    "tips": [
+      "Give yourself a 5-minute screen-free break today.",
+      "Drink a big glass of water mindfully.",
+      "Write down one thing you feel grateful for.",
+      "Take a few deep breaths before an important meeting.",
+      "Gently stretch your shoulders and neck for 30 seconds.",
+      "Walk slowly for a moment and notice your surroundings."
+    ]
+  }
 }
