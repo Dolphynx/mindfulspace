@@ -194,7 +194,7 @@ export default function ResourcesPage() {
                             onClick={() => setCategorySlug(undefined)}
                             className={`rounded-full px-4 py-1 text-sm border ${
                                 !categorySlug
-                                    ? "bg-emerald-100 border-emerald-300 text-emerald-900"
+                                    ? "bg-brandBorder border-brandBorder text-brandGreen"
                                     : "bg-white border-brandBorder text-brandText-soft"
                             }`}
                         >
@@ -207,7 +207,7 @@ export default function ResourcesPage() {
                                 onClick={() => setCategorySlug(cat.slug)}
                                 className={`rounded-full px-4 py-1 text-sm border flex items-center gap-1 ${
                                     categorySlug === cat.slug
-                                        ? "bg-emerald-100 border-emerald-300 text-emerald-900"
+                                        ? "bg-brandBorder border-brandBorder text-brandGreen"
                                         : "bg-white border-brandBorder text-brandText-soft"
                                 }`}
                             >
@@ -259,7 +259,7 @@ export default function ResourcesPage() {
                             >
                                 <div>
                                     <div className="mb-2 flex items-center justify-between gap-2">
-                                        <span className="text-xs font-medium uppercase text-emerald-700">
+                                        <span className="text-xs font-medium uppercase text-brandText-soft">
                                             {r.category.name}
                                         </span>
 
