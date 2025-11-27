@@ -7,6 +7,7 @@ import SleepManualForm from "@/components/sleep/SleepManualForm";
 import {useSleepSessions} from "@/hooks/useSleepSessions";
 import {useTranslations} from "@/i18n/TranslationContext";
 import {SleepHistoryCard} from "@/components/sleep/SleepHistoryCard";
+import DomainSwitcher from "@/components/DomainSwitcher";
 
 export default function SleepPage() {
     const t = useTranslations("domainSleep");
@@ -21,10 +22,14 @@ export default function SleepPage() {
     return (
         <SessionDashboardLayout
             hero={
-                <PageHero
-                    title={t("title")}
-                    subtitle={t("subtitle")}
-                />
+                <div className="flex flex-col items-center">
+                    <PageHero
+                        title={t("title")}
+                        subtitle={t("subtitle")}
+                    />
+                    {/* Sélecteur des 3 domaines sous le hero */}
+                    <DomainSwitcher current="sleep" />
+                </div>
             }
             leftTop={
                 <SessionCard>
