@@ -9,9 +9,11 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from '@/i18n/TranslationContext';
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
+  const t = useTranslations('auth');
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -87,18 +89,18 @@ export default function UserMenu() {
 
           <div className="py-1">
             <Link
-              href={`/${locale}/member/dashboard`}
+              href={`/${locale}/member/world`}
               className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
               onClick={() => setIsOpen(false)}
             >
-              Dashboard
+              {t('myWorld')}
             </Link>
             <Link
               href={`/${locale}/member/profile`}
               className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
               onClick={() => setIsOpen(false)}
             >
-              Profile Settings
+              {t('profileSettings')}
             </Link>
           </div>
 
@@ -107,7 +109,7 @@ export default function UserMenu() {
               onClick={handleLogout}
               className="w-full px-4 py-2 text-left text-sm text-red-600 transition hover:bg-red-50"
             >
-              Sign Out
+              {t('signOut')}
             </button>
           </div>
         </div>

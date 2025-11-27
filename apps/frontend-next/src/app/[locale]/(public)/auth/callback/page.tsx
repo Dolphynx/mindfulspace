@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from '@/i18n/TranslationContext';
 import AuthCard from '@/components/auth/AuthCard';
 
 export default function AuthCallbackPage() {
@@ -15,6 +16,7 @@ export default function AuthCallbackPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuth();
+  const t = useTranslations('auth');
   const success = searchParams.get('success');
   const locale = pathname.split('/')[1] || 'en';
   const hasRun = useRef(false);
@@ -32,8 +34,8 @@ export default function AuthCallbackPage() {
 
         // Small delay to ensure state is updated
         setTimeout(() => {
-          console.log('Redirecting to dashboard...');
-          router.push(`/${locale}/member/dashboard`);
+          console.log('Redirecting to world...');
+          router.push(`/${locale}/member/world`);
         }, 500);
       } else {
         // OAuth failed
@@ -50,12 +52,12 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-      <AuthCard title={success === 'true' ? 'Signing You In...' : 'Authentication Failed'}>
+      <AuthCard title={success === 'true' ? t('signingIn') : t('authenticationFailed')}>
         <div className="flex justify-center py-8">
           {success === 'true' ? (
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-brandGreen/20 border-t-brandGreen" />
           ) : (
-            <p className="text-sm text-red-600">Redirecting to login...</p>
+            <p className="text-sm text-red-600">{t('redirectingToLogin')}</p>
           )}
         </div>
       </AuthCard>

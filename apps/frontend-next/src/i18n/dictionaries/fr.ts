@@ -561,10 +561,10 @@ const fr = {
         subtitle: "Enregistre rapidement tes indicateurs de bien-être du jour.",
 
         loggingFor: "Encodage pour",
-        todaySuffix: "aujourd’hui",
+        todaySuffix: "aujourd'hui",
         yesterdaySuffix: "hier",
 
-        today: "Aujourd’hui",
+        today: "Aujourd'hui",
         yesterday: "Hier",
         chooseAnotherDate: "Choisir une autre date",
 
@@ -575,7 +575,72 @@ const fr = {
         submit: "Enregistrer",
 
         success: "Séance enregistrée avec succès.",
-        error: "Erreur lors de l’enregistrement de la séance.",
+        error: "Erreur lors de l'enregistrement de la séance.",
+    },
+
+    /*
+     * Authentification
+     */
+    auth: {
+        // Page de connexion
+        loginTitle: "Bon retour",
+        loginSubtitle: "Connectez-vous à votre compte MindfulSpace",
+        emailLabel: "Email",
+        emailPlaceholder: "votre@email.com",
+        passwordLabel: "Mot de passe",
+        passwordPlaceholder: "••••••••",
+        forgotPassword: "Mot de passe oublié ?",
+        signInButton: "Se connecter",
+        orContinueWith: "ou continuer avec",
+        noAccount: "Pas encore de compte ?",
+        signUpLink: "S'inscrire",
+        invalidCredentials: "Email ou mot de passe invalide",
+
+        // Page d'inscription
+        registerTitle: "Créer un compte",
+        registerSubtitle: "Commencez votre voyage vers la pleine conscience",
+        fullNameLabel: "Nom complet",
+        fullNamePlaceholder: "Jean Dupont",
+        confirmPasswordLabel: "Confirmer le mot de passe",
+        passwordRequirements: "Le mot de passe doit contenir au moins 8 caractères avec une majuscule, une minuscule, un chiffre et un caractère spécial.",
+        createAccountButton: "Créer un compte",
+        alreadyHaveAccount: "Vous avez déjà un compte ?",
+        signInLink: "Se connecter",
+
+        // Succès de l'inscription
+        checkEmailTitle: "Vérifiez votre email",
+        checkEmailSubtitle: "Nous vous avons envoyé un lien de vérification",
+        checkEmailMessage: "Veuillez consulter votre email {email} et cliquer sur le lien de vérification pour activer votre compte.",
+        checkEmailNote: "Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam ou contactez le support.",
+        backToLogin: "Retour à la connexion",
+
+        // Erreurs de validation
+        nameMinLength: "Le nom doit contenir au moins 2 caractères",
+        passwordMinLength: "Le mot de passe doit contenir au moins 8 caractères",
+        passwordUppercase: "Le mot de passe doit contenir une majuscule",
+        passwordLowercase: "Le mot de passe doit contenir une minuscule",
+        passwordNumber: "Le mot de passe doit contenir un chiffre",
+        passwordSpecial: "Le mot de passe doit contenir un caractère spécial (@$!%*?&)",
+        passwordsNoMatch: "Les mots de passe ne correspondent pas",
+        registrationFailed: "L'inscription a échoué",
+
+        // Callback OAuth
+        signingIn: "Connexion en cours...",
+        authenticationFailed: "Échec de l'authentification",
+        redirectingToLogin: "Redirection vers la connexion...",
+
+        // Boutons OAuth
+        continueWithGoogle: "Continuer avec Google",
+        continueWithGithub: "Continuer avec GitHub",
+
+        // Boutons d'authentification
+        signIn: "Se connecter",
+        signUp: "S'inscrire",
+
+        // Menu utilisateur
+        myWorld: "Mon monde",
+        profileSettings: "Paramètres du profil",
+        signOut: "Se déconnecter",
     },
 };
 

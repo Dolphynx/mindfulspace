@@ -68,9 +68,9 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             labelKey: "breathing",
         },
         {
-            key: "dashboard",
-            href: (loc) => `/${loc}/member/dashboard`,
-            labelKey: "dashboard",
+            key: "world",
+            href: (loc) => `/${loc}/member/world`,
+            labelKey: "world",
         },
         {
             key: "objectives",
@@ -114,10 +114,10 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         );
     };
 
-    // Lien du logo : page d’accueil publique ou dashboard client
+    // Lien du logo : page d'accueil publique ou world client
     const homeHref =
         mode === "client"
-            ? `/${locale}/member/dashboard`
+            ? `/${locale}/member/world`
             : `/${locale}`;
 
     return (

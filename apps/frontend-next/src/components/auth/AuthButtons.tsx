@@ -8,12 +8,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from '@/i18n/TranslationContext';
 import UserMenu from './UserMenu';
 
 export default function AuthButtons() {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'en';
+  const t = useTranslations('auth');
 
   if (loading) {
     return (
@@ -31,13 +33,13 @@ export default function AuthButtons() {
         href={`/${locale}/auth/login`}
         className="rounded-lg border border-brandBorder bg-white px-4 py-2 text-sm font-medium text-brandText transition hover:bg-brandSurface"
       >
-        Sign In
+        {t('signIn')}
       </Link>
       <Link
         href={`/${locale}/auth/register`}
         className="rounded-lg border border-brandGreen bg-brandGreen px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-brandGreen/90"
       >
-        Sign Up
+        {t('signUp')}
       </Link>
     </div>
   );

@@ -226,7 +226,7 @@ export class AuthController {
 
     // Redirect to frontend with success
     const frontendUrl = this.authService['configService'].get('FRONTEND_URL') || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?success=true`);
+    res.redirect(`${frontendUrl}/auth/callback?success=true&redirect=world`);
   }
 
   /**
@@ -286,7 +286,7 @@ export class AuthController {
 
     // Redirect to frontend with success
     const frontendUrl = this.authService['configService'].get('FRONTEND_URL') || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?success=true`);
+    res.redirect(`${frontendUrl}/auth/callback?success=true&redirect=world`);
   }
 
   /**

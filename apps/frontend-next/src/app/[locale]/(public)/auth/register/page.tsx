@@ -6,9 +6,10 @@
  */
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from '@/i18n/TranslationContext';
 import AuthCard from '@/components/auth/AuthCard';
 import AuthInput from '@/components/auth/AuthInput';
 import AuthButton from '@/components/auth/AuthButton';
@@ -17,7 +18,10 @@ import OAuthButtons from '@/components/auth/OAuthButtons';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'en';
   const { register } = useAuth();
+  const t = useTranslations('auth');
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
@@ -30,19 +34,19 @@ export default function RegisterPage() {
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters';
+      return t('passwordMinLength');
     }
     if (!/[A-Z]/.test(password)) {
-      return 'Password must contain an uppercase letter';
+      return t('passwordUppercase');
     }
     if (!/[a-z]/.test(password)) {
-      return 'Password must contain a lowercase letter';
+      return t('passwordLowercase');
     }
     if (!/[0-9]/.test(password)) {
-      return 'Password must contain a number';
+      return t('passwordNumber');
     }
     if (!/[@$!%*?&]/.test(password)) {
-      return 'Password must contain a special character (@$!%*?&)';
+      return t('passwordSpecial');
     }
     return null;
   };
@@ -56,7 +60,7 @@ export default function RegisterPage() {
     const newErrors: Record<string, string> = {};
 
     if (formData.displayName.length < 2) {
-      newErrors.displayName = 'Name must be at least 2 characters';
+      newErrors.displayName = t('nameMinLength');
     }
 
     const passwordError = validatePassword(formData.password);
@@ -65,7 +69,7 @@ export default function RegisterPage() {
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('passwordsNoMatch');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -82,7 +86,7 @@ export default function RegisterPage() {
       });
       setSuccess(true);
     } catch (err: any) {
-      setErrors({ general: err.message || 'Registration failed' });
+      setErrors({ general: err.message || t('registrationFailed') });
     } finally {
       setLoading(false);
     }
@@ -92,8 +96,8 @@ export default function RegisterPage() {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
         <AuthCard
-          title="Check Your Email"
-          subtitle="We've sent you a verification link"
+          title={t('checkEmailTitle')}
+          subtitle={t('checkEmailSubtitle')}
         >
           <div className="space-y-4 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brandGreen/10">
@@ -103,15 +107,15 @@ export default function RegisterPage() {
             </div>
 
             <p className="text-sm text-brandText/70">
-              Please check your email <strong className="text-brandText">{formData.email}</strong> and click the verification link to activate your account.
+              {t('checkEmailMessage').replace('{email}', formData.email)}
             </p>
 
             <p className="text-xs text-brandText/60">
-              Didn't receive the email? Check your spam folder or contact support.
+              {t('checkEmailNote')}
             </p>
 
-            <AuthButton onClick={() => router.push('/auth/login')} variant="secondary">
-              Back to Login
+            <AuthButton onClick={() => router.push(`/${locale}/auth/login`)} variant="secondary">
+              {t('backToLogin')}
             </AuthButton>
           </div>
         </AuthCard>
@@ -122,8 +126,8 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
       <AuthCard
-        title="Create Account"
-        subtitle="Start your mindfulness journey today"
+        title={t('registerTitle')}
+        subtitle={t('registerSubtitle')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {errors.general && (
@@ -133,66 +137,66 @@ export default function RegisterPage() {
           )}
 
           <AuthInput
-            label="Full Name"
+            label={t('fullNameLabel')}
             type="text"
             value={formData.displayName}
             onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-            placeholder="John Doe"
+            placeholder={t('fullNamePlaceholder')}
             error={errors.displayName}
             required
             autoComplete="name"
           />
 
           <AuthInput
-            label="Email"
+            label={t('emailLabel')}
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="your@email.com"
+            placeholder={t('emailPlaceholder')}
             error={errors.email}
             required
             autoComplete="email"
           />
 
           <AuthInput
-            label="Password"
+            label={t('passwordLabel')}
             type="password"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             error={errors.password}
             required
             autoComplete="new-password"
           />
 
           <AuthInput
-            label="Confirm Password"
+            label={t('confirmPasswordLabel')}
             type="password"
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            placeholder="••••••••"
+            placeholder={t('passwordPlaceholder')}
             error={errors.confirmPassword}
             required
             autoComplete="new-password"
           />
 
           <p className="text-xs text-brandText/60">
-            Password must be at least 8 characters with uppercase, lowercase, number, and special character.
+            {t('passwordRequirements')}
           </p>
 
           <AuthButton type="submit" loading={loading}>
-            Create Account
+            {t('createAccountButton')}
           </AuthButton>
         </form>
 
-        <AuthDivider text="or continue with" />
+        <AuthDivider text={t('orContinueWith')} />
 
         <OAuthButtons />
 
         <p className="mt-6 text-center text-sm text-brandText/70">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="font-medium text-brandGreen hover:underline">
-            Sign in
+          {t('alreadyHaveAccount')}{' '}
+          <Link href={`/${locale}/auth/login`} className="font-medium text-brandGreen hover:underline">
+            {t('signInLink')}
           </Link>
         </p>
       </AuthCard>

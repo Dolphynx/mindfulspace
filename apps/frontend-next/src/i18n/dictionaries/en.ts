@@ -578,6 +578,71 @@ const en = {
         error: "Error while logging the session.",
     },
 
+    /*
+     * Authentication
+     */
+    auth: {
+        // Login page
+        loginTitle: "Welcome Back",
+        loginSubtitle: "Sign in to your MindfulSpace account",
+        emailLabel: "Email",
+        emailPlaceholder: "your@email.com",
+        passwordLabel: "Password",
+        passwordPlaceholder: "••••••••",
+        forgotPassword: "Forgot password?",
+        signInButton: "Sign In",
+        orContinueWith: "or continue with",
+        noAccount: "Don't have an account?",
+        signUpLink: "Sign up",
+        invalidCredentials: "Invalid email or password",
+
+        // Register page
+        registerTitle: "Create Account",
+        registerSubtitle: "Start your mindfulness journey today",
+        fullNameLabel: "Full Name",
+        fullNamePlaceholder: "John Doe",
+        confirmPasswordLabel: "Confirm Password",
+        passwordRequirements: "Password must be at least 8 characters with uppercase, lowercase, number, and special character.",
+        createAccountButton: "Create Account",
+        alreadyHaveAccount: "Already have an account?",
+        signInLink: "Sign in",
+
+        // Register success
+        checkEmailTitle: "Check Your Email",
+        checkEmailSubtitle: "We've sent you a verification link",
+        checkEmailMessage: "Please check your email {email} and click the verification link to activate your account.",
+        checkEmailNote: "Didn't receive the email? Check your spam folder or contact support.",
+        backToLogin: "Back to Login",
+
+        // Validation errors
+        nameMinLength: "Name must be at least 2 characters",
+        passwordMinLength: "Password must be at least 8 characters",
+        passwordUppercase: "Password must contain an uppercase letter",
+        passwordLowercase: "Password must contain a lowercase letter",
+        passwordNumber: "Password must contain a number",
+        passwordSpecial: "Password must contain a special character (@$!%*?&)",
+        passwordsNoMatch: "Passwords do not match",
+        registrationFailed: "Registration failed",
+
+        // OAuth callback
+        signingIn: "Signing You In...",
+        authenticationFailed: "Authentication Failed",
+        redirectingToLogin: "Redirecting to login...",
+
+        // OAuth buttons
+        continueWithGoogle: "Continue with Google",
+        continueWithGithub: "Continue with GitHub",
+
+        // Auth buttons
+        signIn: "Sign In",
+        signUp: "Sign Up",
+
+        // User menu
+        myWorld: "My World",
+        profileSettings: "Profile Settings",
+        signOut: "Sign Out",
+    },
+
 };
 
 export default en;
