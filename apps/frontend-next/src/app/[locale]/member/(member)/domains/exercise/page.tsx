@@ -9,6 +9,7 @@ import { SessionDashboardLayout } from "@/components/session/SessionDashboardLay
 import { SessionCard } from "@/components/session/SessionCard";
 import {WorkoutStartSessionCard} from "@/components/exercise/WorkoutStartSessionCard";
 import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
+import DomainSwitcher from "@/components/DomainSwitcher";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -40,10 +41,14 @@ export default function ExercicePage() {
         <main className="text-brandText flex flex-col">
             <SessionDashboardLayout
                 hero={
-                    <PageHero
-                        title={t("title")}
-                        subtitle={t("subtitle")}
-                    />
+                    <div className="flex flex-col items-center">
+                        <PageHero
+                            title={t("title")}
+                            subtitle={t("subtitle")}
+                        />
+                        {/* Sélecteur des 3 domaines sous le hero */}
+                        <DomainSwitcher current="exercise" />
+                    </div>
                 }
                 globalErrorMessage={globalErrorMessage}
                 leftTop={
