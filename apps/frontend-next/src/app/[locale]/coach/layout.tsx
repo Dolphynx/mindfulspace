@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { AppShell, CoachNavbar } from "@/components/layout";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /**
  * Layout du module coach.
@@ -21,11 +20,6 @@ export default function CoachLayout({ children }: { children: ReactNode }) {
     return (
         <AppShell navbar={<CoachNavbar />}>
             <>
-                <div className="w-full border-b border-brandBorder bg-brandSurface/60 backdrop-blur-sm">
-                    <div className="mx-auto max-w-7xl px-4 py-2 flex justify-end">
-                        <LanguageSwitcher />
-                    </div>
-                </div>
                 {children}
             </>
         </AppShell>

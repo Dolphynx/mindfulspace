@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import {AppShell, MainNavbar} from "@/components/layout";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 /**
  * Layout du module member (espace authentifié).
@@ -26,13 +25,6 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 export default function ClientLayout({ children }: { children: ReactNode }) {
     return <AppShell navbar={<MainNavbar mode="client" />}>
         <>
-            {/* Barre fine en haut du contenu public avec le sélecteur de langue */}
-            <div className="w-full border-b border-brandBorder bg-brandSurface/60 backdrop-blur-sm">
-                <div className="mx-auto max-w-7xl px-4 py-2 flex justify-end">
-                    <LanguageSwitcher />
-                </div>
-            </div>
-
             {children}
         </>
     </AppShell>;
