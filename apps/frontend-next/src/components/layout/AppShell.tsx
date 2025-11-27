@@ -68,8 +68,9 @@ export default function AppShell({ navbar, children }: AppShellProps) {
         <>
             <GlobalNotice />
 
-            <div className="min-h-screen flex flex-col bg-brandBg text-brandText border-t border-brandBorder">
-                {/* Navbar injectée par le layout, masquée en séance */}
+            <div className="flex flex-col bg-brandBg text-brandText border-t border-brandBorder">
+
+            {/* Navbar injectée par le layout, masquée en séance */}
                 {!isSession && navbar}
 
                 <main className="flex-1">{children}</main>

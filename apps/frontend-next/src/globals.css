@@ -37,6 +37,8 @@ html, body {
     font-family: var(--font-sans);
 }
 
+
+
 /* pour s’assurer que Next met bien la couleur de fond avant le render */
 body {
     @apply antialiased;

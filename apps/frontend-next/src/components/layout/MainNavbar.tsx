@@ -19,6 +19,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 type NavbarMode = "public" | "client";
 
@@ -67,11 +68,6 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             labelKey: "breathing",
         },
         {
-            key: "dashboard",
-            href: (loc) => `/${loc}/member/dashboard`,
-            labelKey: "dashboard",
-        },
-        {
             key: "objectives",
             href: (loc) => `/${loc}/member/objectives`,
             labelKey: "objectives",
@@ -113,10 +109,10 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         );
     };
 
-    // Lien du logo : page d’accueil publique ou dashboard client
+    // Lien du logo : page d’accueil publique ou world client
     const homeHref =
         mode === "client"
-            ? `/${locale}/member/dashboard`
+            ? `/${locale}/member/world`
             : `/${locale}`;
 
     return (
@@ -161,6 +157,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                         {items.map((item) => (
                             <NavButton key={item.key} item={item} />
                         ))}
+                        <LanguageSwitcher />
                     </nav>
                 </div>
             </div>
