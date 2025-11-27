@@ -7,13 +7,13 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                brandGreen: "#3b7a48",
-                brandBg: "#f7fcf8",
-                brandBorder: "#d9eadf",
-                brandSurface: "#eefaf2",
+                brandGreen: "#2f6fa3",
+                brandBg: "#dbe8f1",
+                brandBorder: "#b6cfdd",
+                brandSurface: "#e8f1f7",
                 brandText: {
-                    DEFAULT: "#2f3a2f",
-                    soft: "#4a5a4a",
+                    DEFAULT: "#203040",
+                    soft: "#4a5c6a",
                 },
             },
             boxShadow: {
