@@ -2,7 +2,7 @@
  * Page Astuce + Mantra IA
  * ------------------------
  * Cette page affiche :
- *  - une astuce / conseil bien-être récupéré depuis `getTip()` (lib locale)
+ *  - une astuce / conseil bien-être récupéré depuis `getTip(locale)` (API Nest)
  *  - un mini-mantra généré par le module IA (endpoint Nest : POST /ai/mantra)
  *
  * Composant serveur :
@@ -24,7 +24,7 @@ export default async function AstucePage({
                                          }: {
     params: Promise<{ locale: string }>;
 }) {
-    // 0️⃣ Résolution de la locale depuis [locale]
+    // Résolution de la locale depuis [locale]
     const { locale: rawLocale } = await params;
     const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
 
@@ -33,28 +33,21 @@ export default async function AstucePage({
     const t = dict.tipSession;
 
     /**
-     * 1️⃣ Astuce locale (JSON / lib)
+     * Astuce locale (API Nest via lib)
      *
-     * `getTip()` peut :
-     *  - lire une base de données
-     *  - choisir une entrée dans une liste statique
-     *  - générer un texte aléatoire
-     *
-     * Le résultat est une simple chaîne de caractères.
+     * On passe la locale telle quelle au backend.
+     * Si l’API ne renvoie rien → fallback i18n (t.fallbackTip).
      */
-    const tip = await getTip();
+    const rawTip = await getTip(locale);
+    const tip = rawTip ?? t.fallbackTip;
 
     /**
-     * 2️⃣ Mantra IA (API Nest)
+     * Mantra IA (API Nest)
      *
-     * On appelle le contrôleur IA :
+     * On passe aussi la locale telle quelle au backend.
      *   POST /ai/mantra
-     *   body: { theme?: string }
+     *   body: { locale: string, theme?: string }
      *   response: { mantra: string }
-     *
-     * L’appel se fait côté serveur, via NEXT_PUBLIC_API_URL.
-     * En cas d’erreur, on loggue juste côté serveur et on n’affiche
-     * pas le bloc mantra (pour ne pas casser la page).
      */
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
     let mantra: string | null = null;
@@ -64,8 +57,10 @@ export default async function AstucePage({
             const res = await fetch(`${apiBaseUrl}/ai/mantra`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Pas de thème spécifique ici, on laisse l’IA proposer un mantra générique
-                body: JSON.stringify({}),
+                body: JSON.stringify({
+                    locale,
+                    // Pas de thème spécifique : mantra générique de bien-être
+                }),
                 cache: "no-store",
             });
 
@@ -89,44 +84,30 @@ export default async function AstucePage({
          * - disposition verticale avec espacement
          */
         <main className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center gap-8 text-center">
-
             <h1 className="text-3xl text-brandText">{t.title}</h1>
 
             {/**
              * Carte affichant l’astuce :
-             * - style “card” cohérent avec le reste du design
-             * - bordure, ombre et arrondis
-             * - texte centré et lisible
              */}
             <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-10 max-w-2xl text-2xl text-brandText-soft">
                 « {tip} »
                 <br />
-                <small className="top-0 text-xs">
-                    {t.tipSourceLabel}
-                </small>
+                <small className="top-0 text-xs">{t.tipSourceLabel}</small>
             </div>
 
             {/**
              * Bloc optionnel : mantra généré par l’IA
-             *
-             * Affiché uniquement si l’appel à /ai/mantra a abouti.
-             * Mise en forme légèrement différente (italique, guillemets) pour
-             * distinguer visuellement l’astuce “fixe” du mantra IA.
              */}
             {mantra && (
                 <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-8 max-w-2xl text-xl italic text-brandText-soft">
                     « {mantra} »
                     <br />
-                    <small className="top-0 text-xs">
-                        {t.mantraSourceLabel}
-                    </small>
+                    <small className="top-0 text-xs">{t.mantraSourceLabel}</small>
                 </div>
             )}
 
             {/**
              * Bouton → page de récap
-             * Permet de terminer la séance après avoir pris connaissance
-             * de l’astuce et éventuellement du mantra IA.
              */}
             <Link
                 href={`/${locale}/member/seance/recap`}
@@ -135,9 +116,7 @@ export default async function AstucePage({
                 {t.finishButton}
             </Link>
 
-            <p className="text-brandText-soft">
-                {t.keepThought}
-            </p>
+            <p className="text-brandText-soft">{t.keepThought}</p>
         </main>
     );
 }

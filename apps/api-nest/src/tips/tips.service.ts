@@ -5,65 +5,96 @@
  *
  * Rôle :
  * - Charger une liste d’astuces depuis un fichier JSON statique.
- * - Fournir une méthode `getRandomTip()` qui renvoie une astuce aléatoire.
+ * - Fournir une méthode `getRandomTip(locale?)` qui renvoie une astuce aléatoire
+ *   en fonction de la locale (fr/en/…).
  *
  * Remarque :
- * - Dans cette version, les données proviennent d’un import statique `tips.json`.
- *   Il n’y a pas encore de persistance dans une base de données.
+ * - Les locales supportées sont déduites dynamiquement depuis tips.json.
  */
 
 import { Injectable } from '@nestjs/common';
 import tipsData from '../data/tips.json'; // import statique
 
-/**
- * Structure attendue du fichier tips.json.
- * Exemple :
- * {
- *   "tips": [
- *     "Pensez à respirer profondément trois fois de suite.",
- *     "Prenez une pause de 2 minutes loin des écrans."
- *   ]
- * }
- */
 type TipsFile = {
   tips: string[];
+};
+
+type TipsFileByLocale = {
+  [locale: string]: TipsFile | undefined;
 };
 
 @Injectable()
 export class TipsService {
   /**
-   * Liste des astuces chargées depuis le fichier JSON.
+   * Map locale → liste des astuces.
+   * Exemple :
+   * {
+   *   fr: ["Astuce FR 1", "Astuce FR 2"],
+   *   en: ["Tip EN 1", "Tip EN 2"],
+   *   nl: ["Tip NL 1", ...]
+   * }
    */
-  private tips: string[];
+  private readonly tipsByLocale: Record<string, string[]> = {};
 
   /**
-   * Constructeur :
-   * - Initialise la liste `tips` à partir du contenu de tips.json.
-   * - Applique un fallback (tableau vide) si la structure est invalide.
-   * - Log un warning si aucun tip valide n’est trouvé.
+   * Locale par défaut utilisée comme fallback si la locale demandée
+   * n’existe pas dans tips.json.
    */
+  private readonly defaultLocale = 'fr';
+
   constructor() {
-    const data = (tipsData as TipsFile) ?? { tips: [] };
-    this.tips = Array.isArray(data.tips) ? data.tips : [];
-    if (!this.tips.length) {
-      console.warn("Aucun tip valide trouvé dans tips.json (import statique)");
+    const data = (tipsData as TipsFileByLocale) ?? {};
+
+    for (const [locale, section] of Object.entries(data)) {
+      if (section && Array.isArray(section.tips)) {
+        this.tipsByLocale[locale] = section.tips;
+      }
+    }
+
+    if (!Object.keys(this.tipsByLocale).length) {
+      console.warn(
+        'Aucun tip valide trouvé dans tips.json (import statique, toutes locales confondues)',
+      );
     }
   }
 
   /**
-   * Renvoie une astuce aléatoire.
-   *
-   * - Si la liste est vide, retourne un message par défaut.
-   * - Sinon, choisit un index aléatoire dans le tableau `tips`.
-   *
-   * @returns {string} Une phrase courte de type "conseil bien-être".
+   * Normalisation de la locale :
+   * - on ne garde que la partie avant le "-": "fr-BE" -> "fr"
+   * - tout en lowercase
    */
-  getRandomTip(): string {
-    if (!this.tips.length) {
-      return "Prenez une grande respiration et souriez 🌿";
-    }
-    const index = Math.floor(Math.random() * this.tips.length);
+  private normalizeLocale(locale?: string): string | undefined {
+    if (!locale) return undefined;
+    return locale.split('-')[0].toLowerCase();
+  }
 
-    return this.tips[index];
+  /**
+   * Renvoie une astuce aléatoire pour une locale donnée.
+   *
+   * @param locale Locale demandée (ex: "fr", "en", "fr-BE").
+   */
+  getRandomTip(locale?: string): string {
+    const normalized = this.normalizeLocale(locale);
+
+    let targetLocale =
+      (normalized && this.tipsByLocale[normalized] ? normalized : undefined) ??
+      (this.tipsByLocale[this.defaultLocale] ? this.defaultLocale : undefined);
+
+    if (!targetLocale) {
+      // Fallback ultime si même la defaultLocale n’existe pas
+      const firstKey = Object.keys(this.tipsByLocale)[0];
+      if (!firstKey) {
+        return 'Prenez une grande respiration et souriez 🌿';
+      }
+      targetLocale = firstKey;
+    }
+
+    const list = this.tipsByLocale[targetLocale];
+    if (!list || !list.length) {
+      return 'Prenez une grande respiration et souriez 🌿';
+    }
+
+    const index = Math.floor(Math.random() * list.length);
+    return list[index];
   }
 }
