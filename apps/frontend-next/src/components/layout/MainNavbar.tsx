@@ -19,6 +19,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
 
 type NavbarMode = "public" | "client";
@@ -113,8 +114,8 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             </Link>
         );
     };
-
-    // Lien du logo : page d'accueil publique ou world client
+    
+    // Lien du logo : page d’accueil publique ou world client
     const homeHref =
         mode === "client"
             ? `/${locale}/member/world`
@@ -157,12 +158,13 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                             className={[
                                 "mt-1 flex flex-col gap-2",
                                 isOpen ? "flex" : "hidden",
-                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4",
+                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
                             ].join(" ")}
                         >
                             {items.map((item) => (
                                 <NavButton key={item.key} item={item} />
                             ))}
+                            <LanguageSwitcher />
                         </nav>
 
                         <div className="hidden lg:block">

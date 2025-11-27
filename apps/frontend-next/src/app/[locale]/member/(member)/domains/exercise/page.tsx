@@ -1,69 +1,79 @@
-import { getDictionary } from "@/i18n/get-dictionary";
-import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
+"use client";
+
 import PageHero from "@/components/PageHero";
+import { useTranslations } from "@/i18n/TranslationContext";
+import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
+import { WorkoutHistoryCard } from "@/components/exercise/WorkoutHistoryCard";
+import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
-import ExerciseManualForm from "@/components/exercice/ExerciseManualForm";
+import {WorkoutStartSessionCard} from "@/components/exercise/WorkoutStartSessionCard";
+import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
 
-export default async function ExercicePage({
-                                               params,
-                                           }: {
-    params: Promise<{ locale: string }>;
-}) {
-    const { locale: rawLocale } = await params;
-    const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+/**
+ * Maps error types from the hook to translated messages.
+ */
+function getErrorMessage(
+    t: ReturnType<typeof useTranslations>,
+    errorType: "load" | "save" | "types" | null,
+): string | null {
+    if (errorType === "load") return t("errors_loadHistory");
+    if (errorType === "save") return t("errors_saveSession");
+    if (errorType === "types") return t("errors_loadTypes");
+    return null;
+}
 
-    const dict = await getDictionary(locale);
-    const t = dict.domainExercice;
+export default function ExercicePage() {
+    const t = useTranslations("domainExercice");
+
+    const {
+        sessions,
+        types,
+        loading,
+        errorType,
+        createSession,
+    } = useWorkoutSessions();
+
+    const globalErrorMessage = getErrorMessage(t, errorType);
 
     return (
-        <SessionDashboardLayout
-            hero={
-                <PageHero
-                    title={t.title}
-                    subtitle={t.subtitle}
-                />
-            }
-            leftTop={
-                <SessionCard variant="green">
-                    <div className="flex flex-col gap-4">
-                        <h2 className="text-lg font-semibold text-slate-800">
-                            {t.manualForm_title}
-                        </h2>
-                        <p className="text-sm text-slate-700">
-                            {t.manualForm_description}
-                        </p>
+        <main className="text-brandText flex flex-col">
+            <SessionDashboardLayout
+                hero={
+                    <PageHero
+                        title={t("title")}
+                        subtitle={t("subtitle")}
+                    />
+                }
+                globalErrorMessage={globalErrorMessage}
+                leftTop={
+                    <SessionCard>
+                        <ExerciseManualForm
+                            types={types}
+                            onCreateSession={createSession}
+                        />
+                    </SessionCard>
+                }
 
-                        <ExerciseManualForm />
-                    </div>
-                </SessionCard>
-            }
-            leftBottom={
-                <SessionCard variant="green">
-                    <div className="flex flex-col gap-4">
-                        <h2 className="text-lg font-semibold text-slate-800">
-                            {t.start_title}
-                        </h2>
-                        <p className="text-sm text-slate-700">
-                            {t.start_description}
-                        </p>
+                leftBottom={
+                    <SessionCard>
+                        <WorkoutStartSection
+                            types={types}
+                            onCreateSession={createSession}
+                        />
+                    </SessionCard>
+                }
 
-                        <div className="rounded-xl bg-white/80 p-4 shadow-sm border border-dashed text-brandText-soft text-center">
-                            {t.start_placeholder}
-                        </div>
-                    </div>
-                </SessionCard>
-            }
-            rightColumn={
-                <SessionCard variant="green">
-                    <h2 className="text-lg font-semibold text-slate-800 mb-3">
-                        {t.history_title}
-                    </h2>
-                    <div className="rounded-xl bg-white/80 p-4 shadow-sm border border-dashed text-brandText-soft text-center">
-                        {t.history_placeholder}
-                    </div>
-                </SessionCard>
-            }
-        />
+
+                rightColumn={
+                    <WorkoutHistoryCard
+                        sessions={sessions}
+                        loading={loading}
+                        errorType={errorType}
+                        types={types}
+                    />
+                }
+            />
+        </main>
     );
 }

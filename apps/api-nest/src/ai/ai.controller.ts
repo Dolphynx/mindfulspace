@@ -1,16 +1,7 @@
 /**
  * AiController
  * ------------
- * Contrôleur responsable des endpoints liés aux fonctionnalités IA
- * (mantra, encouragement, objectifs).
- *
- * Il délègue toute la logique au AiService, qui lui-même s’occupe d'appeler
- * le moteur IA (LLM) configuré dans l’application.
- *
- * Swagger est utilisé pour :
- * - documenter les routes
- * - typer les DTO d’entrée et de sortie
- * - générer automatiquement l’interface dans /api/docs
+ * Contrôleur responsable des endpoints liés aux fonctionnalités IA.
  */
 
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
@@ -30,39 +21,20 @@ import {
   ObjectivesResponseDto,
 } from './dto/ai-responses.dto';
 
-/**
- * Le tag Swagger `"ai"` regroupe toutes les routes IA dans l’UI Swagger.
- */
 @ApiTags('ai')
-@Controller('ai') // Toutes les routes commencent par /ai
+@Controller('ai')
 export class AiController {
-  /**
-   * Injection du service IA.
-   * - Contient les appels aux modèles IA utilisés par l'application.
-   */
   constructor(private readonly aiService: AiService) {}
 
   /**
    * POST /ai/mantra
-   * ----------------
-   * Génère un mini-mantra court et apaisant, basé sur un thème optionnel.
-   *
-   * Ex d’appel :
-   *   {
-   *     "theme": "stress"
-   *   }
-   *
-   * Réponse :
-   *   {
-   *     "mantra": "Tu es en sécurité, tu avances pas à pas."
-   *   }
    */
   @Post('mantra')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Générer un mini-mantra de méditation',
     description:
-      'Retourne un mantra court, doux et apaisant, basé sur un thème optionnel (ex: "stress", "sommeil").',
+      'Retourne un mantra court, doux et apaisant, basé sur un thème optionnel (ex: "stress", "sommeil") et la locale.',
   })
   @ApiBody({ type: GenerateAiContentDto, required: false })
   @ApiOkResponse({ type: MantraResponseDto })
@@ -72,31 +44,19 @@ export class AiController {
   async generateMantra(
     @Body() body: GenerateAiContentDto,
   ): Promise<MantraResponseDto> {
-    const mantra = await this.aiService.generateMantra(body.theme);
+    const mantra = await this.aiService.generateMantra(body.theme, body.locale);
     return { mantra };
   }
 
   /**
    * POST /ai/encouragement
-   * -----------------------
-   * Génère un message court, positif et non culpabilisant.
-   *
-   * Ex :
-   *   {
-   *     "theme": "motivation"
-   *   }
-   *
-   * Réponse :
-   *   {
-   *     "encouragement": "Tu avances même quand tu en doutes. Continue."
-   *   }
    */
   @Post('encouragement')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Générer un message d'encouragement",
     description:
-      'Retourne un message court d\'encouragement, positif et non culpabilisant, basé sur un thème optionnel.',
+      'Retourne un message court d\'encouragement, positif et non culpabilisant, basé sur un thème optionnel et la locale.',
   })
   @ApiBody({ type: GenerateAiContentDto, required: false })
   @ApiOkResponse({ type: EncouragementResponseDto })
@@ -106,38 +66,22 @@ export class AiController {
   async generateEncouragement(
     @Body() body: GenerateAiContentDto,
   ): Promise<EncouragementResponseDto> {
-    const encouragement = await this.aiService.generateEncouragement(body.theme);
+    const encouragement = await this.aiService.generateEncouragement(
+      body.theme,
+      body.locale,
+    );
     return { encouragement };
   }
 
   /**
    * POST /ai/objectives
-   * --------------------
-   * Génère trois objectifs personnalisés :
-   * - facile
-   * - normal
-   * - ambitieux
-   *
-   * Contrairement aux autres endpoints, le thème est obligatoire.
-   *
-   * Ex attendu :
-   *   {
-   *     "theme": "gestion du stress"
-   *   }
-   *
-   * Réponse :
-   *   {
-   *     "easy": "...",
-   *     "normal": "...",
-   *     "ambitious": "..."
-   *   }
    */
   @Post('objectives')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Générer trois objectifs personnalisés',
     description:
-      'Retourne trois objectifs basés sur un thème obligatoire (ex: "gestion du stress"), sous format JSON.',
+      'Retourne trois objectifs basés sur un thème obligatoire (ex: "gestion du stress") et une locale, sous format JSON.',
   })
   @ApiBody({
     type: GenerateAiContentDto,
@@ -154,6 +98,6 @@ export class AiController {
   async generateObjectives(
     @Body() body: GenerateAiContentDto,
   ): Promise<ObjectivesResponseDto> {
-    return this.aiService.generateObjectives(body.theme ?? '');
+    return this.aiService.generateObjectives(body.theme ?? '', body.locale);
   }
 }

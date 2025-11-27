@@ -9,6 +9,7 @@ import {
     type MeditationSession,
     type MeditationTypeItem,
 } from "@/lib/api/meditation";
+import {VisualBreathingConfig} from "@/components";
 
 export type MeditationErrorType = "load" | "save" | "types" | null;
 
@@ -159,3 +160,13 @@ export type {
     MeditationSession,
     MeditationTypeItem,
 } from "@/lib/api/meditation";
+
+export type MeditationContent = {
+    id: string;
+    title: string;
+    description?: string | null;
+    isPremium: boolean;
+    mode: "AUDIO" | "TIMER" | "VISUAL" | "VIDEO";
+    mediaUrl?: string | null;
+    visualConfig?: VisualBreathingConfig | null;
+};

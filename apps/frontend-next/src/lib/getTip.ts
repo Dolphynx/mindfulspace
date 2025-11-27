@@ -3,35 +3,36 @@
  *
  * Récupère un "tip" (conseil bien-être) depuis l’API Nest.
  *
- * Fonctionnement :
- * - Appelle l’endpoint `/tips/random` du backend (URL fournie via NEXT_PUBLIC_API_URL).
- * - Désactive le cache (`cache: "no-store"`) pour garantir que chaque appel
- *   récupère un conseil frais.
- * - Si la réponse est valide, retourne `data.tip`.
- * - En cas d’erreur (réseau, JSON invalide, statut HTTP != 200…), la fonction
- *   retourne un message par défaut.
- *
- * Avantage :
- * - API simple, robuste et prête à être utilisée dans n’importe quel composant UI.
+ * - Ne contient AUCUN texte i18n.
+ * - Ne connaît pas la liste des locales supportées.
+ * - Si l’API ne renvoie rien de valable → retourne `null`.
+ *   (Le fallback textuel est géré dans l’UI via les traductions.)
  */
-export async function getTip(): Promise<string> {
+export async function getTip(locale: string): Promise<string | null> {
     try {
-        // Construction de l’URL absolue à partir de la variable d’environnement
-        const url = `${process.env.NEXT_PUBLIC_API_URL}/tips/random`;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!baseUrl) {
+            console.error("NEXT_PUBLIC_API_URL manquant");
+            return null;
+        }
 
-        // Appel API en mode "no-store" → pas de cache Next.js
+        const url = `${baseUrl}/tips/random?locale=${encodeURIComponent(locale)}`;
+
         const res = await fetch(url, { cache: "no-store" });
 
-        // Vérification du statut HTTP
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`API error: ${res.status}`);
+        }
 
-        // Parsing JSON
         const data = await res.json();
 
-        // Retourne le tip si présent, sinon fallback
-        return data.tip ?? "Prenez une grande respiration et souriez 🌿";
+        if (typeof data.tip === "string" && data.tip.trim().length > 0) {
+            return data.tip;
+        }
+
+        return null;
     } catch (e) {
-        // Sécurité : fallback en cas de n'importe quel problème
-        return "Prenez une grande respiration et souriez 🌿";
+        console.error("Erreur dans getTip:", e);
+        return null;
     }
 }

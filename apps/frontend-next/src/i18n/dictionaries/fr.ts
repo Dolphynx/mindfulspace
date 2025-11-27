@@ -276,6 +276,7 @@ const fr = {
         mantraSourceLabel: "Astuce venant de Groq (IA)",
         finishButton: "Terminer la séance",
         keepThought: "Gardez cette pensée avec vous aujourd'hui",
+        fallbackTip: "Prenez une grande respiration et souriez 🌿",
     },
 
     domainSleep: {
@@ -301,29 +302,100 @@ const fr = {
     },
 
     domainExercice: {
-        title: "Exercice physique",
-        subtitle: "Bougez, respirez et entretenez votre corps au quotidien.",
-        empty: "Contenu prochainement disponible…",
+        title: "Exercice",
+        subtitle: "Suivez et enregistrez vos séances d’exercice.",
 
         // Encodage manuel
         manualForm_title: "Encoder une séance passée",
-        manualForm_description: "Indiquez la date, la durée et le type d’exercice réalisé.",
-        manualForm_placeholder: "Le formulaire pour encoder vos séances sera bientôt disponible.",
-        manualForm_durationLabel: "Durée de la séance",
-        manualForm_saveButton: "Enregistrer",
+        manualForm_description: "Indiquez la date, le type d’exercice et le nombre de répétitions.",
+        manualForm_dateLabel: "Date de la séance",
+        manualForm_typeLabel: "Type d’exercice",
+        manualForm_repetitionsLabel: "Nombre de répétitions",
+        manualForm_qualityLabel: "Qualité / effort ressenti",
+        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_savingButton: "Enregistrement…",
         manualForm_cancelButton: "Annuler",
+        manualForm_repetitionLabel: "Nombre de séries",
+        manualForm_button: "Encoder une session",
 
         // Lancer une séance guidée
         start_title: "Lancer une séance d’exercice",
-        start_description: "Choisissez une séance et laissez-vous guider pas à pas.",
+        start_button: "Commencer exercice",
+        start_description: "Choisissez un exercice et laissez-vous guider pas à pas.",
         start_placeholder: "Le démarrage guidé d’une séance d’exercice sera bientôt disponible.",
+        start_nextButton: "Suivant",
+        start_prevButton: "Précédent",
+        start_finishButton: "Terminé",
 
         // Historique
         history_title: "Vos dernières séances d’exercice",
-        history_placeholder: "L’historique de vos séances apparaîtra ici dès que vous en aurez enregistré.",
+        history_placeholder: "Votre historique apparaîtra ici dès que vous aurez enregistré des séances."
     },
 
     domainMeditation: {
+
+        // --- Wizard: types ---
+        wizard_loadingTypes: "Chargement des types de méditation…",
+        wizard_errorTypes: "Impossible de charger les types de méditation.",
+        wizard_stepType_title: "Quel type de méditation souhaites-tu pratiquer ?",
+
+        // --- Wizard: durée ---
+        wizard_stepDuration_title: "Choisis la durée de ta séance",
+        wizard_minutes: "minutes",
+        wizard_backToType: "Retour au choix du type",
+
+        // --- Wizard: contenu ---
+        wizard_stepContent_title: "Choisis un contenu",
+        wizard_loadingContents: "Chargement des contenus de méditation…",
+        wizard_errorContents: "Impossible de charger les contenus de méditation.",
+        wizard_stepContent_empty: "Aucun contenu disponible pour cette combinaison type + durée.",
+        wizard_premium: "Premium",
+        wizard_backToDuration: "Retour au choix de la durée",
+
+        // --- Wizard: humeur avant ---
+        wizard_stepMoodBefore_title: "Comment te sens-tu avant cette séance ?",
+        wizard_backToContent: "Retour au choix du contenu",
+        wizard_startSession: "Commencer la séance",
+
+        // --- Wizard: playing (audio / timer / visuel) ---
+        wizard_stepPlaying_title: "Ta séance en cours :",
+        wizard_stepPlaying_placeholder: "Cette pratique n'est pas encore disponible dans cette version de l'application.",
+        wizard_endSession: "Terminer la séance",
+        wizard_cancel: "Annuler la séance",
+
+        // --- Wizard: humeur après ---
+        wizard_stepMoodAfter_title: "Comment te sens-tu après cette séance ?",
+        wizard_saveError: "Une erreur est survenue lors de l’enregistrement de ta séance.",
+        wizard_saving: "Enregistrement…",
+        wizard_save: "Enregistrer ma séance",
+
+        // --- Wizard: done ---
+        wizard_stepDone_title: "Bravo, ta séance a été enregistrée !",
+        wizard_stepDone_description: "Continue à pratiquer régulièrement pour renforcer ton bien-être au quotidien.",
+        wizard_close: "Fermer",
+
+        // --- Timer du wizard ---
+        wizard_timer_remainingLabel: "Temps restant",
+        wizard_timer_pause: "Pause",
+        wizard_timer_resume: "Reprendre",
+        wizard_timer_reset: "Réinitialiser",
+        wizard_timer_finished: "Séance terminée",
+
+        // --- Historique 7 derniers jours ---
+        last7_title: "Tes 7 derniers jours de méditation",
+        last7_empty: "Aucune séance enregistrée sur les 7 derniers jours.",
+        last7_toggle_expand: "Afficher le détail",
+        last7_toggle_collapse: "Masquer le détail",
+        last7_totalMeditationLabel: "Méditation au total",
+        last7_totalSessionsLabel: "Nombre de séances",
+        last7_averageMoodLabel: "Humeur moyenne",
+        last7_dayLabel: "Jour",
+        last7_totalLabel: "au total",
+
+        // Petites étiquettes génériques si tu en as besoin
+        sessionsLabel: "séances",
+        minutesLabel: "minutes",
+
         title: "Méditation",
         subtitle: "Pratiques guidées pour apaiser votre esprit.",
         empty: "Contenu prochainement disponible…",
@@ -357,14 +429,10 @@ const fr = {
         player_savingButton: "Enregistrement…",
 
         // 7 dernières
-        last7_title: "Vos 7 dernières séances",
         last7_description: "Aperçu de vos méditations récentes.",
         last7_loading: "Chargement…",
-        last7_empty: "Aucune séance enregistrée.",
         last7_durationLabel: "Durée",
         last7_qualityLabel: "Qualité",
-        last7_dayLabel: "Jour",
-        last7_totalLabel: "Total",
 
         errors: {
             loadTypes: "Erreur lors du chargement des types de méditation",
@@ -393,41 +461,16 @@ const fr = {
                 description:
                     "Cultiver la bienveillance envers soi et les autres.",
             },
+
+            wizard_timer_remainingLabel: "Temps restant",
+            wizard_timer_pause: "Mettre en pause",
+            wizard_timer_resume: "Reprendre",
+            wizard_timer_reset: "Réinitialiser",
+            wizard_timer_finished: "Séance terminée, bravo !"
         },
 
-        wizard_loadingTypes: "Chargement des types de méditation…",
-        wizard_errorTypes: "Impossible de charger les types de méditation.",
-
-        wizard_stepType_title: "Quel type de méditation veux-tu pratiquer ?",
-
-        wizard_stepDuration_title: "Combien de temps as-tu ?",
-        wizard_minutes: "min",
-        wizard_backToType: "⟵ Revenir au choix du type",
-
-        wizard_stepContent_title: "Choisis ta méditation",
-        wizard_loadingContents: "Chargement des méditations…",
-        wizard_errorContents: "Impossible de charger les méditations.",
-        wizard_stepContent_empty: "Aucune méditation ne correspond encore à ces critères.",
-        wizard_premium: "Premium",
-        wizard_backToDuration: "⟵ Revenir au choix de la durée",
-
-        wizard_stepMoodBefore_title: "Comment te sens-tu avant de commencer ?",
-        wizard_backToContent: "⟵ Choisir une autre méditation",
-        wizard_startSession: "Commencer la séance",
-
-        wizard_stepPlaying_title: "Séance en cours :",
-        wizard_stepPlaying_placeholder: "Le player apparaîtra ici selon le type de méditation choisi.",
-        wizard_endSession: "Terminer la séance",
-
-        wizard_stepMoodAfter_title: "Comment te sens-tu maintenant ?",
-        wizard_saveError: "Impossible d'enregistrer ta séance. Réessaie dans un instant.",
-        wizard_saving: "Enregistrement…",
-        wizard_save: "Enregistrer ma séance",
-        wizard_cancel: "Annuler",
-
-        wizard_stepDone_title: "Séance enregistrée",
-        wizard_stepDone_description: "Merci d'avoir pris ce moment pour toi.",
-        wizard_close: "Fermer"
+        last7_summary_sessions: "séances",
+        last7_summary_minutes: "minutes"
     },
 
     publicWorld: {
