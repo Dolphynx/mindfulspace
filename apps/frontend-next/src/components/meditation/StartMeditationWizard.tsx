@@ -402,17 +402,52 @@ export default function StartMeditationWizard({
                                                 className="flex w-full flex-col items-start gap-1 rounded-xl border border-slate-200 px-4 py-3 text-left shadow-sm transition hover:border-indigo-400 hover:shadow-md"
                                             >
                                                 <div className="flex w-full items-center justify-between">
-                                                    <span className="font-medium">
-                                                        {c.title}
-                                                    </span>
-                                                    {c.isPremium && (
-                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                                                            {t(
-                                                                "wizard_premium",
-                                                            )}
-                                                        </span>
-                                                    )}
+                                                <span className="font-medium flex items-center gap-2">
+                                                    {c.title}
+                                                </span>
+
+                                                    <div className="flex items-center gap-2">
+                                                        {/* Icône du mode */}
+                                                        {c.mode === "TIMER" && (
+                                                            <img
+                                                                src="/images/meditation_mode_timer.png"
+                                                                alt="timer"
+                                                                className="h-6 w-6 opacity-80"
+                                                            />
+                                                        )}
+                                                        {c.mode === "AUDIO" && (
+                                                            <img
+                                                                src="/images/meditation_mode_audio.png"
+                                                                alt="audio"
+                                                                className="h-6 w-6 opacity-80"
+                                                            />
+                                                        )}
+                                                        {c.mode === "VISUAL" && (
+                                                            <img
+                                                                src="/images/meditation_mode_visual.png"
+                                                                alt="visual"
+                                                                className="h-6 w-6 opacity-80"
+                                                            />
+                                                        )}
+                                                        {c.mode === "VIDEO" && (
+                                                            <img
+                                                                src="/images/meditation_mode_video.png"
+                                                                alt="video"
+                                                                className="h-6 w-6 opacity-80"
+                                                            />
+                                                        )}
+
+                                                        {/* Icône Premium */}
+                                                        {c.isPremium && (
+                                                            <img
+                                                                src="/images/session_premium.png"
+                                                                alt="premium"
+                                                                className="h-6 w-6"
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
+
                                                 {c.description && (
                                                     <p className="text-sm text-slate-500">
                                                         {c.description}
