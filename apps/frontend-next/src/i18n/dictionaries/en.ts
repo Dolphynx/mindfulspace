@@ -620,6 +620,107 @@ const en = {
         error: "Error while logging the session.",
     },
 
+    /*
+     * Authentication
+     */
+    auth: {
+        // Login page
+        loginTitle: "Welcome Back",
+        loginSubtitle: "Sign in to your MindfulSpace account",
+        emailLabel: "Email",
+        emailPlaceholder: "your@email.com",
+        passwordLabel: "Password",
+        passwordPlaceholder: "••••••••",
+        forgotPassword: "Forgot password?",
+        signInButton: "Sign In",
+        orContinueWith: "or continue with",
+        noAccount: "Don't have an account?",
+        signUpLink: "Sign up",
+        invalidCredentials: "Invalid email or password",
+
+        // Register page
+        registerTitle: "Create Account",
+        registerSubtitle: "Start your mindfulness journey today",
+        fullNameLabel: "Full Name",
+        fullNamePlaceholder: "John Doe",
+        confirmPasswordLabel: "Confirm Password",
+        passwordRequirements: "Password must be at least 8 characters with uppercase, lowercase, number, and special character.",
+        createAccountButton: "Create Account",
+        alreadyHaveAccount: "Already have an account?",
+        signInLink: "Sign in",
+
+        // Register success
+        checkEmailTitle: "Check Your Email",
+        checkEmailSubtitle: "We've sent you a verification link",
+        checkEmailMessage: "Please check your email {email} and click the verification link to activate your account.",
+        checkEmailNote: "Didn't receive the email? Check your spam folder or contact support.",
+        backToLogin: "Back to Login",
+
+        // Validation errors
+        nameMinLength: "Name must be at least 2 characters",
+        passwordMinLength: "Password must be at least 8 characters",
+        passwordUppercase: "Password must contain an uppercase letter",
+        passwordLowercase: "Password must contain a lowercase letter",
+        passwordNumber: "Password must contain a number",
+        passwordSpecial: "Password must contain a special character (@$!%*?&)",
+        passwordsNoMatch: "Passwords do not match",
+        registrationFailed: "Registration failed",
+
+        // OAuth callback
+        signingIn: "Signing You In...",
+        authenticationFailed: "Authentication Failed",
+        redirectingToLogin: "Redirecting to login...",
+
+        // OAuth buttons
+        continueWithGoogle: "Continue with Google",
+        continueWithGithub: "Continue with GitHub",
+
+        // Auth buttons
+        signIn: "Sign In",
+        signUp: "Sign Up",
+
+        // User menu
+        myWorld: "My World",
+        profileSettings: "Profile Settings",
+        signOut: "Sign Out",
+
+        // Email verification
+        verifyEmailLoading: "Verifying...",
+        verifyEmailSuccess: "Email Verified!",
+        verifyEmailFailed: "Verification Failed",
+        verifyEmailInvalidLink: "Invalid verification link",
+        verifyEmailSuccessMessage: "Email verified successfully!",
+        verifyEmailVerificationFailed: "Verification failed",
+        verifyEmailCanSignIn: "You can now sign in to your account.",
+        verifyEmailLinkExpired: "The link may have expired or is invalid.",
+        verifyEmailGoToLogin: "Go to Login",
+        verifyEmailRegisterAgain: "Register Again",
+
+        // Forgot password
+        forgotPasswordTitle: "Forgot Password?",
+        forgotPasswordSubtitle: "Enter your email to receive reset instructions",
+        forgotPasswordSendButton: "Send Reset Link",
+        forgotPasswordCheckEmail: "Check Your Email",
+        forgotPasswordInstructionsSent: "Password reset instructions sent",
+        forgotPasswordCheckEmailMessage: "If an account exists with {email}, you will receive password reset instructions.",
+        forgotPasswordCheckSpam: "Didn't receive the email? Check your spam folder or try again.",
+        forgotPasswordTryAnother: "Try Another Email",
+        forgotPasswordFailedToSend: "Failed to send reset email",
+
+        // Reset password
+        resetPasswordTitle: "Reset Password",
+        resetPasswordSubtitle: "Enter your new password",
+        resetPasswordNewPasswordLabel: "New Password",
+        resetPasswordConfirmPasswordLabel: "Confirm New Password",
+        resetPasswordButton: "Reset Password",
+        resetPasswordInvalidLink: "Invalid Link",
+        resetPasswordLinkExpired: "The reset link is invalid or has expired.",
+        resetPasswordRequestNew: "Request New Link",
+        resetPasswordComplete: "Password Reset Complete",
+        resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
+        resetPasswordFailed: "Password reset failed",
+    },
+
 };
 
 export default en;

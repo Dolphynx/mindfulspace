@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AuthButtons from "@/components/auth/AuthButtons";
 
 type NavbarMode = "public" | "client";
 
@@ -68,6 +69,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             labelKey: "breathing",
         },
         {
+            key: "world",
+            href: (loc) => `/${loc}/member/world`,
+            labelKey: "world",
+        },
+        {
             key: "objectives",
             href: (loc) => `/${loc}/member/objectives`,
             labelKey: "objectives",
@@ -108,7 +114,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             </Link>
         );
     };
-
+    
     // Lien du logo : page d’accueil publique ou world client
     const homeHref =
         mode === "client"
@@ -147,18 +153,32 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                         </button>
                     </div>
 
-                    <nav
-                        className={[
-                            "mt-1 flex flex-col gap-2",
-                            isOpen ? "flex" : "hidden",
-                            "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
-                        ].join(" ")}
-                    >
-                        {items.map((item) => (
-                            <NavButton key={item.key} item={item} />
-                        ))}
-                        <LanguageSwitcher />
-                    </nav>
+                    <div className="flex items-center gap-4">
+                        <nav
+                            className={[
+                                "mt-1 flex flex-col gap-2",
+                                isOpen ? "flex" : "hidden",
+                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
+                            ].join(" ")}
+                        >
+                            {items.map((item) => (
+                                <NavButton key={item.key} item={item} />
+                            ))}
+                            <LanguageSwitcher />
+                        </nav>
+
+                        <div className="hidden lg:block">
+                            <AuthButtons />
+                        </div>
+                    </div>
+
+                    {/* Mobile auth buttons */}
+                    <div className={[
+                        isOpen ? "flex" : "hidden",
+                        "lg:hidden mt-2"
+                    ].join(" ")}>
+                        <AuthButtons />
+                    </div>
                 </div>
             </div>
         </header>
