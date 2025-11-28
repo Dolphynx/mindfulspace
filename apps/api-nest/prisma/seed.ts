@@ -1,4 +1,4 @@
-  import {
+import {
   PrismaClient,
   ResourceType,
   MeditationSessionSource,
@@ -10,12 +10,12 @@ import * as argon2 from "argon2";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding database (auth + domain)...");
 
   // ---------------------------------------------------------------------------
-  // CLEAN DATABASE (SAFE)
+  // 0. CLEAN DATABASE (SAFE pour les données métier)
   // ---------------------------------------------------------------------------
-  console.log("🔄 Clearing existing data (safe)...");
+  console.log("🔄 Clearing existing domain data (safe)...");
 
   // D'abord les sessions qui dépendent des users / types / contenus
   await prisma.exerciceSession.deleteMany();
@@ -31,7 +31,7 @@ async function main() {
   await prisma.meditationContent?.deleteMany().catch(() => {});
   await prisma.meditationType?.deleteMany().catch(() => {});
 
-  // Types d'exercise
+  // Types d'exercices
   await prisma.exerciceType.deleteMany();
 
   // Resources (full reset)
@@ -40,38 +40,392 @@ async function main() {
   await prisma.resourceTag.deleteMany();
   await prisma.resourceCategory.deleteMany();
 
-  console.log("✔ Database cleared.");
+  console.log("✔ Domain data cleared.");
 
   // ---------------------------------------------------------------------------
-  // Seed MeditationType
+  // 1. AUTH SEED : permissions, rôles, rolePermissions, users demo
   // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding authentication data...");
+
+  // 1.1 Permissions
+  console.log("📝 Creating permissions...");
+
+  const permissions = [
+    // User permissions
+    { name: "users:read", description: "Read user profiles" },
+    { name: "users:update", description: "Update user profiles" },
+    { name: "users:delete", description: "Delete users" },
+    { name: "users:manage", description: "Full user management" },
+
+    // Session permissions
+    { name: "sessions:create", description: "Create sessions" },
+    { name: "sessions:read", description: "Read sessions" },
+    { name: "sessions:update", description: "Update sessions" },
+    { name: "sessions:delete", description: "Delete sessions" },
+
+    // Objective permissions
+    { name: "objectives:create", description: "Create objectives" },
+    { name: "objectives:read", description: "Read objectives" },
+    { name: "objectives:update", description: "Update objectives" },
+    { name: "objectives:delete", description: "Delete objectives" },
+
+    // Resource permissions
+    { name: "resources:create", description: "Create resources" },
+    { name: "resources:read", description: "Read resources" },
+    { name: "resources:update", description: "Update resources" },
+    { name: "resources:delete", description: "Delete resources" },
+
+    // Admin permissions
+    { name: "admin:access", description: "Access admin panel" },
+    { name: "admin:manage", description: "Full admin privileges" },
+
+    // Premium content
+    { name: "premium:access", description: "Access premium content" },
+
+    // Coach permissions
+    { name: "coach:access", description: "Access coach features" },
+    { name: "coach:manage-clients", description: "Manage client sessions" },
+  ];
+
+  for (const permission of permissions) {
+    await prisma.permission.upsert({
+      where: { name: permission.name },
+      update: {},
+      create: permission,
+    });
+  }
+
+  console.log(`✅ Created ${permissions.length} permissions`);
+
+  // 1.2 Roles
+  console.log("🎭 Creating roles...");
+
+  const userRole = await prisma.role.upsert({
+    where: { name: "user" },
+    update: {},
+    create: {
+      name: "user",
+      description: "Regular user with basic permissions",
+    },
+  });
+
+  const premiumRole = await prisma.role.upsert({
+    where: { name: "premium" },
+    update: {},
+    create: {
+      name: "premium",
+      description: "Premium user with access to exclusive content",
+    },
+  });
+
+  const coachRole = await prisma.role.upsert({
+    where: { name: "coach" },
+    update: {},
+    create: {
+      name: "coach",
+      description: "Coach with ability to manage clients",
+    },
+  });
+
+  const adminRole = await prisma.role.upsert({
+    where: { name: "admin" },
+    update: {},
+    create: {
+      name: "admin",
+      description: "Administrator with full system access",
+    },
+  });
+
+  console.log("✅ Created 4 roles: user, premium, coach, admin");
+
+  // 1.3 RolePermissions
+  console.log("🔗 Assigning permissions to roles...");
+
+  const allPermissions = await prisma.permission.findMany();
+  const getPermissionId = (name: string) =>
+    allPermissions.find((p) => p.name === name)?.id || "";
+
+  // User permissions
+  const userPermissions = [
+    "sessions:create",
+    "sessions:read",
+    "sessions:update",
+    "sessions:delete",
+    "objectives:create",
+    "objectives:read",
+    "objectives:update",
+    "objectives:delete",
+    "resources:read",
+    "users:read",
+    "users:update",
+  ];
+
+  for (const permName of userPermissions) {
+    const permissionId = getPermissionId(permName);
+    if (!permissionId) continue;
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: userRole.id,
+          permissionId,
+        },
+      },
+      update: {},
+      create: {
+        roleId: userRole.id,
+        permissionId,
+      },
+    });
+  }
+
+  // Premium permissions = user + premium:access
+  const premiumPermissions = [...userPermissions, "premium:access"];
+
+  for (const permName of premiumPermissions) {
+    const permissionId = getPermissionId(permName);
+    if (!permissionId) continue;
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: premiumRole.id,
+          permissionId,
+        },
+      },
+      update: {},
+      create: {
+        roleId: premiumRole.id,
+        permissionId,
+      },
+    });
+  }
+
+  // Coach permissions = premium + coach features + création/maj ressources
+  const coachPermissions = [
+    ...premiumPermissions,
+    "coach:access",
+    "coach:manage-clients",
+    "resources:create",
+    "resources:update",
+  ];
+
+  for (const permName of coachPermissions) {
+    const permissionId = getPermissionId(permName);
+    if (!permissionId) continue;
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: coachRole.id,
+          permissionId,
+        },
+      },
+      update: {},
+      create: {
+        roleId: coachRole.id,
+        permissionId,
+      },
+    });
+  }
+
+  // Admin = toutes les permissions
+  for (const permission of allPermissions) {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole.id,
+          permissionId: permission.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: adminRole.id,
+        permissionId: permission.id,
+      },
+    });
+  }
+
+  console.log("✅ Assigned permissions to all roles");
+
+  // 1.4 Demo users
+  console.log("👥 Creating demo users...");
+
+  const demoPassword = "Demo123!";
+  const hashedPassword = await argon2.hash(demoPassword, {
+    type: argon2.argon2id,
+    memoryCost: 65536, // 64 MB
+    timeCost: 3,
+    parallelism: 4,
+  });
+
+  // Regular User
+  const demoUserRegular = await prisma.user.upsert({
+    where: { email: "user@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "user@mindfulspace.app",
+      displayName: "Demo User",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: demoUserRegular.id,
+        roleId: userRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: demoUserRegular.id,
+      roleId: userRole.id,
+    },
+  });
+
+  console.log("  ✅ Created user@mindfulspace.app (role: user)");
+
+  // Premium User
+  const demoUserPremium = await prisma.user.upsert({
+    where: { email: "premium@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "premium@mindfulspace.app",
+      displayName: "Demo Premium User",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: demoUserPremium.id,
+        roleId: premiumRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: demoUserPremium.id,
+      roleId: premiumRole.id,
+    },
+  });
+
+  console.log("  ✅ Created premium@mindfulspace.app (role: premium)");
+
+  // Coach User
+  const demoUserCoach = await prisma.user.upsert({
+    where: { email: "coach@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "coach@mindfulspace.app",
+      displayName: "Demo Coach",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: demoUserCoach.id,
+        roleId: coachRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: demoUserCoach.id,
+      roleId: coachRole.id,
+    },
+  });
+
+  console.log("  ✅ Created coach@mindfulspace.app (role: coach)");
+
+  // Admin User
+  const demoUserAdmin = await prisma.user.upsert({
+    where: { email: "admin@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "admin@mindfulspace.app",
+      displayName: "Demo Admin",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: demoUserAdmin.id,
+        roleId: adminRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: demoUserAdmin.id,
+      roleId: adminRole.id,
+    },
+  });
+
+  console.log("  ✅ Created admin@mindfulspace.app (role: admin)");
+
+  // User "demo@mindfulspace.app" utilisé pour les sessions de démo
+  const demoUser = await prisma.user.upsert({
+    where: { email: "demo@mindfulspace.app" },
+    update: {},
+    create: {
+      email: "demo@mindfulspace.app",
+      displayName: "Demo User",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: demoUser.id,
+        roleId: userRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: demoUser.id,
+      roleId: userRole.id,
+    },
+  });
+
+  console.log(
+    "  ✅ Created demo@mindfulspace.app (role: user, used for sample sessions)"
+  );
+
+  console.log("\n📊 Auth seed summary:");
+  console.log("  • Roles: user, premium, coach, admin");
+  console.log("  • Permissions:", allPermissions.length);
+  console.log("  • Demo Users (password: Demo123!):");
+  console.log("    - user@mindfulspace.app (user)");
+  console.log("    - premium@mindfulspace.app (premium)");
+  console.log("    - coach@mindfulspace.app (coach)");
+  console.log("    - admin@mindfulspace.app (admin)");
+  console.log("    - demo@mindfulspace.app (user, pour les données de démo)");
+  console.log("✅ All passwords are properly hashed with Argon2id");
+
+  // ---------------------------------------------------------------------------
+  // 2. SEED DOMAIN MODELS (méditations, exercices, ressources…)
+  // ---------------------------------------------------------------------------
+
+  // 2.1 MeditationType
   console.log("🌱 Seeding meditation types...");
 
   const meditationTypesData = [
-    {
-      slug: "breathing",
-      //name: "Respiration consciente",
-      //description: "Focalisation sur le souffle pour apaiser le système nerveux.",
-      sortOrder: 10,
-    },
-    {
-      slug: "mindfulness",
-      //name: "Pleine conscience",
-      //description: "Observer pensées, émotions et sensations sans jugement.",
-      sortOrder: 20,
-    },
-    {
-      slug: "body-scan",
-      //name: "Body scan",
-      //description: "Balayer le corps avec l'attention pour relâcher les tensions.",
-      sortOrder: 30,
-    },
-    {
-      slug: "compassion",
-      //name: "Compassion / Metta",
-      //description: "Cultiver la bienveillance envers soi et les autres.",
-      sortOrder: 40,
-    },
+    { slug: "breathing", sortOrder: 10 },
+    { slug: "mindfulness", sortOrder: 20 },
+    { slug: "body-scan", sortOrder: 30 },
+    { slug: "compassion", sortOrder: 40 },
   ];
 
   const meditationTypes = [];
@@ -82,8 +436,6 @@ async function main() {
       update: {},
       create: {
         slug: type.slug,
-        //name: type.name,
-        //description: type.description,
         isActive: true,
         sortOrder: type.sortOrder,
       },
@@ -93,13 +445,7 @@ async function main() {
 
   console.log(`✔ ${meditationTypes.length} meditation types seeded.`);
 
-  const breathingType = meditationTypes[0]; // on utilisera celui-ci pour les seeds de sessions
-
-  // ---------------------------------------------------------------------------
-  // Seed MeditationContent
-  // ---------------------------------------------------------------------------
-  console.log("🌱 Seeding meditation contents...");
-
+  const breathingType = meditationTypes.find((t) => t.slug === "breathing");
   const mindfulnessType = meditationTypes.find((t) => t.slug === "mindfulness");
   const bodyScanType = meditationTypes.find((t) => t.slug === "body-scan");
   const compassionType = meditationTypes.find((t) => t.slug === "compassion");
@@ -107,6 +453,9 @@ async function main() {
   if (!breathingType || !mindfulnessType || !bodyScanType || !compassionType) {
     throw new Error("Meditation types not properly seeded");
   }
+
+  // 2.2 MeditationContent
+  console.log("🌱 Seeding meditation contents...");
 
   type MeditationContentSeed = {
     title: string;
@@ -153,7 +502,7 @@ async function main() {
       description:
         "Suivez le mouvement d’une vague qui se déploie au rythme de votre souffle.",
       defaultMeditationTypeId: breathingType.id,
-      mode: MeditationMode.VISUAL, // 👈 la seule entrée VISUAL
+      mode: MeditationMode.VISUAL,
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -192,7 +541,7 @@ async function main() {
       description:
         "Fixez la flamme d’une bougie et revenez doucement à l’instant présent.",
       defaultMeditationTypeId: mindfulnessType.id,
-      mode: MeditationMode.TIMER, // 👈 changé de VISUAL -> TIMER
+      mode: MeditationMode.TIMER,
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -231,7 +580,7 @@ async function main() {
       description:
         "Une silhouette s’illumine progressivement pour accompagner le relâchement.",
       defaultMeditationTypeId: bodyScanType.id,
-      mode: MeditationMode.TIMER, // 👈 VISUAL -> TIMER
+      mode: MeditationMode.TIMER,
       minDurationSeconds: 600,
       maxDurationSeconds: 1200,
       defaultDurationSeconds: 900,
@@ -270,7 +619,7 @@ async function main() {
       description:
         "Visualisez un cercle de lumière qui s’élargit pour inclure d’autres personnes.",
       defaultMeditationTypeId: compassionType.id,
-      mode: MeditationMode.TIMER, // 👈 VISUAL -> TIMER
+      mode: MeditationMode.TIMER,
       minDurationSeconds: 300,
       maxDurationSeconds: 900,
       defaultDurationSeconds: 600,
@@ -302,14 +651,11 @@ async function main() {
 
   console.log(`✔ ${meditationContents.length} meditation contents seeded.`);
 
-  // ---------------------------------------------------------------------------
-  // Seed MeditationVisualConfig pour les contenus VISUAL
-  // (pour le moment : cercle qui grandit / rapetisse pour la respiration)
-  // ---------------------------------------------------------------------------
+  // 2.3 Visual config
   console.log("🌱 Seeding visual configs for meditation contents...");
 
   const breathingVisual = meditationContents.find(
-    (c) => c.title === "Respiration en vagues (visuelle)",
+    (c) => c.title === "Respiration en vagues (visuelle)"
   );
 
   if (breathingVisual) {
@@ -331,16 +677,13 @@ async function main() {
     console.log("✔ Visual config seeded for breathing visual content.");
   } else {
     console.warn(
-      "⚠ Breathing visual content not found, visual config not seeded.",
+      "⚠ Breathing visual content not found, visual config not seeded."
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Seed Exercise Types
-  // ---------------------------------------------------------------------------
+  // 2.4 Exercises
   console.log("🌱 Seeding exercise types...");
 
-  // First seed your existing simple exercises
   const baseExercises = [
     { name: "Push Ups", Description: "Upper-body bodyweight press" },
     { name: "Pull Ups", Description: "Back and biceps bodyweight pull" },
@@ -360,9 +703,6 @@ async function main() {
 
   console.log("✔ Base exercises seeded.");
 
-  // ---------------------------------------------------------------------------
-  // Seed Exercise Type: Sun Salutation (Surya Namaskar)
-  // ---------------------------------------------------------------------------
   console.log("🌞 Seeding Sun Salutation...");
 
   const sunSalutation = await prisma.exerciceType.create({
@@ -373,17 +713,90 @@ async function main() {
   });
 
   const sunSalutationSteps = [
-    { order: 1, title: "Pranamasana — Prayer Pose", description: "Stand at the front of your mat, palms together, grounding your breath.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step1_yg3zqf.png"},
-    { order: 2, title: "Hasta Uttanasana — Raised Arms Pose", description: "Lift your arms overhead, gently arching your spine.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step2_a8nuxy.png"},
-    { order: 3, title: "Uttanasana — Standing Forward Bend", description: "Fold forward from the hips, bringing hands toward the floor.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step3_juamaz.png"},
-    { order: 4, title: "Ashwa Sanchalanasana — Low Lunge", description: "Step your right foot back, lowering the knee to the mat, gaze forward.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step4_pt4yqs.png"},
-    { order: 5, title: "Plank Pose", description: "Step back into a strong plank, engaging the core.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step5_cm0aiy.png"},
-    { order: 6, title: "Ashtanga Namaskara — Eight-Limbed Pose", description: "Lower knees, chest, and chin to the mat while hips stay raised.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step6_xuj9pj.png"},
-    { order: 7, title: "Bhujangasana — Cobra Pose", description: "Lift your chest into a gentle backbend, elbows close to your ribs.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step7_fwjut5.png"},
-    { order: 8, title: "Adho Mukha Svanasana — Downward Dog", description: "Lift hips up, forming an inverted V-shape with your body.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step8_tfmvoh.png"},
-    { order: 9, title: "Ashwa Sanchalanasana — Low Lunge (other side)", description: "Step your right foot forward this time, gaze ahead.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step9_mmp9ls.png"},
-    { order: 10, title: "Uttanasana — Standing Forward Bend", description: "Fold forward again from the hips, relaxing your neck.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step10_fcuivq.png"},
-    { order: 11, title: "Hasta Uttanasana → Pranamasana", description: "Rise up with arms overhead, then return palms to heart center.", imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step11_gkfzr7.png"},
+    {
+      order: 1,
+      title: "Pranamasana — Prayer Pose",
+      description:
+        "Stand at the front of your mat, palms together, grounding your breath.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step1_yg3zqf.png",
+    },
+    {
+      order: 2,
+      title: "Hasta Uttanasana — Raised Arms Pose",
+      description: "Lift your arms overhead, gently arching your spine.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step2_a8nuxy.png",
+    },
+    {
+      order: 3,
+      title: "Uttanasana — Standing Forward Bend",
+      description:
+        "Fold forward from the hips, bringing hands toward the floor.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step3_juamaz.png",
+    },
+    {
+      order: 4,
+      title: "Ashwa Sanchalanasana — Low Lunge",
+      description:
+        "Step your right foot back, lowering the knee to the mat, gaze forward.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step4_pt4yqs.png",
+    },
+    {
+      order: 5,
+      title: "Plank Pose",
+      description: "Step back into a strong plank, engaging the core.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step5_cm0aiy.png",
+    },
+    {
+      order: 6,
+      title: "Ashtanga Namaskara — Eight-Limbed Pose",
+      description:
+        "Lower knees, chest, and chin to the mat while hips stay raised.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step6_xuj9pj.png",
+    },
+    {
+      order: 7,
+      title: "Bhujangasana — Cobra Pose",
+      description:
+        "Lift your chest into a gentle backbend, elbows close to your ribs.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step7_fwjut5.png",
+    },
+    {
+      order: 8,
+      title: "Adho Mukha Svanasana — Downward Dog",
+      description: "Lift hips up, forming an inverted V-shape with your body.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step8_tfmvoh.png",
+    },
+    {
+      order: 9,
+      title: "Ashwa Sanchalanasana — Low Lunge (other side)",
+      description: "Step your right foot forward this time, gaze ahead.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step9_mmp9ls.png",
+    },
+    {
+      order: 10,
+      title: "Uttanasana — Standing Forward Bend",
+      description:
+        "Fold forward again from the hips, relaxing your neck.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step10_fcuivq.png",
+    },
+    {
+      order: 11,
+      title: "Hasta Uttanasana → Pranamasana",
+      description:
+        "Rise up with arms overhead, then return palms to heart center.",
+      imageUrl:
+        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step11_gkfzr7.png",
+    },
   ];
 
   for (const step of sunSalutationSteps) {
@@ -399,63 +812,11 @@ async function main() {
   }
 
   console.log("✔ Sun Salutation seeded with 11 steps.");
-
   console.log("✔ ExerciceType seeded");
 
-  // ---------------------------------------------------------------------------
-  // USER DEMO
-  // ---------------------------------------------------------------------------
-  console.log("🌱 Creating demo user...");
+  // 2.5 Sessions demo liées au user "demo@..."
+  console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 
-  // Hash password using Argon2id (same as production auth service)
-  const demoPassword = "Demo123!";
-  const hashedPassword = await argon2.hash(demoPassword, {
-    type: argon2.argon2id,
-    memoryCost: 65536, // 64 MB
-    timeCost: 3,
-    parallelism: 4,
-  });
-
-  const demoUser = await prisma.user.upsert({
-    where: { email: "demo@mindfulspace.app" },
-    update: {},
-    create: {
-      email: "demo@mindfulspace.app",
-      displayName: "Demo User",
-      password: hashedPassword,
-      emailVerified: true,
-      isActive: true,
-    },
-  });
-
-  // Assign default "user" role to demo user
-  const userRole = await prisma.role.findUnique({
-    where: { name: "user" },
-  });
-
-  if (userRole) {
-    await prisma.userRole.upsert({
-      where: {
-        userId_roleId: {
-          userId: demoUser.id,
-          roleId: userRole.id,
-        },
-      },
-      update: {},
-      create: {
-        userId: demoUser.id,
-        roleId: userRole.id,
-      },
-    });
-    console.log("✔ Demo user ready:", demoUser.email, "(password: Demo123!, role: user)");
-  } else {
-    console.log("✔ Demo user ready:", demoUser.email, "(password: Demo123!)");
-    console.warn("⚠️  Warning: 'user' role not found. Run seed-auth.ts first to create roles.");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Workout Session Demo (optionnel, lié au user)
-  // ---------------------------------------------------------------------------
   const workout = await prisma.workoutSession.create({
     data: {
       quality: 4,
@@ -478,9 +839,6 @@ async function main() {
 
   console.log("✔ WorkoutSession seeded:", workout.id);
 
-  // ---------------------------------------------------------------------------
-  // SleepSession demo (liée au user)
-  // ---------------------------------------------------------------------------
   await prisma.sleepSession.create({
     data: {
       hours: 7,
@@ -492,9 +850,6 @@ async function main() {
 
   console.log("✔ SleepSession seeded.");
 
-  // ---------------------------------------------------------------------------
-  // Meditation Sessions liées au user (nouveau modèle)
-  // ---------------------------------------------------------------------------
   console.log("🌱 Seeding meditation sessions for demo user...");
 
   const meditationSeeds = [
@@ -530,7 +885,7 @@ async function main() {
         userId: demoUser.id,
         source: MeditationSessionSource.MANUAL,
         meditationTypeId: breathingType.id,
-        meditationContentId: null, // ici ce sont des saisies "manuelles"
+        meditationContentId: null,
         startedAt,
         endedAt,
         durationSeconds,
@@ -543,9 +898,7 @@ async function main() {
 
   console.log(`✔ ${meditationSeeds.length} meditation sessions seeded.`);
 
-  // ---------------------------------------------------------------------------
-  // Resources (categories, tags, resources…)
-  // ---------------------------------------------------------------------------
+  // 2.6 Resources
   console.log("🌱 Seeding resource categories, tags & resources...");
 
   const articleCat = await prisma.resourceCategory.create({
@@ -568,7 +921,6 @@ async function main() {
     data: { name: "Wellness", slug: "wellness" },
   });
 
-  // Article utilitaire
   const createArticle = (data: {
     slug: string;
     title: string;
@@ -639,7 +991,6 @@ async function main() {
 
   console.log("✔ Resources seeded.");
 
-  // ---------------------------------------------------------------------------
   console.log("🌱 Seeding done.");
 }
 
@@ -649,5 +1000,7 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    prisma
+      .$disconnect()
+      .catch(() => process.exit(1));
   });
