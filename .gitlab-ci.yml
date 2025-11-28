@@ -21,6 +21,19 @@ variables:
   # Utilisé par Kaniko pour le fichier d'auth docker
   DOCKER_CONFIG: /kaniko/.docker
 
+  # ************************************************************
+  # Variables communes (staging / prod)
+  # ------------------------------------------------------------
+  # Utilisées pour l'authentification JWT, SendGrid, et OAuth
+  JWT_ACCESS_SECRET: $JWT_ACCESS_SECRET
+  JWT_REFRESH_SECRET: $JWT_REFRESH_SECRET
+  SENDGRID_API_KEY: $SENDGRID_API_KEY
+  EMAIL_FROM: $EMAIL_FROM
+  GOOGLE_CLIENT_ID: $GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_SECRET: $GOOGLE_CLIENT_SECRET
+  GITHUB_CLIENT_ID: $GITHUB_CLIENT_ID
+  GITHUB_CLIENT_SECRET: $GITHUB_CLIENT_SECRET
+
 # ************************************************************
 # DEFAULT : paramètres appliqués à tous les jobs (sauf override)
 # ------------------------------------------------------------
@@ -278,7 +291,6 @@ build:images:
       "$SSH_HOST" "$SSH_PORT" "$SSH_USER" > ~/.ssh/config
 
 deploy:staging:
-  # Extension de la base de déploiement (.deploy_base)
   extends: .deploy_base
   rules:
     # ----------------------------------------------------------
@@ -315,13 +327,23 @@ deploy:staging:
     # 2) on génère le fichier EN LOCAL dans le job CI
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    # ----------------------------------------------------------
+    # Ajouter les nouvelles variables dans api.env
+    # ----------------------------------------------------------
+    - echo "SENDGRID_API_KEY=$SENDGRID_API_KEY" >> api.env
+    - echo "EMAIL_FROM=$EMAIL_FROM" >> api.env
+    - echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> api.env
+    - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> api.env
+    - echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> api.env
+    - echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> api.env
+    - echo "STAGING_GOOGLE_CALLBACK_URL=$STAGING_GOOGLE_CALLBACK_URL" >> api.env
+    - echo "STAGING_GITHUB_CALLBACK_URL=$STAGING_GITHUB_CALLBACK_URL" >> api.env
+    - echo "STAGING_FRONTEND_URL=$STAGING_FRONTEND_URL" >> api.env
 
     # 3) on l’envoie sur le VPS
     - scp api.env vps:"$DEPLOY_DIR/api.env"
-
     # 4) droits
     - ssh vps "chmod 600 '$DEPLOY_DIR/api.env'"
-
     # 5) nettoyage local
     - rm api.env
 
