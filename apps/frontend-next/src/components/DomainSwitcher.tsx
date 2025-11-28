@@ -31,7 +31,7 @@ export default function DomainSwitcher({ current }: DomainSwitcherProps) {
         },
         {
             key: "meditation",
-            iconSrc: "/images/Icone_meditation.png",
+            iconSrc: "/images/icone_meditation.png",
             label: t("meditationAlt"),
         },
         {
