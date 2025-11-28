@@ -10,9 +10,12 @@
  */
 
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+
 
 /**
  * Fonction bootstrap :
@@ -27,8 +30,20 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
  * 5. Lancement du serveur.
  */
 async function bootstrap(): Promise<void> {
-  // === Création de l’application Nest ===
+  // === Création de l'application Nest ===
   const app = await NestFactory.create(AppModule);
+
+  // === Cookie Parser (for authentication cookies) ===
+  app.use(cookieParser());
+
+  // === Global Validation Pipe ===
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // === Prisma : fermeture propre ===
   /**
@@ -88,27 +103,10 @@ async function bootstrap(): Promise<void> {
 
   app.enableCors({
     origin: allowedOrigins,
-    credentials: true,
+    credentials: true, // Important for cookies
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
   });
-
-  /*app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://staging.mindfulspace.be',
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
-  });/*
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
 
   // === Lancement serveur ===
   /**

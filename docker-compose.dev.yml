@@ -2,7 +2,7 @@
 # Docker Compose – Environnement DEV COMPLET
 # ----------------------------------------------------------------------------
 # Commande recommandée :
-#   docker compose -f docker-compose.dev.yml --env-file .env.dev up --build
+#   docker compose -f docker-compose.dev.yml --env-file ..env.dev up --build
 #
 # Services inclus :
 # - PostgreSQL (db)
@@ -32,7 +32,7 @@ services:
 
     restart: unless-stopped
 
-    env_file: [.env.dev]        # Charge automatiquement POSTGRES_USER, PASS, DB...
+    env_file: [..env.dev]        # Charge automatiquement POSTGRES_USER, PASS, DB...
 
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -51,7 +51,7 @@ services:
     networks: [internal]
 
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"    # Expose Postgres locale sur le port défini en .env.dev
+      - "${POSTGRES_PORT:-5432}:5432"    # Expose Postgres locale sur le port défini en ..env.dev
 
   # ==========================================================================
   # API NESTJS
@@ -60,7 +60,7 @@ services:
     image: node:20-alpine
     container_name: mindfulspace-api-1
     working_dir: /workspace
-    env_file: [.env.dev]                # Charge toutes les var .env.dev pour l’API
+    env_file: [..env.dev]                # Charge toutes les var ..env.dev pour l’API
 
     # Commande exécutée dans le container API
     command: >
@@ -97,7 +97,7 @@ services:
     image: node:20-alpine
     container_name: mindfulspace-web-1
     working_dir: /workspace
-    env_file: [.env.dev]
+    env_file: [..env.dev]
 
     command: >
       sh -lc "
