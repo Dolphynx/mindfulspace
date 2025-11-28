@@ -22,7 +22,7 @@ export function AuthGuard({ children, roles }: AuthGuardProps) {
 
         // 1) Pas connecté → redirection vers /[locale]/auth/login
         if (!user) {
-            const segments = pathname.split("/");
+            const segments = (pathname ?? "").split("/");
             const locale = segments[1] || "fr";
 
             const redirectTo = encodeURIComponent(pathname || `/${locale}`);
