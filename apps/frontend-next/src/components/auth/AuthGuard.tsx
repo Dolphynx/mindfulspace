@@ -1,3 +1,4 @@
+// AuthGuard.tsx
 "use client";
 
 import { ReactNode, useEffect } from "react";
@@ -8,7 +9,7 @@ type RoleName = "user" | "premium" | "coach" | "admin";
 
 type AuthGuardProps = {
     children: ReactNode;
-    roles?: RoleName[]; // optionnel
+    roles?: RoleName[];
 };
 
 export function AuthGuard({ children, roles }: AuthGuardProps) {
@@ -19,26 +20,29 @@ export function AuthGuard({ children, roles }: AuthGuardProps) {
     useEffect(() => {
         if (loading) return;
 
-        // pas connecté → on envoie vers la page de login
+        // 1) Pas connecté → redirection vers /[locale]/auth/login
         if (!user) {
-            router.replace(`/auth/login?redirectTo=${encodeURIComponent(pathname)}`);
+            const segments = pathname.split("/");
+            const locale = segments[1] || "fr";
+
+            const redirectTo = encodeURIComponent(pathname || `/${locale}`);
+            router.replace(`/${locale}/auth/login?redirectTo=${encodeURIComponent(pathname)}`);
             return;
         }
 
-        // si on a des rôles exigés → vérifier
+        // 2) Optionnel : filtrage par rôle
         if (roles && roles.length > 0) {
-            const userRoles = user.roles ?? []; // supposition: tableau de strings
+            const userRoles = user.roles ?? [];
             const hasRole = roles.some((r) => userRoles.includes(r));
             if (!hasRole) {
-                router.replace(`/forbidden`); // ou autre route
+                const segments = pathname.split("/");
+                const locale = segments[1] || "fr";
+                router.replace(`/${locale}`); // ou une page "forbidden"
             }
         }
     }, [user, loading, roles, router, pathname]);
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
+    if (loading) return null;
     if (!user) return null;
 
     if (roles && roles.length > 0) {
