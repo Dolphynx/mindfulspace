@@ -5,6 +5,7 @@
   MeditationMode,
   MeditationVisualType,
 } from "@prisma/client";
+import * as argon2 from "argon2";
 
 const prisma = new PrismaClient();
 
@@ -406,16 +407,51 @@ async function main() {
   // ---------------------------------------------------------------------------
   console.log("🌱 Creating demo user...");
 
+  // Hash password using Argon2id (same as production auth service)
+  const demoPassword = "Demo123!";
+  const hashedPassword = await argon2.hash(demoPassword, {
+    type: argon2.argon2id,
+    memoryCost: 65536, // 64 MB
+    timeCost: 3,
+    parallelism: 4,
+  });
+
   const demoUser = await prisma.user.upsert({
     where: { email: "demo@mindfulspace.app" },
     update: {},
     create: {
       email: "demo@mindfulspace.app",
       displayName: "Demo User",
+      password: hashedPassword,
+      emailVerified: true,
+      isActive: true,
     },
   });
 
-  console.log("✔ Demo user ready:", demoUser.email);
+  // Assign default "user" role to demo user
+  const userRole = await prisma.role.findUnique({
+    where: { name: "user" },
+  });
+
+  if (userRole) {
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: demoUser.id,
+          roleId: userRole.id,
+        },
+      },
+      update: {},
+      create: {
+        userId: demoUser.id,
+        roleId: userRole.id,
+      },
+    });
+    console.log("✔ Demo user ready:", demoUser.email, "(password: Demo123!, role: user)");
+  } else {
+    console.log("✔ Demo user ready:", demoUser.email, "(password: Demo123!)");
+    console.warn("⚠️  Warning: 'user' role not found. Run seed-auth.ts first to create roles.");
+  }
 
   // ---------------------------------------------------------------------------
   // Workout Session Demo (optionnel, lié au user)
