@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
+import AuthButtons from "@/components/auth/AuthButtons";
 
 export function PublicNavbar() {
     const pathname = usePathname();
@@ -69,18 +70,31 @@ export function PublicNavbar() {
                         </button>
                     </div>
 
-                    <nav
-                        className={[
-                            "mt-1 flex flex-col gap-2",
-                            isOpen ? "flex" : "hidden",
-                            "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
-                        ].join(" ")}
-                    >
-                        <NavButton href={`/${locale}/resources`} label={t("resources")} />
-                        <NavButton href={`/${locale}/coach`} label={t("coach")} />
-                        <NavButton href={`/${locale}/contact`} label={t("contact")} />
-                        <NavButton href={`/${locale}/member`} label={t("clientSpace")} />
-                    </nav>
+                    <div className="flex items-center gap-4">
+                        <nav
+                            className={[
+                                "mt-1 flex flex-col gap-2",
+                                isOpen ? "flex" : "hidden",
+                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4",
+                            ].join(" ")}
+                        >
+                            <NavButton href={`/${locale}/resources`} label={t("resources")} />
+                            <NavButton href={`/${locale}/coach`} label={t("coach")} />
+                            <NavButton href={`/${locale}/contact`} label={t("contact")} />
+                        </nav>
+
+                        <div className="hidden lg:block">
+                            <AuthButtons />
+                        </div>
+                    </div>
+
+                    {/* Mobile auth buttons */}
+                    <div className={[
+                        isOpen ? "flex" : "hidden",
+                        "lg:hidden mt-2"
+                    ].join(" ")}>
+                        <AuthButtons />
+                    </div>
                 </div>
             </div>
         </header>

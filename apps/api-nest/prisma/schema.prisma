@@ -227,15 +227,138 @@ model ExerciceSession {
 
 model User {
   id          String  @id @default(cuid())
-  email       String  @unique       // identifiant unique de connexion
-  displayName String?               // nom affiché dans l'UI
+  email       String  @unique
+  displayName String?
+  password    String? // Nullable for OAuth-only users
+
+  emailVerified Boolean @default(false)
+  isActive      Boolean @default(true) // For soft deletes / account suspension
 
   workoutSessions    WorkoutSession[]
   sleepSessions      SleepSession[]
   meditationSessions MeditationSession[]
 
+  // Auth relations
+  emailVerificationTokens EmailVerificationToken[]
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  oauthAccounts           OAuthAccount[]
+  userRoles               UserRole[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt     // mis à jour automatiquement à chaque write
+}
+
+// Email verification tokens
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+// Refresh tokens (stored in DB for security)
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Track device/session info for security
+  userAgent String?
+  ipAddress String?
+
+  @@index([userId])
+  @@index([token])
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt    DateTime? // Track if token was used
+
+  @@index([userId])
+  @@index([token])
+}
+
+// OAuth accounts (Google, GitHub, etc.)
+model OAuthAccount {
+  id           String @id @default(cuid())
+  provider     String // "google", "github", etc.
+  providerId   String // User ID from the OAuth provider
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
+
+// Roles for RBAC
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "admin", "user", "coach", "premium"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+// Join table for User-Role (many-to-many)
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+// Permissions for fine-grained access control
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g., "sessions:create", "users:delete", "objectives:read"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+// Join table for Role-Permission (many-to-many)
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }
 
 /**
