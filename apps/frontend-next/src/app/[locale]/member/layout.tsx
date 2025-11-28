@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {AppShell, MainNavbar} from "@/components/layout";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 
 /**
  * Layout du module member (espace authentifié).
@@ -23,9 +24,12 @@ import {AppShell, MainNavbar} from "@/components/layout";
  *   • les liens + labels sont gérés dans ClientNavbar et les pages via useTranslations.
  */
 export default function ClientLayout({ children }: { children: ReactNode }) {
-    return <AppShell navbar={<MainNavbar mode="client" />}>
-        <>
-            {children}
-        </>
-    </AppShell>;
+    return (
+        <AuthGuard roles={["user", "premium", "coach", "admin"]}>
+            <AppShell navbar={<MainNavbar mode="client" />}>
+                <>
+                    {children}
+                </>
+            </AppShell>
+        </AuthGuard> );
 }
