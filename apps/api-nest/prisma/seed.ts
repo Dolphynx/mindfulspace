@@ -259,7 +259,12 @@ async function main() {
   // Regular User
   const demoUserRegular = await prisma.user.upsert({
     where: { email: "user@mindfulspace.app" },
-    update: {},
+    update: {
+      emailVerified: true,
+      isActive: true,
+      displayName: "Demo User",
+      password: hashedPassword,
+    },
     create: {
       email: "user@mindfulspace.app",
       displayName: "Demo User",
