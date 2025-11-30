@@ -5,48 +5,35 @@ import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 import { MeditationTypeDto } from './dto/meditation-type.dto';
 import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
 
-@Injectable()
 /**
  * Service de gestion des séances de méditation.
  *
- * Cette couche encapsule toute la logique de persistance autour :
- * - de la création de séances
- * - de la récupération d’historiques (7 derniers jours, hier, etc.)
- * - de la récupération des types de méditation
- * - du filtrage des contenus en fonction du type et de la durée
+ * @remarks
+ * Cette couche encapsule toute la logique de persistance liée :
+ * - à la création de séances de méditation ;
+ * - à la récupération d’historiques (7 derniers jours, hier, etc.) ;
+ * - à la récupération des types de méditation ;
+ * - au filtrage des contenus en fonction du type et de la durée.
  *
- * Les contrôleurs HTTP exposent ces méthodes et peuvent être décorés
- * avec Swagger (`@ApiOperation`, `@ApiResponse`, etc.) pour générer la
- * documentation de l’API.
+ * Les contrôleurs HTTP exposent ces fonctionnalités et peuvent être décorés
+ * avec Swagger (`@ApiOperation`, `@ApiResponse`, etc.) afin de générer
+ * automatiquement la documentation de l’API.
  */
+@Injectable()
 export class MeditationSessionService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Crée une nouvelle séance de méditation.
+   * Crée une nouvelle séance de méditation pour un utilisateur donné.
    *
-   * Points importants :
-   * - La séance est toujours associée à l'utilisateur "demo@mindfulspace.app"
-   *   (utilisateur de démonstration seedé en base).
-   * - L'heure de la séance est forcée à midi afin d’éviter les effets de bord
-   *   liés aux fuseaux horaires et à l’UTC.
-   * - `endedAt` est calculé à partir de `startedAt` et de `durationSeconds`.
-   * - La source est par défaut `MANUAL` si non précisée dans le DTO.
-   *
-   * @param dto Données de création de séance (payload validé par le DTO).
-   * @throws Error si l’utilisateur de démo est introuvable.
-   * @returns La séance créée (entité Prisma).
+   * @param userId Identifiant de l’utilisateur propriétaire de la séance.
+   * @param dto Données nécessaires à la création de la séance.
+   * @returns La séance de méditation créée.
    */
-  async create(dto: CreateMeditationSessionDto) {
-    const demoUser = await this.prisma.user.findUnique({
-      where: { email: 'demo@mindfulspace.app' },
-    });
-
-    if (!demoUser) {
-      // Si le seed n'a pas tourné ou que le user a été supprimé
-      throw new Error('Demo user not found. Did you run the seed?');
-    }
-
+  async create(
+    userId: string,
+    dto: CreateMeditationSessionDto,
+  ) {
     // Date logique de la séance -> on fixe l'heure à midi pour éviter les surprises UTC
     const date = new Date(dto.dateSession);
     date.setHours(12, 0, 0, 0);
@@ -58,7 +45,7 @@ export class MeditationSessionService {
 
     return this.prisma.meditationSession.create({
       data: {
-        userId: demoUser.id,
+        userId,
         source,
         meditationTypeId: dto.meditationTypeId,
         meditationContentId: dto.meditationContentId ?? null,
@@ -73,40 +60,12 @@ export class MeditationSessionService {
   }
 
   /**
-   * Retourne l’ensemble des séances de méditation, triées par date de début
-   * décroissante.
+   * Calcule un résumé des 7 derniers jours de méditation pour un utilisateur donné.
    *
-   * Les entités retournées incluent les relations vers :
-   * - `meditationType`
-   * - `meditationContent`
-   *
-   * Cette méthode est typiquement utilisée dans un endpoint d’administration
-   * ou pour un listing complet.
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Un tableau contenant, par jour, la durée totale et quelques métadonnées.
    */
-  async findAll() {
-    return this.prisma.meditationSession.findMany({
-      orderBy: { startedAt: 'desc' },
-      include: {
-        meditationType: true,
-        meditationContent: true,
-      },
-    });
-  }
-
-  /**
-   * Retourne un résumé des séances des 7 derniers jours.
-   *
-   * La fenêtre temporelle est calculée à partir de "maintenant" :
-   * - `sevenDaysAgo` = date actuelle - 7 jours, à minuit
-   * - on récupère toutes les séances dont `startedAt >= sevenDaysAgo`
-   *
-   * Le format de retour est volontairement réduit afin de limiter la
-   * quantité de données :
-   * - `date` (YYYY-MM-DD)
-   * - `durationSeconds`
-   * - `moodAfter`
-   */
-  async getLast7Days() {
+  async getLast7Days(userId: string) {
     const now = new Date();
     const sevenDaysAgo = new Date(now);
     sevenDaysAgo.setDate(now.getDate() - 7);
@@ -114,6 +73,7 @@ export class MeditationSessionService {
 
     const sessions = await this.prisma.meditationSession.findMany({
       where: {
+        userId,
         startedAt: { gte: sevenDaysAgo },
       },
       orderBy: { startedAt: 'asc' },
@@ -123,22 +83,19 @@ export class MeditationSessionService {
       date: s.startedAt ? s.startedAt.toISOString().split('T')[0] : null,
       durationSeconds: s.durationSeconds,
       moodAfter: s.moodAfter,
+      // Si l’on souhaite exploiter le type côté front :
+      meditationTypeId: s.meditationTypeId,
     }));
   }
 
   /**
-   * Calcule un résumé des séances d’hier seulement.
+   * Calcule un résumé des séances de méditation effectuées la veille.
    *
-   * Logique :
-   * - `today` est tronqué à minuit
-   * - `yesterdayStart` = today - 1 jour (00:00)
-   * - `yesterdayEnd`   = today (00:00)
-   *
-   * On renvoie :
-   * - la durée totale des séances d’hier (en secondes)
-   * - la dernière humeur finale (`moodAfter`) constatée
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Un objet contenant la durée totale de méditation et
+   *          la dernière humeur renseignée après une séance.
    */
-  async getYesterdaySummary() {
+  async getYesterdaySummary(userId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -149,6 +106,7 @@ export class MeditationSessionService {
 
     const sessions = await this.prisma.meditationSession.findMany({
       where: {
+        userId,
         startedAt: {
           gte: yesterdayStart,
           lt: yesterdayEnd,
@@ -172,13 +130,38 @@ export class MeditationSessionService {
   }
 
   /**
+   * Retourne l’ensemble des séances de méditation, triées par date de début
+   * décroissante, avec leurs relations de base.
+   *
+   * @remarks
+   * Les entités retournées incluent notamment :
+   * - `meditationType`
+   * - `meditationContent`
+   *
+   * Cette méthode est typiquement utilisée dans un contexte d’administration
+   * ou pour un listing complet.
+   *
+   * @returns La liste des séances de méditation enregistrées.
+   */
+  async findAll() {
+    return this.prisma.meditationSession.findMany({
+      orderBy: { startedAt: 'desc' },
+      include: {
+        meditationType: true,
+        meditationContent: true,
+      },
+    });
+  }
+
+  /**
    * Récupère tous les types de méditation actifs.
    *
-   * - Filtre uniquement les types `isActive = true`
-   * - Trie par `sortOrder` croissant
-   * - Mappe les entités Prisma vers des DTO exposables à l’API
+   * @remarks
+   * - Filtre uniquement les types avec `isActive = true`.
+   * - Trie par `sortOrder` croissant.
+   * - Mappe les entités Prisma vers des DTO exposables à l’API.
    *
-   * @returns Liste de `MeditationTypeDto` destinée au front.
+   * @returns Une liste de {@link MeditationTypeDto} destinée au front.
    */
   async getMeditationTypes(): Promise<MeditationTypeDto[]> {
     const types = await this.prisma.meditationType.findMany({
@@ -193,24 +176,26 @@ export class MeditationSessionService {
    * Récupère les contenus de méditation filtrés par type et,
    * éventuellement, par durée cible.
    *
+   * @remarks
    * Règles de filtrage :
-   * - `meditationTypeId` est obligatoire (sinon erreur).
+   * - `meditationTypeId` est obligatoire (sinon une erreur est levée).
    * - `isActive` doit être vrai.
    * - `defaultMeditationTypeId` doit correspondre au type fourni.
    * - Si `durationSeconds` est fourni et > 0, on applique une combinaison
    *   de règles sur `minDurationSeconds` et `maxDurationSeconds` :
-   *   - cas 1 : min <= duration <= max
-   *   - cas 2 : min null, max >= duration
-   *   - cas 3 : min <= duration, max null
-   *   - cas 4 : min null, max null (aucune contrainte)
+   *   - cas 1 : `min <= duration <= max`
+   *   - cas 2 : `min` null, `max >= duration`
+   *   - cas 3 : `min <= duration`, `max` null
+   *   - cas 4 : `min` null, `max` null (aucune contrainte)
    *
-   * Le résultat est ensuite réduit à ce que le front attend,
-   * à savoir un sous-ensemble de champs + un champ `durationSeconds`
+   * Le résultat est réduit à ce que le front attend :
+   * un sous-ensemble de champs plus un champ `durationSeconds`
    * basé sur `defaultDurationSeconds`.
    *
-   * @param meditationTypeId Identifiant du type de méditation.
+   * @param meditationTypeId Identifiant du type de méditation à filtrer.
    * @param durationSeconds Durée cible en secondes (facultative).
-   * @throws Error si `meditationTypeId` est vide.
+   * @returns La liste des contenus de méditation correspondant aux critères.
+   * @throws Error Si `meditationTypeId` est vide ou non fourni.
    */
   async getMeditationContents(
     meditationTypeId: string,
@@ -271,7 +256,7 @@ export class MeditationSessionService {
       },
     });
 
-    // mapping vers ce que le front attend
+    // Mapping vers ce que le front attend
     return items.map((c) => ({
       id: c.id,
       title: c.title,

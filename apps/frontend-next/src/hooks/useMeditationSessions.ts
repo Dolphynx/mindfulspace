@@ -9,7 +9,7 @@ import {
     type MeditationSession,
     type MeditationTypeItem,
 } from "@/lib/api/meditation";
-import {VisualBreathingConfig} from "@/components";
+import { VisualBreathingConfig } from "@/components";
 
 export type MeditationErrorType = "load" | "save" | "types" | null;
 
@@ -63,20 +63,13 @@ type UseMeditationSessionsResult = {
  * Le hook encapsule toutes les opérations liées à la ressource "méditation",
  * permettant ainsi aux composants d'utiliser une API minimaliste et stable.
  *
- * @param baseUrl URL personnalisée de l’API (optionnelle).
  * @returns Données, états et actions relatives aux séances de méditation.
  */
-export function useMeditationSessions(
-    baseUrl?: string,
-): UseMeditationSessionsResult {
+export function useMeditationSessions(): UseMeditationSessionsResult {
     const [sessions, setSessions] = useState<MeditationSession[]>([]);
     const [types, setTypes] = useState<MeditationTypeItem[]>([]);
     const [loading, setLoading] = useState(false);
-    const [errorType, setErrorType] =
-        useState<MeditationErrorType>(null);
-
-    /** Utilisé pour résoudre l’URL finale sans fallback implicite. */
-    const effectiveBaseUrl = baseUrl;
+    const [errorType, setErrorType] = useState<MeditationErrorType>(null);
 
     /**
      * Charge les dernières séances de méditation.
@@ -87,9 +80,7 @@ export function useMeditationSessions(
         setErrorType(null);
 
         try {
-            const data = await fetchLastMeditationSessions(
-                effectiveBaseUrl,
-            );
+            const data = await fetchLastMeditationSessions();
             setSessions(data);
         } catch (e) {
             console.error("[useMeditationSessions] load failed", e);
@@ -97,7 +88,7 @@ export function useMeditationSessions(
         } finally {
             setLoading(false);
         }
-    }, [effectiveBaseUrl]);
+    }, []);
 
     /**
      * Charge les types de méditation disponibles.
@@ -105,13 +96,13 @@ export function useMeditationSessions(
      */
     const loadTypes = useCallback(async () => {
         try {
-            const data = await fetchMeditationTypes(effectiveBaseUrl);
+            const data = await fetchMeditationTypes();
             setTypes(data);
         } catch (e) {
             console.error("[useMeditationSessions] types failed", e);
             setErrorType("types");
         }
-    }, [effectiveBaseUrl]);
+    }, []);
 
     /**
      * Chargement initial des données (séances et types).
@@ -130,10 +121,7 @@ export function useMeditationSessions(
         async (payload: CreateSessionInput) => {
             setErrorType(null);
             try {
-                await createMeditationSession(
-                    payload,
-                    effectiveBaseUrl,
-                );
+                await createMeditationSession(payload);
                 await load();
             } catch (e) {
                 console.error("[useMeditationSessions] save failed", e);
@@ -141,7 +129,7 @@ export function useMeditationSessions(
                 throw e;
             }
         },
-        [effectiveBaseUrl, load],
+        [load],
     );
 
     return {

@@ -21,6 +21,19 @@ variables:
   # Utilisé par Kaniko pour le fichier d'auth docker
   DOCKER_CONFIG: /kaniko/.docker
 
+  # ************************************************************
+  # Variables communes (staging / prod)
+  # ------------------------------------------------------------
+  # Utilisées pour l'authentification JWT, SendGrid, et OAuth
+  JWT_ACCESS_SECRET: $JWT_ACCESS_SECRET
+  JWT_REFRESH_SECRET: $JWT_REFRESH_SECRET
+  SENDGRID_API_KEY: $SENDGRID_API_KEY
+  EMAIL_FROM: $EMAIL_FROM
+  GOOGLE_CLIENT_ID: $GOOGLE_CLIENT_ID
+  GOOGLE_CLIENT_SECRET: $GOOGLE_CLIENT_SECRET
+  GITHUB_CLIENT_ID: $GITHUB_CLIENT_ID
+  GITHUB_CLIENT_SECRET: $GITHUB_CLIENT_SECRET
+
 # ************************************************************
 # DEFAULT : paramètres appliqués à tous les jobs (sauf override)
 # ------------------------------------------------------------
@@ -278,7 +291,6 @@ build:images:
       "$SSH_HOST" "$SSH_PORT" "$SSH_USER" > ~/.ssh/config
 
 deploy:staging:
-  # Extension de la base de déploiement (.deploy_base)
   extends: .deploy_base
   rules:
     # ----------------------------------------------------------
@@ -302,26 +314,32 @@ deploy:staging:
     # => création si nécessaire (mkdir -p est idempotent)
     - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
-    # api.env = DATABASE_URL complète
+    # api.env = fichier d'env côté API (staging)
     # ----------------------------------------------------------
-    # On génère un fichier api.env sur le VPS contenant une seule ligne :
-    #   DATABASE_URL=<URL>
-    # tee écrit dans le fichier, la redirection >/dev/null supprime la sortie.
-    # chmod 600 : permissions strictes.
+    # On génère le fichier en local puis on l’envoie sur le VPS.
+    # On y ajoute toutes les variables nécessaires au démarrage
+    # de l’API (DB, GROQ, SendGrid, OAuth, JWT, URLs de callback, etc.).
     # ----------------------------------------------------------
-    #- ssh vps "printf 'DATABASE_URL=%s\nGROQ_API_KEY=%s\n' '$URL' '$GROQ_API_KEY' \
-    #  | tee '$DEPLOY_DIR/api.env' >/dev/null && chmod 600 '$DEPLOY_DIR/api.env'"
-
-    # 2) on génère le fichier EN LOCAL dans le job CI
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    # Variables email / OAuth
+    - echo "SENDGRID_API_KEY=$SENDGRID_API_KEY" >> api.env
+    - echo "EMAIL_FROM=$EMAIL_FROM" >> api.env
+    - echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> api.env
+    - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> api.env
+    - echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> api.env
+    - echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> api.env
+    - echo "STAGING_GOOGLE_CALLBACK_URL=$STAGING_GOOGLE_CALLBACK_URL" >> api.env
+    - echo "STAGING_GITHUB_CALLBACK_URL=$STAGING_GITHUB_CALLBACK_URL" >> api.env
+    - echo "STAGING_FRONTEND_URL=$STAGING_FRONTEND_URL" >> api.env
+    # Secrets JWT nécessaires aux stratégies d'authentification
+    - echo "JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET" >> api.env
+    - echo "JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET" >> api.env
 
     # 3) on l’envoie sur le VPS
     - scp api.env vps:"$DEPLOY_DIR/api.env"
-
     # 4) droits
     - ssh vps "chmod 600 '$DEPLOY_DIR/api.env'"
-
     # 5) nettoyage local
     - rm api.env
 
@@ -331,7 +349,7 @@ deploy:staging:
     # Objectif : extraire le mot de passe Postgres de l'URL
     # STAGING_DATABASE_URL et le stocker dans un fichier db.env
     # sous la forme :
-    #   POSTGRES_PASSWORD=<mot_de_passe>
+    #   POSTGRES_PASSWORD=<mot de passe>
     #
     # Détails dans le script :
     # - set -euo pipefail :
@@ -366,9 +384,6 @@ deploy:staging:
     # ----------------------------------------------------------
     - ssh vps "cd '$DEPLOY_DIR' && docker compose pull && docker compose up -d && docker compose ps"
 
-    # migrations & seed Prisma
-    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma migrate deploy"
-    #- ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api npx prisma db seed || true"
     # migrations & seed Prisma (staging)
     # ----------------------------------------------------------
     # Lancement des migrations Prisma dans le conteneur "api" :
@@ -390,8 +405,6 @@ deploy:staging:
     - ssh vps "cd '$DEPLOY_DIR' && docker compose exec -T api sh -lc 'cd /app/apps/api-nest && npx prisma db seed || true'"
 
     # checks HTTP
-    #- ssh vps "curl -k -sfI https://api.staging.mindfulspace.be/health >/dev/null"
-    #- ssh vps "curl -k -sfI https://staging.mindfulspace.be >/dev/null"
     # ----------------------------------------------------------
     # Vérifications HTTP :
     # - curl -sfI :
@@ -429,8 +442,15 @@ deploy:prod:
     - ssh vps "mkdir -p '$DEPLOY_DIR'"
 
     # Fichier api.env PROD
+    # ----------------------------------------------------------
+    # Même principe que pour staging, mais pour l'environnement
+    # de production. On n’écrit pas les URLs "staging_*" ici.
+    # ----------------------------------------------------------
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    # Secrets JWT prod (utilisés par les stratégies d'auth)
+    - echo "JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET" >> api.env
+    - echo "JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET" >> api.env
 
     - scp api.env vps:"$DEPLOY_DIR/api.env"
     - ssh vps "chmod 600 '$DEPLOY_DIR/api.env'"
