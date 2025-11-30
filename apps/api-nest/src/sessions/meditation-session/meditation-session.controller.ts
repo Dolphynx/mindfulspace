@@ -1,47 +1,69 @@
 import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { MeditationSessionService } from './meditation-session.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
+import { Public } from '../../auth/decorators/public.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 /**
- * Contrôleur HTTP exposant les endpoints liés aux séances de méditation.
+ * Contrôleur HTTP regroupant les endpoints liés aux séances de méditation.
  *
- * Ce contrôleur fournit :
- * - POST `/meditation` : création d’une nouvelle séance
- * - GET  `/meditation` : récupération de toutes les séances (usage interne / debug)
- * - GET  `/meditation/last7days` : résumé des 7 derniers jours
- * - GET  `/meditation/summary/yesterday` : résumé d’hier
- * - GET  `/meditation/types` : obtention des types actifs de méditation
- * - GET  `/meditation/contents` : contenus filtrés pour un type et une durée
+ * @remarks
+ * Il expose les routes suivantes :
  *
- * Les règles métier et accès BDD sont délégués au `MeditationSessionService`.
+ * - **POST `/meditation`** : création d’une nouvelle séance.
+ * - **GET `/meditation`** : récupération brute de toutes les séances (debug / back-office).
+ * - **GET `/meditation/last7days`** : résumé compact des 7 derniers jours.
+ * - **GET `/meditation/summary/yesterday`** : résumé des séances d’hier.
+ * - **GET `/meditation/types`** *(public)* : obtention des types actifs de méditation.
+ * - **GET `/meditation/contents`** *(public)* : obtention des contenus filtrés.
  *
- * Pour Swagger :
- * - Les décorateurs `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()` etc.
- *   se placent directement sur les méthodes concernées.
+ * Le contrôleur délègue la logique métier et l’accès aux données
+ * au service {@link MeditationSessionService}.
+ *
+ * @see MeditationSessionService
+ *
+ * @remarks Swagger
+ * Les décorateurs tels que `@ApiTags`, `@ApiOperation`, `@ApiResponse`, etc.
+ * doivent être placés directement sur les méthodes concernées, si nécessaire.
  */
 @Controller('meditation')
 export class MeditationSessionController {
   constructor(private readonly meditationService: MeditationSessionService) {}
 
   /**
-   * Crée une nouvelle séance de méditation.
+   * Crée une nouvelle séance de méditation pour l’utilisateur courant.
    *
-   * Payload validé par `CreateMeditationSessionDto`.
+   * @remarks
+   * Les données reçues sont validées par {@link CreateMeditationSessionDto}, qui contient
+   * notamment :
+   * - l’identifiant du type de méditation ;
+   * - l’identifiant éventuel du contenu utilisé ;
+   * - la durée totale ;
+   * - les humeurs avant/après (optionnelles) ;
+   * - la date de séance.
    *
-   * @param dto Données complétant la séance (type, durée, humeur…).
-   * @returns La séance créée (entité Prisma).
+   * @param userId Identifiant de l’utilisateur authentifié (extrait du token).
+   * @param dto Données complètes de la séance à créer.
+   * @returns La séance de méditation créée.
    */
   @Post()
-  create(@Body() dto: CreateMeditationSessionDto) {
-    return this.meditationService.create(dto);
+  create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateMeditationSessionDto,
+  ) {
+    return this.meditationService.create(userId, dto);
   }
 
   /**
-   * Récupère l’intégralité des séances enregistrées.
+   * Récupère l’ensemble des séances de méditation enregistrées en base.
    *
-   * Souvent utilisé pour du debug ou un back-office.
+   * @remarks
+   * Utilisation typique :
+   * - debug,
+   * - back-office interne,
+   * - contrôles ponctuels.
    *
-   * @returns Liste complète des séances, triées par date.
+   * @returns La liste complète des séances, généralement triées par date.
    */
   @Get()
   findAll() {
@@ -49,55 +71,78 @@ export class MeditationSessionController {
   }
 
   /**
-   * Retourne les séances des 7 derniers jours sous forme d’un résumé compact.
+   * Retourne un résumé compact des séances des 7 derniers jours
+   * pour l’utilisateur courant.
    *
-   * Format inclut :
-   * - date (YYYY-MM-DD)
-   * - durée en secondes
-   * - humeur finale
+   * @remarks
+   * Chaque entrée du tableau retourné inclut au minimum :
+   * - `date` (format `YYYY-MM-DD`) ;
+   * - `durationSeconds` (durée totale de la séance) ;
+   * - `moodAfter` (humeur finale, optionnelle).
    *
-   * @returns Résumé des 7 derniers jours.
+   * @param userId Identifiant de l’utilisateur authentifié.
+   * @returns Un tableau de résumés journaliers.
    */
   @Get('last7days')
-  getLast7Days() {
-    return this.meditationService.getLast7Days();
+  getLast7Days(@CurrentUser('id') userId: string) {
+    return this.meditationService.getLast7Days(userId);
   }
 
   /**
-   * Donne un résumé des séances d’hier :
-   * - durée totale
-   * - dernière humeur de la journée
+   * Retourne un résumé des séances de méditation enregistrées la veille
+   * pour l’utilisateur courant.
    *
-   * @returns Objet résumé (`durationSeconds`, `moodAfter`).
+   * @remarks
+   * Le résumé inclut :
+   * - la durée cumulée de toutes les séances ;
+   * - la dernière humeur finale enregistrée.
+   *
+   * @param userId Identifiant de l’utilisateur authentifié.
+   * @returns Un objet résumé `{ durationSeconds, moodAfter }`.
    */
   @Get('summary/yesterday')
-  getYesterdaySummary() {
-    return this.meditationService.getYesterdaySummary();
+  getYesterdaySummary(@CurrentUser('id') userId: string) {
+    return this.meditationService.getYesterdaySummary(userId);
   }
 
   /**
-   * Récupère la liste des types de méditation actifs,
-   * triés selon `sortOrder`.
+   * Liste publique des types de méditation actifs.
    *
-   * @returns Liste des types sous forme de DTO.
+   * @remarks
+   * Le service retourne :
+   * - uniquement les types `isActive = true` ;
+   * - triés selon `sortOrder`.
+   *
+   * Endpoint non protégé grâce au décorateur {@link Public}.
+   *
+   * @returns Une liste de types de méditation prêts à être consommés par le frontend.
    */
+  @Public()
   @Get('types')
   async getMeditationTypes() {
     return this.meditationService.getMeditationTypes();
   }
 
   /**
-   * Récupère les contenus de méditation filtrés par :
-   * - type (`meditationTypeId`)
-   * - durée souhaitée (optionnelle, en secondes)
+   * Liste publique des contenus de méditation filtrés selon :
+   * - `meditationTypeId` (obligatoire),
+   * - `durationSeconds` (facultatif).
    *
-   * Le service applique ensuite des règles sur `minDurationSeconds`
-   * et `maxDurationSeconds` pour ne retourner que les contenus compatibles.
+   * @remarks
+   * Le service applique automatiquement les règles de compatibilité
+   * basées sur :
+   * - `minDurationSeconds`,
+   * - `maxDurationSeconds`,
+   * - `isActive`,
+   * - `isPremium` (la logique d’accès éventuelle reste côté front ou middleware).
+   *
+   * Endpoint non protégé grâce au décorateur {@link Public}.
    *
    * @param meditationTypeId Identifiant du type de méditation.
-   * @param durationSeconds Durée souhaitée en secondes (facultative).
-   * @returns Liste des contenus compatibles sous forme DTO front.
+   * @param durationSeconds Durée souhaitée, en secondes (facultatif, provenant de la query string).
+   * @returns Les contenus compatibles sous forme de DTO pour le frontend.
    */
+  @Public()
   @Get('contents')
   getMeditationContents(
     @Query('meditationTypeId') meditationTypeId: string,

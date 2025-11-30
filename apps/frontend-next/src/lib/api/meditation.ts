@@ -1,3 +1,11 @@
+import { apiFetch } from "./client";
+
+/**
+ * Type minimal représentant un type de méditation tel qu’exposé au frontend.
+ *
+ * Ce DTO correspond à la forme renvoyée par l’endpoint
+ * `GET /meditation/types`.
+ */
 export type MeditationTypeItem = {
     /** Identifiant unique du type de méditation. */
     id: string;
@@ -10,9 +18,10 @@ export type MeditationTypeItem = {
 
 /**
  * Représente une séance de méditation telle que renvoyée par l’API
- * via l’endpoint `/meditation/last7days`.
+ * via l’endpoint `GET /meditation/last7days`.
  *
- * Les champs sont volontairement minimalistes pour alléger les transferts.
+ * Les champs sont volontairement minimalistes pour alléger les transferts
+ * et s’adapter aux besoins du graphe d’historique côté UI.
  */
 export type MeditationSession = {
     /** Date normalisée au format YYYY-MM-DD. */
@@ -32,7 +41,8 @@ export type MeditationSession = {
 };
 
 /**
- * Payload envoyé au backend lors de la création d’une nouvelle séance.
+ * Payload envoyé au backend lors de la création d’une nouvelle séance
+ * via l’endpoint `POST /meditation`.
  */
 export type CreateMeditationSessionPayload = {
     /** Type de méditation sélectionné. */
@@ -57,20 +67,17 @@ export type CreateMeditationSessionPayload = {
     notes?: string;
 };
 
-/**
- * URL de base de l’API.
- * En développement : fallback sur http://localhost:3001.
- */
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-
 /* -------------------------------------------------------------------------- */
 /*  TYPES : réponses BACKEND "brutes"                                         */
 /* -------------------------------------------------------------------------- */
 
 /**
  * Forme brute d’un résumé de séance renvoyé par l’API.
- * Les types étant incertains (unknown), une phase de validation est nécessaire.
+ *
+ * Les champs sont typés en `unknown` car le JSON backend
+ * n’est pas typé statiquement côté client. Une phase de
+ * validation/normalisation est donc nécessaire avant
+ * de transformer ces données en {@link MeditationSession}.
  */
 type RawMeditationSummary = {
     date?: unknown;
@@ -84,25 +91,26 @@ type RawMeditationSummary = {
  * à une structure cohérente de résumé de séance.
  *
  * @param value Valeur quelconque issue du JSON backend.
- * @returns `true` si la structure est minimalement valide.
+ * @returns `true` si la structure est minimalement valide
+ *          (date string + durée numérique).
  */
 function isRawMeditationSummary(
     value: unknown,
 ): value is RawMeditationSummary {
     if (!value || typeof value !== "object") return false;
     const v = value as RawMeditationSummary;
-    return (
-        typeof v.date === "string" &&
-        typeof v.durationSeconds === "number"
-    );
+    return typeof v.date === "string" && typeof v.durationSeconds === "number";
 }
 
 /**
  * Convertit une valeur brute potentiellement hétérogène en
- * `MeditationSession`, ou retourne `null` si la structure est invalide.
+ * {@link MeditationSession}, ou retourne `null` si la structure est invalide.
  *
  * Ce pattern sécurise le front-end contre les dérives ou modifications
- * inattendues du backend.
+ * inattendues du backend (champs manquants, types incorrects, etc.).
+ *
+ * @param raw Objet brut supposé représenter un résumé de séance.
+ * @returns Une instance valide de {@link MeditationSession} ou `null`.
  */
 function normalizeMeditationSummary(
     raw: RawMeditationSummary,
@@ -110,17 +118,14 @@ function normalizeMeditationSummary(
     if (typeof raw.date !== "string") return null;
     if (typeof raw.durationSeconds !== "number") return null;
 
-    const moodAfter =
-        typeof raw.moodAfter === "number" ? raw.moodAfter : null;
+    const moodAfter = typeof raw.moodAfter === "number" ? raw.moodAfter : null;
 
     return {
         date: raw.date,
         durationSeconds: raw.durationSeconds,
         moodAfter,
         meditationTypeId:
-            typeof raw.meditationTypeId === "string"
-                ? raw.meditationTypeId
-                : null,
+            typeof raw.meditationTypeId === "string" ? raw.meditationTypeId : null,
     };
 }
 
@@ -131,19 +136,18 @@ function normalizeMeditationSummary(
 /**
  * Récupère les 7 derniers jours de séances de méditation.
  *
- * L’API renvoie une liste de structures non typées.
+ * L’API renvoie une liste de structures non typées (`unknown[]`).
  * Le traitement applique :
- * - un filtrage via `isRawMeditationSummary`
- * - une conversion forte via `normalizeMeditationSummary`
  *
- * @param baseUrl URL personnalisée de l’API (défaut : API_BASE_URL)
- * @returns Liste sécurisée de `MeditationSession`.
- * @throws En cas de réponse HTTP invalide.
+ * - un filtrage via {@link isRawMeditationSummary},
+ * - une conversion forte via {@link normalizeMeditationSummary},
+ * - un filtrage final pour éliminer les entrées invalides.
+ *
+ * @returns Liste sécurisée de {@link MeditationSession}.
+ * @throws En cas de réponse HTTP non OK (`res.ok === false`).
  */
-export async function fetchLastMeditationSessions(
-    baseUrl: string = API_BASE_URL,
-): Promise<MeditationSession[]> {
-    const res = await fetch(`${baseUrl}/meditation/last7days`, {
+export async function fetchLastMeditationSessions(): Promise<MeditationSession[]> {
+    const res = await apiFetch("/meditation/last7days", {
         cache: "no-store",
     });
 
@@ -168,14 +172,14 @@ export async function fetchLastMeditationSessions(
 /**
  * Récupère la liste des types de méditation disponibles.
  *
- * @param baseUrl URL personnalisée de l’API (facultatif).
- * @returns Liste brute de `MeditationTypeItem`.
- * @throws Si la requête échoue.
+ * Les données renvoyées correspondent directement
+ * au type {@link MeditationTypeItem}.
+ *
+ * @returns Promesse d’une liste de {@link MeditationTypeItem}.
+ * @throws Si la requête échoue (`res.ok === false`).
  */
-export async function fetchMeditationTypes(
-    baseUrl = API_BASE_URL,
-): Promise<MeditationTypeItem[]> {
-    const res = await fetch(`${baseUrl}/meditation/types`, {
+export async function fetchMeditationTypes(): Promise<MeditationTypeItem[]> {
+    const res = await apiFetch("/meditation/types", {
         cache: "no-store",
     });
 
@@ -191,27 +195,20 @@ export async function fetchMeditationTypes(
 /* -------------------------------------------------------------------------- */
 
 /**
- * Crée une nouvelle séance de méditation.
+ * Crée une nouvelle séance de méditation via l’endpoint `POST /meditation`.
  *
- * Envoie un payload JSON au backend contenant :
- * - le type
- * - le contenu optionnel
- * - la durée
- * - la date complète de la séance
- * - les humeurs avant/après
- * - d’éventuelles notes
+ * Cette fonction n’effectue pas de transformation sur la réponse :
+ * en cas de succès, elle se contente de résoudre la promesse, sinon
+ * elle lève une erreur avec le code HTTP.
  *
- * @param payload Données nécessaires à l’enregistrement.
- * @param baseUrl URL de l’API.
+ * @param payload Données nécessaires à l’enregistrement de la séance.
  * @throws Si l’API renvoie un code HTTP d’erreur.
  */
 export async function createMeditationSession(
     payload: CreateMeditationSessionPayload,
-    baseUrl: string = API_BASE_URL,
 ): Promise<void> {
-    const res = await fetch(`${baseUrl}/meditation`, {
+    const res = await apiFetch("/meditation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     });
 

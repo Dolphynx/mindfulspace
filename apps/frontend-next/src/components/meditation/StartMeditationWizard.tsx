@@ -61,20 +61,39 @@ type StartMeditationWizardProps = {
      * (par exemple après annulation ou après la fin du flux).
      */
     onCloseAction?: () => void;
+
+    /**
+     * Indique si l’utilisateur connecté a le droit d’accéder
+     * aux contenus premium.
+     *
+     * - `true`  → les contenus premium sont cliquables.
+     * - `false` → les contenus premium sont affichés mais grisés et désactivés.
+     *
+     * La logique de calcul (rôle `premium` / `admin`, etc.) est gérée
+     * par le parent (ex. via `useAuthRequired`) et non par ce composant.
+     */
+    canAccessPremium: boolean;
 };
 
 /**
  * Wizard guidant l’utilisateur à travers une séance de méditation.
  *
  * Ce composant orchestre l’ensemble du flux :
- * - choix du type et de la durée
- * - choix d’un contenu adapté
- * - saisie des humeurs avant/après
- * - lecture (audio, timer ou visuel)
- * - sauvegarde de la séance via l’API
+ * - choix du type et de la durée,
+ * - sélection d’un contenu adapté (avec gestion des contenus premium),
+ * - saisie des humeurs avant/après,
+ * - phase de pratique (audio, timer ou visuel),
+ * - sauvegarde de la séance via l’API.
+ *
+ * Il ne gère pas directement l’authentification, mais s’appuie sur la prop
+ * `canAccessPremium` pour verrouiller ou non les contenus premium.
+ *
+ * @param onCloseAction Callback appelé pour fermer le wizard.
+ * @param canAccessPremium Indique si l’utilisateur peut lancer des contenus premium.
  */
 export default function StartMeditationWizard({
                                                   onCloseAction,
+                                                  canAccessPremium,
                                               }: StartMeditationWizardProps) {
     const t = useTranslations("domainMeditation");
 
@@ -180,8 +199,8 @@ export default function StartMeditationWizard({
 
     /**
      * Gère l’annulation globale :
-     * - réinitialise l’état interne
-     * - notifie le parent via `onCloseAction` si fourni
+     * - réinitialise l’état interne,
+     * - notifie le parent via `onCloseAction` si fourni.
      *
      * À utiliser lorsque l’utilisateur souhaite abandonner la séance
      * sans rien enregistrer.
@@ -390,37 +409,85 @@ export default function StartMeditationWizard({
                                 </p>
                             ) : (
                                 <ul className="space-y-3">
-                                    {contents.map((c) => (
-                                        <li key={c.id}>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleSelectContent(
-                                                        c as WizardMeditationContent,
-                                                    )
-                                                }
-                                                className="flex w-full flex-col items-start gap-1 rounded-xl border border-slate-200 px-4 py-3 text-left shadow-sm transition hover:border-indigo-400 hover:shadow-md"
-                                            >
-                                                <div className="flex w-full items-center justify-between">
-                                                    <span className="font-medium">
-                                                        {c.title}
-                                                    </span>
-                                                    {c.isPremium && (
-                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                                                            {t(
-                                                                "wizard_premium",
+                                    {contents.map((c) => {
+                                        /**
+                                         * Contenu premium verrouillé si l’utilisateur
+                                         * n’a pas les droits (`canAccessPremium = false`).
+                                         */
+                                        const isPremiumLocked = c.isPremium && !canAccessPremium;
+
+                                        return (
+                                            <li key={c.id}>
+                                                <button
+                                                    type="button"
+                                                    disabled={isPremiumLocked}
+                                                    onClick={() => {
+                                                        if (isPremiumLocked) return;
+                                                        handleSelectContent(c as WizardMeditationContent);
+                                                    }}
+                                                    className={
+                                                        "flex w-full flex-col items-start gap-1 rounded-xl border px-4 py-3 text-left shadow-sm transition " +
+                                                        (isPremiumLocked
+                                                            ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-60"
+                                                            : "border-slate-200 hover:border-indigo-400 hover:shadow-md")
+                                                    }
+                                                >
+                                                    <div className="flex w-full items-center justify-between">
+                      <span className="font-medium flex items-center gap-2">
+                        {c.title}
+                      </span>
+
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Icône du mode */}
+                                                            {c.mode === "TIMER" && (
+                                                                <img
+                                                                    src="/images/meditation_mode_timer.png"
+                                                                    alt="timer"
+                                                                    className="h-6 w-6 opacity-80"
+                                                                />
                                                             )}
-                                                        </span>
+                                                            {c.mode === "AUDIO" && (
+                                                                <img
+                                                                    src="/images/meditation_mode_audio.png"
+                                                                    alt="audio"
+                                                                    className="h-6 w-6 opacity-80"
+                                                                />
+                                                            )}
+                                                            {c.mode === "VISUAL" && (
+                                                                <img
+                                                                    src="/images/meditation_mode_visual.png"
+                                                                    alt="visual"
+                                                                    className="h-6 w-6 opacity-80"
+                                                                />
+                                                            )}
+                                                            {c.mode === "VIDEO" && (
+                                                                <img
+                                                                    src="/images/meditation_mode_video.png"
+                                                                    alt="video"
+                                                                    className="h-6 w-6 opacity-80"
+                                                                />
+                                                            )}
+
+                                                            {/* Icône Premium */}
+                                                            {c.isPremium && (
+                                                                <img
+                                                                    src="/images/session_premium.png"
+                                                                    alt="premium"
+                                                                    className="h-6 w-6"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {c.description && (
+                                                        <p className="text-sm text-slate-500">
+                                                            {c.description}
+                                                        </p>
                                                     )}
-                                                </div>
-                                                {c.description && (
-                                                    <p className="text-sm text-slate-500">
-                                                        {c.description}
-                                                    </p>
-                                                )}
-                                            </button>
-                                        </li>
-                                    ))}
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             )}
                         </>
@@ -435,6 +502,7 @@ export default function StartMeditationWizard({
                     </button>
                 </section>
             )}
+
 
             {/* MOOD AVANT */}
             {step === "MOOD_BEFORE" && selectedContent && (
