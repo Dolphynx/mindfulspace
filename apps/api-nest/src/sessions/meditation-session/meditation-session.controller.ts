@@ -1,35 +1,44 @@
 import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { MeditationSessionService } from './meditation-session.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
+import { Public } from '../../auth/decorators/public.decorator';
 
 /**
- * Contrôleur HTTP exposant les endpoints liés aux séances de méditation.
+ * Contrôleur HTTP regroupant les endpoints liés aux séances de méditation.
  *
- * Ce contrôleur fournit :
- * - POST `/meditation` : création d’une nouvelle séance
- * - GET  `/meditation` : récupération de toutes les séances (usage interne / debug)
- * - GET  `/meditation/last7days` : résumé des 7 derniers jours
- * - GET  `/meditation/summary/yesterday` : résumé d’hier
- * - GET  `/meditation/types` : obtention des types actifs de méditation
- * - GET  `/meditation/contents` : contenus filtrés pour un type et une durée
+ * Il expose les routes suivantes :
  *
- * Les règles métier et accès BDD sont délégués au `MeditationSessionService`.
+ * - **POST `/meditation`** : création d’une nouvelle séance.
+ * - **GET `/meditation`** : récupération brute de toutes les séances (debug / back-office).
+ * - **GET `/meditation/last7days`** : résumé compact des 7 derniers jours.
+ * - **GET `/meditation/summary/yesterday`** : résumé des séances d’hier.
+ * - **GET `/meditation/types`** *(public)* : obtention des types actifs de méditation.
+ * - **GET `/meditation/contents`** *(public)* : obtention des contenus filtrés.
  *
- * Pour Swagger :
- * - Les décorateurs `@ApiTags()`, `@ApiOperation()`, `@ApiResponse()` etc.
- *   se placent directement sur les méthodes concernées.
+ * Le contrôleur délègue toute la logique métier et l’accès aux données
+ * au {@link MeditationSessionService}.
+ *
+ * ### Remarque Swagger
+ * Les décorateurs tels que `@ApiTags`, `@ApiOperation`, `@ApiResponse`…
+ * doivent être placés directement sur les méthodes concernées, si nécessaires.
  */
 @Controller('meditation')
 export class MeditationSessionController {
   constructor(private readonly meditationService: MeditationSessionService) {}
 
   /**
-   * Crée une nouvelle séance de méditation.
+   * Création d’une séance de méditation.
    *
-   * Payload validé par `CreateMeditationSessionDto`.
+   * Les données reçues sont validées par {@link CreateMeditationSessionDto}.
+   * Ce DTO contient notamment :
+   * - l’identifiant du type de méditation,
+   * - l’identifiant éventuel du contenu utilisé,
+   * - la durée totale,
+   * - les humeurs avant/après (optionnelles),
+   * - la date de séance.
    *
-   * @param dto Données complétant la séance (type, durée, humeur…).
-   * @returns La séance créée (entité Prisma).
+   * @param dto Données complètes de la séance à créer.
+   * @returns L'entité créée (objet Prisma ou équivalent).
    */
   @Post()
   create(@Body() dto: CreateMeditationSessionDto) {
@@ -37,11 +46,14 @@ export class MeditationSessionController {
   }
 
   /**
-   * Récupère l’intégralité des séances enregistrées.
+   * Récupération *non filtrée* de toutes les séances enregistrées en base.
    *
-   * Souvent utilisé pour du debug ou un back-office.
+   * Utilisé principalement :
+   * - pour du debug,
+   * - pour un back-office interne,
+   * - ou pour des contrôles ponctuels.
    *
-   * @returns Liste complète des séances, triées par date.
+   * @returns L’intégralité des séances, généralement triées par date.
    */
   @Get()
   findAll() {
@@ -49,14 +61,14 @@ export class MeditationSessionController {
   }
 
   /**
-   * Retourne les séances des 7 derniers jours sous forme d’un résumé compact.
+   * Résumé compact des séances des 7 derniers jours.
    *
-   * Format inclut :
-   * - date (YYYY-MM-DD)
-   * - durée en secondes
-   * - humeur finale
+   * Chaque entrée du tableau retourné inclut a minima :
+   * - `date` (format `YYYY-MM-DD`),
+   * - `durationSeconds` (durée totale de la séance),
+   * - `moodAfter` (humeur finale, optionnelle).
    *
-   * @returns Résumé des 7 derniers jours.
+   * @returns Un tableau de résumés journaliers.
    */
   @Get('last7days')
   getLast7Days() {
@@ -64,11 +76,11 @@ export class MeditationSessionController {
   }
 
   /**
-   * Donne un résumé des séances d’hier :
-   * - durée totale
-   * - dernière humeur de la journée
+   * Résumé des séances enregistrées la veille :
+   * - durée cumulée de toutes les séances,
+   * - dernière humeur finale enregistrée.
    *
-   * @returns Objet résumé (`durationSeconds`, `moodAfter`).
+   * @returns Un objet résumé `{ durationSeconds, moodAfter }`.
    */
   @Get('summary/yesterday')
   getYesterdaySummary() {
@@ -76,28 +88,40 @@ export class MeditationSessionController {
   }
 
   /**
-   * Récupère la liste des types de méditation actifs,
-   * triés selon `sortOrder`.
+   * Liste publique des types de méditation actifs.
    *
-   * @returns Liste des types sous forme de DTO.
+   * Le service les retourne triés selon `sortOrder`,
+   * et uniquement ceux marqués `isActive = true`.
+   *
+   * Endpoint *non protégé* grâce au décorateur {@link Public}.
+   *
+   * @returns Une liste de types de méditation prêts pour le frontend.
    */
+  @Public()
   @Get('types')
   async getMeditationTypes() {
     return this.meditationService.getMeditationTypes();
   }
 
   /**
-   * Récupère les contenus de méditation filtrés par :
-   * - type (`meditationTypeId`)
-   * - durée souhaitée (optionnelle, en secondes)
+   * Liste publique des contenus de méditation filtrés selon :
+   * - `meditationTypeId` (obligatoire),
+   * - `durationSeconds` (facultatif).
    *
-   * Le service applique ensuite des règles sur `minDurationSeconds`
-   * et `maxDurationSeconds` pour ne retourner que les contenus compatibles.
+   * Le service applique automatiquement les règles de compatibilité
+   * basées sur :
+   * - `minDurationSeconds`,
+   * - `maxDurationSeconds`,
+   * - `isActive`,
+   * - `isPremium` (la logique d'accès se fait côté front).
+   *
+   * Endpoint *non protégé* grâce au décorateur {@link Public}.
    *
    * @param meditationTypeId Identifiant du type de méditation.
-   * @param durationSeconds Durée souhaitée en secondes (facultative).
-   * @returns Liste des contenus compatibles sous forme DTO front.
+   * @param durationSeconds Durée souhaitée, en secondes (facultatif).
+   * @returns Les contenus compatibles sous forme DTO pour le frontend.
    */
+  @Public()
   @Get('contents')
   getMeditationContents(
     @Query('meditationTypeId') meditationTypeId: string,

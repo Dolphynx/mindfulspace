@@ -7,6 +7,7 @@ import {
     type MeditationErrorType,
 } from "@/hooks/useMeditationSessions";
 import { MeditationHistoryCard } from "@/components/meditation";
+import { useAuthRequired } from "@/hooks/useAuthRequired";
 import StartMeditationWizard from "@/components/meditation/StartMeditationWizard";
 import {
     SessionDashboardLayout,
@@ -17,15 +18,16 @@ import { useState } from "react";
 import DomainSwitcher from "@/components/DomainSwitcher";
 
 /**
- * Calcule un message d'erreur global à partir du type d'erreur métier.
+ * Génère un message d’erreur global en fonction du type d’échec métier.
  *
- * Cette fonction centralise la correspondance entre les codes d'erreur
- * (`load`, `save`, `types`) et les clés de traduction i18n afin de garder
- * la logique de mapping dans un endroit unique.
+ * Centralise la correspondance entre les codes d’erreur internes
+ * (`load`, `save`, `types`) et les clés de traduction i18n.
+ * Cela évite que la logique de mapping soit dupliquée ailleurs
+ * dans l’interface.
  *
- * @param t Fonction de traduction retournée par `useTranslations`.
- * @param errorType Type d'erreur courant (chargement, sauvegarde, types…).
- * @returns Message d'erreur localisé, ou `null` s'il n'y a pas d'erreur.
+ * @param t Fonction de traduction obtenue via `useTranslations`.
+ * @param errorType Type d’erreur renvoyé par `useMeditationSessions`.
+ * @returns Message d’erreur utilisateur ou `null` s’il n’y a pas d’erreur.
  */
 function getErrorMessage(
     t: ReturnType<typeof useTranslations>,
@@ -38,11 +40,22 @@ function getErrorMessage(
 }
 
 /**
- * Page principale de gestion de la méditation.
+ * Page principale du domaine “Méditation”.
+ *
+ * Elle regroupe :
+ * - l’historique des séances,
+ * - le formulaire manuel,
+ * - le wizard de démarrage d’une nouvelle séance,
+ * - le sélecteur de domaine,
+ * - le layout générique des pages de sessions.
+ *
+ * Le comportement premium / non-premium est géré via `useAuthRequired`
+ * et transmis au wizard via `canAccessPremium`.
  */
 export default function MeditationPage() {
     const t = useTranslations("domainMeditation");
 
+    // Données métier : dernières sessions, types disponibles, erreurs, etc.
     const {
         sessions,
         types,
@@ -51,9 +64,30 @@ export default function MeditationPage() {
         createSession,
     } = useMeditationSessions();
 
+    // Affichage du wizard
     const [isStartWizardOpen, setIsStartWizardOpen] = useState(false);
 
+    // Message d’erreur global pour le layout
     const globalErrorMessage = getErrorMessage(t, errorType);
+
+    // Utilisateur connecté (+ rôles)
+    const { user } = useAuthRequired();
+
+    /**
+     * Détermine si l’utilisateur peut accéder aux contenus premium.
+     *
+     * Le backend renvoie `roles: string[]`, déjà normalisés par `useAuthRequired`
+     * (user, premium, coach, admin).
+     *
+     * Les rôles premium sont :
+     * - premium
+     * - admin
+     */
+    const canAccessPremium =
+        !!user &&
+        user.roles
+            .map((r) => r.toLowerCase())
+            .some((role) => ["premium", "admin"].includes(role));
 
     return (
         <main className="text-brandText flex flex-col">
@@ -64,7 +98,7 @@ export default function MeditationPage() {
                             title={t("title")}
                             subtitle={t("subtitle")}
                         />
-                        {/* Sélecteur des 3 domaines sous le hero */}
+                        {/* Sélecteur des 3 domaines sous le header */}
                         <DomainSwitcher current="meditation" />
                     </div>
                 }
@@ -89,6 +123,8 @@ export default function MeditationPage() {
                                         {t("player_description")}
                                     </p>
                                 </div>
+
+                                {/* Bouton d’ouverture du wizard */}
                                 <button
                                     onClick={() => setIsStartWizardOpen(true)}
                                     className={`rounded-full bg-sky-500 px-5 py-2 text-sm font-medium text-white transition-all duration-500 ${
@@ -103,6 +139,7 @@ export default function MeditationPage() {
                                 </button>
                             </div>
 
+                            {/* Bloc animé contenant le wizard */}
                             <div
                                 className={`transition-all duration-700 overflow-hidden ${
                                     isStartWizardOpen
@@ -116,6 +153,7 @@ export default function MeditationPage() {
                                             onCloseAction={() =>
                                                 setIsStartWizardOpen(false)
                                             }
+                                            canAccessPremium={canAccessPremium}
                                         />
                                     </div>
                                 )}
