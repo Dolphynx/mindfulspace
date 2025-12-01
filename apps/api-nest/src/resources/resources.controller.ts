@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ResourcesService } from "./resources.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
+import { Public } from '../auth/decorators/public.decorator';
 
 /**
  * Contrôleur responsable de l’exposition des ressources via l’API.
@@ -8,6 +9,7 @@ import { GetResourcesDto } from "./dto/get-resources.dto";
  * et fournit les points d’accès publics pour la récupération des
  * ressources, catégories et détails individuels.
  */
+@Public()
 @Controller("resources")
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
