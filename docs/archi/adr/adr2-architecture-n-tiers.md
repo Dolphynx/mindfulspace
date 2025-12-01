@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace
-**Date :** 02/10/2025
-**Statut :** accepté
-**Auteur :** Équipe MindfulSpace
-
 # ADR 2 : Architecture N-tiers
 
 ## Status

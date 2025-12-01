@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace
-**Date :** 10/10/2025
-**Statut :** accepté
-**Auteur :** Équipe MindfulSpace
-
 # ADR 7 : Sécurité réseau et isolation
 
 ## Status

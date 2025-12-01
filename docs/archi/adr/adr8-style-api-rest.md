@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 04/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace
-
 # Style d’API : REST + OpenAPI
 
 ## Contexte

@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 06/11/2025  
-**Statut :** accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 6 : Intégration, build Docker et déploiement continu avec GitLab CI/CD
 
 ## Status

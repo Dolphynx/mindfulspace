@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 24/11/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace
-
 # Gestion multilingue du front (i18n avec App Router)
 
 ## Contexte

@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 10/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 5 : Reverse proxy avec Traefik
 
 ## Status

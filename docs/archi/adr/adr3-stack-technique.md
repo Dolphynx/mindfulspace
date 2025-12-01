@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 06/10/2025  
-**Statut :** accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 3 : Stack technique
 
 ## Status
