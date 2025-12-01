@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 16/10/2025  
-**Statut :** accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 4 : Monorepo géré avec PNPM
 
 ## Status  

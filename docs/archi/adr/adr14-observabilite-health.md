@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 15/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace (S. Gouvars)
-
 # ADR 14 : Observabilité & Santé (Healthchecks, Logs, Métriques)
 
 ## Status  

@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 22/10/2025  
-**Statut :** accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 12 : Conteneurisation des applications
 
 ## Status  

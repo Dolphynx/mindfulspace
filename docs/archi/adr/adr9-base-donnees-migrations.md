@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 04/10/2025  
-**Statut :** Accepté  
-**Auteur :** Équipe MindfulSpace
-
 # ADR 7 : Base de données, Prisma & migrations
 
 ## Status
