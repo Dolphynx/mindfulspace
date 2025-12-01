@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace
-**Date :** 01/10/2025
-**Statut :** accepté
-**Auteur :** Équipe MindfulSpace
-
 # ADR 1 : Hébergement sur VPS avec Docker
 
 ## Status

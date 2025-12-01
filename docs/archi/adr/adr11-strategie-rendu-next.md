@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 22/10/2025  
-**Statut :** En cours  
-**Auteur :** Équipe MindfulSpace
-
 # Stratégie de rendu Next : SSR + SSG/ISR
 
 ## Contexte

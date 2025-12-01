@@ -1,21 +1,26 @@
+# C1 – Contexte MindfulSpace
+
 ```mermaid
 flowchart LR
 %% Contexte global MindfulSpace
 
-subgraph internet [Internet]
-userAnon[Utilisateur anonyme]
-userAuth[Utilisateur authentifié]
-mailSrv[Serveur SMTP]
-analyticsSrv[Service externe - statistiques]
+subgraph internet [Utilisateurs & navigateurs]
+  userAnon[Utilisateur anonyme]
+  userAuth[Utilisateur authentifié]
 end
 
 subgraph mindfulSpace [Système MindfulSpace]
-appWeb[Application Web PWA]
-apiSrv[API REST NestJS]
+  appWeb[Application Web PWA\nNext.js]
+  apiSrv[API REST\nNestJS]
 end
 
-userAnon -->|Consulte pages publiques| appWeb
-userAuth -->|Utilise les fonctionnalités connectées| appWeb
+subgraph externals [Systèmes externes]
+  mailSrv[SMTP]
+  analyticsSrv[Analytics]
+end
+
+userAnon -->|Pages publiques| appWeb
+userAuth -->|Fonctionnalités connectées| appWeb
 appWeb <--> apiSrv
 apiSrv --> mailSrv
 appWeb -.-> analyticsSrv

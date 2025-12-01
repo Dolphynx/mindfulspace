@@ -1,31 +1,30 @@
+# C2 – Conteneurs MindfulSpace
+
 ```mermaid
 flowchart TD
-%% Vue conteneurs MindfulSpace (C4 - Container Diagram)
 
-subgraph vps [Hôte VPS Debian (staging & production)]
-traefik[Traefik v3.x<br/>Reverse proxy + TLS]
-frontend[Frontend Next.js<br/>Image Docker (staging/prod)]
-backend[NestJS API<br/>Image Docker (staging/prod)]
-postgres[(PostgreSQL<br/>Volume persistant)]
-dockerEngine[Docker Engine<br/>Docker Compose + Deployer]
+client[Client web]
+
+subgraph vps [VPS Debian 13]
+  traefik[Traefik v3\nReverse proxy]
+  frontend[Next.js\nFrontend]
+  backend[NestJS\nAPI]
+  postgres[(PostgreSQL)]
 end
 
 subgraph cicd [GitLab CI/CD]
-runner[Runner Docker<br/>Kaniko + SSH deploy]
+  runner[Runner Docker\nKaniko + SSH]
 end
 
 subgraph registry [GitLab Container Registry]
-reg[(Registry Docker<br/>Images API & Front)]
+  reg[(Registry Docker)]
 end
 
-client[Client Web ou Mobile] -->|HTTPS :443| traefik
-traefik -->|GET /| frontend
-traefik -->|GET /api| backend
-
+client -->|HTTPS| traefik
+traefik --> frontend
+traefik --> backend
 backend --> postgres
 
-runner -->|build images<br/>push staging/prod| reg
-dockerEngine -->|pull latest<br/>staging/prod| reg
-dockerEngine --> frontend
-dockerEngine --> backend
+runner -->|build/push| reg
+vps -->|pull images| reg
 ```

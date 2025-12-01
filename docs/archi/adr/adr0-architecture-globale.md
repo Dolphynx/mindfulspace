@@ -1,10 +1,5 @@
 # MindfulSpace – Architecture Decision Record
 
-**Projet :** MindfulSpace  
-**Date :** 23/10/2025  
-**Statut :** accepté  
-**Auteur :** Équipe MindfulSpace 
-
 # ADR 0 : Architecture globale et pipeline MindfulSpace
 
 ## Status
