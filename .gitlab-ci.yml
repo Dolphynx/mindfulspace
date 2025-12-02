@@ -329,9 +329,9 @@ deploy:staging:
     - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> api.env
     - echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> api.env
     - echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> api.env
-    - echo "STAGING_GOOGLE_CALLBACK_URL=$STAGING_GOOGLE_CALLBACK_URL" >> api.env
-    - echo "STAGING_GITHUB_CALLBACK_URL=$STAGING_GITHUB_CALLBACK_URL" >> api.env
-    - echo "STAGING_FRONTEND_URL=$STAGING_FRONTEND_URL" >> api.env
+    - echo "GOOGLE_CALLBACK_URL=$STAGING_GOOGLE_CALLBACK_URL" >> api.env
+    - echo "GITHUB_CALLBACK_URL=$STAGING_GITHUB_CALLBACK_URL" >> api.env
+    - echo "FRONTEND_URL=$STAGING_FRONTEND_URL" >> api.env
     # Secrets JWT nécessaires aux stratégies d'authentification
     - echo "JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET" >> api.env
     - echo "JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET" >> api.env
@@ -448,6 +448,16 @@ deploy:prod:
     # ----------------------------------------------------------
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    # Variables email / OAuth
+    - echo "SENDGRID_API_KEY=$SENDGRID_API_KEY" >> api.env
+    - echo "EMAIL_FROM=$EMAIL_FROM" >> api.env
+    - echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> api.env
+    - echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> api.env
+    - echo "GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID" >> api.env
+    - echo "GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET" >> api.env
+    - echo "GOOGLE_CALLBACK_URL=$PROD_GOOGLE_CALLBACK_URL" >> api.env
+    - echo "GITHUB_CALLBACK_URL=$PROD_GITHUB_CALLBACK_URL" >> api.env
+    - echo "FRONTEND_URL=$PROD_FRONTEND_URL" >> api.env
     # Secrets JWT prod (utilisés par les stratégies d'auth)
     - echo "JWT_ACCESS_SECRET=$JWT_ACCESS_SECRET" >> api.env
     - echo "JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET" >> api.env
