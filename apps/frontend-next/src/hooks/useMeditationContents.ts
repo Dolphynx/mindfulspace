@@ -38,7 +38,12 @@ export type MeditationContent = {
     /** Durée maximale recommandée en secondes, si applicable. */
     maxDurationSeconds?: number | null;
 
-    /** Durée par défaut utilisée lorsque l’utilisateur n’en choisit pas. */
+    /**
+     * Durée par défaut utilisée lorsque l’utilisateur n’en choisit pas.
+     *
+     * Selon l’implémentation backend, ce champ peut être directement fourni
+     * ou dérivé d’un champ générique de durée.
+     */
     defaultDurationSeconds?: number | null;
 
     /** Ordre d'affichage dans les listes, facultatif. */
@@ -79,7 +84,7 @@ const API_BASE_URL =
  * Hook permettant de récupérer les contenus de méditation depuis l'API.
  *
  * Ce hook :
- * - effectue une requête `GET /meditation/contents`
+ * - effectue une requête `GET /meditation-contents`
  * - applique des paramètres facultatifs (`typeId`, `durationSeconds`)
  * - gère les états `loading` et `error`
  * - réinitialise les contenus si aucun `typeId` n’est fourni
@@ -119,7 +124,7 @@ export function useMeditationContents(
                 }
 
                 const res = await fetch(
-                    `${API_BASE_URL}/meditation/contents?${params.toString()}`,
+                    `${API_BASE_URL}/meditation-contents?${params.toString()}`,
                     { cache: "no-store" },
                 );
 

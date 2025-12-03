@@ -4,7 +4,7 @@ import { apiFetch } from "./client";
  * Type minimal représentant un type de méditation tel qu’exposé au frontend.
  *
  * Ce DTO correspond à la forme renvoyée par l’endpoint
- * `GET /meditation/types`.
+ * `GET /meditation-types`.
  */
 export type MeditationTypeItem = {
     /** Identifiant unique du type de méditation. */
@@ -18,7 +18,7 @@ export type MeditationTypeItem = {
 
 /**
  * Représente une séance de méditation telle que renvoyée par l’API
- * via l’endpoint `GET /meditation/last7days`.
+ * via l’endpoint `GET /me/meditation-sessions?lastDays=7`.
  *
  * Les champs sont volontairement minimalistes pour alléger les transferts
  * et s’adapter aux besoins du graphe d’historique côté UI.
@@ -42,7 +42,7 @@ export type MeditationSession = {
 
 /**
  * Payload envoyé au backend lors de la création d’une nouvelle séance
- * via l’endpoint `POST /meditation`.
+ * via l’endpoint `POST /me/meditation-sessions`.
  */
 export type CreateMeditationSessionPayload = {
     /** Type de méditation sélectionné. */
@@ -130,11 +130,12 @@ function normalizeMeditationSummary(
 }
 
 /* -------------------------------------------------------------------------- */
-/*  GET /meditation/last7days                                                 */
+/*  GET /me/meditation-sessions?lastDays=7                                    */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Récupère les 7 derniers jours de séances de méditation.
+ * Récupère les 7 derniers jours de séances de méditation
+ * pour l’utilisateur courant.
  *
  * L’API renvoie une liste de structures non typées (`unknown[]`).
  * Le traitement applique :
@@ -147,7 +148,7 @@ function normalizeMeditationSummary(
  * @throws En cas de réponse HTTP non OK (`res.ok === false`).
  */
 export async function fetchLastMeditationSessions(): Promise<MeditationSession[]> {
-    const res = await apiFetch("/meditation/last7days", {
+    const res = await apiFetch("/me/meditation-sessions?lastDays=7", {
         cache: "no-store",
     });
 
@@ -166,7 +167,7 @@ export async function fetchLastMeditationSessions(): Promise<MeditationSession[]
 }
 
 /* -------------------------------------------------------------------------- */
-/*  GET /meditation/types                                                     */
+/*  GET /meditation-types                                                     */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -179,7 +180,7 @@ export async function fetchLastMeditationSessions(): Promise<MeditationSession[]
  * @throws Si la requête échoue (`res.ok === false`).
  */
 export async function fetchMeditationTypes(): Promise<MeditationTypeItem[]> {
-    const res = await apiFetch("/meditation/types", {
+    const res = await apiFetch("/meditation-types", {
         cache: "no-store",
     });
 
@@ -191,11 +192,12 @@ export async function fetchMeditationTypes(): Promise<MeditationTypeItem[]> {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  POST /meditation                                                          */
+/*  POST /me/meditation-sessions                                              */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Crée une nouvelle séance de méditation via l’endpoint `POST /meditation`.
+ * Crée une nouvelle séance de méditation via l’endpoint
+ * `POST /me/meditation-sessions`.
  *
  * Cette fonction n’effectue pas de transformation sur la réponse :
  * en cas de succès, elle se contente de résoudre la promesse, sinon
@@ -207,7 +209,7 @@ export async function fetchMeditationTypes(): Promise<MeditationTypeItem[]> {
 export async function createMeditationSession(
     payload: CreateMeditationSessionPayload,
 ): Promise<void> {
-    const res = await apiFetch("/meditation", {
+    const res = await apiFetch("/me/meditation-sessions", {
         method: "POST",
         body: JSON.stringify(payload),
     });
