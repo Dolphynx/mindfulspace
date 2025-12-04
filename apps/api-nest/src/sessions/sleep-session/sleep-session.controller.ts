@@ -2,6 +2,7 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { SleepSessionService } from './sleep-session.service';
 import { CreateSleepSessionDto } from './dto/sleep-session.dto';
+import { CurrentUser } from '@mindfulspace/api/auth/decorators/current-user.decorator';
 
 @Controller('sleep')
 export class SleepSessionController {
@@ -18,8 +19,8 @@ export class SleepSessionController {
   }
 
   @Get('last7days')
-  getLast7Days() {
-    return this.sleepService.getLast7Days();
+  getLast7Days(@CurrentUser('id') userId: string) {
+    return this.sleepService.getLast7Days(userId);
   }
 
   @Get('summary/yesterday')

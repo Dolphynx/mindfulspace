@@ -48,12 +48,13 @@ export class SleepSessionService {
     });
   }
 
-  async getLast7Days() {
+  async getLast7Days(userId: string) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const sessions = await this.prisma.sleepSession.findMany({
       where: {
+        userId,
         dateSession: { gte: sevenDaysAgo },
       },
       orderBy: { dateSession: 'asc' },
