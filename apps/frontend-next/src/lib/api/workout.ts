@@ -2,6 +2,8 @@
 /*  TYPES                                                                     */
 /* -------------------------------------------------------------------------- */
 
+import {apiFetch} from "@/lib/api/client";
+
 export type WorkoutTypeItem = {
     id: string;
     name: string;
@@ -151,7 +153,7 @@ function normalizeWorkoutType(
 export async function fetchLastWorkoutSessions(
     baseUrl = API_BASE_URL,
 ): Promise<WorkoutSession[]> {
-    const res = await fetch(`${baseUrl}/workouts/last7days`, {
+    const res = await apiFetch(`${baseUrl}/workouts/last7days`, {
         cache: "no-store",
     });
 
@@ -169,7 +171,7 @@ export async function fetchLastWorkoutSessions(
 export async function fetchWorkoutTypes(
     baseUrl = API_BASE_URL,
 ): Promise<WorkoutTypeItem[]> {
-    const res = await fetch(`${baseUrl}/workouts/exercice-types`, {
+    const res = await apiFetch(`${baseUrl}/workouts/exercice-types`, {
         cache: "no-store",
     });
 
@@ -188,7 +190,7 @@ export async function createWorkoutSession(
     payload: CreateWorkoutSessionPayload,
     baseUrl = API_BASE_URL,
 ): Promise<void> {
-    const res = await fetch(`${baseUrl}/workouts`, {
+    const res = await apiFetch(`${baseUrl}/workouts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
