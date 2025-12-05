@@ -196,7 +196,8 @@ model ExerciceType {
   Description String
 
   exerciceSessions ExerciceSession[]
-  steps            ExerciceStep[]   // 👈 all the steps for this exercise type
+  steps            ExerciceStep[]   // all the steps for this exercise type
+  workoutProgramExercices WorkoutProgramExercice[]
 }
 
 model ExerciceStep {
@@ -224,6 +225,41 @@ model ExerciceSession {
 
   @@id([workoutSessionId, exerciceTypeId]) // clé composite (un type par séance)
 }
+
+model WorkoutProgram {
+  id          String                @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime              @default(now())
+
+  days        WorkoutProgramDay[]
+}
+
+model WorkoutProgramDay {
+  id               String               @id @default(uuid())
+  workoutProgramId String
+  workoutProgram   WorkoutProgram       @relation(fields: [workoutProgramId], references: [id])
+
+  order            Int                  // Day order inside the program (1, 2, 3...)
+  title            String               // e.g. "Day A – Upper Body"
+
+  weekday          Int?                 // 1 = Monday ... 7 = Sunday, optional
+
+  exercices        WorkoutProgramExercice[]
+}
+
+model WorkoutProgramExercice {
+  id                String        @id @default(uuid())
+  programDayId      String
+  exerciceTypeId    String
+
+  programDay        WorkoutProgramDay @relation(fields: [programDayId], references: [id])
+  exerciceType      ExerciceType      @relation(fields: [exerciceTypeId], references: [id])
+
+  defaultRepetitionCount Int?
+  defaultSets            Int?
+}
+
 
 model User {
   id          String  @id @default(cuid())

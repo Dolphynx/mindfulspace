@@ -13,6 +13,7 @@ import { SleepSessionModule } from './sessions/sleep-session/sleep-session.modul
 import { MeditationSessionModule } from './sessions/meditation-session/meditation-session.module';
 import { WorkoutSessionModule } from '@mindfulspace/api/sessions/workout-session/workout-session.module';
 import { ResourcesModule } from './resources/resources.module';
+import { WorkoutProgramModule} from "@mindfulspace/api/programs/workout-program/workout-program.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ResourcesModule } from './resources/resources.module';
       SleepSessionModule,
       MeditationSessionModule,
       WorkoutSessionModule,
+      WorkoutProgramModule,
     AiModule,
     ResourcesModule,
   ],
