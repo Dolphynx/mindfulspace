@@ -98,7 +98,7 @@ export default function SleepManualForm({onCreateSession}: SleepManualFormProps)
                     type="range"
                     min={4}
                     max={12}
-                    step={0.5}
+                    step={1}
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
                     className="w-full"
