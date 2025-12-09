@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import type { WorkoutTypeItem } from "@/lib/api/workout";
 import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/MoodPicker";
@@ -13,9 +13,13 @@ type Props = {
         repetitionCount: number;
         quality: number | null;
     }) => Promise<void>;
+    onCancel: () => void;
 };
 
-export function WorkoutStartSessionCard({ types, onSave }: Props) {
+
+
+
+export function WorkoutStartSessionCard({ types, onSave, onCancel }: Props) {
     const t = useTranslations("domainExercice");
 
     const [selectedId, setSelectedId] = useState("");
@@ -27,10 +31,11 @@ export function WorkoutStartSessionCard({ types, onSave }: Props) {
     const steps = selectedType?.steps ?? [];
     const hasSelected = Boolean(selectedType);
 
-    function handleSelect(id: string) {
-        setSelectedId(id);
-        setStepIndex(0);
-    }
+    useEffect(() => {
+        if (!selectedId && types.length > 0) {
+            setSelectedId(types[0].id);
+        }
+    }, [types, selectedId]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -53,19 +58,18 @@ export function WorkoutStartSessionCard({ types, onSave }: Props) {
 
                 <select
                     value={selectedId}
-                    onChange={(e) => handleSelect(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    onChange={(e) => setSelectedId(e.target.value)}
+                    className="w-full ..."
                 >
-                    <option value="">
-                        — {t("manualForm_selectPlaceholder")} —
-                    </option>
-                    {types.map((t) => (
+                    {types.map(t => (
                         <option key={t.id} value={t.id}>
                             {t.name}
                         </option>
                     ))}
                 </select>
+
             </div>
+
 
             {/* Repetition slider */}
             {hasSelected && (
@@ -154,19 +158,31 @@ export function WorkoutStartSessionCard({ types, onSave }: Props) {
 
             {/* Finish button */}
             {hasSelected && (
-                <button
-                    className="w-full mt-3 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"
-                    onClick={() =>
-                        onSave({
-                            exerciceTypeId: selectedId,
-                            repetitionCount,
-                            quality,
-                        })
-                    }
-                >
-                    {t("start_finishButton")}
-                </button>
+                <div className="flex items-center gap-3 mt-3">
+                    <button
+                        className="flex-1 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"
+                        onClick={() =>
+                            onSave({
+                                exerciceTypeId: selectedId,
+                                repetitionCount,
+                                quality,
+                            })
+                        }
+                    >
+                        {t("start_finishButton")}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="text-sm text-slate-600 underline underline-offset-2"
+                    >
+                        {t("manualForm_cancelButton")}
+                    </button>
+
+                </div>
             )}
+
 
             {!hasSelected && (
                 <div className="rounded-xl bg-white/80 p-4 text-center border border-dashed text-slate-500">

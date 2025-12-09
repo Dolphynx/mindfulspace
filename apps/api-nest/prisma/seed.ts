@@ -819,6 +819,92 @@ async function main() {
   console.log("✔ Sun Salutation seeded with 11 steps.");
   console.log("✔ ExerciceType seeded");
 
+  // ---------------------------------------------------------------------------
+// 2.x Workout Programs (demo)
+// ---------------------------------------------------------------------------
+  console.log("🌱 Seeding workout programs...");
+
+// Get some exercise type IDs
+  const pushUps = await prisma.exerciceType.findUnique({ where: { name: "Push Ups" } });
+  const squats = await prisma.exerciceType.findUnique({ where: { name: "Squats" } });
+  const plank = await prisma.exerciceType.findUnique({ where: { name: "Plank" } });
+  const burpees = await prisma.exerciceType.findUnique({ where: { name: "Burpees" } });
+
+  if (!pushUps || !squats || !plank || !burpees) {
+    throw new Error("Some required exercise types not found");
+  }
+
+// Program #1
+  await prisma.workoutProgram.create({
+    data: {
+      title: "Full Body Beginner",
+      description: "A simple 2-day full body routine.",
+      days: {
+        create: [
+          {
+            title: "Day 1 – Full Body A",
+            order: 1,
+            weekday: 1,
+            exercices: {
+              create: [
+                { exerciceTypeId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceTypeId: squats.id, defaultRepetitionCount: 12, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Day 2 – Full Body B",
+            order: 2,
+            weekday: 3,
+            exercices: {
+              create: [
+                { exerciceTypeId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+                { exerciceTypeId: burpees.id, defaultRepetitionCount: 8, defaultSets: 2 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+// Program #2
+  await prisma.workoutProgram.create({
+    data: {
+      title: "Upper / Lower Split",
+      description: "Classic 4-day weekly split.",
+      days: {
+        create: [
+          {
+            title: "Upper",
+            order: 1,
+            weekday: 1,
+            exercices: {
+              create: [
+                { exerciceTypeId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 4 },
+                { exerciceTypeId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Lower",
+            order: 2,
+            weekday: 3,
+            exercices: {
+              create: [
+                { exerciceTypeId: squats.id, defaultRepetitionCount: 12, defaultSets: 4 },
+                { exerciceTypeId: burpees.id, defaultRepetitionCount: 10, defaultSets: 3 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("✔ Workout programs seeded.");
+
+
   // 2.5 Sessions demo liées au user "demo@..."
   console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 

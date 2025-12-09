@@ -57,9 +57,11 @@ export function WorkoutStartSection({ types, onCreateSession }: Props) {
                                     exercices: [{ exerciceTypeId, repetitionCount }],
                                 });
 
-                                setOpen(false); // ⬅ CLOSE after finishing
+                                setOpen(false); // CLOSE after finishing
                             }}
+                            onCancel={() => setOpen(false)}   // 👈 CLOSE when cancelling
                         />
+
                     </div>
                 )}
             </div>

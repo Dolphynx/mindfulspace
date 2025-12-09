@@ -458,7 +458,7 @@ model Resource {
   meditationProgramId String?
   meditationProgram   MeditationProgram? @relation(fields: [meditationProgramId], references: [id])
 
-  // (WorkoutProgram => à mettre en place)
+  // (WorkoutPrograms => à mettre en place)
   tags ResourceTagOnResource[] // jonction N-N avec les tags
 
   createdAt DateTime @default(now())

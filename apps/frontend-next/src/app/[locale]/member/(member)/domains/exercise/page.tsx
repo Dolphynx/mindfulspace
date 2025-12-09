@@ -7,9 +7,9 @@ import { WorkoutHistoryCard } from "@/components/exercise/WorkoutHistoryCard";
 import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
-import {WorkoutStartSessionCard} from "@/components/exercise/WorkoutStartSessionCard";
 import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
 import DomainSwitcher from "@/components/DomainSwitcher";
+import {WorkoutProgramsStartCard} from "@/components/exercise/WorkoutProgramStartCard";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -61,13 +61,20 @@ export default function ExercicePage() {
                 }
 
                 leftBottom={
-                    <SessionCard>
-                        <WorkoutStartSection
-                            types={types}
-                            onCreateSession={createSession}
-                        />
-                    </SessionCard>
+                    <>
+                        <SessionCard>
+                            <WorkoutStartSection
+                                types={types}
+                                onCreateSession={createSession}
+                            />
+                        </SessionCard>
+
+                        <SessionCard>
+                            <WorkoutProgramsStartCard />
+                        </SessionCard>
+                    </>
                 }
+
 
 
                 rightColumn={
@@ -78,6 +85,7 @@ export default function ExercicePage() {
                         types={types}
                     />
                 }
+
             />
         </main>
     );
