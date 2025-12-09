@@ -1,10 +1,10 @@
 "use client";
 
 import { useTranslations } from "@/i18n/TranslationContext";
-import type { WorkoutPrograms } from "@/lib/api/workout-programs";
+import type { ProgramItem } from "@/lib/api/program";
 
-export function WorkoutProgramsList({programs, loading, onCancel, onSelect}: {
-    programs: WorkoutPrograms[];
+export function ProgramsList({programs, loading, onCancel, onSelect}: {
+    programs: ProgramItem[];
     loading: boolean;
     onCancel: () => void;
     onSelect: (id: string) => void;

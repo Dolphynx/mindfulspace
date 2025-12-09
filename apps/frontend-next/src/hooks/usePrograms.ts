@@ -2,28 +2,28 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-    fetchWorkoutPrograms,
-    createWorkoutProgram,
-    type WorkoutPrograms,
-    type CreateWorkoutProgramPayload,
-} from "@/lib/api/workout-programs";
+    fetchPrograms,
+    createProgram,
+    type ProgramItem,
+    type CreateProgramPayload,
+} from "@/lib/api/program";
 
-export type WorkoutProgramsErrorType = "load" | "save" | "single" | null;
+export type ProgramErrorType = "load" | "save" | "single" | null;
 
-export function useWorkoutPrograms(baseUrl?: string) {
-    const [programs, setPrograms] = useState<WorkoutPrograms[]>([]);
+export function usePrograms(baseUrl?: string) {
+    const [programs, setPrograms] = useState<ProgramItem[]>([]);
     const [loading, setLoading] = useState(false);
-    const [errorType, setErrorType] = useState<WorkoutProgramsErrorType>(null);
+    const [errorType, setErrorType] = useState<ProgramErrorType>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
         setErrorType(null);
 
         try {
-            const data = await fetchWorkoutPrograms(baseUrl);
+            const data = await fetchPrograms(baseUrl);
             setPrograms(data);
         } catch (e) {
-            console.error("[useWorkoutPrograms] load failed", e);
+            console.error("[usePrograms] load failed", e);
             setErrorType("load");
         } finally {
             setLoading(false);
@@ -35,14 +35,14 @@ export function useWorkoutPrograms(baseUrl?: string) {
     }, [load]);
 
     const create = useCallback(
-        async (payload: CreateWorkoutProgramPayload) => {
+        async (payload: CreateProgramPayload) => {
             setErrorType(null);
 
             try {
-                await createWorkoutProgram(payload, baseUrl);
+                await createProgram(payload, baseUrl);
                 await load();
             } catch (e) {
-                console.error("[useWorkoutPrograms] save failed", e);
+                console.error("[usePrograms] save failed", e);
                 setErrorType("save");
                 throw e;
             }
@@ -59,4 +59,4 @@ export function useWorkoutPrograms(baseUrl?: string) {
     };
 }
 
-export type { WorkoutPrograms } from "@/lib/api/workout-programs";
+export type { ProgramItem } from "@/lib/api/program";

@@ -5,18 +5,18 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/MoodPicker";
 import { MoodValue } from "@/lib";
 
-type ExerciceType = {
+type ExerciceContentItem = {
     id: string;
     name: string;
 };
 
-type ExerciseManualFormProps = {
-    types: ExerciceType[];
+type ExerciceManualFormProps = {
+    types: ExerciceContentItem[];
     onCreateSession: (payload: {
         dateSession: string;
         quality?: MoodValue;
         exercices: {
-            exerciceTypeId: string;
+            exerciceContentId: string;   // 👈 updated
             repetitionCount: number;
         }[];
     }) => Promise<void>;
@@ -31,7 +31,7 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-// Convert "YYYY-MM-DD" → ISO at noon (same logic as meditation)
+// Convert "YYYY-MM-DD" → ISO at noon
 function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
@@ -42,36 +42,36 @@ function dateInputToNoonIso(dateStr: string): string {
     return date.toISOString();
 }
 
-export default function ExerciseManualForm({
+export default function ExerciceManualForm({
                                                types,
                                                onCreateSession,
-                                           }: ExerciseManualFormProps) {
+                                           }: ExerciceManualFormProps) {
     const t = useTranslations("domainExercice");
 
     const [isOpen, setIsOpen] = useState(false);
     const [dateInput, setDateInput] = useState(buildTodayDateInput());
-    const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
+    const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
     const [repetitions, setRepetitions] = useState(10);
     const [quality, setQuality] = useState<MoodValue | null>(3 as MoodValue);
     const [savingManual, setSavingManual] = useState(false);
 
-    // Preselect first available exercise type
+    // Preselect first available content
     useEffect(() => {
-        if (!selectedTypeId && types.length > 0) {
-            setSelectedTypeId(types[0].id);
+        if (!selectedContentId && types.length > 0) {
+            setSelectedContentId(types[0].id);
         }
-    }, [types, selectedTypeId]);
+    }, [types, selectedContentId]);
 
     function resetForm() {
         setDateInput(buildTodayDateInput());
-        setSelectedTypeId(null);
+        setSelectedContentId(null);
         setRepetitions(10);
         setQuality(3 as MoodValue);
     }
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
-        if (!selectedTypeId) return;
+        if (!selectedContentId) return;
 
         setSavingManual(true);
         try {
@@ -80,7 +80,7 @@ export default function ExerciseManualForm({
                 quality: quality ?? undefined,
                 exercices: [
                     {
-                        exerciceTypeId: selectedTypeId,
+                        exerciceContentId: selectedContentId, // 👈 use new field
                         repetitionCount: repetitions,
                     },
                 ],
@@ -122,16 +122,14 @@ export default function ExerciseManualForm({
             {/* COLLAPSIBLE FORM */}
             <div
                 className={`transition-all duration-1000 overflow-hidden ${
-                    isOpen
-                        ? "max-h-[600px] opacity-100 mt-2"
-                        : "max-h-0 opacity-0"
+                    isOpen ? "max-h-[600px] opacity-100 mt-2" : "max-h-0 opacity-0"
                 }`}
             >
                 <form
                     className="space-y-6 rounded-2xl bg-white/80 p-4 shadow-sm"
                     onSubmit={handleSubmit}
                 >
-                    {/* DATE PICKER */}
+                    {/* DATE */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_dateLabel")}
@@ -144,21 +142,18 @@ export default function ExerciseManualForm({
                         />
                     </div>
 
-                    {/* EXERCISE TYPE */}
+                    {/* CONTENT TYPE */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_typeLabel")}
                         </label>
                         <select
-                            value={selectedTypeId ?? ""}
+                            value={selectedContentId ?? ""}
                             onChange={(e) =>
-                                setSelectedTypeId(e.target.value || null)
+                                setSelectedContentId(e.target.value || null)
                             }
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm"
                         >
-                            <option value="">
-                                -- {t("manualForm_typePlaceholder")} --
-                            </option>
                             {types.map((type) => (
                                 <option key={type.id} value={type.id}>
                                     {type.name}
@@ -167,7 +162,7 @@ export default function ExerciseManualForm({
                         </select>
                     </div>
 
-                    {/* REPETITIONS SLIDER */}
+                    {/* REPETITIONS */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_repetitionLabel")}:{" "}
@@ -187,7 +182,7 @@ export default function ExerciseManualForm({
                         />
                     </div>
 
-                    {/* QUALITY / MOOD */}
+                    {/* QUALITY */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_qualityLabel")}
@@ -205,7 +200,7 @@ export default function ExerciseManualForm({
                     <div className="flex items-center gap-3">
                         <button
                             type="submit"
-                            disabled={savingManual || !selectedTypeId}
+                            disabled={savingManual || !selectedContentId}
                             className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
                             {savingManual

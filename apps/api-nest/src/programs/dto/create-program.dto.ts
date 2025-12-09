@@ -1,9 +1,9 @@
 import { IsString, IsOptional, IsArray, ValidateNested, IsInt, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class ProgramExerciseDto {
+class ProgramExerciceItemDto {
     @IsUUID()
-    exerciceTypeId!: string;
+    exerciceContentId!: string;
 
     @IsOptional()
     @IsInt()
@@ -27,11 +27,11 @@ class ProgramDayDto {
 
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => ProgramExerciseDto)
-    exercices!: ProgramExerciseDto[];
+    @Type(() => ProgramExerciceItemDto)
+    exercices!: ProgramExerciceItemDto[];
 }
 
-export class CreateWorkoutProgramDto {
+export class CreateProgramDto {
     @IsString()
     title!: string;
 

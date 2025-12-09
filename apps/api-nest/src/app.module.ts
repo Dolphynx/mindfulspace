@@ -11,9 +11,9 @@ import { TipsModule } from "./tips/tips.module";
 import { AiModule } from './ai/ai.module';
 import { SleepSessionModule } from './sessions/sleep-session/sleep-session.module';
 import { MeditationSessionModule } from './sessions/meditation-session/meditation-session.module';
-import { WorkoutSessionModule } from '@mindfulspace/api/sessions/workout-session/workout-session.module';
+import { ExerciceSessionModule } from '@mindfulspace/api/sessions/exercice-session/exercice-session.module';
 import { ResourcesModule } from './resources/resources.module';
-import { WorkoutProgramModule} from "@mindfulspace/api/programs/workout-program/workout-program.module";
+import { ProgramModule} from "@mindfulspace/api/programs/program.module";
 
 @Module({
   imports: [
@@ -28,8 +28,8 @@ import { WorkoutProgramModule} from "@mindfulspace/api/programs/workout-program/
     TestDataModule,
       SleepSessionModule,
       MeditationSessionModule,
-      WorkoutSessionModule,
-      WorkoutProgramModule,
+      ExerciceSessionModule,
+      ProgramModule,
     AiModule,
     ResourcesModule,
   ],

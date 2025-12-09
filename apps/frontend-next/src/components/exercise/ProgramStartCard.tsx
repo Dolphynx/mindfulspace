@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { useWorkoutPrograms } from "@/hooks/useWorkoutPrograms";
-import { WorkoutProgramsList } from "./WorkoutProgramsList";
-import {WorkoutProgramDetails} from "@/components/exercise/WorkoutProgramDetails";
+import { usePrograms } from "@/hooks/usePrograms";
+import { ProgramsList } from "./ProgramsList";
+import {ProgramDetails} from "@/components/exercise/ProgramDetails";
 
 export function WorkoutProgramsStartCard() {
     const t = useTranslations("domainExercice");
-    const { programs, loading } = useWorkoutPrograms();
+    const { programs, loading } = usePrograms();
 
     const [showList, setShowList] = useState(false);
     const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
     if (showList && selectedProgramId) {
         return (
-            <WorkoutProgramDetails
+            <ProgramDetails
                 program={programs.find(p => p.id === selectedProgramId)!}
                 onBack={() => setSelectedProgramId(null)}
                 onSubscribe={() => console.log("TODO subscribe")}
@@ -25,7 +25,7 @@ export function WorkoutProgramsStartCard() {
 
     if (showList) {
         return (
-            <WorkoutProgramsList
+            <ProgramsList
                 programs={programs}
                 loading={loading}
                 onCancel={() => setShowList(false)}

@@ -1,15 +1,15 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import type { WorkoutTypeItem } from "@/lib/api/workout";
+import type { ExerciceContentItem } from "@/lib/api/exercice";
 import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/MoodPicker";
 import {MoodValue} from "@/lib";   // ✅ use the real one
 
 type Props = {
-    types: WorkoutTypeItem[];
+    types: ExerciceContentItem[];
     onSave: (data: {
-        exerciceTypeId: string;
+        exerciceContentId: string;
         repetitionCount: number;
         quality: number | null;
     }) => Promise<void>;
@@ -19,7 +19,7 @@ type Props = {
 
 
 
-export function WorkoutStartSessionCard({ types, onSave, onCancel }: Props) {
+export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
     const t = useTranslations("domainExercice");
 
     const [selectedId, setSelectedId] = useState("");
@@ -163,7 +163,7 @@ export function WorkoutStartSessionCard({ types, onSave, onCancel }: Props) {
                         className="flex-1 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"
                         onClick={() =>
                             onSave({
-                                exerciceTypeId: selectedId,
+                                exerciceContentId: selectedId,
                                 repetitionCount,
                                 quality,
                             })

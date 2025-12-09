@@ -4,83 +4,78 @@
 
 import { apiFetch } from "@/lib/api/client";
 
-export type WorkoutPrograms = {
+export type ProgramItem = {
     id: string;
     title: string;
     description: string | null;
-    days: WorkoutProgramDay[];
-}
+    days: ProgramDay[];
+};
 
-export type WorkoutProgramDay = {
+export type ProgramDay = {
     id: string;
     title: string;
     order: number;
     weekday: number | null;
-    exercices: WorkoutProgramExercise[];
-}
+    exerciceItems: ProgramExerciceItem[];
+};
 
-export type WorkoutProgramExercise = {
+export type ProgramExerciceItem = {
     id: string;
-    exerciceTypeId: string;
+    exerciceContentId: string;
     defaultRepetitionCount: number | null;
     defaultSets: number | null;
 
-    exerciceType: {
+    exerciceContent: {
         id: string;
         name: string;
         description?: string | null;
     } | null;
 };
 
-
-export type CreateWorkoutProgramPayload = {
+export type CreateProgramPayload = {
     title: string;
     description?: string;
     days: {
         title: string;
         order: number;
         weekday?: number;
-        exercices: {
-            exerciceTypeId: string;
+        exerciceItems: {
+            exerciceContentId: string;
             defaultRepetitionCount?: number;
             defaultSets?: number;
         }[];
     }[];
-}
+};
 
 /* -------------------------------------------------------------------------- */
 /*  CONFIG                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-
-/* -------------------------------------------------------------------------- */
-/*  RAW TYPES (untyped JSON)                                                  */
-/* -------------------------------------------------------------------------- */
-
-type RawWorkoutProgram = any; // you could apply shape checking later
+const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 /* -------------------------------------------------------------------------- */
 /*  NORMALIZERS                                                               */
 /* -------------------------------------------------------------------------- */
 
-function normalizeWorkoutProgram(raw: any): WorkoutPrograms | null {
+function normalizeProgram(raw: any): ProgramItem | null {
     if (!raw || typeof raw !== "object") return null;
 
     return {
         id: String(raw.id ?? ""),
         title: String(raw.title ?? ""),
-        description: typeof raw.description === "string" ? raw.description : null,
+        description:
+            typeof raw.description === "string" ? raw.description : null,
         days: Array.isArray(raw.days)
             ? raw.days.map((d: any) => ({
                 id: String(d.id ?? ""),
                 title: String(d.title ?? ""),
                 order: Number(d.order ?? 0),
                 weekday: typeof d.weekday === "number" ? d.weekday : null,
-                exercices: Array.isArray(d.exercices)
-                    ? d.exercices.map((e: any) => ({
+                exerciceItems: Array.isArray(d.exerciceItems)
+                    ? d.exerciceItems.map((e: any) => ({
                         id: String(e.id ?? ""),
-                        exerciceTypeId: String(e.exerciceTypeId ?? ""),
+                        exerciceContentId: String(e.exerciceContentId ?? ""),
                         defaultRepetitionCount:
                             typeof e.defaultRepetitionCount === "number"
                                 ? e.defaultRepetitionCount
@@ -89,19 +84,18 @@ function normalizeWorkoutProgram(raw: any): WorkoutPrograms | null {
                             typeof e.defaultSets === "number"
                                 ? e.defaultSets
                                 : null,
-                        exerciceType: e.exerciceType
+                        exerciceContent: e.exerciceContent
                             ? {
-                                id: String(e.exerciceType.id ?? ""),
-                                name: String(e.exerciceType.name ?? ""),
+                                id: String(e.exerciceContent.id ?? ""),
+                                name: String(e.exerciceContent.name ?? ""),
                                 description:
-                                    typeof e.exerciceType.description === "string"
-                                        ? e.exerciceType.description
+                                    typeof e.exerciceContent.description === "string"
+                                        ? e.exerciceContent.description
                                         : null,
                             }
                             : null,
                     }))
                     : [],
-
             }))
             : [],
     };
@@ -111,36 +105,36 @@ function normalizeWorkoutProgram(raw: any): WorkoutPrograms | null {
 /*  API CALLS                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchWorkoutPrograms(
-    baseUrl = API_BASE_URL,
-): Promise<WorkoutPrograms[]> {
-    const res = await apiFetch(`${baseUrl}/programs/workout`);
+export async function fetchPrograms(
+    baseUrl = API_BASE_URL
+): Promise<ProgramItem[]> {
+    const res = await apiFetch(`${baseUrl}/programs`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
     if (!Array.isArray(data)) return [];
 
     return data
-        .map(normalizeWorkoutProgram)
-        .filter((p): p is WorkoutPrograms => p !== null);
+        .map(normalizeProgram)
+        .filter((p): p is ProgramItem => p !== null);
 }
 
-export async function fetchWorkoutProgramById(
+export async function fetchProgramById(
     id: string,
-    baseUrl = API_BASE_URL,
-): Promise<WorkoutPrograms | null> {
-    const res = await apiFetch(`${baseUrl}/programs/workout/${id}`);
+    baseUrl = API_BASE_URL
+): Promise<ProgramItem | null> {
+    const res = await apiFetch(`${baseUrl}/programs/${id}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const raw = await res.json();
-    return normalizeWorkoutProgram(raw);
+    return normalizeProgram(raw);
 }
 
-export async function createWorkoutProgram(
-    payload: CreateWorkoutProgramPayload,
-    baseUrl = API_BASE_URL,
-): Promise<WorkoutPrograms | null> {
-    const res = await apiFetch(`${baseUrl}/programs/workout`, {
+export async function createProgram(
+    payload: CreateProgramPayload,
+    baseUrl = API_BASE_URL
+): Promise<ProgramItem | null> {
+    const res = await apiFetch(`${baseUrl}/programs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -149,5 +143,5 @@ export async function createWorkoutProgram(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const raw = await res.json();
-    return normalizeWorkoutProgram(raw);
+    return normalizeProgram(raw);
 }

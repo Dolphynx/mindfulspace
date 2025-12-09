@@ -5,10 +5,10 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { CreateWorkoutSessionDto } from './dto/workout-session.dto';
+import { CreateExerciceSessionDto } from './dto/exercice-session.dto';
 
 @Injectable()
-export class WorkoutSessionService {
+export class ExerciceSessionService {
     constructor(private readonly prisma: PrismaService) {}
 
     /**
@@ -18,7 +18,7 @@ export class WorkoutSessionService {
      * - une seule séance par jour **et par utilisateur** ;
      * - si une séance existe déjà ce jour-là → update (quality + exercices).
      */
-    async create(userId: string, dto: CreateWorkoutSessionDto) {
+    async create(userId: string, dto: CreateExerciceSessionDto) {
         const date = new Date(dto.dateSession);
 
         const startOfDay = new Date(date);
@@ -28,13 +28,13 @@ export class WorkoutSessionService {
         endOfDay.setHours(23, 59, 59, 999);
 
         // 1️⃣ Validate exercise types
-        const exerciceTypeIds = dto.exercices.map((e) => e.exerciceTypeId);
+        const exerciceTypeIds = dto.exercices.map((e) => e.exerciceContentId);
 
         if (exerciceTypeIds.length === 0) {
             throw new BadRequestException('At least one exercice is required');
         }
 
-        const existingTypes = await this.prisma.exerciceType.findMany({
+        const existingTypes = await this.prisma.exerciceContent.findMany({
             where: { id: { in: exerciceTypeIds } },
             select: { id: true },
         });
@@ -49,7 +49,7 @@ export class WorkoutSessionService {
         }
 
         // 2️⃣ Check if a workout already exists that day for this user
-        const existingWorkout = await this.prisma.workoutSession.findFirst({
+        const existingSession = await this.prisma.exerciceSession.findFirst({
             where: {
                 userId,
                 dateSession: { gte: startOfDay, lte: endOfDay },
@@ -58,18 +58,18 @@ export class WorkoutSessionService {
 
         // 3️⃣ Create or update workout + exerciceSessions
         const fullSession = await this.prisma.$transaction(async (tx) => {
-            let workout;
+            let session;
 
-            if (existingWorkout) {
-                workout = await tx.workoutSession.update({
-                    where: { id: existingWorkout.id },
+            if (existingSession) {
+                session = await tx.exerciceSession.update({
+                    where: { id: existingSession.id },
                     data: {
-                        quality: dto.quality ?? existingWorkout.quality,
+                        quality: dto.quality ?? existingSession.quality,
                         dateSession: date,
                     },
                 });
             } else {
-                workout = await tx.workoutSession.create({
+                session = await tx.exerciceSession.create({
                     data: {
                         quality: dto.quality ?? null,
                         dateSession: date,
@@ -80,31 +80,31 @@ export class WorkoutSessionService {
 
             // 4️⃣ UPSERT exercise entries (update if exists, otherwise create)
             for (const e of dto.exercices) {
-                await tx.exerciceSession.upsert({
+                await tx.exerciceSerie.upsert({
                     where: {
-                        workoutSessionId_exerciceTypeId: {
-                            workoutSessionId: workout.id,
-                            exerciceTypeId: e.exerciceTypeId,
+                        exerciceSessionId_exerciceContentId: {
+                            exerciceSessionId: session.id,
+                            exerciceContentId: e.exerciceContentId,
                         },
                     },
                     update: {
                         repetitionCount: e.repetitionCount,
                     },
                     create: {
-                        workoutSessionId: workout.id,
-                        exerciceTypeId: e.exerciceTypeId,
+                        exerciceSessionId: session.id,
+                        exerciceContentId: e.exerciceContentId,
                         repetitionCount: e.repetitionCount,
                     },
                 });
             }
 
             // 5️⃣ Return full workout with exercices
-            return tx.workoutSession.findUnique({
-                where: { id: workout.id },
+            return tx.exerciceSession.findUnique({
+                where: { id: session.id },
                 include: {
-                    exerciceSessions: {
+                    exerciceSerie: {
                         include: {
-                            exerciceType: {
+                            exerciceContent: {
                                 include: {
                                     steps: {
                                         orderBy: { order: 'asc' },
@@ -126,13 +126,13 @@ export class WorkoutSessionService {
      * Format normalisé pour le frontend.
      */
     async findAll(userId: string) {
-        const sessions = await this.prisma.workoutSession.findMany({
+        const sessions = await this.prisma.exerciceSession.findMany({
             where: { userId },
             orderBy: { dateSession: 'desc' },
             include: {
-                exerciceSessions: {
+                exerciceSerie: {
                     include: {
-                        exerciceType: true,
+                        exerciceContent: true,
                     },
                 },
             },
@@ -146,12 +146,12 @@ export class WorkoutSessionService {
      * Vérifie l’ownership avant de renvoyer les données.
      */
     async findOne(id: string, userId: string) {
-        const workout = await this.prisma.workoutSession.findUnique({
+        const workout = await this.prisma.exerciceSession.findUnique({
             where: { id },
             include: {
-                exerciceSessions: {
+              exerciceSerie: {
                     include: {
-                        exerciceType: true,
+                      exerciceContent: true,
                     },
                 },
             },
@@ -178,16 +178,16 @@ export class WorkoutSessionService {
         sevenDaysAgo.setDate(now.getDate() - 7);
         sevenDaysAgo.setHours(0, 0, 0, 0);
 
-        const sessions = await this.prisma.workoutSession.findMany({
+        const sessions = await this.prisma.exerciceSession.findMany({
             where: {
                 userId,
                 dateSession: { gte: sevenDaysAgo },
             },
             orderBy: { dateSession: 'asc' },
             include: {
-                exerciceSessions: {
+              exerciceSerie: {
                     include: {
-                        exerciceType: true,
+                      exerciceContent: true,
                     },
                 },
             },
@@ -209,15 +209,15 @@ export class WorkoutSessionService {
         const endOfYesterday = new Date(startOfYesterday);
         endOfYesterday.setHours(23, 59, 59, 999);
 
-        const session = await this.prisma.workoutSession.findFirst({
+        const session = await this.prisma.exerciceSession.findFirst({
             where: {
                 userId,
                 dateSession: { gte: startOfYesterday, lte: endOfYesterday },
             },
             orderBy: { dateSession: 'desc' },
             include: {
-                exerciceSessions: {
-                    include: { exerciceType: true },
+              exerciceSerie: {
+                    include: { exerciceContent: true },
                 },
             },
         });
@@ -238,8 +238,8 @@ export class WorkoutSessionService {
     /**
      * Types d’exercices publics, triés par nom + steps ordonnés.
      */
-    async getExerciceTypes() {
-        return this.prisma.exerciceType.findMany({
+    async getExerciceContents() {
+        return this.prisma.exerciceContent.findMany({
             orderBy: { name: 'asc' },
             include: {
                 steps: {
@@ -268,9 +268,9 @@ export class WorkoutSessionService {
             id: session.id,
             date: session.dateSession.toISOString().split('T')[0],
             quality: session.quality,
-            exercices: session.exerciceSessions.map((e: any) => ({
-                exerciceTypeId: e.exerciceTypeId,
-                exerciceTypeName: e.exerciceType?.name ?? '',
+            exercices: session.exerciceSerie.map((e: any) => ({
+                exerciceContentId: e.exerciceContentId,
+                exerciceContentName: e.exerciceContent?.name ?? '',
                 repetitionCount: e.repetitionCount,
             })),
         };

@@ -1,20 +1,20 @@
 "use client";
 
 import { useTranslations } from "@/i18n/TranslationContext";
-import type { WorkoutPrograms } from "@/lib/api/workout-programs";
+import type { ProgramItem } from "@/lib/api/program";
 
-export function WorkoutProgramDetails({
-                                          program,
-                                          onBack,
-                                          onSubscribe,
-                                      }: {
-    program: WorkoutPrograms;
+export function ProgramDetails({
+                                   program,
+                                   onBack,
+                                   onSubscribe,
+                               }: {
+    program: ProgramItem;
     onBack: () => void;
     onSubscribe: () => void;
 }) {
     const t = useTranslations("domainExercice");
 
-    const uniqueWeekdays = new Set(program.days.map(d => d.weekday)).size;
+    const uniqueWeekdays = new Set(program.days.map((d) => d.weekday)).size;
 
     return (
         <div className="space-y-4">
@@ -37,18 +37,21 @@ export function WorkoutProgramDetails({
                 {uniqueWeekdays} {t("program_list_daysPerWeek")}
             </p>
 
-            {/* List Daily Workouts */}
+            {/* Days */}
             <div className="space-y-3">
-                {program.days.map(day => (
-                    <div key={day.id} className="p-3 rounded-lg bg-white shadow-sm border">
+                {program.days.map((day) => (
+                    <div
+                        key={day.id}
+                        className="p-3 rounded-lg bg-white shadow-sm border"
+                    >
                         <p className="font-medium">
                             {t("weekday_" + day.weekday?.toString())}
                         </p>
 
                         <ul className="pl-4 list-disc">
-                            {day.exercices.map((ex, idx) => (
+                            {day.exerciceItems.map((ex, idx) => (
                                 <li key={idx}>
-                                    {ex.exerciceType?.name} — {ex.defaultRepetitionCount} reps
+                                    {ex.exerciceContent?.name} — {ex.defaultRepetitionCount} reps
                                 </li>
                             ))}
                         </ul>

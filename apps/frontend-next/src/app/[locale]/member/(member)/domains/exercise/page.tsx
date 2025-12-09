@@ -2,14 +2,14 @@
 
 import PageHero from "@/components/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { WorkoutHistoryCard } from "@/components/exercise/WorkoutHistoryCard";
-import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
+import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
+import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
-import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
+import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
 import DomainSwitcher from "@/components/DomainSwitcher";
-import {WorkoutProgramsStartCard} from "@/components/exercise/WorkoutProgramStartCard";
+import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -33,7 +33,7 @@ export default function ExercicePage() {
         loading,
         errorType,
         createSession,
-    } = useWorkoutSessions();
+    } = useExerciceSessions();
 
     const globalErrorMessage = getErrorMessage(t, errorType);
 
@@ -53,7 +53,7 @@ export default function ExercicePage() {
                 globalErrorMessage={globalErrorMessage}
                 leftTop={
                     <SessionCard>
-                        <ExerciseManualForm
+                        <ExerciceManualForm
                             types={types}
                             onCreateSession={createSession}
                         />
@@ -63,7 +63,7 @@ export default function ExercicePage() {
                 leftBottom={
                     <>
                         <SessionCard>
-                            <WorkoutStartSection
+                            <ExerciceStartSection
                                 types={types}
                                 onCreateSession={createSession}
                             />
@@ -78,7 +78,7 @@ export default function ExercicePage() {
 
 
                 rightColumn={
-                    <WorkoutHistoryCard
+                    <ExerciceHistoryCard
                         sessions={sessions}
                         loading={loading}
                         errorType={errorType}
