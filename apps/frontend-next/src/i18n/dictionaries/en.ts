@@ -300,7 +300,9 @@ const en = {
         history_title: "Your recent nights",
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
         history_nights: "nights",
+        last7_empty: "No sleep recorded in the last 7 days.",
         history_average: "hours in average"
+
     },
 
     domainExercice: {

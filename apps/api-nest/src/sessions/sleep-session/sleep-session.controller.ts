@@ -9,8 +9,11 @@ export class SleepSessionController {
   constructor(private readonly sleepService: SleepSessionService) {}
 
   @Post()
-  create(@Body() dto: CreateSleepSessionDto) {
-    return this.sleepService.create(dto);
+  create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateSleepSessionDto
+  ) {
+    return this.sleepService.create(userId, dto);
   }
 
   @Get()

@@ -298,6 +298,7 @@ const fr = {
         history_title: "Vos dernières nuits",
         history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
         history_nights: "nuits",
+        last7_empty: "Aucune donnée enregistrée sur les 7 derniers jours.",
         history_average: "heures en moyenne"
     },
 
