@@ -340,8 +340,16 @@ const fr = {
         program_list_title: "Programmes disponibles",
         program_list_days: "jours",
         program_list_seeDetails: "Voir les détails",
-        program_list_daysPerWeek: "jours/semaine"
-
+        program_list_daysPerWeek: "jours/semaine",
+        program_details_back: "Retour",
+        program_details_subscribe: "S'abonner",
+        weekday_0: "Dimanche",
+        weekday_1: "Lundi",
+        weekday_2: "Mardi",
+        weekday_3: "Mercredi",
+        weekday_4: "Jeudi",
+        weekday_5: "Vendredi",
+        weekday_6: "Samedi",
     },
 
     domainMeditation: {

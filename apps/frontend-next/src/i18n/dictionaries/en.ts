@@ -343,8 +343,16 @@ const en = {
         program_list_title: "Available workout programs",
         program_list_days: "days",
         program_list_seeDetails: "See details",
-        program_list_daysPerWeek: "days/week"
-
+        program_list_daysPerWeek: "days/week",
+        program_details_back: "Back",
+        program_details_subscribe: "Subscribe",
+        weekday_0: "Sunday",
+        weekday_1: "Monday",
+        weekday_2: "Tuesday",
+        weekday_3: "Wednesday",
+        weekday_4: "Thursday",
+        weekday_5: "Friday",
+        weekday_6: "Saturday",
     },
 
     domainMeditation: {

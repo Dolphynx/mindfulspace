@@ -7,13 +7,20 @@ export class WorkoutProgramService {
     constructor(private prisma: PrismaService) {}
 
     async getAll() {
-        return this.prisma.workoutProgram.findMany({
+      return this.prisma.workoutProgram.findMany({
+        include: {
+          days: {
             include: {
-                days: {
-                    include: { exercices: true },
+              exercices: {
+                include: {
+                  exerciceType: true,   // 👈 include name + description
                 },
+              },
             },
-        });
+          },
+        },
+      });
+
     }
 
     async getOne(id: string) {
@@ -21,7 +28,13 @@ export class WorkoutProgramService {
             where: { id },
             include: {
                 days: {
-                    include: { exercices: true },
+                    include: {
+                      exercices:  {
+                        include: {
+                          exerciceType: true,
+                        }
+                      }
+                    },
                 },
             },
         });

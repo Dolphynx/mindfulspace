@@ -24,7 +24,14 @@ export type WorkoutProgramExercise = {
     exerciceTypeId: string;
     defaultRepetitionCount: number | null;
     defaultSets: number | null;
-}
+
+    exerciceType: {
+        id: string;
+        name: string;
+        description?: string | null;
+    } | null;
+};
+
 
 export type CreateWorkoutProgramPayload = {
     title: string;
@@ -79,9 +86,22 @@ function normalizeWorkoutProgram(raw: any): WorkoutPrograms | null {
                                 ? e.defaultRepetitionCount
                                 : null,
                         defaultSets:
-                            typeof e.defaultSets === "number" ? e.defaultSets : null,
+                            typeof e.defaultSets === "number"
+                                ? e.defaultSets
+                                : null,
+                        exerciceType: e.exerciceType
+                            ? {
+                                id: String(e.exerciceType.id ?? ""),
+                                name: String(e.exerciceType.name ?? ""),
+                                description:
+                                    typeof e.exerciceType.description === "string"
+                                        ? e.exerciceType.description
+                                        : null,
+                            }
+                            : null,
                     }))
                     : [],
+
             }))
             : [],
     };

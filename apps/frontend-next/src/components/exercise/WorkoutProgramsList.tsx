@@ -3,10 +3,11 @@
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { WorkoutPrograms } from "@/lib/api/workout-programs";
 
-export function WorkoutProgramsList({programs, loading, onCancel}: {
+export function WorkoutProgramsList({programs, loading, onCancel, onSelect}: {
     programs: WorkoutPrograms[];
     loading: boolean;
     onCancel: () => void;
+    onSelect: (id: string) => void;
 }) {
     const t = useTranslations("domainExercice");
 
@@ -39,10 +40,12 @@ export function WorkoutProgramsList({programs, loading, onCancel}: {
                             </p>
 
                             <button
+                                onClick={() => onSelect(p.id)}
                                 className="mt-3 rounded-md bg-violet-500 px-3 py-1 text-white text-sm hover:bg-violet-600"
                             >
                                 {t("program_list_seeDetails")}
                             </button>
+
                         </div>
                     );
                 })}

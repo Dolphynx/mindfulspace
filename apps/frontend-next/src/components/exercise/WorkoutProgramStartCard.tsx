@@ -4,12 +4,24 @@ import { useState } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { useWorkoutPrograms } from "@/hooks/useWorkoutPrograms";
 import { WorkoutProgramsList } from "./WorkoutProgramsList";
+import {WorkoutProgramDetails} from "@/components/exercise/WorkoutProgramDetails";
 
 export function WorkoutProgramsStartCard() {
     const t = useTranslations("domainExercice");
     const { programs, loading } = useWorkoutPrograms();
 
     const [showList, setShowList] = useState(false);
+    const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+
+    if (showList && selectedProgramId) {
+        return (
+            <WorkoutProgramDetails
+                program={programs.find(p => p.id === selectedProgramId)!}
+                onBack={() => setSelectedProgramId(null)}
+                onSubscribe={() => console.log("TODO subscribe")}
+            />
+        );
+    }
 
     if (showList) {
         return (
@@ -17,23 +29,27 @@ export function WorkoutProgramsStartCard() {
                 programs={programs}
                 loading={loading}
                 onCancel={() => setShowList(false)}
+                onSelect={setSelectedProgramId}
             />
         );
     }
 
-    return (
-        <div className="p-4 m-0 p-0">
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">
-                {t("program_start_title")}
-            </h3>
 
-            <p className="text-sm text-slate-600 mb-4">
-                {t("program_start_description")}
-            </p>
+    return (
+        <div className="flex items-start justify-between gap-4">
+            <div>
+                <h3 className="text-lg font-semibold text-slate-800">
+                    {t("program_start_title")}
+                </h3>
+                <p className="text-sm text-slate-700">
+                    {t("program_start_description")}
+                </p>
+            </div>
 
             <button
                 onClick={() => setShowList(true)}
-                className="rounded-full bg-emerald-500 px-4 py-2 text-white font-medium shadow hover:bg-emerald-600 transition">
+                className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white shadow hover:bg-emerald-600 transition"
+            >
                 {t("program_start_button")}
             </button>
         </div>
