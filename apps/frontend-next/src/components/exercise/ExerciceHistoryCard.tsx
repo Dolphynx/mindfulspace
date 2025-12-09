@@ -2,25 +2,25 @@
 
 import { useTranslations } from "@/i18n/TranslationContext";
 import type {
-    WorkoutSession,
-    WorkoutErrorType,
-    WorkoutTypeItem,
-} from "@/hooks/useWorkoutSessions";
+    ExerciceSession,
+    ExerciceErrorType,
+    ExerciceContentItem,
+} from "@/hooks/useExerciceSessions";
 import { getMood } from "@/lib";
 
 type Props = {
-    sessions: WorkoutSession[];
+    sessions: ExerciceSession[];
     loading: boolean;
-    errorType: WorkoutErrorType;
-    types?: WorkoutTypeItem[];
+    errorType: ExerciceErrorType;
+    types?: ExerciceContentItem[];
 };
 
 /** Groups sessions by YYYY-MM-DD */
-function groupByDate(sessions: WorkoutSession[]) {
-    const map = new Map<string, WorkoutSession[]>();
+function groupByDate(sessions: ExerciceSession[]) {
+    const map = new Map<string, ExerciceSession[]>();
 
     for (const s of sessions) {
-        const date = s.date; // ✅ matches your API type: WorkoutSession.date
+        const date = s.date;
         const list = map.get(date) ?? [];
         list.push(s);
         map.set(date, list);
@@ -39,11 +39,11 @@ function groupByDate(sessions: WorkoutSession[]) {
         }));
 }
 
-export function WorkoutHistoryCard({
-                                       sessions,
-                                       loading,
-                                       errorType,
-                                   }: Props) {
+export function ExerciceHistoryCard({
+                                        sessions,
+                                        loading,
+                                        errorType,
+                                    }: Props) {
     const t = useTranslations("domainExercice");
 
     const error =
@@ -103,13 +103,13 @@ export function WorkoutHistoryCard({
                                 <div className="pl-3">
                                     {/* DATE HEADER */}
                                     <div className="flex items-baseline justify-between mb-2">
-                                        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                            {g.date}
-                                        </span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {g.date}
+                    </span>
 
                                         <span className="text-xs text-slate-600">
-                                            {g.totalExercises} exercices
-                                        </span>
+                      {g.totalExercises} exercices
+                    </span>
                                     </div>
 
                                     {/* LIST OF SESSIONS */}
@@ -127,27 +127,20 @@ export function WorkoutHistoryCard({
                                                 >
                                                     {/* LEFT SIDE */}
                                                     <div className="flex flex-col gap-1">
-                                                        {sess.exercices.map(
-                                                            (ex, idx) => (
-                                                                <div
-                                                                    key={idx}
-                                                                    className="text-sm text-slate-600 flex items-center gap-2"
-                                                                >
-                                                                    <span className="text-[11px] rounded-full bg-violet-50 px-2 py-0.5 font-medium text-violet-700">
-                                                                        {
-                                                                            ex.exerciceTypeName
-                                                                        }
-                                                                    </span>
+                                                        {sess.exercices.map((ex, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="text-sm text-slate-600 flex items-center gap-2"
+                                                            >
+                                <span className="text-[11px] rounded-full bg-violet-50 px-2 py-0.5 font-medium text-violet-700">
+                                  {ex.exerciceContentName}
+                                </span>
 
-                                                                    <span className="text-slate-600">
-                                                                        {
-                                                                            ex.repetitionCount
-                                                                        }
-                                                                        x
-                                                                    </span>
-                                                                </div>
-                                                            )
-                                                        )}
+                                                                <span className="text-slate-600">
+                                  {ex.repetitionCount}x
+                                </span>
+                                                            </div>
+                                                        ))}
                                                     </div>
 
                                                     {/* RIGHT SIDE: MOOD ICON */}
@@ -155,9 +148,7 @@ export function WorkoutHistoryCard({
                                                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
                                                             <img
                                                                 src={mood.emoji}
-                                                                alt={t(
-                                                                    mood.label
-                                                                )}
+                                                                alt={t(mood.label)}
                                                                 className="h-6 w-6"
                                                             />
                                                         </div>

@@ -330,7 +330,27 @@ const fr = {
 
         // Historique
         history_title: "Vos dernières séances d’exercice",
-        history_placeholder: "Votre historique apparaîtra ici dès que vous aurez enregistré des séances."
+        history_placeholder: "Votre historique apparaîtra ici dès que vous aurez enregistré des séances.",
+
+        // Workout Programs
+        program_start_title: "S'abonner à un programme d’exercice",
+        program_start_description: "Découvrez des programmes guidés pour rester régulier.",
+        program_start_button: "Voir les programmes disponibles",
+
+        program_list_loading: "Chargement des programmes…",
+        program_list_title: "Programmes disponibles",
+        program_list_days: "jours",
+        program_list_seeDetails: "Voir les détails",
+        program_list_daysPerWeek: "jours/semaine",
+        program_details_back: "Retour",
+        program_details_subscribe: "S'abonner",
+        weekday_0: "Dimanche",
+        weekday_1: "Lundi",
+        weekday_2: "Mardi",
+        weekday_3: "Mercredi",
+        weekday_4: "Jeudi",
+        weekday_5: "Vendredi",
+        weekday_6: "Samedi",
     },
 
     domainMeditation: {

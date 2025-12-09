@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { WorkoutStartSessionCard } from "./WorkoutStartSessionCard";
-import type { WorkoutTypeItem, CreateWorkoutSessionPayload } from "@/lib/api/workout";
+import { ExerciceStartSessionCard } from "./ExerciceStartSessionCard";
+import type { ExerciceContentItem, CreateExerciceSessionPayload } from "@/lib/api/exercice";
 
 type Props = {
-    types: WorkoutTypeItem[];
-    onCreateSession: (payload: CreateWorkoutSessionPayload) => Promise<void>;
+    types: ExerciceContentItem[];
+    onCreateSession: (payload: CreateExerciceSessionPayload) => Promise<void>;
 };
 
-export function WorkoutStartSection({ types, onCreateSession }: Props) {
+export function ExerciceStartSection({ types, onCreateSession }: Props) {
     const t = useTranslations("domainExercice");
 
     const [open, setOpen] = useState(false);
@@ -48,18 +48,20 @@ export function WorkoutStartSection({ types, onCreateSession }: Props) {
             >
                 {open && (
                     <div className="rounded-2xl bg-white/80 p-4 shadow-sm">
-                        <WorkoutStartSessionCard
+                        <ExerciceStartSessionCard
                             types={types}
-                            onSave={async ({ exerciceTypeId, repetitionCount, quality }) => {
+                            onSave={async ({ exerciceContentId, repetitionCount, quality }) => {
                                 await onCreateSession({
                                     dateSession: new Date().toISOString(),
                                     quality: quality ?? undefined,
-                                    exercices: [{ exerciceTypeId, repetitionCount }],
+                                    exercices: [{ exerciceContentId, repetitionCount }],
                                 });
 
-                                setOpen(false); // ⬅ CLOSE after finishing
+                                setOpen(false); // CLOSE after finishing
                             }}
+                            onCancel={() => setOpen(false)}   // 👈 CLOSE when cancelling
                         />
+
                     </div>
                 )}
             </div>

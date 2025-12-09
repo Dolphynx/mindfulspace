@@ -1,37 +1,38 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+
 import {
-    fetchLastWorkoutSessions,
-    fetchWorkoutTypes,
-    createWorkoutSession,
-    type WorkoutSession,
-    type WorkoutTypeItem,
-    type CreateWorkoutSessionPayload,
-} from "@/lib/api/workout";
+    fetchLastExerciceSessions,
+    fetchExerciceContents,
+    createExerciceSession,
+    type ExerciceSession,
+    type ExerciceContentItem,
+    type CreateExerciceSessionPayload,
+} from "@/lib/api/exercice";
 
-export type WorkoutErrorType = "load" | "save" | "types" | null;
+export type ExerciceErrorType = "load" | "save" | "types" | null;
 
-type CreateSessionInput = CreateWorkoutSessionPayload;
+type CreateSessionInput = CreateExerciceSessionPayload;
 
-type UseWorkoutSessionsResult = {
-    sessions: WorkoutSession[];
-    types: WorkoutTypeItem[];
+type UseExerciceSessionsResult = {
+    sessions: ExerciceSession[];
+    types: ExerciceContentItem[];
     loading: boolean;
-    errorType: WorkoutErrorType;
+    errorType: ExerciceErrorType;
     reload: () => Promise<void>;
     reloadTypes: () => Promise<void>;
     createSession: (payload: CreateSessionInput) => Promise<void>;
 };
 
-export function useWorkoutSessions(
+export function useExerciceSessions(
     baseUrl?: string,
-): UseWorkoutSessionsResult {
-    const [sessions, setSessions] = useState<WorkoutSession[]>([]);
-    const [types, setTypes] = useState<WorkoutTypeItem[]>([]);
+): UseExerciceSessionsResult {
+    const [sessions, setSessions] = useState<ExerciceSession[]>([]);
+    const [types, setTypes] = useState<ExerciceContentItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorType, setErrorType] =
-        useState<WorkoutErrorType>(null);
+        useState<ExerciceErrorType>(null);
 
     const effectiveBaseUrl = baseUrl;
 
@@ -41,25 +42,25 @@ export function useWorkoutSessions(
         setErrorType(null);
 
         try {
-            const data = await fetchLastWorkoutSessions(
+            const data = await fetchLastExerciceSessions(
                 effectiveBaseUrl,
             );
             setSessions(data);
         } catch (e) {
-            console.error("[useWorkoutSessions] load failed", e);
+            console.error("[useExerciceSessions] load failed", e);
             setErrorType("load");
         } finally {
             setLoading(false);
         }
     }, [effectiveBaseUrl]);
 
-    /** LOAD EXERCISE TYPES */
+    /** LOAD EXERCISE CONTENTS */
     const loadTypes = useCallback(async () => {
         try {
-            const data = await fetchWorkoutTypes(effectiveBaseUrl);
+            const data = await fetchExerciceContents(effectiveBaseUrl);
             setTypes(data);
         } catch (e) {
-            console.error("[useWorkoutSessions] types failed", e);
+            console.error("[useExerciceSessions] types failed", e);
             setErrorType("types");
         }
     }, [effectiveBaseUrl]);
@@ -70,15 +71,15 @@ export function useWorkoutSessions(
         void loadTypes();
     }, [load, loadTypes]);
 
-    /** CREATE WORKOUT SESSION */
+    /** CREATE EXERCISE SESSION */
     const createSession = useCallback(
         async (payload: CreateSessionInput) => {
             setErrorType(null);
             try {
-                await createWorkoutSession(payload, effectiveBaseUrl);
+                await createExerciceSession(payload, effectiveBaseUrl);
                 await load(); // refresh list
             } catch (e) {
-                console.error("[useWorkoutSessions] save failed", e);
+                console.error("[useExerciceSessions] save failed", e);
                 setErrorType("save");
                 throw e;
             }
@@ -98,6 +99,6 @@ export function useWorkoutSessions(
 }
 
 export type {
-    WorkoutSession,
-    WorkoutTypeItem,
-} from "@/lib/api/workout";
+    ExerciceSession,
+    ExerciceContentItem,
+} from "@/lib/api/exercice";

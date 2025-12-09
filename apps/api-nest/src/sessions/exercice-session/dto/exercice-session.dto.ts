@@ -9,15 +9,15 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreateWorkoutExerciceDto {
+export class CreateExerciceSerieDto {
   @IsUUID()
-  exerciceTypeId!: string;
+  exerciceContentId!: string;
 
   @IsInt()
   repetitionCount!: number;
 }
 
-export class CreateWorkoutSessionDto {
+export class CreateExerciceSessionDto {
   @IsOptional()
   @IsInt()
   quality?: number;
@@ -28,6 +28,6 @@ export class CreateWorkoutSessionDto {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => CreateWorkoutExerciceDto)
-  exercices!: CreateWorkoutExerciceDto[];
+  @Type(() => CreateExerciceSerieDto)
+  exercices!: CreateExerciceSerieDto[];
 }
