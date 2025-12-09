@@ -7,7 +7,7 @@ import { CreateSleepSessionDto } from './dto/sleep-session.dto';
 export class SleepSessionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateSleepSessionDto) {
+  async create(userId: string, dto: CreateSleepSessionDto) {
     const date = new Date(dto.dateSession);
 
     const startOfDay = new Date(date);
@@ -18,7 +18,7 @@ export class SleepSessionService {
 
     // Check for existing sleep session of that day
     const existing = await this.prisma.sleepSession.findFirst({
-      where: { dateSession: { gte: startOfDay, lte: endOfDay } },
+      where: { userId, dateSession: { gte: startOfDay, lte: endOfDay } },
     });
 
     if (existing) {
@@ -28,6 +28,7 @@ export class SleepSessionService {
           hours: dto.hours,
           quality: dto.quality ?? null,
           dateSession: date,
+          userId
         },
       });
     }
@@ -38,6 +39,7 @@ export class SleepSessionService {
         hours: dto.hours,
         quality: dto.quality ?? null,
         dateSession: date,
+        userId
       },
     });
   }
