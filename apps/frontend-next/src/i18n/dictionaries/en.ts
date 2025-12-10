@@ -334,7 +334,27 @@ const en = {
 
         // History
         history_title: "Your recent exercise sessions",
-        history_placeholder: "Your session history will appear here once you record some."
+        history_placeholder: "Your session history will appear here once you record some.",
+
+        // Workout Programs
+        program_start_title: "Subscribe to a workout program",
+        program_start_description: "Discover guided programs designed to help you stay consistent.",
+        program_start_button: "See available programs",
+
+        program_list_loading: "Loading programs…",
+        program_list_title: "Available workout programs",
+        program_list_days: "days",
+        program_list_seeDetails: "See details",
+        program_list_daysPerWeek: "days/week",
+        program_details_back: "Back",
+        program_details_subscribe: "Subscribe",
+        weekday_0: "Sunday",
+        weekday_1: "Monday",
+        weekday_2: "Tuesday",
+        weekday_3: "Wednesday",
+        weekday_4: "Thursday",
+        weekday_5: "Friday",
+        weekday_6: "Saturday",
     },
 
     domainMeditation: {

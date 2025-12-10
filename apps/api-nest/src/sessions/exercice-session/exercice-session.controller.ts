@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
-import { WorkoutSessionService } from './workout-session.service';
-import { CreateWorkoutSessionDto } from './dto/workout-session.dto';
+import { ExerciceSessionService } from './exercice-session.service';
+import { CreateExerciceSessionDto } from './dto/exercice-session.dto';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
 
@@ -8,16 +8,16 @@ import { Public } from '../../auth/decorators/public.decorator';
  * Contrôleur HTTP regroupant les endpoints liés aux séances de sport.
  *
  * Routes principales :
- * - POST `/workouts`                : crée / met à jour la séance du jour pour l’utilisateur courant.
- * - GET  `/workouts`                : liste des séances de l’utilisateur courant.
- * - GET  `/workouts/last7days`      : résumé des 7 derniers jours (utilisé par le frontend).
- * - GET  `/workouts/summary/yesterday` : résumé de la veille.
- * - GET  `/workouts/exercice-types` : liste publique des types d’exercices.
- * - GET  `/workouts/:id`            : détail d’une séance appartenant à l’utilisateur courant.
+ * - POST `/exercices`                : crée / met à jour la séance du jour pour l’utilisateur courant.
+ * - GET  `/exercices`                : liste des séances de l’utilisateur courant.
+ * - GET  `/exercices/last7days`      : résumé des 7 derniers jours (utilisé par le frontend).
+ * - GET  `/exercices/summary/yesterday` : résumé de la veille.
+ * - GET  `/exercices/exercice-content` : liste publique des types d’exercices.
+ * - GET  `/exercices/:id`            : détail d’une séance appartenant à l’utilisateur courant.
  */
-@Controller('workouts')
-export class WorkoutSessionController {
-    constructor(private readonly workoutService: WorkoutSessionService) {}
+@Controller('exercices')
+export class ExerciceSessionController {
+    constructor(private readonly exerciceSessionService: ExerciceSessionService) {}
 
     /**
      * Crée ou met à jour une séance de sport pour l’utilisateur courant.
@@ -29,9 +29,9 @@ export class WorkoutSessionController {
     @Post()
     create(
         @CurrentUser('id') userId: string,
-        @Body() dto: CreateWorkoutSessionDto,
+        @Body() dto: CreateExerciceSessionDto,
     ) {
-        return this.workoutService.create(userId, dto);
+        return this.exerciceSessionService.create(userId, dto);
     }
 
     /**
@@ -40,7 +40,7 @@ export class WorkoutSessionController {
      */
     @Get()
     findAll(@CurrentUser('id') userId: string) {
-        return this.workoutService.findAll(userId);
+        return this.exerciceSessionService.findAll(userId);
     }
 
     /**
@@ -55,7 +55,7 @@ export class WorkoutSessionController {
      */
     @Get('last7days')
     getLast7Days(@CurrentUser('id') userId: string) {
-        return this.workoutService.getLast7Days(userId);
+        return this.exerciceSessionService.getLast7Days(userId);
     }
 
     /**
@@ -66,7 +66,7 @@ export class WorkoutSessionController {
      */
     @Get('summary/yesterday')
     getYesterdaySummary(@CurrentUser('id') userId: string) {
-        return this.workoutService.getYesterdaySummary(userId);
+        return this.exerciceSessionService.getYesterdaySummary(userId);
     }
 
     /**
@@ -76,9 +76,9 @@ export class WorkoutSessionController {
      * de saisie d’une séance de sport.
      */
     @Public()
-    @Get('exercice-types')
-    getExerciceTypes() {
-        return this.workoutService.getExerciceTypes();
+    @Get('exercice-content')
+    getExerciceContents() {
+        return this.exerciceSessionService.getExerciceContents();
     }
 
     /**
@@ -89,6 +89,6 @@ export class WorkoutSessionController {
      */
     @Get(':id')
     findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
-        return this.workoutService.findOne(id, userId);
+        return this.exerciceSessionService.findOne(id, userId);
     }
 }

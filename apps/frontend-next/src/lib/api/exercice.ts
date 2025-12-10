@@ -2,9 +2,9 @@
 /*  TYPES                                                                     */
 /* -------------------------------------------------------------------------- */
 
-import {apiFetch} from "@/lib/api/client";
+import { apiFetch } from "@/lib/api/client";
 
-export type WorkoutTypeItem = {
+export type ExerciceContentItem = {
     id: string;
     name: string;
     Description: string;
@@ -17,22 +17,22 @@ export type WorkoutTypeItem = {
     }[];
 };
 
-export type WorkoutSession = {
+export type ExerciceSession = {
     id: string;
-    date: string;            // YYYY-MM-DD (already normalized by backend)
+    date: string; // YYYY-MM-DD (already normalized by backend)
     quality: number | null;
     exercices: {
-        exerciceTypeId: string;
-        exerciceTypeName: string;
+        exerciceContentId: string;
+        exerciceContentName: string;
         repetitionCount: number;
     }[];
 };
 
-export type CreateWorkoutSessionPayload = {
-    dateSession: string;     // ISO timestamp
+export type CreateExerciceSessionPayload = {
+    dateSession: string; // ISO timestamp
     quality?: number;
     exercices: {
-        exerciceTypeId: string;
+        exerciceContentId: string;
         repetitionCount: number;
     }[];
 };
@@ -48,14 +48,14 @@ const API_BASE_URL =
 /*  RAW BACKEND TYPES (untyped JSON → unknown)                                */
 /* -------------------------------------------------------------------------- */
 
-type RawWorkoutSession = {
+type RawExerciceSession = {
     id?: unknown;
     date?: unknown;
     quality?: unknown;
     exercices?: unknown;
 };
 
-type RawWorkoutType = {
+type RawExerciceContent = {
     id?: unknown;
     name?: unknown;
     Description?: unknown;
@@ -66,9 +66,9 @@ type RawWorkoutType = {
 /*  TYPE GUARDS                                                               */
 /* -------------------------------------------------------------------------- */
 
-function isRawWorkoutSession(value: unknown): value is RawWorkoutSession {
+function isRawExerciceSession(value: unknown): value is RawExerciceSession {
     if (!value || typeof value !== "object") return false;
-    const v = value as RawWorkoutSession;
+    const v = value as RawExerciceSession;
 
     return (
         typeof v.id === "string" &&
@@ -77,9 +77,9 @@ function isRawWorkoutSession(value: unknown): value is RawWorkoutSession {
     );
 }
 
-function isRawWorkoutType(value: unknown): value is RawWorkoutType {
+function isRawExerciceContent(value: unknown): value is RawExerciceContent {
     if (!value || typeof value !== "object") return false;
-    const v = value as RawWorkoutType;
+    const v = value as RawExerciceContent;
 
     return (
         typeof v.id === "string" &&
@@ -93,35 +93,33 @@ function isRawWorkoutType(value: unknown): value is RawWorkoutType {
 /*  NORMALIZERS                                                               */
 /* -------------------------------------------------------------------------- */
 
-function normalizeWorkoutSession(
-    raw: RawWorkoutSession,
-): WorkoutSession | null {
-    if (!isRawWorkoutSession(raw)) return null;
+function normalizeExerciceSession(
+    raw: RawExerciceSession
+): ExerciceSession | null {
+    if (!isRawExerciceSession(raw)) return null;
 
-    const quality =
-        typeof raw.quality === "number" ? raw.quality : null;
+    const quality = typeof raw.quality === "number" ? raw.quality : null;
 
     const exercices = Array.isArray(raw.exercices)
         ? raw.exercices.map((e: any) => ({
-            exerciceTypeId: String(e.exerciceTypeId ?? ""),
-            exerciceTypeName: String(e.exerciceTypeName ?? ""),
+            exerciceContentId: String(e.exerciceContentId ?? ""),
+            exerciceContentName: String(e.exerciceContentName ?? ""),
             repetitionCount: Number(e.repetitionCount ?? 0),
         }))
         : [];
 
     return {
-        id: String(raw.id),         // <-- FIXED HERE
-        date: String(raw.date),     // <-- FIXED HERE
+        id: String(raw.id),
+        date: String(raw.date),
         quality,
         exercices,
     };
 }
 
-
-function normalizeWorkoutType(
-    raw: RawWorkoutType,
-): WorkoutTypeItem | null {
-    if (!isRawWorkoutType(raw)) return null;
+function normalizeExerciceContent(
+    raw: RawExerciceContent
+): ExerciceContentItem | null {
+    if (!isRawExerciceContent(raw)) return null;
 
     const steps = Array.isArray(raw.steps)
         ? raw.steps
@@ -135,25 +133,23 @@ function normalizeWorkoutType(
             }))
         : [];
 
-
     return {
         id: String(raw.id),
         name: String(raw.name),
         Description: String(raw.Description),
         steps,
     };
-
 }
 
 /* -------------------------------------------------------------------------- */
 /*  API CALLS                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/** GET /workouts/last7days */
-export async function fetchLastWorkoutSessions(
-    baseUrl = API_BASE_URL,
-): Promise<WorkoutSession[]> {
-    const res = await apiFetch(`${baseUrl}/workouts/last7days`, {
+/** GET /exercices/last7days */
+export async function fetchLastExerciceSessions(
+    baseUrl = API_BASE_URL
+): Promise<ExerciceSession[]> {
+    const res = await apiFetch(`${baseUrl}/exercices/last7days`, {
         cache: "no-store",
     });
 
@@ -163,15 +159,15 @@ export async function fetchLastWorkoutSessions(
     if (!Array.isArray(data)) return [];
 
     return data
-        .map(normalizeWorkoutSession)
-        .filter((s): s is WorkoutSession => s !== null);
+        .map(normalizeExerciceSession)
+        .filter((s): s is ExerciceSession => s !== null);
 }
 
-/** GET /workouts/exercice-types */
-export async function fetchWorkoutTypes(
-    baseUrl = API_BASE_URL,
-): Promise<WorkoutTypeItem[]> {
-    const res = await apiFetch(`${baseUrl}/workouts/exercice-types`, {
+/** GET /exercices/types */
+export async function fetchExerciceContents(
+    baseUrl = API_BASE_URL
+): Promise<ExerciceContentItem[]> {
+    const res = await apiFetch(`${baseUrl}/exercices/exercice-content`, {
         cache: "no-store",
     });
 
@@ -181,16 +177,16 @@ export async function fetchWorkoutTypes(
     if (!Array.isArray(data)) return [];
 
     return data
-        .map(normalizeWorkoutType)
-        .filter((t): t is WorkoutTypeItem => t !== null);
+        .map(normalizeExerciceContent)
+        .filter((t): t is ExerciceContentItem => t !== null);
 }
 
-/** POST /workouts */
-export async function createWorkoutSession(
-    payload: CreateWorkoutSessionPayload,
-    baseUrl = API_BASE_URL,
+/** POST /exercices */
+export async function createExerciceSession(
+    payload: CreateExerciceSessionPayload,
+    baseUrl = API_BASE_URL
 ): Promise<void> {
-    const res = await apiFetch(`${baseUrl}/workouts`, {
+    const res = await apiFetch(`${baseUrl}/exercices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

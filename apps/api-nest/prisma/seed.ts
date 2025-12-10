@@ -18,7 +18,7 @@ async function main() {
   console.log("🔄 Clearing existing domain data (safe)...");
 
   // D'abord les sessions qui dépendent des users / types / contenus
-  await prisma.exerciceSession.deleteMany();
+  /*await prisma.exerciceSession.deleteMany();
   await prisma.exerciceStep.deleteMany();
   await prisma.workoutSession.deleteMany();
   await prisma.sleepSession.deleteMany();
@@ -38,7 +38,7 @@ async function main() {
   await prisma.resourceTagOnResource?.deleteMany().catch(() => {});
   await prisma.resource.deleteMany();
   await prisma.resourceTag.deleteMany();
-  await prisma.resourceCategory.deleteMany();
+  await prisma.resourceCategory.deleteMany();*/
 
   console.log("✔ Domain data cleared.");
 
@@ -700,9 +700,9 @@ async function main() {
     { name: "Overhead Press", Description: "Shoulder barbell press" },
   ];
 
-  for (const type of baseExercises) {
-    await prisma.exerciceType.create({
-      data: type,
+  for (const ex of baseExercises) {
+    await prisma.exerciceContent.create({
+      data: ex,
     });
   }
 
@@ -710,7 +710,7 @@ async function main() {
 
   console.log("🌞 Seeding Sun Salutation...");
 
-  const sunSalutation = await prisma.exerciceType.create({
+  const sunSalutation = await prisma.exerciceContent.create({
     data: {
       name: "Sun Salutation",
       Description: "A traditional flowing sequence of yoga postures.",
@@ -807,7 +807,7 @@ async function main() {
   for (const step of sunSalutationSteps) {
     await prisma.exerciceStep.create({
       data: {
-        exerciceTypeId: sunSalutation.id,
+        exerciceContentId: sunSalutation.id,
         order: step.order,
         title: step.title,
         description: step.description,
@@ -819,22 +819,108 @@ async function main() {
   console.log("✔ Sun Salutation seeded with 11 steps.");
   console.log("✔ ExerciceType seeded");
 
+  // ---------------------------------------------------------------------------
+// 2.x Workout Programs (demo)
+// ---------------------------------------------------------------------------
+  console.log("🌱 Seeding workout programs...");
+
+// Get some exercise type IDs
+  const pushUps = await prisma.exerciceContent.findUnique({ where: { name: "Push Ups" } });
+  const squats = await prisma.exerciceContent.findUnique({ where: { name: "Squats" } });
+  const plank = await prisma.exerciceContent.findUnique({ where: { name: "Plank" } });
+  const burpees = await prisma.exerciceContent.findUnique({ where: { name: "Burpees" } });
+
+  if (!pushUps || !squats || !plank || !burpees) {
+    throw new Error("Some required exercise types not found");
+  }
+
+// Program #1
+  await prisma.program.create({
+    data: {
+      title: "Full Body Beginner",
+      description: "A simple 2-day full body routine.",
+      days: {
+        create: [
+          {
+            title: "Day 1 – Full Body A",
+            order: 1,
+            weekday: 1,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Day 2 – Full Body B",
+            order: 2,
+            weekday: 3,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+                { exerciceContentId: burpees.id, defaultRepetitionCount: 8, defaultSets: 2 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+// Program #2
+  await prisma.program.create({
+    data: {
+      title: "Upper / Lower Split",
+      description: "Classic 4-day weekly split.",
+      days: {
+        create: [
+          {
+            title: "Upper",
+            order: 1,
+            weekday: 1,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 4 },
+                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Lower",
+            order: 2,
+            weekday: 3,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 4 },
+                { exerciceContentId: burpees.id, defaultRepetitionCount: 10, defaultSets: 3 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("✔ Workout programs seeded.");
+
+
   // 2.5 Sessions demo liées au user "demo@..."
   console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 
-  const workout = await prisma.workoutSession.create({
+  const workout = await prisma.exerciceSession.create({
     data: {
       quality: 4,
       dateSession: new Date(),
       userId: demoUser.id,
-      exerciceSessions: {
+      exerciceSerie: {
         create: [
           {
-            exerciceType: { connect: { name: "Push Ups" } },
+            exerciceContent: { connect: { name: "Push Ups" } },
             repetitionCount: 20,
           },
           {
-            exerciceType: { connect: { name: "Squats" } },
+            exerciceContent: { connect: { name: "Squats" } },
             repetitionCount: 15,
           },
         ],
