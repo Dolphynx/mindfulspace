@@ -16,10 +16,12 @@ import { Controller, Get, Patch, Body } from "@nestjs/common";
 import { PrefsService } from "./prefs.service";
 import { ApiTags, ApiOkResponse } from "@nestjs/swagger";
 import { UpdatePrefsDto } from "./dto/update-prefs.dto";
+import { Public } from "../auth/decorators/public.decorator";
 
 /**
  * Tag Swagger "prefs" : regroupe ces routes dans la doc Swagger.
  */
+@Public()
 @ApiTags("prefs")
 @Controller("prefs")
 export class PrefsController {
