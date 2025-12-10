@@ -17,6 +17,7 @@ export type ProgramDay = {
     order: number;
     weekday: number | null;
     exerciceItems: ProgramExerciceItem[];
+    sleepItems: ProgramSleepItem[];
 };
 
 export type ProgramExerciceItem = {
@@ -32,6 +33,11 @@ export type ProgramExerciceItem = {
     } | null;
 };
 
+export type ProgramSleepItem = {
+    id: string;
+    defaultHours: number | null;
+};
+
 export type CreateProgramPayload = {
     title: string;
     description?: string;
@@ -44,6 +50,9 @@ export type CreateProgramPayload = {
             defaultRepetitionCount?: number;
             defaultSets?: number;
         }[];
+        sleepItems: {
+            defaultHours: number | null;
+        }
     }[];
 };
 
@@ -55,11 +64,17 @@ export type UserProgramExercise = {
     defaultRepetitionCount: number | null;
 };
 
+export type UserProgramSleep = {
+    id: string;
+    hours: number | null;
+};
+
 export type UserProgramDay = {
     id: string;
     title: string;
     weekday: number | null;
     exercices: UserProgramExercise[];
+    sleepItems: UserProgramSleep[];
 };
 
 export type UserProgram = {
@@ -117,6 +132,7 @@ function normalizeProgram(raw: any): ProgramItem | null {
                             : null,
                     }))
                     : [],
+                sleepItems: [] //todo
             }))
             : [],
     };
@@ -235,6 +251,12 @@ export async function fetchUserPrograms(
                             typeof e.defaultRepetitionCount === "number"
                                 ? e.defaultRepetitionCount
                                 : null,
+                    }))
+                    : [],
+                sleepItems: Array.isArray(d.sleepItems)
+                    ? d.sleepItems.map((s: any): UserProgramSleep => ({
+                        id: String(s.id ?? ""),
+                        hours: typeof s.hours === "number" ? s.hours : null,
                     }))
                     : [],
             }))

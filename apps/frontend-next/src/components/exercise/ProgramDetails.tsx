@@ -2,6 +2,8 @@
 
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { ProgramItem } from "@/lib/api/program";
+import { usePrograms } from "@/hooks/usePrograms";
+import { useEffect, useState } from "react";
 
 export function ProgramDetails({
                                    program,

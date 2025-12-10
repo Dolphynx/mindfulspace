@@ -16,6 +16,7 @@ export class ProgramService {
                 exerciceContent: true,  // include name + description
               },
             },
+            sleepItems: true,
           },
         },
       },
@@ -33,6 +34,7 @@ export class ProgramService {
                 exerciceContent: true,
               },
             },
+            sleepItems: true,
           },
         },
       },
@@ -62,6 +64,11 @@ export class ProgramService {
                 defaultSets: e.defaultSets,
               })),
             },
+            sleepItems: {
+              create: day.sleepItems.map((sleep) => ({
+                hours: sleep.defaultHours,
+              })),
+            }
           })),
         },
       },
@@ -69,6 +76,7 @@ export class ProgramService {
         days: {
           include: {
             exerciceItems: true,
+            sleepItems: true,
           },
         },
       },
@@ -79,11 +87,13 @@ export class ProgramService {
     const program = await this.prisma.program.findUnique({
       where: { id: programId },
       include: {
-        days: { include: { exerciceItems: true } },
+        days: { include: { exerciceItems: true, sleepItems: true } },
       },
     });
 
+
     if (!program) throw new NotFoundException();
+    console.log(program.days[0])
 
     return this.prisma.$transaction(async (tx) => {
       return tx.userProgram.create({
@@ -102,6 +112,11 @@ export class ProgramService {
                   defaultSets: ex.defaultSets,
                 })),
               },
+              sleepItems: {
+                create: day.sleepItems.map((s) => ({
+                  hours: s.defaultHours,
+                })),
+              }
             })),
           },
         },
