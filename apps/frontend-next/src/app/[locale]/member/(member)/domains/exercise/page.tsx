@@ -10,6 +10,8 @@ import { SessionCard } from "@/components/session/SessionCard";
 import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
 import DomainSwitcher from "@/components/DomainSwitcher";
 import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
+import { usePrograms } from "@/hooks/usePrograms";
+import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -52,23 +54,27 @@ export default function ExercicePage() {
                 }
                 globalErrorMessage={globalErrorMessage}
                 leftTop={
-                    <SessionCard>
-                        <ExerciceManualForm
-                            types={types}
-                            onCreateSession={createSession}
-                        />
-                    </SessionCard>
-                }
-
-                leftBottom={
                     <>
+                        <SessionCard>
+                            <TodayExercices/>
+                        </SessionCard>
                         <SessionCard>
                             <ExerciceStartSection
                                 types={types}
                                 onCreateSession={createSession}
                             />
                         </SessionCard>
+                    </>
 
+                }
+
+                leftBottom={
+                    <>
+                        <SessionCard>
+                            <ExerciceManualForm
+                                types={types}
+                                onCreateSession={createSession}/>
+                        </SessionCard>
                         <SessionCard>
                             <WorkoutProgramsStartCard />
                         </SessionCard>

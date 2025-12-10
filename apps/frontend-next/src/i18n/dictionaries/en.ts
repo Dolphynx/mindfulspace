@@ -351,6 +351,12 @@ const en = {
         program_list_daysPerWeek: "days/week",
         program_details_back: "Back",
         program_details_subscribe: "Subscribe",
+        program_details_unsubscribe: "Unsubscribe",
+
+        exercice_plan_today_title: "Today's exercises",
+        exercice_plan_today_empty: "Nothing planned today 🙂",
+        exercice_plan_loading: "Loading...",
+
         weekday_0: "Sunday",
         weekday_1: "Monday",
         weekday_2: "Tuesday",

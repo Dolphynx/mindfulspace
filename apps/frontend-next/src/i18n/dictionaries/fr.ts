@@ -347,6 +347,12 @@ const fr = {
         program_list_daysPerWeek: "jours/semaine",
         program_details_back: "Retour",
         program_details_subscribe: "S'abonner",
+        program_details_unsubscribe: "Se désabonner",
+
+        exercice_plan_today_title: "Exercices du jour",
+        exercice_plan_today_empty: "Rien de prévu aujourd'hui",
+        exercice_plan_loading: "Chargement...",
+
         weekday_0: "Dimanche",
         weekday_1: "Lundi",
         weekday_2: "Mardi",
