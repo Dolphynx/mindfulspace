@@ -905,6 +905,58 @@ async function main() {
   console.log("✔ Workout programs seeded.");
 
 
+  const programA = await prisma.program.create({
+    data: {
+      title: "Balanced Sleep Routine",
+      description: "A 7-day cycle: 8 hours for 5 days, then 9 hours during the weekend.",
+      days: {
+        create: [
+          ...Array.from({ length: 5 }).map((_, i) => ({
+            order: i + 1,
+            title: `Day ${i + 1}`,
+            weekday: i + 1, // Monday–Friday
+            sleepItems: {
+              create: {
+                defaultHours: 8,
+              },
+            },
+          })),
+          ...Array.from({ length: 2 }).map((_, i) => ({
+            order: 6 + i,
+            title: `Day ${6 + i}`,
+            weekday: 6 + i, // Saturday–Sunday
+            sleepItems: {
+              create: {
+                defaultHours: 9,
+              },
+            },
+          })),
+        ],
+      },
+    },
+  });
+
+  const programB = await prisma.program.create({
+    data: {
+      title: "Consistent 8h Sleep",
+      description: "A simple 7-day program with 8 hours of sleep every day.",
+      days: {
+        create: Array.from({ length: 7 }).map((_, i) => ({
+          order: i + 1,
+          title: `Day ${i + 1}`,
+          weekday: i + 1, // 1–7
+          sleepItems: {
+            create: {
+              defaultHours: 8,
+            },
+          },
+        })),
+      },
+    },
+  });
+
+
+
   // 2.5 Sessions demo liées au user "demo@..."
   console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 
