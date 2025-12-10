@@ -2,6 +2,7 @@ import { Controller, Get, Param, Post, Body } from '@nestjs/common';
 import { ProgramService } from './program.service';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '@mindfulspace/api/auth/decorators/current-user.decorator';
 
 
 @Controller('programs/')
@@ -25,4 +26,13 @@ export class ProgramController {
     create(@Body() dto: CreateProgramDto) {
         return this.service.create(dto);
     }
+
+    @Post(':id/subscribe')
+    subscribe(
+      @CurrentUser('id') userId: string,
+      @Param('id') programId: string,
+    ) {
+      return this.service.subscribe(userId, programId);
+    }
+
 }

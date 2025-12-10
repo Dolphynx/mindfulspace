@@ -47,6 +47,27 @@ export type CreateProgramPayload = {
     }[];
 };
 
+
+// Types for the user’s copied programs
+export type UserProgramExercise = {
+    id: string;
+    exerciceContentName: string;
+    defaultRepetitionCount: number | null;
+};
+
+export type UserProgramDay = {
+    id: string;
+    title: string;
+    weekday: number | null;
+    exercices: UserProgramExercise[];
+};
+
+export type UserProgram = {
+    id: string;
+    programTitle: string;
+    days: UserProgramDay[];
+};
+
 /* -------------------------------------------------------------------------- */
 /*  CONFIG                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -145,3 +166,84 @@ export async function createProgram(
     const raw = await res.json();
     return normalizeProgram(raw);
 }
+
+/**
+ * POST /user/programs  (subscribe current user to a program)
+ * body: { programId: string }
+ */
+export async function subscribeToProgram(
+    programId: string,
+    baseUrl = API_BASE_URL
+): Promise<void> {
+    const res = await apiFetch(`${baseUrl}/user/programs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ programId }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+export async function getProgramSubscriptionStatus(programId: string, baseUrl = API_BASE_URL) {
+    const res = await apiFetch(`${baseUrl}/user/programs/status/${programId}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json() as {
+        subscribed: boolean;
+        userProgramId: string | null;
+    };
+
+    return data; // not just boolean
+}
+
+export async function unsubscribeFromProgram(userProgramId: string, baseUrl = API_BASE_URL) {
+    const res = await apiFetch(`${baseUrl}/user/programs/${userProgramId}`, {
+        method: "DELETE"
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+/**
+ * GET /user/programs  (fetch all subscriptions of current user)
+ */
+export async function fetchUserPrograms(
+    baseUrl = API_BASE_URL,
+): Promise<UserProgram[]> {
+    const res = await apiFetch(`${baseUrl}/user/programs`, {
+        cache: "no-store",
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return [];
+
+    return data.map((raw: any): UserProgram => ({
+        id: String(raw.id ?? ""),
+        programTitle: String(raw.program?.title ?? ""), // 👈 from relation
+        days: Array.isArray(raw.days)
+            ? raw.days.map((d: any): UserProgramDay => ({
+                id: String(d.id ?? ""),
+                title: String(d.title ?? ""),
+                weekday:
+                    typeof d.weekday === "number" ? d.weekday : null,
+                exercices: Array.isArray(d.exercices)
+                    ? d.exercices.map((e: any): UserProgramExercise => ({
+                        id: String(e.id ?? ""),
+                        exerciceContentName: String(e.exerciceContent?.name ?? ""),
+                        defaultRepetitionCount:
+                            typeof e.defaultRepetitionCount === "number"
+                                ? e.defaultRepetitionCount
+                                : null,
+                    }))
+                    : [],
+            }))
+            : [],
+    }));
+}
+
+
+
+
+
+
