@@ -9,7 +9,10 @@ import {
     type ExerciceSession,
     type ExerciceContentItem,
     type CreateExerciceSessionPayload,
+    type CreateExerciceSessionResponse,
 } from "@/lib/api/exercice";
+import {useBadgeToasts} from "@/components/badges/BadgeToastProvider";
+import {mapApiBadgeToToastItem} from "@/lib/badges/mapApiBadge";
 
 export type ExerciceErrorType = "load" | "save" | "types" | null;
 
@@ -72,11 +75,19 @@ export function useExerciceSessions(
     }, [load, loadTypes]);
 
     /** CREATE EXERCISE SESSION */
+    const { pushBadges } = useBadgeToasts();
+
     const createSession = useCallback(
         async (payload: CreateSessionInput) => {
             setErrorType(null);
             try {
-                await createExerciceSession(payload, effectiveBaseUrl);
+                const { newBadges }: CreateExerciceSessionResponse =
+                    await createExerciceSession(payload, effectiveBaseUrl);
+
+                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                    pushBadges(newBadges.map(mapApiBadgeToToastItem));
+                }
+
                 await load(); // refresh list
             } catch (e) {
                 console.error("[useExerciceSessions] save failed", e);
@@ -84,7 +95,7 @@ export function useExerciceSessions(
                 throw e;
             }
         },
-        [effectiveBaseUrl, load],
+        [effectiveBaseUrl, load, pushBadges],
     );
 
     return {

@@ -3,17 +3,24 @@ import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { SleepSessionService } from './sleep-session.service';
 import { CreateSleepSessionDto } from './dto/sleep-session.dto';
 import { CurrentUser } from '@mindfulspace/api/auth/decorators/current-user.decorator';
+import { BadgesService } from '@mindfulspace/api/badges/badges.service';
 
 @Controller('sleep')
 export class SleepSessionController {
-  constructor(private readonly sleepService: SleepSessionService) {}
+  constructor(
+    private readonly sleepService: SleepSessionService,
+    private readonly badgesService: BadgesService,
+    ) {}
 
   @Post()
-  create(
+  async create(
     @CurrentUser('id') userId: string,
-    @Body() dto: CreateSleepSessionDto
+    @Body() dto: CreateSleepSessionDto,
   ) {
-    return this.sleepService.create(userId, dto);
+    const session = await this.sleepService.create(userId, dto);
+    const newBadges = await this.badgesService.checkForNewBadges(userId);
+
+    return { session, newBadges };
   }
 
   @Get()

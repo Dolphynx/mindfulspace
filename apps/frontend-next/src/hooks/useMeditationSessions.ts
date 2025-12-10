@@ -8,8 +8,11 @@ import {
     type CreateMeditationSessionPayload,
     type MeditationSession,
     type MeditationTypeItem,
+    type CreateMeditationSessionResponse,
 } from "@/lib/api/meditation";
 import { VisualBreathingConfig } from "@/components";
+import { useBadgeToasts } from "@/components/badges/BadgeToastProvider";
+import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
 
 export type MeditationErrorType = "load" | "save" | "types" | null;
 
@@ -128,11 +131,19 @@ export function useMeditationSessions(): UseMeditationSessionsResult {
      * Définit `errorType = "save"` en cas d’échec et relance l’erreur
      * pour permettre un traitement spécifique côté UI (toast, banner, etc.).
      */
+    const { pushBadges } = useBadgeToasts();
+
     const createSession = useCallback(
         async (payload: CreateSessionInput) => {
             setErrorType(null);
             try {
-                await createMeditationSession(payload);
+                const { newBadges }: CreateMeditationSessionResponse =
+                    await createMeditationSession(payload);
+
+                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                    pushBadges(newBadges.map(mapApiBadgeToToastItem));
+                }
+
                 await load();
             } catch (e) {
                 console.error("[useMeditationSessions] save failed", e);
@@ -140,7 +151,7 @@ export function useMeditationSessions(): UseMeditationSessionsResult {
                 throw e;
             }
         },
-        [load],
+        [load, pushBadges],
     );
 
     return {
