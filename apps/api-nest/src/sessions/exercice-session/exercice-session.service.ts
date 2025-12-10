@@ -27,7 +27,6 @@ export class ExerciceSessionService {
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
 
-        // 1️⃣ Validate exercise types
         const exerciceTypeIds = dto.exercices.map((e) => e.exerciceContentId);
 
         if (exerciceTypeIds.length === 0) {
@@ -48,7 +47,6 @@ export class ExerciceSessionService {
             );
         }
 
-        // 2️⃣ Check if a workout already exists that day for this user
         const existingSession = await this.prisma.exerciceSession.findFirst({
             where: {
                 userId,
@@ -56,7 +54,6 @@ export class ExerciceSessionService {
             },
         });
 
-        // 3️⃣ Create or update workout + exerciceSessions
         const fullSession = await this.prisma.$transaction(async (tx) => {
             let session;
 
@@ -78,7 +75,6 @@ export class ExerciceSessionService {
                 });
             }
 
-            // 4️⃣ UPSERT exercise entries (update if exists, otherwise create)
             for (const e of dto.exercices) {
                 await tx.exerciceSerie.upsert({
                     where: {
@@ -98,7 +94,6 @@ export class ExerciceSessionService {
                 });
             }
 
-            // 5️⃣ Return full workout with exercices
             return tx.exerciceSession.findUnique({
                 where: { id: session.id },
                 include: {
@@ -117,7 +112,6 @@ export class ExerciceSessionService {
             });
         });
 
-        // Optionally normalize here too if you want same shape everywhere
         return this.normalizeSession(fullSession);
     }
 
@@ -146,7 +140,7 @@ export class ExerciceSessionService {
      * Vérifie l’ownership avant de renvoyer les données.
      */
     async findOne(id: string, userId: string) {
-        const workout = await this.prisma.exerciceSession.findUnique({
+        const session = await this.prisma.exerciceSession.findUnique({
             where: { id },
             include: {
               exerciceSerie: {
@@ -157,20 +151,20 @@ export class ExerciceSessionService {
             },
         });
 
-        if (!workout) {
-            throw new NotFoundException('WorkoutSession not found');
+        if (!session) {
+            throw new NotFoundException('exerciceSession not found');
         }
 
-        if (workout.userId !== userId) {
+        if (session.userId !== userId) {
             throw new ForbiddenException('You are not allowed to access this session');
         }
 
-        return this.normalizeSession(workout);
+        return this.normalizeSession(session);
     }
 
     /**
      * Résumé des 7 derniers jours pour un utilisateur.
-     * Utilise le même format que le frontend attend pour `WorkoutSession`.
+     * Utilise le même format que le frontend attend pour `exerciceSession`.
      */
     async getLast7Days(userId: string) {
         const now = new Date();
