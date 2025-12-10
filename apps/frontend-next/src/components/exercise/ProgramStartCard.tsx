@@ -18,7 +18,6 @@ export function WorkoutProgramsStartCard() {
             <ProgramDetails
                 program={programs.find(p => p.id === selectedProgramId)!}
                 onBack={() => setSelectedProgramId(null)}
-                onSubscribe={() => console.log("TODO subscribe")}
             />
         );
     }

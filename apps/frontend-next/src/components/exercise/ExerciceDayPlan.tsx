@@ -19,7 +19,7 @@ export function TodayExercices() {
     const todays = programs
         ?.map(p => ({
             program: p,
-            day: p.days.find(d => d.weekday === today),
+            day: p.days.find((d: { weekday: number }) => d.weekday === today),
         }))
         .filter(x => x.day) ?? [];
 
@@ -62,12 +62,12 @@ export function TodayExercices() {
 
                     {/* exercises */}
                     <ul className="mt-2 space-y-1">
-                        {day.exercices.map(ex => (
+                        {day.exercices.map((ex: { id: string; exerciceContentName: string; defaultRepetitionCount: number }) => (
                             <li key={ex.id}>
                                 {ex.exerciceContentName} – {ex.defaultRepetitionCount} reps
                             </li>
-
                         ))}
+
                     </ul>
                 </div>
             ))}
