@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import PageHero from "@/components/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 
@@ -72,6 +72,7 @@ const API_BASE_URL =
  */
 export default function ResourceDetailPage() {
     const params = useParams<{ locale: string; slug: string }>();
+    const router = useRouter();
 
     // On force des strings, avec fallback correct
     const localeParam = params?.locale;
@@ -93,6 +94,7 @@ export default function ResourceDetailPage() {
     const [resource, setResource] = useState<ResourceDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isForbidden, setIsForbidden] = useState(false);
 
     useEffect(() => {
         // Si pas de slug (string vide), on ne lance rien
@@ -104,16 +106,28 @@ export default function ResourceDetailPage() {
         async function loadResource(slugValue: string) {
             setLoading(true);
             setError(null);
+            setIsForbidden(false);
 
             try {
                 const res = await fetch(
                     `${API_BASE_URL}/resources/${encodeURIComponent(
                         slugValue
                     )}`,
-                    { cache: "no-store" }
+                    {
+                        cache: "no-store",
+                        credentials: "include", // utile si tu utilises des cookies pour l'auth
+                    }
                 );
 
                 const contentType = res.headers.get("content-type") ?? "";
+
+                if (res.status === 403) {
+                    // Ressource premium sans droit d’accès
+                    setIsForbidden(true);
+                    setError(null);
+                    setResource(null);
+                    return;
+                }
 
                 if (!res.ok) {
                     const text = await res.text();
@@ -150,7 +164,7 @@ export default function ResourceDetailPage() {
         }
 
         loadResource(slug);
-    }, [slug]); // slug est maintenant toujours un string → plus d'erreur TS
+    }, [slug, t]);
 
     // Titre à afficher dans le hero : soit celui de la ressource, soit une valeur fallback
     const pageTitle =
@@ -191,7 +205,28 @@ export default function ResourceDetailPage() {
                     </article>
                 )}
 
-                {!loading && error && (
+                {/* 403 – accès refusé (premium) */}
+                {!loading && isForbidden && (
+                    <article className="bg-white border border-red-200 rounded-card shadow-card p-6">
+                        <h2 className="text-base font-semibold text-red-700 mb-2">
+                            {t("forbiddenTitle")}
+                        </h2>
+                        <p className="text-sm text-red-700 mb-4">
+                            {t("forbiddenText")}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() => router.push(`/${locale}/resources`)}
+                            className="inline-flex items-center rounded-full bg-brandPrimary px-4 py-1.5 text-xs font-medium text-white hover:bg-brandPrimary/90"
+                        >
+                            {t("backToListCTA")}
+                        </button>
+                    </article>
+                )}
+
+                {/* Erreur générique / 404 */}
+                {!loading && !isForbidden && error && (
                     <article className="bg-white border border-red-200 rounded-card shadow-card p-6">
                         <h2 className="text-base font-semibold text-red-700 mb-2">
                             {t("errorTitle")}
@@ -200,7 +235,7 @@ export default function ResourceDetailPage() {
                     </article>
                 )}
 
-                {!loading && !error && !resource && (
+                {!loading && !isForbidden && !error && !resource && (
                     <article className="bg-white border border-brandBorder rounded-card shadow-card p-6">
                         <h2 className="text-base font-semibold mb-2">
                             {t("notFoundTitle")}
@@ -212,7 +247,7 @@ export default function ResourceDetailPage() {
                 )}
 
                 {/* Contenu principal */}
-                {!loading && !error && resource && (
+                {!loading && !isForbidden && !error && resource && (
                     <article className="bg-white border border-brandBorder rounded-card shadow-card p-6 space-y-4">
                         {/* En-tête */}
                         <header className="flex flex-wrap items-center justify-between gap-3">

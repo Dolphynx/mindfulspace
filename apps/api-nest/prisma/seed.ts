@@ -1071,6 +1071,7 @@ async function main() {
       content: "…",
       type: ResourceType.GUIDE,
       isFeatured: true,
+      isPremium: true,
       readTimeMin: 5,
       authorName: "Équipe MindfulSpace",
       categoryId: guideCat.id,
