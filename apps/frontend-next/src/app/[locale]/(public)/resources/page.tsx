@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import PageHero from "@/components/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 
@@ -48,6 +49,20 @@ type Resource = {
 };
 
 /**
+ * Rôles possibles pour l'utilisateur (doit matcher ton backend).
+ */
+type RoleName = "user" | "premium" | "coach" | "admin";
+
+/**
+ * Représentation minimale de l’utilisateur telle que renvoyée par `/auth/me`.
+ */
+type AuthUser = {
+    id: string;
+    email: string;
+    roles: RoleName[];
+};
+
+/**
  * Base URL des appels API (identique au reste du front).
  */
 const API_BASE_URL =
@@ -67,6 +82,9 @@ export default function ResourcesPage() {
     const [categorySlug, setCategorySlug] = useState<string | undefined>();
     const [loading, setLoading] = useState(false);
 
+    // État pour savoir si l'utilisateur courant est premium (auth optionnelle)
+    const [isPremiumUser, setIsPremiumUser] = useState(false);
+
     /**
      * Déduction de la locale depuis l'URL.
      * Exemple : /fr/resources → locale = "fr".
@@ -76,6 +94,52 @@ export default function ResourcesPage() {
 
     // Namespace i18n spécifique à cette page
     const t = useTranslations("resourcesPage");
+
+    /**
+     * Auth optionnelle :
+     * - on interroge /auth/me
+     * - si 401/403 → on considère juste "non connecté" (isPremiumUser = false)
+     * - si OK → on vérifie la présence du rôle "premium"
+     * - aucune redirection ici (contrairement à useAuthRequired)
+     */
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadCurrentUser() {
+            try {
+                const res = await fetch(
+                    `${API_BASE_URL}/auth/me`,
+                    { credentials: "include" }
+                );
+
+                if (res.status === 401 || res.status === 403) {
+                    // pas connecté ou interdit → pas de rôle premium
+                    if (!cancelled) setIsPremiumUser(false);
+                    return;
+                }
+
+                if (!res.ok) {
+                    console.error("Erreur /auth/me (optionnel):", await res.text());
+                    return;
+                }
+
+                const data = (await res.json()) as AuthUser;
+                if (cancelled) return;
+
+                const userRoles = data.roles.map((r) => r.toLowerCase());
+                const hasPremium = userRoles.includes("premium");
+                setIsPremiumUser(hasPremium);
+            } catch (error) {
+                console.error("Erreur réseau /auth/me (optionnel):", error);
+            }
+        }
+
+        loadCurrentUser();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     /**
      * Chargement initial des catégories.
@@ -251,56 +315,95 @@ export default function ResourcesPage() {
 
                     {/* Grille des cartes */}
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
-                        {resources.map((r) => (
-                            <Link
-                                key={r.id}
-                                href={`/${locale}/resources/${r.slug}`}
-                                className="rounded-2xl border border-brandBorder bg-brandBgCard p-4 flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5 transition-all"
-                            >
-                                <div>
-                                    <div className="mb-2 flex items-center justify-between gap-2">
-                                        <span className="text-xs font-medium uppercase text-brandText-soft">
-                                            {r.category.name}
-                                        </span>
+                        {resources.map((r) => {
+                            const isLocked = r.isPremium && !isPremiumUser;
 
-                                        {r.isPremium && (
-                                            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-medium text-purple-700">
-                                                {t("premiumBadge")}
+                            const card = (
+                                <div
+                                    className={
+                                        "rounded-2xl border border-brandBorder bg-brandBgCard p-4 flex flex-col justify-between transition-all " +
+                                        (isLocked
+                                            ? "opacity-70 cursor-not-allowed"
+                                            : "hover:shadow-lg hover:-translate-y-0.5")
+                                    }
+                                >
+                                    <div>
+                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                            <span className="text-xs font-medium uppercase text-brandText-soft">
+                                                {r.category.name}
+                                            </span>
+
+                                            {r.isPremium && (
+                                                <div className="flex items-center gap-1">
+                                                    <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+                                                        {t("premiumBadge")}
+                                                    </span>
+                                                    <Image
+                                                        src="/images/session_premium.png"
+                                                        alt={t("premiumIconAlt")}
+                                                        width={18}
+                                                        height={18}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <h3 className="text-base font-semibold text-brandText mb-1">
+                                            {r.title}
+                                        </h3>
+
+                                        <p className="text-sm text-brandText-soft line-clamp-3">
+                                            {r.summary}
+                                        </p>
+                                    </div>
+
+                                    {/* Tags + durée de lecture */}
+                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-brandText-soft">
+                                        <div className="flex flex-wrap gap-1">
+                                            {r.tags.map((tTag) => (
+                                                <span
+                                                    key={tTag.tag.id}
+                                                    className="rounded-full bg-white/60 px-2 py-0.5"
+                                                >
+                                                    {tTag.tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        {r.readTimeMin && (
+                                            <span>
+                                                {r.readTimeMin}{" "}
+                                                {t("readTimeSuffix")}
                                             </span>
                                         )}
                                     </div>
-
-                                    <h3 className="text-base font-semibold text-brandText mb-1">
-                                        {r.title}
-                                    </h3>
-
-                                    <p className="text-sm text-brandText-soft line-clamp-3">
-                                        {r.summary}
-                                    </p>
                                 </div>
+                            );
 
-                                {/* Tags + durée de lecture */}
-                                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-brandText-soft">
-                                    <div className="flex flex-wrap gap-1">
-                                        {r.tags.map((tTag) => (
-                                            <span
-                                                key={tTag.tag.id}
-                                                className="rounded-full bg-white/60 px-2 py-0.5"
-                                            >
-                                                {tTag.tag.name}
-                                            </span>
-                                        ))}
+                            if (isLocked) {
+                                return (
+                                    <div
+                                        key={r.id}
+                                        aria-label={t(
+                                            "lockedPremiumResource"
+                                        )}
+                                        title={t("lockedPremiumTooltip")}
+                                    >
+                                        {card}
                                     </div>
+                                );
+                            }
 
-                                    {r.readTimeMin && (
-                                        <span>
-                                            {r.readTimeMin}{" "}
-                                            {t("readTimeSuffix")}
-                                        </span>
-                                    )}
-                                </div>
-                            </Link>
-                        ))}
+                            return (
+                                <Link
+                                    key={r.id}
+                                    href={`/${locale}/resources/${r.slug}`}
+                                    className="block"
+                                >
+                                    {card}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </article>
             </section>

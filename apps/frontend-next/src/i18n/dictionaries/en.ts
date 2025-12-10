@@ -236,6 +236,9 @@ const en = {
         empty: "No resources match your search yet.",
 
         premiumBadge: "Premium",
+        premiumIconAlt: "Premium content",
+        lockedPremiumResource: "Premium resource reserved for premium members",
+        lockedPremiumTooltip: "Become a premium member to access this content",
         readTimeSuffix: "min",
     },
 
@@ -515,7 +518,10 @@ const en = {
         notFoundText: "This resource does not exist or is no longer available.",
         readTimeSuffix: "min read",
         premiumBadge: "Premium",
-        noContent: "The content of this resource is not yet available."
+        noContent: "The content of this resource is not yet available.",
+        forbiddenTitle: "Access restricted",
+        forbiddenText: "This resource is reserved for premium members. Please sign in with a premium account to access it.",
+        backToListCTA: "Back to resources list"
     },
 
     notFoundPage: {

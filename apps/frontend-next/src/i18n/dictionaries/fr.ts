@@ -235,6 +235,9 @@ const fr = {
         empty: "Aucune ressource ne correspond à ta recherche pour le moment.",
 
         premiumBadge: "Premium",
+        premiumIconAlt: "Contenu premium",
+        lockedPremiumResource: "Ressource premium réservée aux membres premium",
+        lockedPremiumTooltip: "Devenez membre premium pour accéder à ce contenu",
         readTimeSuffix: "min",
     },
     breathingSession: {
@@ -514,7 +517,10 @@ const fr = {
         notFoundText: "Cette ressource n’existe pas ou n’est plus disponible.",
         readTimeSuffix: "min de lecture",
         premiumBadge: "Premium",
-        noContent: "Le contenu de cette ressource n’est pas encore disponible."
+        noContent: "Le contenu de cette ressource n’est pas encore disponible.",
+        forbiddenTitle: "Accès réservé",
+        forbiddenText: "Cette ressource est réservée aux membres premium. Connectez-vous avec un compte premium pour y accéder.",
+        backToListCTA: "Retour à la liste des ressources"
     },
 
     notFoundPage: {
