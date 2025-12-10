@@ -754,6 +754,40 @@ const fr = {
         resetPasswordSuccess: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
         resetPasswordFailed: "Échec de la réinitialisation du mot de passe",
     },
+
+    badges: {
+        latestBadgesTitle: "Tes derniers badges",
+
+        toastUnlockedTitle: "Nouveau badge débloqué",
+        toastUnlockedSubtitle: "Tu viens de débloquer un badge !",
+
+        meditation: {
+            first: {
+                title: "Première séance de méditation",
+            },
+            five: {
+                title: "5 séances de méditation complétées",
+            },
+            streak3: {
+                title: "Série de 3 jours de méditation",
+            },
+        },
+        exercice: {
+            first: {
+                title: "Première séance d’exercice",
+            },
+        },
+        sleep: {
+            first: {
+                title: "Première nuit de sommeil suivie",
+            },
+        },
+        generic: {
+            firstSession: {
+                title: "Première session MindfulSpace",
+            },
+        },
+    },
 };
 
 export default fr;
