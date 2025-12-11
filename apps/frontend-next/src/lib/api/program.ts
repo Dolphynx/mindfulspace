@@ -17,6 +17,7 @@ export type ProgramDay = {
     order: number;
     weekday: number | null;
     exerciceItems: ProgramExerciceItem[];
+    sleepItems: ProgramSleepItem[];
 };
 
 export type ProgramExerciceItem = {
@@ -32,6 +33,11 @@ export type ProgramExerciceItem = {
     } | null;
 };
 
+export type ProgramSleepItem = {
+    id: string;
+    defaultHours: number | null;
+};
+
 export type CreateProgramPayload = {
     title: string;
     description?: string;
@@ -44,6 +50,9 @@ export type CreateProgramPayload = {
             defaultRepetitionCount?: number;
             defaultSets?: number;
         }[];
+        sleepItems: {
+            defaultHours: number | null;
+        }
     }[];
 };
 
@@ -55,11 +64,17 @@ export type UserProgramExercise = {
     defaultRepetitionCount: number | null;
 };
 
+export type UserProgramSleep = {
+    id: string;
+    hours: number | null;
+};
+
 export type UserProgramDay = {
     id: string;
     title: string;
     weekday: number | null;
     exercices: UserProgramExercise[];
+    sleepItems: UserProgramSleep[];
 };
 
 export type UserProgram = {
@@ -81,6 +96,8 @@ const API_BASE_URL =
 
 function normalizeProgram(raw: any): ProgramItem | null {
     if (!raw || typeof raw !== "object") return null;
+
+    console.log(raw)
 
     return {
         id: String(raw.id ?? ""),
@@ -117,6 +134,7 @@ function normalizeProgram(raw: any): ProgramItem | null {
                             : null,
                     }))
                     : [],
+                sleepItems: []
             }))
             : [],
     };
@@ -134,6 +152,8 @@ export async function fetchPrograms(
 
     const data = await res.json();
     if (!Array.isArray(data)) return [];
+
+    console.log(data)
 
     return data
         .map(normalizeProgram)
@@ -164,6 +184,7 @@ export async function createProgram(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const raw = await res.json();
+
     return normalizeProgram(raw);
 }
 
@@ -218,6 +239,8 @@ export async function fetchUserPrograms(
     const data = (await res.json()) as unknown;
     if (!Array.isArray(data)) return [];
 
+    console.log(data);
+
     return data.map((raw: any): UserProgram => ({
         id: String(raw.id ?? ""),
         programTitle: String(raw.program?.title ?? ""), // 👈 from relation
@@ -235,6 +258,12 @@ export async function fetchUserPrograms(
                             typeof e.defaultRepetitionCount === "number"
                                 ? e.defaultRepetitionCount
                                 : null,
+                    }))
+                    : [],
+                sleepItems: Array.isArray(d.sleepItems)
+                    ? d.sleepItems.map((s: any): UserProgramSleep => ({
+                        id: String(s.id ?? ""),
+                        hours: typeof s.hours === "number" ? s.hours : null,
                     }))
                     : [],
             }))

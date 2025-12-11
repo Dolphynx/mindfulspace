@@ -9,7 +9,7 @@ export class UserProgramService {
     const program = await this.prisma.program.findUnique({
       where: { id: programId },
       include: {
-        days: { include: { exerciceItems: true } },
+        days: { include: { exerciceItems: true, sleepItems: true } },
       },
     });
 
@@ -30,6 +30,11 @@ export class UserProgramService {
                   exerciceContentId: ex.exerciceContentId,
                   defaultRepetitionCount: ex.defaultRepetitionCount,
                   defaultSets: ex.defaultSets,
+                })),
+              },
+              sleepItems: {
+                create: day.sleepItems.map((sleep) => ({
+                  hours: sleep.defaultHours,
                 })),
               },
             })),
@@ -54,6 +59,7 @@ export class UserProgramService {
                 exerciceContent: true,
               },
             },
+            sleepItems: true,
           },
         },
       },

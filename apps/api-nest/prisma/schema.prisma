@@ -249,6 +249,7 @@ model ProgramDay {
   weekday Int? // 1 = Monday ... 7 = Sunday, optional
 
   exerciceItems ProgramExerciceItem[]
+  sleepItems ProgramSleepItem[]
 }
 
 model ProgramExerciceItem {
@@ -284,6 +285,7 @@ model UserProgramDay {
   weekday       Int?
 
   exercices UserProgramExerciceItem[]
+  sleepItems UserProgramSleepItem[]
 
   userProgram UserProgram @relation(fields: [userProgramId], references: [id], onDelete: Cascade)
 }
@@ -299,6 +301,24 @@ model UserProgramExerciceItem {
   userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
   exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
+}
+
+
+model ProgramSleepItem {
+  id             String @id @default(uuid())
+  programDayId   String
+
+  programDay   ProgramDay      @relation(fields: [programDayId], references: [id])
+  defaultHours Int?
+}
+
+model UserProgramSleepItem {
+  id               String @id @default(uuid())
+  userProgramDayId String
+
+  userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
+
+  hours Int?
 }
 
 

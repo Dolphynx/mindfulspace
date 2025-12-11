@@ -14,6 +14,12 @@ class ProgramExerciceItemDto {
     defaultSets?: number;
 }
 
+class ProgramSleepItemDto {
+    @IsOptional()
+    @IsInt()
+    defaultHours?: number;
+}
+
 class ProgramDayDto {
     @IsString()
     title!: string;
@@ -29,6 +35,11 @@ class ProgramDayDto {
     @ValidateNested({ each: true })
     @Type(() => ProgramExerciceItemDto)
     exercices!: ProgramExerciceItemDto[];
+
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => ProgramSleepItemDto)
+    sleepItems!: ProgramSleepItemDto[];
 }
 
 export class CreateProgramDto {
