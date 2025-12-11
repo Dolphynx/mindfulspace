@@ -3,6 +3,7 @@ import { ExerciceSessionService } from './exercice-session.service';
 import { CreateExerciceSessionDto } from './dto/exercice-session.dto';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
+import { BadgesService } from '@mindfulspace/api/badges/badges.service';
 
 /**
  * Contrôleur HTTP regroupant les endpoints liés aux séances de sport.
@@ -17,7 +18,10 @@ import { Public } from '../../auth/decorators/public.decorator';
  */
 @Controller('exercices')
 export class ExerciceSessionController {
-    constructor(private readonly exerciceSessionService: ExerciceSessionService) {}
+    constructor(
+      private readonly exerciceSessionService: ExerciceSessionService,
+                private readonly badgesService: BadgesService
+    ) {}
 
     /**
      * Crée ou met à jour une séance de sport pour l’utilisateur courant.
@@ -27,11 +31,17 @@ export class ExerciceSessionController {
      * - si une séance existe déjà ce jour-là → mise à jour (quality, exercices, etc.).
      */
     @Post()
-    create(
-        @CurrentUser('id') userId: string,
-        @Body() dto: CreateExerciceSessionDto,
+    async create(
+      @CurrentUser('id') userId: string,
+      @Body() dto: CreateExerciceSessionDto,
     ) {
-        return this.exerciceSessionService.create(userId, dto);
+      const session = await this.exerciceSessionService.create(userId, dto);
+      const newBadges = await this.badgesService.checkForNewBadges(userId);
+
+      // Retourne la session nouvellement créée ainsi que les éventuels nouveaux
+      // badges débloqués à cette occasion. Ce format de réponse est commun à
+      // l’ensemble des types de sessions pour garantir une structure uniforme.
+      return { session, newBadges };
     }
 
     /**

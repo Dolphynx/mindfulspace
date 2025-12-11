@@ -346,6 +346,8 @@ model User {
   updatedAt DateTime @updatedAt // mis à jour automatiquement à chaque write
 
   UserProgram UserProgram[]
+
+  badges UserBadge[]
 }
 
 // Email verification tokens
@@ -539,4 +541,73 @@ model ResourceTagOnResource {
   tag      ResourceTag @relation(fields: [tagId], references: [id])
 
   @@id([resourceId, tagId]) // table de jonction N-N (clé composite)
+}
+
+enum BadgeDomain {
+  GENERIC
+  MEDITATION
+  EXERCICE
+  SLEEP
+}
+
+enum BadgeMetricType {
+  // Méditation
+  TOTAL_MEDITATION_SESSIONS
+  MEDITATION_STREAK_DAYS
+
+  // Exercice
+  TOTAL_EXERCICE_SESSIONS
+
+  // Sommeil
+  TOTAL_SLEEP_NIGHTS
+
+  // Générique (tous domaines confondus)
+  TOTAL_SESSIONS_ANY
+}
+
+model BadgeDefinition {
+  id        String   @id @default(cuid())
+  slug      String   @unique // ex: "first-meditation"
+
+  domain    BadgeDomain
+  metric    BadgeMetricType
+  threshold Int        // ex: 1, 5, 10...
+
+  // Clés i18n (tu pourras les mapper à fr/en dans ton system actuel)
+  titleKey       String // ex: "badges.meditation.first.title"
+  descriptionKey String // ex: "badges.meditation.first.description"
+
+  // Pour que le front sache quelle icône rendre
+  iconKey   String?    // ex: "badge-meditation-1"
+
+  // Gestion de l’affichage sur la home
+  // null -> jamais mis en avant automatiquement
+  highlightDurationHours Int? // ex: 168 = 7 jours
+
+  sortOrder Int?
+  isActive  Boolean   @default(true)
+
+  userBadges UserBadge[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+
+  userId    String
+  badgeId   String
+
+  earnedAt  DateTime @default(now())
+  metricValueAtEarn Int?
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge  BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  // Un user ne peut gagner un même badge qu’une seule fois
+  @@unique([userId, badgeId])
+
+  @@index([userId])
+  @@index([badgeId])
 }

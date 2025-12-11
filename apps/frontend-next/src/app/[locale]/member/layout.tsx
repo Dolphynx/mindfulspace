@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {AppShell, MainNavbar} from "@/components/layout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { BadgeToastProvider } from "@/components/badges/BadgeToastProvider";
 
 /**
  * Layout du module member (espace authentifié).
@@ -23,13 +24,14 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
  *   • la langue courante est déterminée au niveau de app/[locale]/layout.tsx,
  *   • les liens + labels sont gérés dans ClientNavbar et les pages via useTranslations.
  */
-export default function ClientLayout({ children }: { children: ReactNode }) {
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
         <AuthGuard roles={["user", "premium", "coach", "admin"]}>
-            <AppShell navbar={<MainNavbar mode="client" />}>
-                <>
+            <BadgeToastProvider>
+                <AppShell navbar={<MainNavbar mode="client" />}>
                     {children}
-                </>
-            </AppShell>
-        </AuthGuard> );
+                </AppShell>
+            </BadgeToastProvider>
+        </AuthGuard>
+    );
 }
