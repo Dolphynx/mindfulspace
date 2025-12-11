@@ -68,3 +68,25 @@ body {
 .animate-float {
     animation: float 3s ease-in-out infinite alternate;
 }
+
+@keyframes lotus-fall {
+    0% {
+        transform: translate3d(0, -120%, 0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(0, 110vh, 0) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.animate-lotus-fall {
+    animation-name: lotus-fall;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1;
+    animation-fill-mode: both;
+}
+

@@ -5,10 +5,11 @@ import {
     useState,
     useCallback,
     useContext,
-    ReactNode,
+    ReactNode, useEffect,
 } from "react";
 import type { BadgeToastItem } from "@/types/badges";
 import { BadgeToast } from "./BadgeToast";
+import { LotusConfetti } from "./LotusConfetti";
 
 /**
  * Structure de la valeur exposée par le contexte BadgeToastContext.
@@ -78,14 +79,17 @@ export function BadgeToastProvider({ children }: { children: ReactNode }) {
         setQueue((prev) => prev.slice(1));
     }, []);
 
+    const hasActiveToast = queue.length > 0;
+
     return (
         <BadgeToastContext.Provider value={{ pushBadges }}>
             {children}
 
-            {/* Affiche uniquement le badge en tête de file */}
-            {queue.length > 0 && (
-                <BadgeToast badge={queue[0]} onClose={pop} />
-            )}
+            {/* Effet confettis global dès qu’un badge est affiché */}
+            <LotusConfetti fire={hasActiveToast} />
+
+            {/* Toast du badge en tête de file */}
+            {hasActiveToast && <BadgeToast badge={queue[0]} onClose={pop} />}
         </BadgeToastContext.Provider>
     );
 }
