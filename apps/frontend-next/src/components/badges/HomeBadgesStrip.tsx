@@ -7,21 +7,23 @@ import type { BadgeToastItem } from "@/types/badges";
 import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
 
 /**
- * Nombre maximum de badges visibles affichés dans la barre d’accueil.
+ * Nombre maximum de badges affichés simultanément dans la barre d’accueil.
  */
 const MAX_BADGES = 3;
 
 /**
- * Composant responsable de l’affichage d’une bande de badges récemment obtenus,
- * visibles uniquement lorsque l’utilisateur détient des badges dits “mis en avant”.
+ * Composant affichant une bande horizontale contenant les badges récemment
+ * obtenus par l’utilisateur. Ces badges sont fournis par l’endpoint
+ * `/badges/me/highlighted`, lequel sélectionne uniquement ceux dont la
+ * période de mise en avant est encore valide.
  *
  * Le composant :
- * - charge les badges via l’endpoint `/badges/me/highlighted`
- * - convertit les données API en objets front (`BadgeToastItem`)
- * - limite l’affichage à {@link MAX_BADGES}
- * - masque automatiquement le rendu si aucun badge n’est disponible
+ * - effectue la requête réseau,
+ * - valide la structure de la réponse,
+ * - convertit les données API en `BadgeToastItem`,
+ * - masque automatiquement le bloc si aucune donnée n’est disponible.
  *
- * @returns Un bloc affichant les badges ou `null` si rien n'est à afficher.
+ * @returns Un bloc affichant les badges ou `null` si rien n’est disponible.
  */
 export function HomeBadgesStrip() {
     const t = useTranslations("badges");
@@ -32,84 +34,62 @@ export function HomeBadgesStrip() {
         let cancelled = false;
 
         /**
-         * Charge les badges mis en avant pour l’utilisateur courant.
-         * Gère les états de chargement, les erreurs réseau et protège
-         * contre les mises à jour de state après démontage du composant.
+         * Charge les badges mis en avant depuis l’API et met à jour
+         * l’état local du composant. Protège contre les mises à jour
+         * après démontage via le flag `cancelled`.
          */
         async function load() {
             setLoading(true);
-            try {
-                console.log("[HomeBadgesStrip] fetching highlighted badges...");
 
+            try {
                 const res = await apiFetch("/badges/me/highlighted", {
                     cache: "no-store",
                 });
 
-                console.log(
-                    "[HomeBadgesStrip] response status =",
-                    res.status,
-                );
-
                 if (!res.ok) {
-                    const text = await res.text().catch(() => "<no body>");
                     console.error(
-                        "[HomeBadgesStrip] non-OK response:",
+                        "[HomeBadgesStrip] Unexpected response:",
                         res.status,
-                        text,
+                        await res.text().catch(() => "<no-body>")
                     );
                     return;
                 }
 
-                const data = (await res.json()) as unknown;
+                const raw = await res.json();
 
-                console.log("[HomeBadgesStrip] raw data =", data);
-
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(raw)) {
                     console.warn(
-                        "[HomeBadgesStrip] Expected an array, got:",
-                        data,
+                        "[HomeBadgesStrip] Expected array, got:",
+                        raw
                     );
                     return;
                 }
 
-                const mapped = data
-                    .map((b) => mapApiBadgeToToastItem(b))
+                const mapped = raw
+                    .map(mapApiBadgeToToastItem)
                     .slice(0, MAX_BADGES);
-
-                console.log(
-                    "[HomeBadgesStrip] mapped badges =",
-                    mapped,
-                );
 
                 if (!cancelled) {
                     setBadges(mapped);
                 }
-            } catch (e) {
-                console.error(
-                    "[HomeBadgesStrip] Error while loading badges:",
-                    e,
-                );
+            } catch (err) {
+                console.error("[HomeBadgesStrip] Loading error:", err);
             } finally {
                 if (!cancelled) setLoading(false);
             }
         }
 
         load();
-
         return () => {
             cancelled = true;
         };
     }, []);
 
     // Aucun rendu pendant le chargement
-    if (loading) {
-        return null;
-    }
+    if (loading) return null;
 
-    // Aucun badge à afficher → pas de rendu
-    if (badges.length === 0) {
-        return null;
-    }
+    // Aucun badge → le composant reste invisible
+    if (badges.length === 0) return null;
 
     return (
         <div
@@ -120,75 +100,59 @@ export function HomeBadgesStrip() {
                 border border-white/60
                 bg-white/80
                 px-4
-                py-3
+                py-4
                 shadow-lg
                 backdrop-blur
                 flex
                 flex-col
-                gap-2
+                gap-3
                 items-center
             "
         >
+            {/* Titre de la section */}
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {t("latestBadgesTitle")}
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Liste horizontale des badges */}
+            <div className="flex items-center gap-5">
                 {badges.map((badge) => {
-                    // On enlève le préfixe "badges." parce qu'on est déjà
-                    // dans le namespace "badges".
+                    // Nettoyage du namespace i18n
                     const titleKey =
-                        badge.titleKey &&
-                        (badge.titleKey.startsWith("badges.")
+                        badge.titleKey?.startsWith("badges.")
                             ? badge.titleKey.slice("badges.".length)
-                            : badge.titleKey);
-
-                    const descriptionKey =
-                        badge.descriptionKey &&
-                        (badge.descriptionKey.startsWith("badges.")
-                            ? badge.descriptionKey.slice("badges.".length)
-                            : badge.descriptionKey);
+                            : badge.titleKey;
 
                     return (
-                    <div
-                        key={badge.id}
-                        className="
-                            flex
-                            items-center
-                            gap-2
-                            rounded-xl
-                            bg-slate-50/80
-                            px-3
-                            py-2
-                            shadow-sm
-                        "
-                    >
-                        <div className="h-12 w-12 shrink-0 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                            {badge.iconKey ? (
+                        <div
+                            key={badge.id}
+                            className="
+                                flex
+                                flex-col
+                                items-center
+                                gap-2
+                                rounded-xl
+                                bg-slate-50/80
+                                px-3
+                                py-3
+                                shadow-sm
+                                min-w-[90px]
+                            "
+                        >
+                            {/* Icône du badge */}
+                            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
                                 <img
-                                    src={`/images/badges/${badge.iconKey}`}
+                                    src={`/images/badges/${badge.iconKey ?? "default"}`}
                                     alt=""
-                                    className="h-12 w-12 object-contain"
+                                    className="h-16 w-16 object-contain"
                                 />
-                            ) : (
-                                <img
-                                    src={`/images/badges/default`}
-                                    alt=""
-                                    className="h-12 w-12 object-contain"
-                                />
-                            )}
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-slate-800">
+                            </div>
+
+                            {/* Titre en dessous */}
+                            <span className="text-xs font-semibold text-slate-800 text-center leading-tight">
                                 {titleKey ? t(titleKey) : badge.titleKey}
                             </span>
-                            {/*badge.descriptionKey && (
-                                <span className="text-[11px] text-slate-500">
-                                    {t(descriptionKey)}
-                                </span>
-                            )*/}
                         </div>
-                    </div>
                     );
                 })}
             </div>

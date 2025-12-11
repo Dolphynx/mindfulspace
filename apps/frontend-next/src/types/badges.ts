@@ -1,5 +1,3 @@
-// types/badges.ts
-
 /**
  * Représentation minimale d’un badge à afficher en toast.
  * On ne garde que ce dont l’UI a vraiment besoin.

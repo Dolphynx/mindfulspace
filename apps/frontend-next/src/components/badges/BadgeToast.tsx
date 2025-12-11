@@ -1,60 +1,112 @@
 "use client";
 
+import { useEffect } from "react";
 import type { BadgeToastItem } from "@/types/badges";
 
+/**
+ * Props attendues par le composant BadgeToast.
+ */
 interface BadgeToastProps {
+    /**
+     * Badge à afficher dans le toast.
+     */
     badge: BadgeToastItem;
+
+    /**
+     * Callback déclenché lorsque le toast est fermé (automatiquement ou manuellement).
+     */
     onClose: () => void;
 }
 
+/**
+ * Composant visuel représentant une notification toast pour un badge gagné.
+ *
+ * Fonctionnement :
+ * - Affiche une carte flottante en bas de l’écran.
+ * - Affiche l’icône, le titre et une brève description du badge.
+ * - Se ferme automatiquement après un délai.
+ * - Permet la fermeture manuelle (croix).
+ *
+ * Ce composant est destiné à être utilisé via le `BadgeToastProvider`,
+ * plutôt que directement par l’application.
+ */
 export function BadgeToast({ badge, onClose }: BadgeToastProps) {
+    const AUTO_CLOSE_DELAY = 4000; // 4 secondes
+
+    /**
+     * Déclenche une fermeture automatique après un délai prédéfini.
+     * Le cleanup empêche un appel multiple si le composant est démonté.
+     */
+    useEffect(() => {
+        const timer = setTimeout(onClose, AUTO_CLOSE_DELAY);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    // Nettoyage du namespace i18n (ex : "badges.zen10.title")
+    const cleanTitle =
+        badge.titleKey?.startsWith("badges.")
+            ? badge.titleKey.slice("badges.".length)
+            : badge.titleKey;
+
+    const cleanDescription =
+        badge.descriptionKey?.startsWith("badges.")
+            ? badge.descriptionKey.slice("badges.".length)
+            : badge.descriptionKey;
+
     return (
-        <button
-            type="button"
-            onClick={onClose}
+        <div
             className="
                 fixed
                 bottom-6
-                right-6
+                left-1/2
+                -translate-x-1/2
                 z-50
+                rounded-2xl
+                bg-white
+                shadow-xl
+                p-4
+                border border-slate-200
                 flex
                 items-center
-                gap-3
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                px-4
-                py-3
-                shadow-xl
+                gap-4
+                animate-fade-in-up
             "
         >
-            {/* Icône du badge : vient de la DB via `iconKey` */}
-            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 shadow-sm overflow-hidden">
-                {badge.iconKey ? (
-                    <img
-                        src={`/images/badges/${badge.iconKey}`}
-                        alt=""
-                        className="h-10 w-10 object-contain"
-                    />
-                ) : (
-                    <span className="text-xl" aria-hidden="true">
-                        🏅
+            {/* Icône du badge */}
+            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                <img
+                    src={`/images/badges/${badge.iconKey ?? "default"}`}
+                    alt=""
+                    className="h-16 w-16 object-contain"
+                />
+            </div>
+
+            {/* Texte du badge */}
+            <div className="flex flex-col">
+                <span className="text-sm font-semibold text-slate-800">
+                    {cleanTitle ?? badge.titleKey}
+                </span>
+
+                {cleanDescription && (
+                    <span className="text-xs text-slate-500 leading-tight mt-0.5">
+                        {cleanDescription}
                     </span>
                 )}
             </div>
 
-            {/* Texte */}
-            <div className="text-left">
-                <div className="text-sm font-semibold">
-                    {badge.titleKey}
-                </div>
-                {badge.descriptionKey && (
-                    <div className="text-xs text-gray-600">
-                        {badge.descriptionKey}
-                    </div>
-                )}
-            </div>
-        </button>
+            {/* Bouton de fermeture */}
+            <button
+                onClick={onClose}
+                className="
+                    ml-2
+                    text-slate-400
+                    hover:text-slate-600
+                    transition
+                "
+                aria-label="Close badge toast"
+            >
+                ✕
+            </button>
+        </div>
     );
 }

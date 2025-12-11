@@ -59,6 +59,9 @@ export class MeditationSessionController {
     const session = await this.meditationService.create(userId, dto);
     const newBadges = await this.badgesService.checkForNewBadges(userId);
 
+    // Retourne la session nouvellement créée ainsi que les éventuels nouveaux
+    // badges débloqués à cette occasion. Ce format de réponse est commun à
+    // l’ensemble des types de sessions pour garantir une structure uniforme.
     return { session, newBadges };
   }
 

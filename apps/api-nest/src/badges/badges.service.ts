@@ -1,14 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { BadgeMetricType, Prisma } from "@prisma/client";
+import { HighlightedBadgeDto, UserBadgeDto } from "./dto/badges.dto";
 
 @Injectable()
 export class BadgesService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Vérifie tous les badges actifs pour un user, et attribue ceux qui sont débloqués.
-   * Retourne la liste des nouveaux badges gagnés (BadgeDefinition).
+   * Évalue l'ensemble des badges actifs pour un utilisateur et attribue
+   * ceux dont les critères sont remplis.
+   *
+   * @param userId Identifiant de l'utilisateur.
+   * @returns Liste des nouveaux badges gagnés, incluant la définition du badge
+   *          et l'entrée associée dans la table userBadge.
    */
   async checkForNewBadges(userId: string) {
     const allBadges = await this.prisma.badgeDefinition.findMany({
@@ -27,6 +32,7 @@ export class BadgesService {
     const newlyEarned = [];
 
     for (const badge of allBadges) {
+      // Badge déjà obtenu, on passe au suivant.
       if (earnedIds.has(badge.id)) continue;
 
       const metricValue = await this.computeMetric(userId, badge.metric);
@@ -51,11 +57,15 @@ export class BadgesService {
   }
 
   /**
-   * Calcul des différentes métriques supportées par le système de badges.
+   * Calcule la valeur courante d'une métrique de badge pour un utilisateur.
+   *
+   * @param userId Identifiant de l'utilisateur.
+   * @param metric Type de métrique à calculer.
+   * @returns Valeur numérique de la métrique.
    */
   private async computeMetric(
     userId: string,
-    metric: BadgeMetricType
+    metric: BadgeMetricType,
   ): Promise<number> {
     switch (metric) {
       case "TOTAL_MEDITATION_SESSIONS":
@@ -85,10 +95,11 @@ export class BadgesService {
   }
 
   /**
-   * Streak simple : nombre de jours consécutifs (en remontant depuis aujourd'hui)
-   * avec au moins UNE méditation.
+   * Calcule le nombre de jours consécutifs de méditation à partir de la date courante,
+   * en considérant les jours comportant au moins une session de méditation.
    *
-   * MVP volontairement simple.
+   * @param userId Identifiant de l'utilisateur.
+   * @returns Longueur de la série de jours consécutifs.
    */
   private async computeMeditationStreakDays(userId: string): Promise<number> {
     const sessions = await this.prisma.meditationSession.findMany({
@@ -99,31 +110,25 @@ export class BadgesService {
         createdAt: true,
       },
       orderBy: {
-        // le plus récent d'abord
         createdAt: "desc",
       },
     });
 
     if (!sessions.length) return 0;
 
-    // On normalise chaque session sur un "jour" (YYYY-MM-DD)
+    // Ensemble des jours distincts comportant au moins une session.
     const daysSet = new Set<string>();
 
     for (const s of sessions) {
-      const date =
-        s.startedAt ??
-        s.endedAt ??
-        s.createdAt; // fallback sur createdAt si besoin
-
+      const date = s.startedAt ?? s.endedAt ?? s.createdAt;
       const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
       daysSet.add(dayKey);
     }
 
-    // On compte les jours consécutifs à partir d'aujourd'hui
     let streak = 0;
     const today = new Date();
 
-    // On part du jour courant et on recule
+    // Parcours des jours en remontant depuis aujourd'hui
     while (true) {
       const d = new Date(today);
       d.setDate(today.getDate() - streak);
@@ -140,9 +145,12 @@ export class BadgesService {
   }
 
   /**
-   * Badges gagnés par un user (liste complète, par ex. pour une page "Mes badges").
+   * Récupère l'ensemble des badges gagnés par un utilisateur.
+   *
+   * @param userId Identifiant de l'utilisateur.
+   * @returns Liste des badges utilisateur, triés par date d'obtention décroissante.
    */
-  async getUserBadges(userId: string) {
+  async getUserBadges(userId: string): Promise<UserBadgeDto[]> {
     return this.prisma.userBadge.findMany({
       where: { userId },
       include: {
@@ -151,15 +159,21 @@ export class BadgesService {
       orderBy: {
         earnedAt: "desc",
       },
-    });
+    }) as unknown as UserBadgeDto[];
   }
 
   /**
-   * Badges mis en avant sur la home (avec logique d'expiration).
-   * On limite à quelques badges récents (ex: 3).
+   * Récupère les badges récents d'un utilisateur destinés à être mis en avant.
+   * Seuls les badges dont la durée de mise en avant n'est pas expirée sont retournés.
+   *
+   * @param userId Identifiant de l'utilisateur.
+   * @param limit Nombre maximum de badges à retourner.
+   * @returns Liste des badges mis en avant, dans un format aplati.
    */
-  /* TODO: faire un DTO !! */
-  async getHighlightedBadges(userId: string, limit = 3) {
+  async getHighlightedBadges(
+    userId: string,
+    limit = 3,
+  ): Promise<HighlightedBadgeDto[]> {
     const now = new Date();
 
     const userBadges = await this.prisma.userBadge.findMany({
@@ -209,17 +223,18 @@ export class BadgesService {
       visible.length,
     );
 
-    // ⬇️ On renvoie un objet "plat" avec iconKey au top-level
-    return visible.slice(0, limit).map((ub) => ({
-      id: ub.id,
-      badgeId: ub.badgeId,
-      earnedAt: ub.earnedAt, // ou .toISOString() si tu préfères
-      slug: ub.badge.slug,
-      titleKey: ub.badge.titleKey,
-      descriptionKey: ub.badge.descriptionKey,
-      iconKey: ub.badge.iconKey,
-    }));
+    const result = visible.slice(0, limit).map(
+      (ub): HighlightedBadgeDto => ({
+        id: ub.id,
+        badgeId: ub.badgeId,
+        earnedAt: ub.earnedAt,
+        slug: ub.badge.slug,
+        titleKey: ub.badge.titleKey,
+        descriptionKey: ub.badge.descriptionKey,
+        iconKey: ub.badge.iconKey,
+      }),
+    );
+
+    return result;
   }
-
-
 }
