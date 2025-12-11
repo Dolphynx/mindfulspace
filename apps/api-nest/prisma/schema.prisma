@@ -112,6 +112,7 @@ model MeditationContent {
 
   // Media unique (audio OU vidéo), optionnel si TIMER/VISUAL
   mediaUrl String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
+  soundcloudUrl String? //
 
   isActive  Boolean @default(true) // pour masquer un contenu sans le supprimer
   isPremium Boolean @default(false) // restreint aux utilisateurs premium
