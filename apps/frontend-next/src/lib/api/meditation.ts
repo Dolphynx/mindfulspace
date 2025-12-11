@@ -206,9 +206,14 @@ export async function fetchMeditationTypes(): Promise<MeditationTypeItem[]> {
  * @param payload Données nécessaires à l’enregistrement de la séance.
  * @throws Si l’API renvoie un code HTTP d’erreur.
  */
+export type CreateMeditationSessionResponse = {
+    session: unknown;
+    newBadges?: unknown[];
+};
+
 export async function createMeditationSession(
     payload: CreateMeditationSessionPayload,
-): Promise<void> {
+): Promise<CreateMeditationSessionResponse> {
     const res = await apiFetch("/me/meditation-sessions", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -217,4 +222,6 @@ export async function createMeditationSession(
     if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
     }
+
+    return res.json() as Promise<CreateMeditationSessionResponse>;
 }

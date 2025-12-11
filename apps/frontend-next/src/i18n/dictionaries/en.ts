@@ -236,6 +236,9 @@ const en = {
         empty: "No resources match your search yet.",
 
         premiumBadge: "Premium",
+        premiumIconAlt: "Premium content",
+        lockedPremiumResource: "Premium resource reserved for premium members",
+        lockedPremiumTooltip: "Become a premium member to access this content",
         readTimeSuffix: "min",
     },
 
@@ -300,7 +303,9 @@ const en = {
         history_title: "Your recent nights",
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
         history_nights: "nights",
+        last7_empty: "No sleep recorded in the last 7 days.",
         history_average: "hours in average"
+
     },
 
     domainExercice: {
@@ -332,7 +337,33 @@ const en = {
 
         // History
         history_title: "Your recent exercise sessions",
-        history_placeholder: "Your session history will appear here once you record some."
+        history_placeholder: "Your session history will appear here once you record some.",
+
+        // Workout Programs
+        program_start_title: "Subscribe to a workout program",
+        program_start_description: "Discover guided programs designed to help you stay consistent.",
+        program_start_button: "See available programs",
+
+        program_list_loading: "Loading programs…",
+        program_list_title: "Available workout programs",
+        program_list_days: "days",
+        program_list_seeDetails: "See details",
+        program_list_daysPerWeek: "days/week",
+        program_details_back: "Back",
+        program_details_subscribe: "Subscribe",
+        program_details_unsubscribe: "Unsubscribe",
+
+        exercice_plan_today_title: "Today's exercises",
+        exercice_plan_today_empty: "Nothing planned today 🙂",
+        exercice_plan_loading: "Loading...",
+
+        weekday_0: "Sunday",
+        weekday_1: "Monday",
+        weekday_2: "Tuesday",
+        weekday_3: "Wednesday",
+        weekday_4: "Thursday",
+        weekday_5: "Friday",
+        weekday_6: "Saturday",
     },
 
     domainMeditation: {
@@ -493,7 +524,10 @@ const en = {
         notFoundText: "This resource does not exist or is no longer available.",
         readTimeSuffix: "min read",
         premiumBadge: "Premium",
-        noContent: "The content of this resource is not yet available."
+        noContent: "The content of this resource is not yet available.",
+        forbiddenTitle: "Access restricted",
+        forbiddenText: "This resource is reserved for premium members. Please sign in with a premium account to access it.",
+        backToListCTA: "Back to resources list"
     },
 
     notFoundPage: {
@@ -719,6 +753,40 @@ const en = {
         resetPasswordComplete: "Password Reset Complete",
         resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
         resetPasswordFailed: "Password reset failed",
+    },
+
+    badges: {
+        latestBadgesTitle: "Tes derniers badges",
+
+        toastUnlockedTitle: "Nouveau badge débloqué",
+        toastUnlockedSubtitle: "Tu viens de débloquer un badge !",
+
+        meditation: {
+            first: {
+                title: "First meditation session",
+            },
+            five: {
+                title: "5 meditation sessions completed",
+            },
+            streak3: {
+                title: "3-day meditation streak",
+            },
+        },
+        exercice: {
+            first: {
+                title: "First workout session",
+            },
+        },
+        sleep: {
+            first: {
+                title: "First tracked night of sleep",
+            },
+        },
+        generic: {
+            firstSession: {
+                title: "First MindfulSpace session",
+            },
+        },
     },
 
 };

@@ -73,11 +73,6 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             href: (loc) => `/${loc}/member/world`,
             labelKey: "world",
         },
-        {
-            key: "objectives",
-            href: (loc) => `/${loc}/member/objectives`,
-            labelKey: "objectives",
-        },
     ];
 
     // Item spécifique au public : entrée vers l’espace member

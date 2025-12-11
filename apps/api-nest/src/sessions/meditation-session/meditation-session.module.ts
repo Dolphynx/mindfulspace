@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MeditationSessionService } from './meditation-session.service';
 import { MeditationSessionController } from './meditation-session.controller';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { BadgesModule } from '@mindfulspace/api/badges/badges.module';
 
 /**
  * Module encapsulant toute la logique métier et les endpoints liés
@@ -20,6 +21,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
  * - Le module assure simplement la cohésion et l’injection de dépendances.
  */
 @Module({
+  imports: [BadgesModule],
   controllers: [MeditationSessionController],
   providers: [MeditationSessionService, PrismaService],
 })

@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ResourcesService } from "./resources.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
 import { Public } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 
 /**
  * Contrôleur responsable de l’exposition des ressources via l’API.
@@ -25,7 +26,6 @@ import { Public } from "../auth/decorators/public.decorator";
  * Les décorateurs Swagger (`@ApiTags`, `@ApiOperation`, `@ApiResponse`, …)
  * peuvent être ajoutés directement sur les méthodes si nécessaire.
  */
-@Public()
 @Controller("resources")
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
@@ -41,6 +41,7 @@ export class ResourcesController {
    * @param query Paramètres de filtrage mappés via {@link GetResourcesDto}.
    * @returns Une liste de ressources correspondant aux critères fournis.
    */
+  @Public()
   @Get()
   findAll(@Query() query: GetResourcesDto) {
     return this.resourcesService.findAll(query);
@@ -56,6 +57,7 @@ export class ResourcesController {
    *
    * @returns Les catégories disponibles, avec leur nombre de ressources.
    */
+  @Public()
   @Get("categories")
   findCategories() {
     return this.resourcesService.findCategories();
@@ -69,6 +71,7 @@ export class ResourcesController {
    *
    * @throws NotFoundException si aucune ressource ne correspond au slug.
    */
+  @Roles('premium', 'admin')
   @Get(":slug")
   findOne(@Param("slug") slug: string) {
     return this.resourcesService.findOneBySlug(slug);

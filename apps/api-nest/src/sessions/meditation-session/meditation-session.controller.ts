@@ -3,6 +3,7 @@ import { MeditationSessionService } from './meditation-session.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { BadgesService } from '@mindfulspace/api/badges/badges.service';
 
 /**
  * Contrôleur HTTP regroupant les endpoints liés aux séances de méditation.
@@ -28,7 +29,10 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
  */
 @Controller()
 export class MeditationSessionController {
-  constructor(private readonly meditationService: MeditationSessionService) {}
+  constructor(
+    private readonly meditationService: MeditationSessionService,
+    private readonly badgesService: BadgesService,
+    ) {}
 
   /**
    * Crée une nouvelle séance de méditation pour l’utilisateur courant.
@@ -47,11 +51,18 @@ export class MeditationSessionController {
    * @returns La séance de méditation créée.
    */
   @Post('me/meditation-sessions')
-  createForCurrentUser(
+  async createForCurrentUser(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateMeditationSessionDto,
   ) {
-    return this.meditationService.create(userId, dto);
+
+    const session = await this.meditationService.create(userId, dto);
+    const newBadges = await this.badgesService.checkForNewBadges(userId);
+
+    // Retourne la session nouvellement créée ainsi que les éventuels nouveaux
+    // badges débloqués à cette occasion. Ce format de réponse est commun à
+    // l’ensemble des types de sessions pour garantir une structure uniforme.
+    return { session, newBadges };
   }
 
   /**

@@ -25,14 +25,22 @@ export async function fetchLastSleepSessions(baseUrl: string = API_BASE_URL,): P
     return res.json();
 }
 
+export type CreateSleepSessionResponse = {
+    session: unknown;
+    newBadges?: unknown[];
+};
+
 export async function createSleepSession(
     payload: CreateSleepSessionPayload,
     baseUrl: string = API_BASE_URL,
-): Promise<void> {
+): Promise<CreateSleepSessionResponse> {
     const res = await apiFetch(`${baseUrl}/sleep`, {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
     });
+
     if (!res.ok) throw new Error("Failed to create sleep session");
+
+    return res.json() as Promise<CreateSleepSessionResponse>;
 }

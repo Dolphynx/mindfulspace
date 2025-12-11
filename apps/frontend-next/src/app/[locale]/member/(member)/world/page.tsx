@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import Island from "@/components/Island";
+import { HomeBadgesStrip } from "@/components/badges/HomeBadgesStrip";
 
 export default function SerenityLanding() {
     const router = useRouter();
@@ -92,7 +93,7 @@ export default function SerenityLanding() {
                 </svg>
             </div>
 
-            {/* ISLANDS */}
+            {/* BADGES + ISLANDS */}
             <div
                 className="
                     absolute
@@ -101,32 +102,45 @@ export default function SerenityLanding() {
                     -translate-x-1/2
                     -translate-y-1/2
                     flex
-                    gap-12 md:gap-20 lg:gap-28
+                    flex-col
+                    items-center
+                    gap-8
                     z-10
                 "
             >
-                <Island
-                    type="sleep"
-                    label={t("sleepAlt")}
-                    iconSrc="/images/icone_sleep.png"
-                    onClick={() => handleIslandClick("sleep")}
-                />
+                {/* BOX DES DERNIERS BADGES (affichée seulement s’il y en a) */}
+                <HomeBadgesStrip />
 
-                <div className="hidden md:block">
+                {/* ISLANDS (inchangé, juste mis dans une row séparée) */}
+                <div
+                    className="
+                        flex
+                        gap-12 md:gap-20 lg:gap-28
+                    "
+                >
                     <Island
-                        type="meditation"
-                        label={t("meditationAlt")}
-                        iconSrc="/images/icone_meditation.png"
-                        onClick={() => handleIslandClick("meditation")}
+                        type="sleep"
+                        label={t("sleepAlt")}
+                        iconSrc="/images/icone_sleep.png"
+                        onClick={() => handleIslandClick("sleep")}
+                    />
+
+                    <div className="hidden md:block">
+                        <Island
+                            type="meditation"
+                            label={t("meditationAlt")}
+                            iconSrc="/images/icone_meditation.png"
+                            onClick={() => handleIslandClick("meditation")}
+                        />
+                    </div>
+
+                    <Island
+                        type="exercise"
+                        label={t("exerciceAlt")}
+                        iconSrc="/images/icone_exercise.png"
+                        onClick={() => handleIslandClick("exercise")}
                     />
                 </div>
-
-                <Island
-                    type="exercise"
-                    label={t("exerciceAlt")}
-                    iconSrc="/images/icone_exercise.png"
-                    onClick={() => handleIslandClick("exercise")}
-                />
             </div>
         </div>
     );
