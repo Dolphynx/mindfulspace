@@ -6,7 +6,10 @@ import {
     createSleepSession,
     type SleepSession,
     type CreateSleepSessionPayload,
+    type CreateSleepSessionResponse,
 } from "@/lib/api/sleep";
+import { useBadgeToasts } from "@/components/badges/BadgeToastProvider";
+import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
 
 export type SleepErrorType = "load" | "save" | null;
 
@@ -53,12 +56,20 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
     /**
      * Create a session and reload
      */
+    const { pushBadges } = useBadgeToasts();
+
     const createSession = useCallback(
         async (payload: CreateSleepSessionPayload) => {
             setErrorType(null);
 
             try {
-                await createSleepSession(payload, effectiveBaseUrl);
+                const { newBadges }: CreateSleepSessionResponse =
+                    await createSleepSession(payload, effectiveBaseUrl);
+
+                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                    pushBadges(newBadges.map(mapApiBadgeToToastItem));
+                }
+
                 await load();
             } catch (e) {
                 console.error("[useSleepSessions] save failed", e);
@@ -66,7 +77,7 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
                 throw e;
             }
         },
-        [effectiveBaseUrl, load],
+        [effectiveBaseUrl, load, pushBadges],
     );
 
     return {

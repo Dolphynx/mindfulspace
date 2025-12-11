@@ -182,10 +182,15 @@ export async function fetchExerciceContents(
 }
 
 /** POST /exercices */
+export type CreateExerciceSessionResponse = {
+    session: unknown;
+    newBadges?: unknown[];
+};
+
 export async function createExerciceSession(
     payload: CreateExerciceSessionPayload,
-    baseUrl = API_BASE_URL
-): Promise<void> {
+    baseUrl = API_BASE_URL,
+): Promise<CreateExerciceSessionResponse> {
     const res = await apiFetch(`${baseUrl}/exercices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,4 +198,6 @@ export async function createExerciceSession(
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    return res.json() as Promise<CreateExerciceSessionResponse>;
 }

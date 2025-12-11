@@ -755,6 +755,40 @@ const en = {
         resetPasswordFailed: "Password reset failed",
     },
 
+    badges: {
+        latestBadgesTitle: "Tes derniers badges",
+
+        toastUnlockedTitle: "Nouveau badge débloqué",
+        toastUnlockedSubtitle: "Tu viens de débloquer un badge !",
+
+        meditation: {
+            first: {
+                title: "First meditation session",
+            },
+            five: {
+                title: "5 meditation sessions completed",
+            },
+            streak3: {
+                title: "3-day meditation streak",
+            },
+        },
+        exercice: {
+            first: {
+                title: "First workout session",
+            },
+        },
+        sleep: {
+            first: {
+                title: "First tracked night of sleep",
+            },
+        },
+        generic: {
+            firstSession: {
+                title: "First MindfulSpace session",
+            },
+        },
+    },
+
 };
 
 export default en;
