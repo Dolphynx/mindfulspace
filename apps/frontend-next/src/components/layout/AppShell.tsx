@@ -130,7 +130,7 @@ export default function AppShell({ navbar, children }: AppShellProps) {
                 {/* En séance : pas de navbar/footer ; on peut afficher la notice seule */}
                 {isSession && <GlobalNotice />}
 
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 min-h-0">{children}</main>
 
                 {!isSession && (
                     <Footer onOpenPreferencesAction={() => setOpenPrefs(true)} />
