@@ -510,7 +510,9 @@ const en = {
         sleepAlt: "Sleep",
         exerciceAlt: "Exercise",
         meditationAlt: "Meditation",
+        encodeSessionTitle: "Log a session"
     },
+
     resourceDetailPage: {
         heroSubtitle: "Explore this well-being resource",
         backToList: "Back to resources",

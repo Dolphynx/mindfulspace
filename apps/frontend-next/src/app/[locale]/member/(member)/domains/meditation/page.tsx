@@ -107,7 +107,7 @@ export default function MeditationPage() {
                     <SessionCard>
                         <MeditationManualForm
                             types={types}
-                            onCreateSession={createSession}
+                            onCreateSessionAction={createSession}
                         />
                     </SessionCard>
                 }
