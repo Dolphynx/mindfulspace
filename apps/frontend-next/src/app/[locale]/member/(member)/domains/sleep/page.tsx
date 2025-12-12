@@ -42,7 +42,7 @@ export default function SleepPage() {
                         </p>
 
                         <SleepManualForm
-                        onCreateSession={createSession}/>
+                        onCreateSessionAction={createSession}/>
                     </div>
                 </SessionCard>
             }

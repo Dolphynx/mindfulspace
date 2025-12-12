@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { BadgeToastItem } from "@/types/badges";
+import { useTranslations } from "@/i18n/TranslationContext";
 
 /**
  * Props attendues par le composant BadgeToast.
@@ -23,15 +24,16 @@ interface BadgeToastProps {
  *
  * Fonctionnement :
  * - Affiche une carte flottante en bas de l’écran.
- * - Affiche l’icône, le titre et une brève description du badge.
+ * - Affiche l’icône, le titre et, si disponible, une description du badge.
  * - Se ferme automatiquement après un délai.
- * - Permet la fermeture manuelle (croix).
+ * - Permet également la fermeture manuelle.
  *
  * Ce composant est destiné à être utilisé via le `BadgeToastProvider`,
  * plutôt que directement par l’application.
  */
 export function BadgeToast({ badge, onClose }: BadgeToastProps) {
     const AUTO_CLOSE_DELAY = 4000; // 4 secondes
+    const t = useTranslations("badges");
 
     /**
      * Déclenche une fermeture automatique après un délai prédéfini.
@@ -42,13 +44,13 @@ export function BadgeToast({ badge, onClose }: BadgeToastProps) {
         return () => clearTimeout(timer);
     }, [onClose]);
 
-    // Nettoyage du namespace i18n (ex : "badges.zen10.title")
-    const cleanTitle =
+    // Nettoyage du namespace i18n (ex. "badges.zen10.title" → "zen10.title")
+    const titleKey =
         badge.titleKey?.startsWith("badges.")
             ? badge.titleKey.slice("badges.".length)
             : badge.titleKey;
 
-    const cleanDescription =
+    const descriptionKey =
         badge.descriptionKey?.startsWith("badges.")
             ? badge.descriptionKey.slice("badges.".length)
             : badge.descriptionKey;
@@ -84,12 +86,14 @@ export function BadgeToast({ badge, onClose }: BadgeToastProps) {
             {/* Texte du badge */}
             <div className="flex flex-col">
                 <span className="text-sm font-semibold text-slate-800">
-                    {cleanTitle ?? badge.titleKey}
+                    {/* Même logique que dans le strip : on tente la traduction du titleKey nettoyé,
+                       sinon on tombe en fallback sur la clé brute. */}
+                    {titleKey ? t(titleKey) : badge.titleKey}
                 </span>
 
-                {cleanDescription && (
+                {descriptionKey && (
                     <span className="text-xs text-slate-500 leading-tight mt-0.5">
-                        {cleanDescription}
+                        {t(descriptionKey)}
                     </span>
                 )}
             </div>

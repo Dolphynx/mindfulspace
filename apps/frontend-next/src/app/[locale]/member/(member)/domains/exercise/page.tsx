@@ -73,7 +73,7 @@ export default function ExercicePage() {
                         <SessionCard>
                             <ExerciceManualForm
                                 types={types}
-                                onCreateSession={createSession}/>
+                                onCreateSessionAction={createSession}/>
                         </SessionCard>
                         <SessionCard>
                             <WorkoutProgramsStartCard />

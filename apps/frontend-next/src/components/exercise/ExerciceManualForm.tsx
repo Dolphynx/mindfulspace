@@ -12,17 +12,28 @@ type ExerciceContentItem = {
 
 type ExerciceManualFormProps = {
     types: ExerciceContentItem[];
-    onCreateSession: (payload: {
+    onCreateSessionAction: (payload: {
         dateSession: string;
         quality?: MoodValue;
         exercices: {
-            exerciceContentId: string;   // 👈 updated
+            exerciceContentId: string;
             repetitionCount: number;
         }[];
     }) => Promise<void>;
+
+    /**
+     * Ouvre le panneau dès le rendu.
+     * @default false
+     */
+    defaultOpen?: boolean;
+
+    /**
+     * Mode compact : masque titre/description/bouton “ouvrir” et affiche directement le form.
+     * @default false
+     */
+    compact?: boolean;
 };
 
-// Format date for <input type="date">
 function buildTodayDateInput(): string {
     const now = new Date();
     const y = now.getFullYear();
@@ -31,7 +42,6 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-// Convert "YYYY-MM-DD" → ISO at noon
 function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
@@ -44,23 +54,28 @@ function dateInputToNoonIso(dateStr: string): string {
 
 export default function ExerciceManualForm({
                                                types,
-                                               onCreateSession,
+                                               onCreateSessionAction,
+                                               defaultOpen = false,
+                                               compact = false,
                                            }: ExerciceManualFormProps) {
     const t = useTranslations("domainExercice");
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     const [dateInput, setDateInput] = useState(buildTodayDateInput());
     const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
     const [repetitions, setRepetitions] = useState(10);
     const [quality, setQuality] = useState<MoodValue | null>(3 as MoodValue);
     const [savingManual, setSavingManual] = useState(false);
 
-    // Preselect first available content
     useEffect(() => {
         if (!selectedContentId && types.length > 0) {
             setSelectedContentId(types[0].id);
         }
     }, [types, selectedContentId]);
+
+    useEffect(() => {
+        if (defaultOpen) setIsOpen(true);
+    }, [defaultOpen]);
 
     function resetForm() {
         setDateInput(buildTodayDateInput());
@@ -75,19 +90,14 @@ export default function ExerciceManualForm({
 
         setSavingManual(true);
         try {
-            await onCreateSession({
+            await onCreateSessionAction({
                 dateSession: dateInputToNoonIso(dateInput),
                 quality: quality ?? undefined,
-                exercices: [
-                    {
-                        exerciceContentId: selectedContentId, // 👈 use new field
-                        repetitionCount: repetitions,
-                    },
-                ],
+                exercices: [{ exerciceContentId: selectedContentId, repetitionCount: repetitions }],
             });
 
             resetForm();
-            setIsOpen(false);
+            setIsOpen(defaultOpen || compact);
         } finally {
             setSavingManual(false);
         }
@@ -95,38 +105,36 @@ export default function ExerciceManualForm({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* TITLE + OPEN BUTTON */}
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        {t("manualForm_title")}
-                    </h2>
-                    <p className="text-sm text-slate-700">
-                        {t("manualForm_description")}
-                    </p>
+            {!compact && (
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-semibold text-slate-800">
+                            {t("manualForm_title")}
+                        </h2>
+                        <p className="text-sm text-slate-700">{t("manualForm_description")}</p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(true)}
+                        className={`rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white transition-all duration-500 ${
+                            isOpen
+                                ? "opacity-0 scale-95 pointer-events-none"
+                                : "opacity-100 scale-100 delay-700"
+                        }`}
+                    >
+                        {t("manualForm_button")}
+                    </button>
                 </div>
+            )}
 
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(true)}
-                    className={`rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white transition-all duration-500 ${
-                        isOpen
-                            ? "opacity-0 scale-95 pointer-events-none"
-                            : "opacity-100 scale-100 delay-700"
-                    }`}
-                >
-                    {t("manualForm_button")}
-                </button>
-            </div>
-
-            {/* COLLAPSIBLE FORM */}
             <div
-                className={`transition-all duration-1000 overflow-hidden ${
-                    isOpen ? "max-h-[600px] opacity-100 mt-2" : "max-h-0 opacity-0"
+                className={`transition-all duration-700 overflow-hidden ${
+                    compact || isOpen ? "max-h-[700px] opacity-100" : "max-h-0 opacity-0"
                 }`}
             >
                 <form
-                    className="space-y-6 rounded-2xl bg-white/80 p-4 shadow-sm"
+                    className="space-y-5 rounded-2xl bg-white p-4 shadow-sm"
                     onSubmit={handleSubmit}
                 >
                     {/* DATE */}
@@ -149,9 +157,7 @@ export default function ExerciceManualForm({
                         </label>
                         <select
                             value={selectedContentId ?? ""}
-                            onChange={(e) =>
-                                setSelectedContentId(e.target.value || null)
-                            }
+                            onChange={(e) => setSelectedContentId(e.target.value || null)}
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm"
                         >
                             {types.map((type) => (
@@ -168,16 +174,13 @@ export default function ExerciceManualForm({
                             {t("manualForm_repetitionLabel")}:{" "}
                             <span className="font-semibold">{repetitions}</span>
                         </label>
-
                         <input
                             type="range"
                             min={1}
                             max={50}
                             step={1}
                             value={repetitions}
-                            onChange={(e) =>
-                                setRepetitions(Number(e.target.value))
-                            }
+                            onChange={(e) => setRepetitions(Number(e.target.value))}
                             className="w-full"
                         />
                     </div>
@@ -203,21 +206,21 @@ export default function ExerciceManualForm({
                             disabled={savingManual || !selectedContentId}
                             className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
-                            {savingManual
-                                ? t("manualForm_savingButton")
-                                : t("manualForm_saveButton")}
+                            {savingManual ? t("manualForm_savingButton") : t("manualForm_saveButton")}
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                resetForm();
-                                setIsOpen(false);
-                            }}
-                            className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
-                        >
-                            {t("manualForm_cancelButton")}
-                        </button>
+                        {!compact && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    resetForm();
+                                    setIsOpen(false);
+                                }}
+                                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                            >
+                                {t("manualForm_cancelButton")}
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>

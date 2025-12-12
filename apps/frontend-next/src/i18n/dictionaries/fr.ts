@@ -508,6 +508,7 @@ const fr = {
         sleepAlt: "Sommeil",
         exerciceAlt: "Exercice",
         meditationAlt: "Méditation",
+        encodeSessionTitle: "Encoder une session"
     },
 
     resourceDetailPage: {
