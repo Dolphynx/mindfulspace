@@ -6,7 +6,7 @@ import {MoodValue} from "@/lib";
 import MoodPicker from "@/components/MoodPicker";
 
 type SleepManualFormProps = {
-    onCreateSession: (payload: {
+    onCreateSessionAction: (payload: {
         hours: number;
         quality?: MoodValue;
         dateSession: string;
@@ -21,7 +21,7 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-export default function SleepManualForm({onCreateSession}: SleepManualFormProps) {
+export default function SleepManualForm({onCreateSessionAction}: SleepManualFormProps) {
     const t = useTranslations("domainSleep");
 
     const [durationHours, setDurationHours] = useState<number>(8);
@@ -37,7 +37,7 @@ export default function SleepManualForm({onCreateSession}: SleepManualFormProps)
         // future API call
 
         try {
-            await onCreateSession({
+            await onCreateSessionAction({
                 hours: durationHours,
                 quality: manualQuality ?? undefined,
                 dateSession: dateInputToNoonIso(dateInput),
