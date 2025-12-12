@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+import { useEffect, useRef, useState } from "react";
 
 import Island from "@/components/Island";
 import DomainTabsPanel from "@/components/DomainTabsPanel";
@@ -16,9 +17,32 @@ export default function SerenityLanding() {
 
     const t = useTranslations("publicWorld");
 
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const [needsScroll, setNeedsScroll] = useState(false);
+
     const handleIslandClick = (type: "sleep" | "meditation" | "exercise") => {
         router.push(`/${locale}/member/domains/${type}`);
     };
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const compute = () => {
+            setNeedsScroll(el.scrollHeight > el.clientHeight + 1);
+        };
+
+        compute();
+
+        const ro = new ResizeObserver(compute);
+        ro.observe(el);
+
+        window.addEventListener("resize", compute);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener("resize", compute);
+        };
+    }, []);
 
     return (
         <div
@@ -61,7 +85,13 @@ export default function SerenityLanding() {
             </div>
 
             {/* SCROLL AREA (seul ça bouge) */}
-            <div className="relative z-10 h-full overflow-y-auto overscroll-contain">
+            <div
+                ref={scrollRef}
+                className={[
+                    "relative z-10 h-full overscroll-contain",
+                    needsScroll ? "overflow-y-auto" : "overflow-y-hidden",
+                ].join(" ")}
+            >
                 {/* Espace haut/bas + centrage horizontal */}
                 <div className="mx-auto w-[92%] max-w-6xl pt-6 pb-8">
                     <div className="flex flex-col items-center gap-8">
