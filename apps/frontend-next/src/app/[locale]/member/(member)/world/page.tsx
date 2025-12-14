@@ -112,7 +112,7 @@ export default function SerenityLanding() {
             "
         >
             <div className="relative h-full overflow-y-auto overscroll-contain">
-                <div className="relative mx-auto w-[92%] max-w-7xl pt-6 pb-10">
+                <div className="relative mx-auto w-[92%] max-w-7xl pt-12 sm:pt-6 pb-10">
                     {/* MAP centered */}
                     <div className="mx-auto w-full max-w-5xl">
                         <div className="relative aspect-[16/9] w-full">

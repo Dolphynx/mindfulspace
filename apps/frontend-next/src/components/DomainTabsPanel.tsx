@@ -35,47 +35,22 @@ const TABS: DomainTab[] = [
  * via un système d'onglets et des formulaires dédiés.
  *
  * @remarks
- * - Affiche une bande d'icônes (onglets) permettant de choisir le domaine.
- * - Sur desktop, le formulaire est affiché dans un panneau flottant sous la bande.
- * - Sur mobile, le panneau est intégré dans le flux et se déplie/replie.
- * - Agrège les états de chargement et d'erreur provenant des hooks de sessions.
+ * - Sur desktop, le formulaire est affiché dans un panneau flottant sous la bande d'icônes.
+ * - Sur mobile, le formulaire est rendu uniquement lorsqu'il est ouvert afin d'éviter l'affichage
+ *   d'un conteneur vide.
  */
 export default function DomainTabsPanel() {
     const tWorld = useTranslations("publicWorld");
     const tCommon = useTranslations("common");
 
-    /**
-     * Onglet actuellement sélectionné.
-     *
-     * @remarks
-     * `null` signifie qu'aucun onglet n'a encore été choisi (affichage d'un titre générique).
-     */
     const [active, setActive] = useState<DomainKey | null>(null);
-
-    /**
-     * État d'ouverture du panneau de saisie (desktop et mobile).
-     *
-     * @remarks
-     * - Sur desktop, contrôle l'opacité et l'interactivité (via `pointer-events-none`).
-     * - Sur mobile, contrôle l'animation de dépliage (via `max-height`/`opacity`).
-     */
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    /**
-     * Métadonnées de l'onglet actif (label et icône) dérivées de {@link TABS}.
-     */
     const activeTab = useMemo(
         () => (active ? TABS.find((x) => x.key === active) : null),
         [active],
     );
 
-    /**
-     * Gestion des sessions de méditation.
-     *
-     * @remarks
-     * - `types` correspond aux types de méditations disponibles.
-     * - `createSession` déclenche la création d'une session via l'API.
-     */
     const {
         types: meditationTypes,
         loading: meditationLoading,
@@ -83,13 +58,6 @@ export default function DomainTabsPanel() {
         createSession: createMeditationSession,
     } = useMeditationSessions();
 
-    /**
-     * Gestion des sessions d'exercice.
-     *
-     * @remarks
-     * - `types` correspond aux exercices disponibles.
-     * - `createSession` déclenche la création d'une session via l'API.
-     */
     const {
         types: exerciceTypes,
         loading: exerciceLoading,
@@ -97,45 +65,23 @@ export default function DomainTabsPanel() {
         createSession: createExerciceSession,
     } = useExerciceSessions();
 
-    /**
-     * Gestion des sessions de sommeil.
-     *
-     * @remarks
-     * - `createSession` déclenche la création d'une session via l'API.
-     */
     const {
         loading: sleepLoading,
         errorType: sleepErrorType,
         createSession: createSleepSession,
     } = useSleepSessions();
 
-    /**
-     * Indique si au moins un domaine est en cours de chargement.
-     *
-     * @remarks
-     * Utilisé pour afficher un indicateur "Chargement…" dans l'entête du panneau.
-     */
     const anyLoading = meditationLoading || exerciceLoading || sleepLoading;
 
-    /**
-     * Texte d'erreur générique si un des hooks remonte une erreur.
-     *
-     * @remarks
-     * Le détail de l'erreur est volontairement masqué ici au profit d'un message utilisateur commun.
-     */
     const errorText =
         meditationErrorType || exerciceErrorType || sleepErrorType
             ? tCommon?.("genericError") ?? "Une erreur est survenue."
             : null;
 
     /**
-     * Gère le clic sur un onglet.
+     * Ouvre/ferme le panneau selon l'onglet sélectionné.
      *
      * @param next - Domaine sélectionné.
-     *
-     * @remarks
-     * - Si l'utilisateur clique sur l'onglet déjà actif, on replie/déplie le panneau.
-     * - Sinon, on change d'onglet et on ouvre le panneau.
      */
     function handleTabClick(next: DomainKey) {
         if (active === next) {
@@ -146,14 +92,6 @@ export default function DomainTabsPanel() {
         setIsOpen(true);
     }
 
-    /**
-     * Action de création d'une session de méditation.
-     *
-     * @param payload - Données nécessaires à la création.
-     *
-     * @remarks
-     * Le payload est typé localement afin de garantir la compatibilité avec le hook.
-     */
     const onCreateMeditationSessionAction = async (payload: {
         durationSeconds: number;
         moodAfter?: MoodValue;
@@ -161,22 +99,12 @@ export default function DomainTabsPanel() {
         meditationTypeId: string;
     }) => createMeditationSession(payload);
 
-    /**
-     * Action de création d'une session d'exercice.
-     *
-     * @param payload - Données nécessaires à la création.
-     */
     const onCreateExerciceSessionAction = async (payload: {
         dateSession: string;
         quality?: MoodValue;
         exercices: { exerciceContentId: string; repetitionCount: number }[];
     }) => createExerciceSession(payload);
 
-    /**
-     * Action de création d'une session de sommeil.
-     *
-     * @param payload - Données nécessaires à la création.
-     */
     const onCreateSleepSessionAction = async (payload: {
         hours: number;
         quality?: MoodValue;
@@ -185,13 +113,13 @@ export default function DomainTabsPanel() {
 
     return (
         <div className="w-full lg:w-[380px]">
-            {/* BADGES ultra-compacts en haut */}
-            <div className="mb-3 flex justify-end">
+            {/* BADGES (au-dessus) */}
+            <div className="mb-3 flex flex-col items-end">
                 <HomeBadgesStrip compact />
             </div>
 
-            {/* QUICK LOG (comme badges) + panneau */}
-            <div className="relative flex justify-end">
+            {/* QUICK LOG + PANNEAUX */}
+            <div className="relative flex flex-col items-end">
                 {/* Strip Quick log */}
                 <div className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2 shadow-md backdrop-blur">
                     <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">
@@ -228,7 +156,7 @@ export default function DomainTabsPanel() {
                     </div>
                 </div>
 
-                {/* DESKTOP: panneau sous la strip */}
+                {/* DESKTOP: panneau sous la strip (positionné en absolu) */}
                 <div
                     className={[
                         "hidden lg:block",
@@ -284,46 +212,55 @@ export default function DomainTabsPanel() {
                     </div>
                 </div>
 
-                {/* MOBILE: panneau sous la strip (inchangé dans l’idée) */}
-                <div className="lg:hidden mt-3 w-full rounded-3xl bg-white/75 shadow-md backdrop-blur p-5">
-                    <div className="text-sm font-semibold text-slate-800">
-                        {tWorld("encodeSessionTitle")}
+                {/* MOBILE: panneau sous la strip (dans le flux) */}
+                {isOpen ? (
+                    <div className="lg:hidden mt-3 w-full rounded-3xl bg-white/75 shadow-md backdrop-blur p-5">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="text-sm font-semibold text-slate-800">
+                                {activeTab ? tWorld(activeTab.labelKey) : tWorld("encodeSessionTitle")}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsOpen(false)}
+                                className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                {tCommon?.("close") ?? "Fermer"}
+                            </button>
+                        </div>
+
+                        <div className="mt-2 min-h-[18px] text-xs text-slate-500">
+                            {anyLoading ? (tCommon?.("loading") ?? "Chargement…") : ""}
+                            {!anyLoading && errorText ? (
+                                <span className="text-rose-700">{errorText}</span>
+                            ) : null}
+                        </div>
+
+                        <div className="mt-3">
+                            {active === "sleep" && (
+                                <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
+                            )}
+
+                            {active === "meditation" && (
+                                <MeditationManualForm
+                                    types={meditationTypes ?? []}
+                                    onCreateSessionAction={onCreateMeditationSessionAction}
+                                    defaultOpen
+                                    compact
+                                />
+                            )}
+
+                            {active === "exercise" && (
+                                <ExerciceManualForm
+                                    types={exerciceTypes ?? []}
+                                    onCreateSessionAction={onCreateExerciceSessionAction}
+                                    defaultOpen
+                                    compact
+                                />
+                            )}
+                        </div>
                     </div>
-
-                    <div className="mt-2 min-h-[18px] text-xs text-slate-500">
-                        {anyLoading ? (tCommon?.("loading") ?? "Chargement…") : ""}
-                        {!anyLoading && errorText ? <span className="text-rose-700">{errorText}</span> : null}
-                    </div>
-
-                    <div
-                        className={[
-                            "transition-all duration-500 overflow-hidden",
-                            isOpen ? "max-h-[900px] opacity-100 mt-3" : "max-h-0 opacity-0 mt-0",
-                        ].join(" ")}
-                    >
-                        {active === "sleep" && (
-                            <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
-                        )}
-
-                        {active === "meditation" && (
-                            <MeditationManualForm
-                                types={meditationTypes ?? []}
-                                onCreateSessionAction={onCreateMeditationSessionAction}
-                                defaultOpen
-                                compact
-                            />
-                        )}
-
-                        {active === "exercise" && (
-                            <ExerciceManualForm
-                                types={exerciceTypes ?? []}
-                                onCreateSessionAction={onCreateExerciceSessionAction}
-                                defaultOpen
-                                compact
-                            />
-                        )}
-                    </div>
-                </div>
+                ) : null}
             </div>
         </div>
     );
