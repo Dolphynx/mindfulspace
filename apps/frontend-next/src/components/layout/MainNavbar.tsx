@@ -28,6 +28,7 @@ type NavItem = {
     key: string;
     href: (locale: Locale) => string;
     labelKey: string;
+    icon?: string;
 };
 
 type MainNavbarProps = {
@@ -67,6 +68,12 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             key: "breathing",
             href: (loc) => `/${loc}/member/seance/respiration`,
             labelKey: "breathing",
+            icon: "▶️",
+        },
+        {
+            key: "badges",
+            href: (loc) => `/${loc}/member/badges`,
+            labelKey: "badges",
         },
         {
             key: "world",
@@ -105,6 +112,10 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                         : "text-brandText border-transparent hover:bg-white/60 hover:border-brandBorder",
                 ].join(" ")}
             >
+                {item.icon ? (
+                    <span className="text-sm leading-none">{item.icon}</span>
+                ) : null}
+
                 <span>{t(item.labelKey)}</span>
             </Link>
         );

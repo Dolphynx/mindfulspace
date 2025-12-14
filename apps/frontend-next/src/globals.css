@@ -2,12 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Couleurs globales du thème clair MindfulSpace */
+/* Variables CSS globales du thème (mode clair). */
 :root {
     --background: #f7fcf8;
     --foreground: #2f3a2f;
     --font-sans: var(--font-geist-sans, system-ui, sans-serif);
     --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+
     --ocean-light: 190 70% 70%;
     --ocean-mid: 195 60% 55%;
     --ocean-deep: 200 55% 40%;
@@ -19,7 +20,7 @@
     --island-glow: 50 100% 70%;
 }
 
-/* Dark mode (facultatif) */
+/* Adaptation minimale en mode sombre (si activé au niveau OS). */
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #0a0a0a;
@@ -27,7 +28,7 @@
     }
 }
 
-/* Styles de base */
+/* Styles de base du document. */
 html,
 body {
     height: 100%;
@@ -38,24 +39,46 @@ body {
     font-family: var(--font-sans);
 }
 
-/* pour s’assurer que Next met bien la couleur de fond avant le render */
+/* Optimisation du rendu typographique (antialiasing). */
 body {
     @apply antialiased;
 }
 
-@keyframes wave {
+/* ------------------------------------ */
+/* Ocean waves (vertical + subtle drift) */
+/* ------------------------------------ */
+
+@keyframes ocean-wave {
     0% {
-        transform: translateX(0);
+        transform: translate3d(0, 0%, 0) scaleX(1);
+    }
+    40% {
+        transform: translate3d(-1.5%, -1.2%, 0) scaleX(1.01);
+    }
+    70% {
+        transform: translate3d(1%, -0.6%, 0) scaleX(0.995);
     }
     100% {
-        transform: translateX(-2%);
+        transform: translate3d(0, 0%, 0) scaleX(1);
     }
 }
 
-.animate-wave {
-    animation: wave 6s ease-in-out infinite alternate;
+.animate-ocean-wave {
+    animation: ocean-wave 14s ease-in-out infinite;
+    will-change: transform;
+    transform-origin: center;
 }
 
+/* ------------------------------------ */
+/* Float (îlots : oscillation verticale) */
+/* ------------------------------------ */
+
+/**
+ * Animation "float".
+ *
+ * @remarks
+ * Oscillation verticale légère, utilisée pour les îlots.
+ */
 @keyframes float {
     0% {
         transform: translateY(0);
@@ -65,10 +88,28 @@ body {
     }
 }
 
+/**
+ * Applique l'animation "float" sur un élément.
+ *
+ * @remarks
+ * Peut être désactivé au niveau composant (ex. via `animated={false}`).
+ */
 .animate-float {
     animation: float 3s ease-in-out infinite alternate;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
+/* ------------------------------------ */
+/* Lotus fall (confettis : chute + rotation) */
+/* ------------------------------------ */
+
+/**
+ * Animation "lotus-fall".
+ *
+ * @remarks
+ * Fait tomber un élément depuis le haut avec rotation et fondu en sortie.
+ */
 @keyframes lotus-fall {
     0% {
         transform: translate3d(0, -120%, 0) rotate(0deg);
@@ -83,10 +124,99 @@ body {
     }
 }
 
+/**
+ * Applique l'animation de chute "lotus-fall".
+ *
+ * @remarks
+ * - Animation non bouclée (`iteration-count: 1`).
+ * - `fill-mode: both` conserve l'état initial/final pendant l'animation.
+ */
 .animate-lotus-fall {
     animation-name: lotus-fall;
     animation-timing-function: ease-out;
     animation-iteration-count: 1;
     animation-fill-mode: both;
+    will-change: transform, opacity;
 }
 
+/* ------------------------------------ */
+/* Island “wave” (scale uniquement)      */
+/* ------------------------------------ */
+
+/**
+ * Animation d'ondulation externe de l'île (scale).
+ *
+ * @remarks
+ * Légère pulsation pour donner du vivant au contour externe.
+ */
+@keyframes island-wave-outer {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.035);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/**
+ * Animation d'ondulation interne de l'île (scale).
+ *
+ * @remarks
+ * Pulsation plus faible que l'externe afin de conserver de la profondeur.
+ */
+@keyframes island-wave-mid {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.022);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/**
+ * Pré-requis communs pour les animations de scale des îles.
+ *
+ * @remarks
+ * - `transform-box: fill-box` assure un calcul cohérent du centre sur des SVG.
+ * - `transform-origin: center` centre la mise à l'échelle.
+ */
+.animate-island-wave-outer,
+.animate-island-wave-mid {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform;
+}
+
+/**
+ * Applique l'ondulation externe.
+ */
+.animate-island-wave-outer {
+    animation: island-wave-outer 4.9s ease-in-out infinite;
+}
+
+/**
+ * Applique l'ondulation interne.
+ *
+ * @remarks
+ * Un léger `animation-delay` permet de désynchroniser l'effet et d'éviter une pulsation uniforme.
+ */
+.animate-island-wave-mid {
+    animation: island-wave-mid 4.6s ease-in-out infinite;
+    animation-delay: 0.18s;
+}
+
+/**
+ * Désactive les animations si l'utilisateur a activé la réduction des mouvements.
+ */
+@media (prefers-reduced-motion: reduce) {
+    .animate-island-wave-outer,
+    .animate-island-wave-mid {
+        animation: none !important;
+    }
+}
