@@ -3,22 +3,43 @@
 import type { ReactNode } from "react";
 
 type OceanWavesBackgroundProps = {
+    /**
+     * Contenu rendu au-dessus du décor (scroll normal).
+     */
     children: ReactNode;
+
+    /**
+     * Classes Tailwind additionnelles appliquées au wrapper principal.
+     */
     className?: string;
 
     /**
-     * Hauteur du header sticky (si tu veux garder le calcul).
-     * Mets 80 par défaut comme dans Serenity.
+     * Hauteur du header sticky, utilisée pour calculer la hauteur minimale du layout.
+     *
+     * @defaultValue 80
      */
     headerOffsetPx?: number;
 
     /**
-     * Hauteur visuelle de la zone des vagues.
-     * (80vh rend bien sur ta page Serenity)
+     * Hauteur visuelle du bloc de vagues fixé en bas de la fenêtre.
+     *
+     * @remarks
+     * Exemples : `"80vh"`, `"70vh"`, `"520px"`.
+     *
+     * @defaultValue "80vh"
      */
-    wavesHeight?: string; // ex: "80vh"
+    wavesHeight?: string;
 };
 
+/**
+ * Fond "océan" avec vagues SVG fixes en bas de la fenêtre et contenu scrollable au-dessus.
+ *
+ * @remarks
+ * - Les vagues sont rendues dans un conteneur `fixed` afin de rester immobiles au scroll.
+ * - Le contenu est rendu dans un calque supérieur (`z-10`) pour rester interactif.
+ * - Le wrapper applique un dégradé de fond identique à la page Serenity.
+ * - La classe CSS `animate-ocean-wave` doit être définie globalement (animation horizontale).
+ */
 export default function OceanWavesBackground({
                                                  children,
                                                  className = "",
@@ -34,7 +55,7 @@ export default function OceanWavesBackground({
                 className,
             ].join(" ")}
         >
-            {/* WAVES FIXED (toujours en bas de la fenêtre, ne bougent pas au scroll) */}
+            {/* Décor (vagues) fixé en bas, non-interactif. */}
             <div
                 className="pointer-events-none fixed inset-x-0 bottom-0 z-0"
                 style={{ height: wavesHeight }}
@@ -45,7 +66,7 @@ export default function OceanWavesBackground({
                     className="w-[105%] h-full -ml-[2.5%] object-fill"
                     preserveAspectRatio="none"
                 >
-                    {/* Wave 1 – la plus lente */}
+                    {/* Vague 1 (lente). */}
                     <path
                         className="animate-ocean-wave opacity-30"
                         style={{ animationDuration: "18s" }}
@@ -53,7 +74,7 @@ export default function OceanWavesBackground({
                         fill="hsl(var(--ocean-light))"
                     />
 
-                    {/* Wave 2 – un peu plus dynamique */}
+                    {/* Vague 2 (plus dynamique). */}
                     <path
                         className="animate-ocean-wave opacity-40"
                         style={{ animationDuration: "14s", animationDelay: "-4s" }}
@@ -61,7 +82,7 @@ export default function OceanWavesBackground({
                         fill="hsl(var(--ocean-mid))"
                     />
 
-                    {/* Wave 3 – quasi statique (ancre visuelle) */}
+                    {/* Vague 3 (ancre visuelle). */}
                     <path
                         className="animate-ocean-wave opacity-60"
                         style={{ animationDuration: "22s", animationDelay: "-8s" }}
@@ -71,7 +92,7 @@ export default function OceanWavesBackground({
                 </svg>
             </div>
 
-            {/* CONTENT (scroll normal, au-dessus des vagues) */}
+            {/* Contenu au-dessus du décor. */}
             <div className="relative z-10">{children}</div>
         </div>
     );

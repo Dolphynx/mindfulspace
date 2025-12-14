@@ -12,15 +12,24 @@ import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 /**
  * Retire le namespace `badges.` d'une clé i18n afin d'utiliser la clé relative
  * attendue par le scope `useTranslations("badges")`.
+ *
+ * @param key - Clé i18n potentiellement préfixée (ex: `badges.zen10.title`).
+ * @returns Clé sans namespace (ex: `zen10.title`) ou chaîne vide si invalide.
  */
 function stripBadgesNamespace(key?: string | null) {
     if (!key) return "";
     return key.startsWith("badges.") ? key.slice("badges.".length) : key;
 }
 
+/**
+ * DTO HTTP retourné par l'API pour un badge utilisateur.
+ *
+ * @remarks
+ * `earnedAt` est une date ISO côté API, convertie en {@link Date} côté UI.
+ */
 type ApiUserBadgeDto = {
     id: string;
-    earnedAt: string; // ISO string côté HTTP
+    earnedAt: string;
     metricValueAtEarn: number;
     badge: {
         id: string;
@@ -31,6 +40,9 @@ type ApiUserBadgeDto = {
     };
 };
 
+/**
+ * Modèle UI utilisé par la page après transformation des DTO.
+ */
 type UiUserBadge = {
     id: string;
     earnedAt: Date;
@@ -40,6 +52,13 @@ type UiUserBadge = {
     slug: string;
 };
 
+/**
+ * Formate la date d'obtention d'un badge.
+ *
+ * @param d - Date d'obtention.
+ * @param locale - Locale UI.
+ * @returns Libellé date formaté.
+ */
 function formatEarnedAt(d: Date, locale: Locale) {
     try {
         return new Intl.DateTimeFormat(locale, {
@@ -52,6 +71,15 @@ function formatEarnedAt(d: Date, locale: Locale) {
     }
 }
 
+/**
+ * Page "Badges" de l'espace membre.
+ *
+ * @remarks
+ * - Charge la liste des badges utilisateur depuis l'API (`/badges/me`).
+ * - Applique les traductions via le scope `badges`.
+ * - Affiche un état skeleton pendant le chargement.
+ * - Utilise {@link OceanWavesBackground} pour le décor fixe des vagues.
+ */
 export default function MemberBadgesPage() {
     const t = useTranslations("badges");
 
@@ -62,6 +90,13 @@ export default function MemberBadgesPage() {
     const [badges, setBadges] = useState<UiUserBadge[]>([]);
     const [loading, setLoading] = useState(true);
 
+    /**
+     * Charge les badges de l'utilisateur.
+     *
+     * @remarks
+     * - Utilise un drapeau `cancelled` pour éviter un `setState` après un unmount.
+     * - Les réponses inattendues sont journalisées sans bloquer l'UI.
+     */
     useEffect(() => {
         let cancelled = false;
 
@@ -109,8 +144,14 @@ export default function MemberBadgesPage() {
         };
     }, []);
 
+    /**
+     * Nombre total de badges obtenus.
+     */
     const count = badges.length;
 
+    /**
+     * Badges enrichis (traductions + date formatée) pour l'affichage.
+     */
     const items = useMemo(() => {
         return badges.map((b) => {
             const titleKey = stripBadgesNamespace(b.titleKey);
@@ -125,15 +166,21 @@ export default function MemberBadgesPage() {
         });
     }, [badges, locale, t]);
 
+    /**
+     * Icône affichée dans l'entête (premier badge, si disponible).
+     *
+     * @remarks
+     * Les badges ne sont pas explicitement triés ici ; l'ordre dépend de l'API.
+     */
     const headerBadgeIconKey = items[0]?.iconKey ?? "default";
 
     return (
         <OceanWavesBackground headerOffsetPx={80} wavesHeight="80vh">
             <div className="mx-auto w-[92%] max-w-6xl pt-6 pb-24">
-                {/* Header (un peu plus léger) */}
+                {/* En-tête de page */}
                 <div className="rounded-3xl border border-white/40 bg-white/55 shadow-md backdrop-blur px-6 py-5">
                     <div className="flex items-center gap-5">
-                        {/* Grande icône (dernier badge) */}
+                        {/* Icône principale */}
                         <div className="h-16 w-16 md:h-20 md:w-20 rounded-3xl bg-white/70 border border-white/50 shadow-sm flex items-center justify-center shrink-0">
                             <img
                                 src={`/images/badges/${headerBadgeIconKey}`}
@@ -142,7 +189,7 @@ export default function MemberBadgesPage() {
                             />
                         </div>
 
-                        {/* Texte */}
+                        {/* Titre + sous-texte */}
                         <div className="flex flex-col gap-1 min-w-0">
                             <h1 className="text-lg md:text-2xl font-semibold text-slate-800">
                                 {t?.("allBadgesTitle") ?? "Badges"}
@@ -162,8 +209,7 @@ export default function MemberBadgesPage() {
                     </div>
                 </div>
 
-
-                {/* Content */}
+                {/* Contenu */}
                 <div className="mt-6">
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -212,8 +258,8 @@ export default function MemberBadgesPage() {
                                                 </div>
 
                                                 <span className="shrink-0 rounded-full border border-slate-200/60 bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                        {b.earnedLabel}
-                      </span>
+                                                    {b.earnedLabel}
+                                                </span>
                                             </div>
 
                                             {b.description ? (
