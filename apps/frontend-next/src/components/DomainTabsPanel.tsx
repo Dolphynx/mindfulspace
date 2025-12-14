@@ -16,97 +16,66 @@ import { useSleepSessions } from "@/hooks/useSleepSessions";
 
 import type { MoodValue } from "@/lib";
 
-/**
- * Identifiants des domaines supportés par le panneau.
- *
- * @remarks
- * Ces clés servent à :
- * - piloter l’état (onglet actif),
- * - décider quel formulaire afficher,
- * - garder une API stable côté UI.
- */
 type DomainKey = "sleep" | "meditation" | "exercise";
 
-/**
- * Configuration d’un onglet du panneau.
- */
 type DomainTab = {
-    /**
-     * Clé interne du domaine.
-     */
     key: DomainKey;
-
-    /**
-     * Clé i18n (namespace `publicWorld`) utilisée pour le libellé et l’accessibilité.
-     */
     labelKey: "sleepAlt" | "meditationAlt" | "exerciceAlt";
-
-    /**
-     * Chemin de l’icône (les mêmes images que les îlots).
-     */
     iconSrc: string;
 };
 
-/**
- * Liste des onglets affichés.
- *
- * @remarks
- * L’ordre de ce tableau correspond à l’ordre visuel dans l’UI.
- */
 const TABS: DomainTab[] = [
     { key: "sleep", labelKey: "sleepAlt", iconSrc: "/images/icone_sleep.png" },
-    {
-        key: "meditation",
-        labelKey: "meditationAlt",
-        iconSrc: "/images/icone_meditation.png",
-    },
+    { key: "meditation", labelKey: "meditationAlt", iconSrc: "/images/icone_meditation.png" },
     { key: "exercise", labelKey: "exerciceAlt", iconSrc: "/images/icone_exercise.png" },
 ];
 
 /**
- * Panneau "Badges + Encoder une session" affiché sur la page Serenity/World.
+ * Panneau "Quick log" permettant d'encoder une session de bien-être (sommeil, méditation, exercice)
+ * via un système d'onglets et des formulaires dédiés.
  *
  * @remarks
- * Fonctionnement attendu :
- * - Au chargement : box du formulaire fermée, aucun onglet sélectionné.
- * - Clic sur un onglet :
- *   - sélection de l’onglet,
- *   - ouverture de la box,
- *   - affichage du formulaire du domaine.
- * - Re-clic sur l’onglet actif : ouverture/fermeture (toggle).
- *
- * Le panneau s’appuie sur les hooks existants pour charger les types et créer
- * des sessions (méditation/exercice/sommeil).
+ * - Affiche une bande d'icônes (onglets) permettant de choisir le domaine.
+ * - Sur desktop, le formulaire est affiché dans un panneau flottant sous la bande.
+ * - Sur mobile, le panneau est intégré dans le flux et se déplie/replie.
+ * - Agrège les états de chargement et d'erreur provenant des hooks de sessions.
  */
 export default function DomainTabsPanel() {
     const tWorld = useTranslations("publicWorld");
     const tCommon = useTranslations("common");
 
     /**
-     * Onglet actif.
+     * Onglet actuellement sélectionné.
      *
      * @remarks
-     * `null` au départ pour respecter la contrainte "aucun onglet sélectionné".
+     * `null` signifie qu'aucun onglet n'a encore été choisi (affichage d'un titre générique).
      */
     const [active, setActive] = useState<DomainKey | null>(null);
 
     /**
-     * État d’ouverture/fermeture de la box formulaire (collapsible).
+     * État d'ouverture du panneau de saisie (desktop et mobile).
+     *
+     * @remarks
+     * - Sur desktop, contrôle l'opacité et l'interactivité (via `pointer-events-none`).
+     * - Sur mobile, contrôle l'animation de dépliage (via `max-height`/`opacity`).
      */
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
     /**
-     * Meta de l’onglet actif (libellé + icône).
+     * Métadonnées de l'onglet actif (label et icône) dérivées de {@link TABS}.
      */
     const activeTab = useMemo(
         () => (active ? TABS.find((x) => x.key === active) : null),
         [active],
     );
 
-    // ---------------------------------------------------------------------------
-    // Hooks (identiques à tes pages spécifiques d’îlots)
-    // ---------------------------------------------------------------------------
-
+    /**
+     * Gestion des sessions de méditation.
+     *
+     * @remarks
+     * - `types` correspond aux types de méditations disponibles.
+     * - `createSession` déclenche la création d'une session via l'API.
+     */
     const {
         types: meditationTypes,
         loading: meditationLoading,
@@ -114,6 +83,13 @@ export default function DomainTabsPanel() {
         createSession: createMeditationSession,
     } = useMeditationSessions();
 
+    /**
+     * Gestion des sessions d'exercice.
+     *
+     * @remarks
+     * - `types` correspond aux exercices disponibles.
+     * - `createSession` déclenche la création d'une session via l'API.
+     */
     const {
         types: exerciceTypes,
         loading: exerciceLoading,
@@ -121,6 +97,12 @@ export default function DomainTabsPanel() {
         createSession: createExerciceSession,
     } = useExerciceSessions();
 
+    /**
+     * Gestion des sessions de sommeil.
+     *
+     * @remarks
+     * - `createSession` déclenche la création d'une session via l'API.
+     */
     const {
         loading: sleepLoading,
         errorType: sleepErrorType,
@@ -128,28 +110,32 @@ export default function DomainTabsPanel() {
     } = useSleepSessions();
 
     /**
-     * Indique si une partie du panneau est en chargement.
+     * Indique si au moins un domaine est en cours de chargement.
+     *
+     * @remarks
+     * Utilisé pour afficher un indicateur "Chargement…" dans l'entête du panneau.
      */
     const anyLoading = meditationLoading || exerciceLoading || sleepLoading;
 
     /**
-     * Message d’erreur générique (i18n si disponible).
+     * Texte d'erreur générique si un des hooks remonte une erreur.
+     *
+     * @remarks
+     * Le détail de l'erreur est volontairement masqué ici au profit d'un message utilisateur commun.
      */
     const errorText =
         meditationErrorType || exerciceErrorType || sleepErrorType
             ? tCommon?.("genericError") ?? "Une erreur est survenue."
             : null;
 
-    // ---------------------------------------------------------------------------
-    // Handlers
-    // ---------------------------------------------------------------------------
-
     /**
-     * Gestion du clic sur un onglet.
+     * Gère le clic sur un onglet.
+     *
+     * @param next - Domaine sélectionné.
      *
      * @remarks
-     * - Si on clique l’onglet déjà actif : toggle ouverture/fermeture.
-     * - Sinon : on sélectionne le nouvel onglet et on ouvre la box.
+     * - Si l'utilisateur clique sur l'onglet déjà actif, on replie/déplie le panneau.
+     * - Sinon, on change d'onglet et on ouvre le panneau.
      */
     function handleTabClick(next: DomainKey) {
         if (active === next) {
@@ -161,10 +147,12 @@ export default function DomainTabsPanel() {
     }
 
     /**
-     * Handler de création de session de méditation.
+     * Action de création d'une session de méditation.
+     *
+     * @param payload - Données nécessaires à la création.
      *
      * @remarks
-     * Suffixe `Action` par convention projet.
+     * Le payload est typé localement afin de garantir la compatibilité avec le hook.
      */
     const onCreateMeditationSessionAction = async (payload: {
         durationSeconds: number;
@@ -174,10 +162,9 @@ export default function DomainTabsPanel() {
     }) => createMeditationSession(payload);
 
     /**
-     * Handler de création de session d’exercice.
+     * Action de création d'une session d'exercice.
      *
-     * @remarks
-     * Suffixe `Action` par convention projet.
+     * @param payload - Données nécessaires à la création.
      */
     const onCreateExerciceSessionAction = async (payload: {
         dateSession: string;
@@ -186,10 +173,9 @@ export default function DomainTabsPanel() {
     }) => createExerciceSession(payload);
 
     /**
-     * Handler de création de session de sommeil.
+     * Action de création d'une session de sommeil.
      *
-     * @remarks
-     * Suffixe `Action` par convention projet.
+     * @param payload - Données nécessaires à la création.
      */
     const onCreateSleepSessionAction = async (payload: {
         hours: number;
@@ -198,26 +184,21 @@ export default function DomainTabsPanel() {
     }) => createSleepSession(payload);
 
     return (
-        <div className="w-full max-w-6xl">
-            <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-                {/* ------------------------------------------------------------------ */}
-                {/* LEFT: BADGES                                                        */}
-                {/* ------------------------------------------------------------------ */}
-                <div className="min-w-0">
-                    <HomeBadgesStrip />
-                </div>
+        <div className="w-full lg:w-[380px]">
+            {/* BADGES ultra-compacts en haut */}
+            <div className="mb-3 flex justify-end">
+                <HomeBadgesStrip compact />
+            </div>
 
-                {/* ------------------------------------------------------------------ */}
-                {/* RIGHT: FORM (collapsible)                                           */}
-                {/* ------------------------------------------------------------------ */}
-                <div className="rounded-3xl bg-white/70 p-6 shadow-md backdrop-blur">
-                    {/* Title above tabs */}
-                    <h2 className="mb-4 text-xl font-semibold text-slate-800">
+            {/* QUICK LOG (comme badges) + panneau */}
+            <div className="relative flex justify-end">
+                {/* Strip Quick log */}
+                <div className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2 shadow-md backdrop-blur">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 text-right">
                         {tWorld("encodeSessionTitle")}
-                    </h2>
+                    </div>
 
-                    {/* Tabs */}
-                    <div className="flex items-center justify-between gap-2 rounded-2xl bg-white/80 p-2 shadow-sm">
+                    <div className="flex items-center justify-end gap-2">
                         {TABS.map((tab) => {
                             const isActive = tab.key === active;
 
@@ -227,56 +208,57 @@ export default function DomainTabsPanel() {
                                     type="button"
                                     onClick={() => handleTabClick(tab.key)}
                                     aria-selected={isActive}
+                                    title={tWorld(tab.labelKey)}
                                     className={[
-                                        "flex flex-1 items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium transition",
+                                        "relative h-9 w-9 rounded-full overflow-hidden transition",
+                                        "bg-transparent",
                                         "focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2",
-                                        isActive
-                                            ? // actif => pastel + bord + ombre légère
-                                            "bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm text-slate-900"
-                                            : "bg-transparent text-slate-700 hover:bg-slate-50",
+                                        isActive ? "ring-2 ring-slate-300" : "hover:bg-slate-50/40",
                                     ].join(" ")}
                                 >
-                  <span className="relative h-7 w-7">
-                    <Image
-                        src={tab.iconSrc}
-                        alt={tWorld(tab.labelKey)}
-                        fill
-                        className="object-contain"
-                    />
-                  </span>
-
-                                    <span className="hidden sm:inline">{tWorld(tab.labelKey)}</span>
+                                    <Image
+                                        src={tab.iconSrc}
+                                        alt={tWorld(tab.labelKey)}
+                                        fill
+                                        className="object-contain"
+                                    />
                                 </button>
                             );
                         })}
                     </div>
+                </div>
 
-                    {/* Status */}
-                    <div className="mt-3 min-h-[18px]">
-                        {anyLoading && (
-                            <div className="text-xs text-slate-600">
-                                {tCommon?.("loading") ?? "Chargement…"}
-                            </div>
-                        )}
-                        {!anyLoading && errorText && (
-                            <div className="text-xs text-rose-700">{errorText}</div>
-                        )}
-                    </div>
-
-                    {/* Collapsible form container */}
-                    <div
-                        className={[
-                            "transition-all duration-500 overflow-hidden",
-                            isOpen ? "max-h-[900px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0",
-                        ].join(" ")}
-                    >
-                        <div>
-                            {/* Optional domain title (only once a tab has been selected) */}
-                            <div className="mb-2 text-sm font-semibold text-slate-800">
-                                {activeTab ? tWorld(activeTab.labelKey) : null}
+                {/* DESKTOP: panneau sous la strip */}
+                <div
+                    className={[
+                        "hidden lg:block",
+                        "absolute right-0 top-[calc(100%+12px)]",
+                        "transition-all duration-500",
+                        isOpen ? "opacity-100" : "pointer-events-none opacity-0",
+                    ].join(" ")}
+                >
+                    <div className="w-[520px] rounded-3xl bg-white/80 shadow-lg backdrop-blur p-5">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="text-sm font-semibold text-slate-800">
+                                    {activeTab ? tWorld(activeTab.labelKey) : tWorld("encodeSessionTitle")}
+                                </div>
+                                <div className="mt-1 text-xs text-slate-500">
+                                    {anyLoading ? (tCommon?.("loading") ?? "Chargement…") : ""}
+                                    {!anyLoading && errorText ? errorText : ""}
+                                </div>
                             </div>
 
-                            {/* Domain forms */}
+                            <button
+                                type="button"
+                                onClick={() => setIsOpen(false)}
+                                className="rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                {tCommon?.("close") ?? "Fermer"}
+                            </button>
+                        </div>
+
+                        <div className="mt-4">
                             {active === "sleep" && (
                                 <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
                             )}
@@ -299,6 +281,47 @@ export default function DomainTabsPanel() {
                                 />
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* MOBILE: panneau sous la strip (inchangé dans l’idée) */}
+                <div className="lg:hidden mt-3 w-full rounded-3xl bg-white/75 shadow-md backdrop-blur p-5">
+                    <div className="text-sm font-semibold text-slate-800">
+                        {tWorld("encodeSessionTitle")}
+                    </div>
+
+                    <div className="mt-2 min-h-[18px] text-xs text-slate-500">
+                        {anyLoading ? (tCommon?.("loading") ?? "Chargement…") : ""}
+                        {!anyLoading && errorText ? <span className="text-rose-700">{errorText}</span> : null}
+                    </div>
+
+                    <div
+                        className={[
+                            "transition-all duration-500 overflow-hidden",
+                            isOpen ? "max-h-[900px] opacity-100 mt-3" : "max-h-0 opacity-0 mt-0",
+                        ].join(" ")}
+                    >
+                        {active === "sleep" && (
+                            <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
+                        )}
+
+                        {active === "meditation" && (
+                            <MeditationManualForm
+                                types={meditationTypes ?? []}
+                                onCreateSessionAction={onCreateMeditationSessionAction}
+                                defaultOpen
+                                compact
+                            />
+                        )}
+
+                        {active === "exercise" && (
+                            <ExerciceManualForm
+                                types={exerciceTypes ?? []}
+                                onCreateSessionAction={onCreateExerciceSessionAction}
+                                defaultOpen
+                                compact
+                            />
+                        )}
                     </div>
                 </div>
             </div>
