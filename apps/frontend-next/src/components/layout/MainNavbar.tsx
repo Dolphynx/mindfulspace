@@ -7,16 +7,26 @@
  *  - le module public → mode = "public"
  *  - le module client → mode = "client"
  *
- * Principes UI/UX :
- *  - Items communs : resources, becomecoach, contact
- *  - Items client : breathing + "world" (dropdown)
- *  - Dropdown "world" :
- *      - Desktop (≥ lg) : ouverture au survol (CSS `group-hover`)
- *      - Mobile (< lg)  : ouverture au clic (state React) + `preventDefault` pour éviter la navigation immédiate
+ * Problème UX résolu :
+ *  - Le dropdown desktop disparaissait lorsqu’il existait un “gap” vertical entre
+ *    le bouton parent et le panneau (le curseur passe brièvement sur une zone
+ *    qui n’appartient ni au bouton ni au menu → le hover se perd).
+ *
+ * Solution :
+ *  - Retirer l’espace “mt-2” (gap) entre le parent et le dropdown sur desktop,
+ *    et le remplacer par un positionnement `top-full` + une marge minimale.
+ *  - Ajouter une “zone tampon” (hit area) invisible au-dessus du panneau afin
+ *    de couvrir les quelques pixels potentiellement perdus lors du passage de
+ *    la souris. Cette zone reste dans le `group`, donc le menu ne se referme pas.
+ *
+ * Comportement :
+ *  - Desktop (≥ lg) : ouverture au survol (`group-hover`) + stabilité du survol.
+ *  - Mobile (< lg)  : ouverture au clic (state React) + `preventDefault` pour
+ *    éviter la navigation immédiate.
  *
  * Accessibilité :
  *  - Le parent "world" reste un lien (desktop) et un toggle (mobile).
- *  - Les items du sous-menu sont des liens standards.
+ *  - Le sous-menu utilise `role="menu"` / `role="menuitem"` et un label ARIA.
  */
 
 import { useState } from "react";
@@ -47,7 +57,7 @@ type NavChildItem = {
  *
  * @remarks
  * - Un item peut contenir des `children` pour devenir un dropdown.
- * - Dans ce cas, `href` reste présent : le parent est cliquable (desktop) et sert de "racine" (world).
+ * - Dans ce cas, `href` reste présent : le parent est cliquable (desktop) et sert de "racine".
  */
 type NavItem = {
     /** Clé unique React. */
@@ -112,10 +122,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             href: (loc) => `/${loc}/member/world`,
             labelKey: "world",
             children: [
-                { key: "badges", href: (loc) => `/${loc}/member/badges`, labelKey: "badges" },
+                { key: "world", href: (loc) => `/${loc}/member/world`, labelKey: "world2" },
                 { key: "meditation", href: (loc) => `/${loc}/member/domains/meditation`, labelKey: "meditation" },
                 { key: "exercise", href: (loc) => `/${loc}/member/domains/exercise`, labelKey: "exercise" },
                 { key: "sleep", href: (loc) => `/${loc}/member/domains/sleep`, labelKey: "sleep" },
+                { key: "badges", href: (loc) => `/${loc}/member/badges`, labelKey: "badges" },
             ],
         },
     ];
@@ -127,10 +138,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         { key: "clientSpace", href: (loc) => `/${loc}/member/world`, labelKey: "clientSpace" },
     ];
 
-    const items: NavItem[] = [
-        ...commonItems,
-        ...(mode === "client" ? clientItems : publicItems),
-    ];
+    const items: NavItem[] = [...commonItems, ...(mode === "client" ? clientItems : publicItems)];
 
     /**
      * Rendu d’un item de navbar :
@@ -146,8 +154,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
          * - la route courante commence par le href parent
          * - OU par l’un des href enfants
          */
-        const active =
-            pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
+        const active = pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
 
         const baseClass = [
             "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border transition-colors",
@@ -170,8 +177,8 @@ export function MainNavbar({ mode }: MainNavbarProps) {
 
         /**
          * Dropdown :
-         * - Desktop : affichage via `lg:group-hover:block` pour éviter l’effet "je quitte le bouton → menu disparaît"
-         * - Mobile : affichage via state `openDropdown`
+         * - Desktop : affichage via `lg:group-hover:block` (hover stable).
+         * - Mobile  : affichage via state `openDropdown`.
          */
         const isDropdownOpen = openDropdown === item.key;
 
@@ -196,20 +203,42 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                     <span className="ml-auto lg:ml-0 text-xs opacity-70">▾</span>
                 </Link>
 
+                {/* Dropdown panel */}
                 <div
                     className={[
-                        // Desktop : hover sur le "group" (bouton OU panneau) → le menu reste ouvert.
+                        /**
+                         * Desktop :
+                         * - `top-full` colle le menu juste sous le bouton (pas de “trou”).
+                         * - On évite `mt-2` sur desktop car cela recrée un gap qui casse le hover.
+                         */
                         "hidden lg:group-hover:block",
-                        // Mobile : état React (toggle au clic).
+                        /**
+                         * Mobile :
+                         * - Ouverture/fermeture pilotée par state.
+                         * - Sur desktop, cette partie est ignorée (lg:*).
+                         */
                         isDropdownOpen ? "block lg:block" : "hidden lg:hidden",
 
-                        "mt-2 w-full rounded-xl border border-brandBorder bg-white/90 shadow-lg backdrop-blur",
-                        "lg:absolute lg:left-0 lg:mt-2 lg:min-w-56",
+                        "w-full rounded-xl border border-brandBorder bg-white/90 shadow-lg backdrop-blur",
+                        "lg:absolute lg:left-0 lg:top-full lg:min-w-56",
+                        /**
+                         * Petite marge visuelle sur desktop sans créer un “gap dangereux”.
+                         * (On reste à 1px : imperceptible, mais évite certains artefacts de border.)
+                         */
+                        "lg:mt-px",
                         "z-50",
                     ].join(" ")}
                     role="menu"
                     aria-label={t(item.labelKey)}
                 >
+                    {/**
+                     * Zone tampon (desktop) :
+                     * - Couvre les quelques pixels “à risque” entre le bouton et le panneau
+                     *   (selon rendu/borders/sous-pixel).
+                     * - Comme elle est dans le `group`, le hover reste actif.
+                     */}
+                    <div className="hidden lg:block absolute -top-2 left-0 right-0 h-2" />
+
                     <div className="p-2 flex flex-col gap-1">
                         {item.children.map((child) => {
                             const chref = child.href(locale);
@@ -227,7 +256,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                                             : "border-transparent hover:bg-brandSurface hover:border-brandBorder text-brandText",
                                     ].join(" ")}
                                     onClick={() => {
-                                        // Mobile : ferme le dropdown après navigation.
+                                        /**
+                                         * Mobile :
+                                         * - Ferme le dropdown après navigation.
+                                         * - Sur desktop, cela n’a pas d’impact (navigation immédiate).
+                                         */
                                         setOpenDropdown(null);
                                     }}
                                 >
