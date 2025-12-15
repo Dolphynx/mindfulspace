@@ -12,6 +12,7 @@ import DomainSwitcher from "@/components/DomainSwitcher";
 import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
 import { usePrograms } from "@/hooks/usePrograms";
 import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";
+import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -40,6 +41,8 @@ export default function ExercicePage() {
     const globalErrorMessage = getErrorMessage(t, errorType);
 
     return (
+        <OceanWavesBackground headerOffsetPx={80} wavesHeight="70vh">
+            <div className="mx-auto max-w-5xl pt-6 pb-24">
         <main className="text-brandText flex flex-col">
             <SessionDashboardLayout
                 hero={
@@ -90,5 +93,7 @@ export default function ExercicePage() {
 
             />
         </main>
+            </div>
+        </OceanWavesBackground>
     );
 }
