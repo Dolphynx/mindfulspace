@@ -1,3 +1,5 @@
+import {apiFetch} from "@/lib/api/client";
+
 /**
  * getTip
  *
@@ -18,7 +20,7 @@ export async function getTip(locale: string): Promise<string | null> {
 
         const url = `${baseUrl}/tips/random?locale=${encodeURIComponent(locale)}`;
 
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await apiFetch(url, { cache: "no-store" });
 
         if (!res.ok) {
             throw new Error(`API error: ${res.status}`);

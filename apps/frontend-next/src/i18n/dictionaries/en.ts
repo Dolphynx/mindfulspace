@@ -24,8 +24,11 @@ const en = {
         dashboard: "Dashboard",
         objectives: "Goals",
         becomeCoach: "Become a coach",
-        world: "World",
-        badges: "My badges"
+        world: "My world",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbar: {
@@ -37,8 +40,11 @@ const en = {
         dashboard: "Dashboard",
         objectives: "Goals",
         mobileToggle: "Open menu",
-        world: "World",
-        badges: "My badges"
+        world: "My world",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbarCoach: {
