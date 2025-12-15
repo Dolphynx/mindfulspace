@@ -44,10 +44,6 @@ export default function ExercicePage() {
             <SessionDashboardLayout
                 hero={
                     <div className="flex flex-col items-center">
-                        <PageHero
-                            title={t("title")}
-                            subtitle={t("subtitle")}
-                        />
                         {/* Sélecteur des 3 domaines sous le hero */}
                         <DomainSwitcher current="exercise" />
                     </div>

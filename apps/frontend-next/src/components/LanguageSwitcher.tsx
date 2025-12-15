@@ -1,47 +1,89 @@
 "use client";
 
 /**
- * LanguageSwitcher
- * ----------------
- * Petit sélecteur de langue affiché dans le layout public.
+ * Sélecteur de langue (FR/EN) basé sur l’URL.
  *
- * Comportement :
- * - Détecte la locale actuelle à partir de l’URL : /fr/... ou /en/...
- * - Permet de basculer entre les locales sans perdre la page courante :
- *   ex. /fr/resources  -> /en/resources
+ * @remarks
+ * - Détermine la locale courante à partir du premier segment du chemin (`/fr/...`, `/en/...`).
+ * - Change de langue en conservant le reste du chemin.
+ * - Persiste la préférence utilisateur dans un cookie essentiel `locale`.
  *
- * Implémentation :
- * - Utilise `usePathname` pour lire le chemin actuel.
- * - Utilise `useRouter().push()` pour naviguer vers la même route
- *   en remplaçant uniquement le segment de locale.
+ * @example
+ * - `/fr/member/badges` → switch `en` → `/en/member/badges`
+ * - `/` (sans locale) → locale par défaut (voir {@link defaultLocale})
  */
 
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
+const LOCALE_COOKIE = "locale";
+
+/**
+ * Écrit la locale préférée dans le cookie `locale`.
+ *
+ * @param locale - Locale cible.
+ *
+ * @remarks
+ * - Cookie côté client : `Path=/`, `Max-Age=1 an`, `SameSite=Lax`.
+ * - Ajoute `Secure` en production.
+ */
+function setLocaleCookie(locale: Locale) {
+    const oneYear = 60 * 60 * 24 * 365;
+
+    document.cookie =
+        `${LOCALE_COOKIE}=${locale}; Path=/; Max-Age=${oneYear}; SameSite=Lax` +
+        (process.env.NODE_ENV === "production" ? "; Secure" : "");
+}
+
 export default function LanguageSwitcher() {
     const pathname = usePathname();
     const router = useRouter();
     const t = useTranslations("langSwitcher");
 
-    // Découpe du chemin : "", "fr", "client", "dashboard", ...
+    /**
+     * Segments de l'URL courante.
+     *
+     * @remarks
+     * `pathname` commence par `/`, donc `split("/")` donne typiquement :
+     * - `["", "fr", "member", "..."]`
+     */
     const segments = pathname.split("/");
 
+    /**
+     * Locale courante résolue depuis le premier segment.
+     *
+     * @remarks
+     * En cas de segment absent/invalide, retombe sur {@link defaultLocale}.
+     */
     const currentRaw = segments[1] || defaultLocale;
-    const currentLocale: Locale = isLocale(currentRaw)
-        ? currentRaw
-        : defaultLocale;
+    const currentLocale: Locale = isLocale(currentRaw) ? currentRaw : defaultLocale;
 
+    /**
+     * Locales disponibles dans le switcher.
+     *
+     * @remarks
+     * Idéalement, cette liste doit rester alignée avec la configuration i18n globale.
+     */
     const LOCALES: Locale[] = ["fr", "en"];
 
+    /**
+     * Bascule de langue en conservant la route actuelle.
+     *
+     * @param nextLocale - Locale à activer.
+     *
+     * @remarks
+     * - Si la locale demandée est identique à la locale courante, ne fait rien.
+     * - Stocke la préférence dans un cookie essentiel.
+     * - Reconstruit le chemin en remplaçant uniquement le segment de locale.
+     */
     function handleSwitch(nextLocale: Locale) {
         if (nextLocale === currentLocale) return;
 
-        // on garde le "reste" du chemin après la locale
+        setLocaleCookie(nextLocale);
+
         const rest = segments.slice(2).join("/");
-        const newPath =
-            "/" + nextLocale + (rest ? "/" + rest : "");
+        const newPath = "/" + nextLocale + (rest ? "/" + rest : "");
 
         router.push(newPath);
     }
@@ -54,6 +96,12 @@ export default function LanguageSwitcher() {
                         key={loc}
                         type="button"
                         onClick={() => handleSwitch(loc)}
+                        aria-pressed={loc === currentLocale}
+                        aria-label={
+                            t?.("switchTo")
+                                ? `${t("switchTo")} ${loc.toUpperCase()}`
+                                : `Switch to ${loc.toUpperCase()}`
+                        }
                         className={[
                             "px-2 py-0.5 rounded-full border text-[11px] font-medium transition",
                             loc === currentLocale

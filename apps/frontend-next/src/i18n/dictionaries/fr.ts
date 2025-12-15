@@ -20,11 +20,16 @@ const fr = {
         coach: "Devenir coach",
         contact: "Contact",
         clientSpace: "Espace client",
-
         breathing: "Respiration",
         dashboard: "Tableau de bord",
         objectives: "Objectifs",
         becomeCoach: "Devenir coach",
+        world: "Mon monde",
+        world2: "Ma carte bien-être",
+        badges: "Mes badges",
+        meditation: "Méditation",
+        exercise: "Exercices",
+        sleep: "Sommeil"
     },
 
     navbar: {
@@ -36,6 +41,12 @@ const fr = {
         dashboard: "Dashboard",
         objectives: "Objectifs",
         mobileToggle: "Ouvrir le menu",
+        world: "Mon monde",
+        world2: "Ma carte bien-être",
+        badges: "Mes badges",
+        meditation: "Méditation",
+        exercise: "Exercices",
+        sleep: "Sommeil"
     },
 
     navbarCoach: {
@@ -758,37 +769,54 @@ const fr = {
 
     badges: {
         latestBadgesTitle: "Tes derniers badges",
+        viewAllBadgesLink: "Voir tous mes badges",
 
         toastUnlockedTitle: "Nouveau badge débloqué",
         toastUnlockedSubtitle: "Tu viens de débloquer un badge !",
 
+        allBadgesTitle: "Mes badges",
+        loading: "Chargement…",
+
+        badgesCount: "{count} badges obtenus",
+        noBadgesYet: "Aucun badge pour le moment.",
+        noBadgesYetLong:
+            "Continue les activités (sommeil, méditation, exercice) pour débloquer des badges.",
+        earnedOnLabel: "Obtenu le",
+        recentlyEarnedTitle: "Derniers badges obtenus",
+
         meditation: {
             first: {
                 title: "Première séance de méditation",
+                description: "Tu as terminé ta toute première séance de méditation.",
             },
             five: {
                 title: "5 séances de méditation complétées",
-            },
-            streak3: {
-                title: "Série de 3 jours de méditation",
+                description: "Tu as complété 5 séances. Continue comme ça !",
             },
         },
+
         exercice: {
             first: {
                 title: "Première séance d’exercice",
+                description: "Tu as enregistré ta première séance d’exercice.",
             },
         },
+
         sleep: {
             first: {
                 title: "Première nuit de sommeil suivie",
+                description: "Tu as encodé ta première nuit de sommeil.",
             },
         },
+
         generic: {
             firstSession: {
                 title: "Première session MindfulSpace",
+                description: "Bienvenue ! Tu as commencé à utiliser MindfulSpace.",
             },
         },
-    },
+    }
+
 };
 
 export default fr;
