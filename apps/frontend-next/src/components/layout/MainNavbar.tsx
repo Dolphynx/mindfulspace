@@ -7,29 +7,37 @@
  *  - le module public → mode = "public"
  *  - le module client → mode = "client"
  *
- * Problème UX résolu :
- *  - Le dropdown desktop disparaissait lorsqu’il existait un “gap” vertical entre
- *    le bouton parent et le panneau (le curseur passe brièvement sur une zone
- *    qui n’appartient ni au bouton ni au menu → le hover se perd).
+ * Problème UX (cohérence navigation) :
+ *  - Lorsque l’utilisateur est connecté mais navigue sur une page publique (ex: /contact),
+ *    le layout public affiche la navbar en `mode="public"`, ce qui remplace les items client
+ *    ("Respiration", "Mon monde") par l’item public "Espace client".
+ *  - Résultat : incohérence perçue ("je suis connecté, pourquoi je n’ai plus mon menu ?").
  *
  * Solution :
- *  - Retirer l’espace “mt-2” (gap) entre le parent et le dropdown sur desktop,
- *    et le remplacer par un positionnement `top-full` + une marge minimale.
- *  - Ajouter une “zone tampon” (hit area) invisible au-dessus du panneau afin
- *    de couvrir les quelques pixels potentiellement perdus lors du passage de
- *    la souris. Cette zone reste dans le `group`, donc le menu ne se referme pas.
+ *  - Introduire une notion de "mode effectif" : si l’utilisateur est authentifié,
+ *    la navbar affiche les items client même si la page courante est publique.
+ *  - La détection d’auth se fait côté client via un appel `GET /auth/me` (configurable),
+ *    en utilisant `apiFetch` (compatible cookies httpOnly / credentials).
+ *
+ * Problème UX résolu (dropdown desktop) :
+ *  - Le dropdown desktop disparaissait lorsqu’il existait un “gap” vertical entre
+ *    le bouton parent et le panneau (le curseur passe sur une zone qui n’appartient
+ *    ni au bouton ni au menu → le hover se perd).
+ *
+ * Solution dropdown :
+ *  - Coller le panneau au bouton (`top-full`) et éviter un `mt-*` “dangereux” sur desktop.
+ *  - Ajouter une zone tampon invisible au-dessus du panneau pour sécuriser le passage souris.
  *
  * Comportement :
- *  - Desktop (≥ lg) : ouverture au survol (`group-hover`) + stabilité du survol.
- *  - Mobile (< lg)  : ouverture au clic (state React) + `preventDefault` pour
- *    éviter la navigation immédiate.
+ *  - Desktop (≥ lg) : ouverture au survol (`group-hover`) + hover stable
+ *  - Mobile (< lg)  : ouverture au clic (state React) + `preventDefault`
  *
  * Accessibilité :
  *  - Le parent "world" reste un lien (desktop) et un toggle (mobile).
  *  - Le sous-menu utilise `role="menu"` / `role="menuitem"` et un label ARIA.
  */
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,6 +45,7 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
+import { apiFetch } from "@/lib/api/client";
 
 type NavbarMode = "public" | "client";
 
@@ -73,7 +82,7 @@ type NavItem = {
 };
 
 type MainNavbarProps = {
-    /** Mode d’affichage (public vs client). */
+    /** Mode d’affichage (public vs client), généralement déterminé par le layout courant. */
     mode: NavbarMode;
 };
 
@@ -97,6 +106,106 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * Sur mobile, on ouvre au clic via ce state.
      */
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+    /**
+     * État d’authentification côté navbar.
+     *
+     * @remarks
+     * - `null` = inconnu (au premier render)
+     * - `true` = authentifié
+     * - `false` = non authentifié
+     *
+     * On s’en sert pour définir un "mode effectif" :
+     * - si la page est publique mais l’utilisateur est connecté → afficher le menu client.
+     */
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+    /**
+     * Endpoint minimal "me" pour vérifier si la session/cookies sont valides.
+     *
+     * @remarks
+     * Adapter si ton backend expose un autre endpoint (ex: `/users/me`).
+     */
+    const ME_PATH = "/auth/me";
+
+    useEffect(() => {
+        /**
+         * Optimisation :
+         * - Si on est déjà en mode client, le menu client s’affiche quoi qu’il arrive,
+         *   et l’état auth est déjà “implicite” côté UI.
+         * - Néanmoins, garder la vérification peut être utile si ton UI doit refléter
+         *   une déconnexion silencieuse ; ici on fait simple : on ne force pas en mode client.
+         */
+        if (mode === "client") {
+            setIsAuthenticated(true);
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+                if (!baseUrl) {
+                    // En absence de base URL, on ne peut pas valider l’auth de manière fiable.
+                    if (!cancelled) setIsAuthenticated(false);
+                    return;
+                }
+
+                const url = `${baseUrl}${ME_PATH}`;
+
+                /**
+                 * `apiFetch` doit inclure les credentials/cookies (httpOnly) afin que le backend
+                 * puisse déterminer la session réelle de l’utilisateur.
+                 *
+                 * Objectif :
+                 * - 200 → connecté
+                 * - 401/403 → non connecté
+                 * - autre → considérer non connecté (et loguer pour debug)
+                 */
+                const res = await apiFetch(url, { cache: "no-store" });
+
+                if (cancelled) return;
+
+                if (res.ok) {
+                    setIsAuthenticated(true);
+                } else if (res.status === 401 || res.status === 403) {
+                    setIsAuthenticated(false);
+                } else {
+                    console.error("[MainNavbar] Unexpected auth check status:", res.status);
+                    setIsAuthenticated(false);
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    console.error("[MainNavbar] Auth check failed:", e);
+                    setIsAuthenticated(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [mode, ME_PATH]);
+
+    /**
+     * Mode effectif de rendu des items.
+     *
+     * @remarks
+     * Règle métier demandée :
+     * - Si l’utilisateur est authentifié → afficher les items client,
+     *   même si on est sur une page publique.
+     * - Sinon, respecter le `mode` passé par le layout.
+     *
+     * Note :
+     * - Tant que l’auth est inconnue (`null`), on respecte le mode du layout
+     *   pour éviter des “flash” de menu (peut être ajusté si tu préfères l’inverse).
+     */
+    const effectiveMode: NavbarMode = useMemo(() => {
+        if (mode === "client") return "client";
+        if (isAuthenticated === true) return "client";
+        return "public";
+    }, [mode, isAuthenticated]);
 
     /**
      * Items communs (public + client).
@@ -138,7 +247,16 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         { key: "clientSpace", href: (loc) => `/${loc}/member/world`, labelKey: "clientSpace" },
     ];
 
-    const items: NavItem[] = [...commonItems, ...(mode === "client" ? clientItems : publicItems)];
+    /**
+     * Liste finale des items selon le mode effectif.
+     *
+     * @remarks
+     * `effectiveMode` peut être "client" même sur une page publique si l’utilisateur est connecté.
+     */
+    const items: NavItem[] = [
+        ...commonItems,
+        ...(effectiveMode === "client" ? clientItems : publicItems),
+    ];
 
     /**
      * Rendu d’un item de navbar :
@@ -154,7 +272,8 @@ export function MainNavbar({ mode }: MainNavbarProps) {
          * - la route courante commence par le href parent
          * - OU par l’un des href enfants
          */
-        const active = pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
+        const active =
+            pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
 
         const baseClass = [
             "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border transition-colors",
@@ -189,8 +308,9 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                     className={baseClass}
                     onClick={(e) => {
                         /**
-                         * Mobile : le clic sert à ouvrir/fermer le menu.
-                         * On empêche la navigation immédiate, sinon on ne voit jamais le dropdown.
+                         * Mobile :
+                         * - Le clic sert à ouvrir/fermer le menu.
+                         * - On empêche la navigation immédiate, sinon on ne voit jamais le dropdown.
                          */
                         if (window.innerWidth < 1024) {
                             e.preventDefault();
@@ -206,37 +326,22 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                 {/* Dropdown panel */}
                 <div
                     className={[
-                        /**
-                         * Desktop :
-                         * - `top-full` colle le menu juste sous le bouton (pas de “trou”).
-                         * - On évite `mt-2` sur desktop car cela recrée un gap qui casse le hover.
-                         */
+                        // Desktop : hover stable via "group-hover".
                         "hidden lg:group-hover:block",
-                        /**
-                         * Mobile :
-                         * - Ouverture/fermeture pilotée par state.
-                         * - Sur desktop, cette partie est ignorée (lg:*).
-                         */
+
+                        // Mobile : toggle via state.
                         isDropdownOpen ? "block lg:block" : "hidden lg:hidden",
 
                         "w-full rounded-xl border border-brandBorder bg-white/90 shadow-lg backdrop-blur",
                         "lg:absolute lg:left-0 lg:top-full lg:min-w-56",
-                        /**
-                         * Petite marge visuelle sur desktop sans créer un “gap dangereux”.
-                         * (On reste à 1px : imperceptible, mais évite certains artefacts de border.)
-                         */
+                        // Micro-marge visuelle sans “trou” significatif.
                         "lg:mt-px",
                         "z-50",
                     ].join(" ")}
                     role="menu"
                     aria-label={t(item.labelKey)}
                 >
-                    {/**
-                     * Zone tampon (desktop) :
-                     * - Couvre les quelques pixels “à risque” entre le bouton et le panneau
-                     *   (selon rendu/borders/sous-pixel).
-                     * - Comme elle est dans le `group`, le hover reste actif.
-                     */}
+                    {/* Zone tampon (desktop) pour éviter les pertes de hover sur quelques pixels. */}
                     <div className="hidden lg:block absolute -top-2 left-0 right-0 h-2" />
 
                     <div className="p-2 flex flex-col gap-1">
@@ -256,11 +361,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                                             : "border-transparent hover:bg-brandSurface hover:border-brandBorder text-brandText",
                                     ].join(" ")}
                                     onClick={() => {
-                                        /**
-                                         * Mobile :
-                                         * - Ferme le dropdown après navigation.
-                                         * - Sur desktop, cela n’a pas d’impact (navigation immédiate).
-                                         */
+                                        // Mobile : ferme le dropdown après navigation.
                                         setOpenDropdown(null);
                                     }}
                                 >
@@ -276,8 +377,12 @@ export function MainNavbar({ mode }: MainNavbarProps) {
 
     /**
      * Lien du logo : page d’accueil publique ou world client.
+     *
+     * @remarks
+     * On se base sur le mode effectif : si connecté, le logo mène naturellement vers le “world”.
      */
-    const homeHref = mode === "client" ? `/${locale}/member/world` : `/${locale}`;
+    const homeHref =
+        effectiveMode === "client" ? `/${locale}/member/world` : `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">
