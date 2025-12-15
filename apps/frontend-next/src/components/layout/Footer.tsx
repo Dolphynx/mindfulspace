@@ -45,7 +45,7 @@ export default function Footer({ onOpenPreferencesAction }: FooterProps) {
     const t = useTranslations("footer");
 
     return (
-        <footer className="w-full bg-transparent border-t border-brandBorder py-4">
+        <footer className="w-full bg-[#e9f0f6]/90 backdrop-blur border-t border-brandBorder/60 py-4 relative z-20">
             <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-[12px] text-brandText-soft max-w-7xl mx-auto px-4">
                 <p className="text-center">
                     {t("deployMessage")}

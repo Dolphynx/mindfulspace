@@ -16,6 +16,7 @@ import { SessionCard } from "@/components/session/SessionCard";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
 import { useState } from "react";
 import DomainSwitcher from "@/components/DomainSwitcher";
+import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 /**
  * Génère un message d’erreur global en fonction du type d’échec métier.
@@ -90,14 +91,12 @@ export default function MeditationPage() {
             .some((role) => ["premium", "admin"].includes(role));
 
     return (
+        <OceanWavesBackground headerOffsetPx={80} wavesHeight="70vh">
+            <div className="mx-auto max-w-5xl pt-6 pb-24">
         <main className="text-brandText flex flex-col">
             <SessionDashboardLayout
                 hero={
                     <div className="flex flex-col items-center">
-                        <PageHero
-                            title={t("title")}
-                            subtitle={t("subtitle")}
-                        />
                         {/* Sélecteur des 3 domaines sous le header */}
                         <DomainSwitcher current="meditation" />
                     </div>
@@ -171,5 +170,7 @@ export default function MeditationPage() {
                 }
             />
         </main>
+            </div>
+        </OceanWavesBackground>
     );
 }
