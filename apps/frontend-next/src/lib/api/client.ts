@@ -11,11 +11,39 @@ const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 /**
+ * Variable pour éviter les appels multiples simultanés au refresh endpoint
+ */
+let refreshPromise: Promise<Response> | null = null;
+
+/**
+ * Tente de rafraîchir le token d'accès
+ */
+async function refreshAccessToken(): Promise<Response> {
+    // Si un refresh est déjà en cours, on réutilise la même promesse
+    if (refreshPromise) {
+        return refreshPromise;
+    }
+
+    refreshPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+    });
+
+    try {
+        const response = await refreshPromise;
+        return response;
+    } finally {
+        // Réinitialiser après la résolution
+        refreshPromise = null;
+    }
+}
+
+/**
  * Wrapper sécurisé autour de {@link fetch} pour communiquer avec l'API backend.
  *
  * Ce petit client fournit plusieurs garanties utiles :
  *
- * ### 1. Gestion automatique de l’URL
+ * ### 1. Gestion automatique de l'URL
  * - Si `input` est **une URL absolue** (ex. `"https://api..."`), elle est utilisée telle quelle.
  * - Si `input` est **un chemin relatif** (ex. `"/meditation/last7days"`),
  *   il est automatiquement préfixé par {@link API_BASE_URL}.
@@ -27,6 +55,10 @@ const API_BASE_URL =
  * ### 3. En-têtes unifiés
  * Ajoute automatiquement `Content-Type: application/json`, sauf si surchargé.
  *
+ * ### 4. Refresh automatique des tokens
+ * Si une requête reçoit une 401 Unauthorized, le client tente automatiquement
+ * de rafraîchir le token et rejoue la requête initiale une seule fois.
+ *
  * ### Exemple
  * ```ts
  * const res = await apiFetch("/meditation/types");
@@ -36,7 +68,7 @@ const API_BASE_URL =
  *
  * @param input URL absolue ou chemin relatif vers une ressource API.
  * @param init Options fetch standard. Les clés fournies ici surchargent les valeurs par défaut.
- * @returns La promesse d’un objet {@link Response}.
+ * @returns La promesse d'un objet {@link Response}.
  */
 export async function apiFetch(
     input: string,
@@ -48,7 +80,8 @@ export async function apiFetch(
     // Construit l'URL finale (absolue telle quelle, relative + BASE_URL sinon)
     const url = isAbsoluteUrl ? input : `${API_BASE_URL}${input}`;
 
-    return fetch(url, {
+    // Première tentative
+    let response = await fetch(url, {
         ...init,
         credentials: "include",
         headers: {
@@ -56,4 +89,23 @@ export async function apiFetch(
             ...(init.headers ?? {}),
         },
     });
+
+    // Si 401 et que ce n'est pas déjà l'endpoint /auth/refresh, tenter le refresh
+    if (response.status === 401 && !url.includes("/auth/refresh")) {
+        const refreshResponse = await refreshAccessToken();
+
+        // Si le refresh a réussi, rejouer la requête originale
+        if (refreshResponse.ok) {
+            response = await fetch(url, {
+                ...init,
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(init.headers ?? {}),
+                },
+            });
+        }
+    }
+
+    return response;
 }
