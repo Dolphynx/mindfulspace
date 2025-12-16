@@ -767,6 +767,95 @@ const fr = {
         resetPasswordFailed: "Échec de la réinitialisation du mot de passe",
     },
 
+    profile: {
+        // Page title
+        pageTitle: "Paramètres du profil",
+        pageSubtitle: "Gérez vos informations personnelles et paramètres de sécurité",
+
+        // Account Information Section
+        accountInfoTitle: "Informations du compte",
+        displayNameLabel: "Nom d'affichage",
+        displayNamePlaceholder: "Votre nom",
+        emailLabel: "Adresse email",
+        emailVerifiedBadge: "Vérifié",
+        emailNotVerifiedBadge: "Non vérifié",
+        accountCreatedLabel: "Compte créé le",
+        accountStatusLabel: "Statut du compte",
+        accountStatusActive: "Actif",
+        accountStatusSuspended: "Suspendu",
+        updateProfileButton: "Mettre à jour le profil",
+        profileUpdatedSuccess: "Profil mis à jour avec succès",
+
+        // Security Settings Section
+        securityTitle: "Sécurité",
+        changePasswordTitle: "Changer le mot de passe",
+        currentPasswordLabel: "Mot de passe actuel",
+        newPasswordLabel: "Nouveau mot de passe",
+        changePasswordButton: "Changer le mot de passe",
+        passwordChangedSuccess: "Mot de passe changé avec succès",
+        noPasswordSet: "Compte OAuth uniquement - aucun mot de passe défini",
+
+        // Connected Accounts
+        connectedAccountsTitle: "Comptes connectés",
+        connectedSince: "Connecté depuis",
+        unlinkButton: "Déconnecter",
+        noConnectedAccounts: "Aucun compte OAuth connecté",
+        unlinkConfirm: "Êtes-vous sûr de vouloir déconnecter ce compte ?",
+        unlinkSuccess: "Compte déconnecté avec succès",
+        unlinkError: "Impossible de déconnecter le seul moyen d'authentification",
+
+        // Active Sessions
+        activeSessionsTitle: "Sessions actives",
+        currentSessionBadge: "Session actuelle",
+        deviceLabel: "Appareil",
+        ipAddressLabel: "Adresse IP",
+        lastActiveLabel: "Dernière activité",
+        revokeSessionButton: "Révoquer",
+        revokeAllOtherButton: "Révoquer toutes les autres sessions",
+        noActiveSessions: "Aucune session active",
+        revokeSessionConfirm: "Êtes-vous sûr de vouloir révoquer cette session ?",
+        revokeAllConfirm: "Êtes-vous sûr de vouloir révoquer toutes les autres sessions ?",
+        sessionRevokedSuccess: "Session révoquée avec succès",
+        allSessionsRevokedSuccess: "Toutes les autres sessions ont été révoquées",
+
+        // Data Privacy
+        dataPrivacyTitle: "Confidentialité des données",
+        exportDataButton: "Télécharger mes données",
+        exportDataDescription: "Téléchargez toutes vos données personnelles au format JSON (RGPD)",
+        exportDataSuccess: "Vos données ont été téléchargées",
+        deleteAccountButton: "Supprimer mon compte",
+        deleteAccountDescription: "Suppression permanente de votre compte et de toutes vos données",
+        deleteAccountWarning: "Cette action est irréversible. Toutes vos données seront supprimées définitivement.",
+        deleteAccountConfirm: "Êtes-vous sûr de vouloir supprimer votre compte ?",
+        deleteAccountPasswordLabel: "Entrez votre mot de passe pour confirmer",
+        deleteAccountConfirmButton: "Oui, supprimer mon compte",
+        deleteAccountCancelButton: "Annuler",
+        accountDeletedSuccess: "Votre compte a été supprimé",
+
+        // Subscription & Roles
+        subscriptionTitle: "Abonnement et rôles",
+        currentRoleLabel: "Rôle actuel",
+        roleUser: "Utilisateur",
+        rolePremium: "Premium",
+        roleCoach: "Coach",
+        roleAdmin: "Administrateur",
+        upgradeToPremiumButton: "Passer à Premium",
+        upgradeToPremiumDescription: "Accédez à des fonctionnalités exclusives et du contenu premium",
+        premiumFeatures: "Fonctionnalités Premium",
+        premiumFeature1: "Programmes de méditation avancés",
+        premiumFeature2: "Plans d'entraînement personnalisés",
+        premiumFeature3: "Analyses détaillées du sommeil",
+        premiumFeature4: "Support prioritaire",
+
+        // Errors
+        errorLoadingProfile: "Erreur lors du chargement du profil",
+        errorUpdatingProfile: "Erreur lors de la mise à jour du profil",
+        errorChangingPassword: "Erreur lors du changement de mot de passe",
+        errorRevokingSession: "Erreur lors de la révocation de la session",
+        errorUnlinkingAccount: "Erreur lors de la déconnexion du compte",
+        errorDeletingAccount: "Erreur lors de la suppression du compte",
+    },
+
     badges: {
         latestBadgesTitle: "Tes derniers badges",
         viewAllBadgesLink: "Voir tous mes badges",

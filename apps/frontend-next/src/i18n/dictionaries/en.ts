@@ -768,6 +768,95 @@ const en = {
         resetPasswordFailed: "Password reset failed",
     },
 
+    profile: {
+        // Page title
+        pageTitle: "Profile Settings",
+        pageSubtitle: "Manage your personal information and security settings",
+
+        // Account Information Section
+        accountInfoTitle: "Account Information",
+        displayNameLabel: "Display Name",
+        displayNamePlaceholder: "Your name",
+        emailLabel: "Email Address",
+        emailVerifiedBadge: "Verified",
+        emailNotVerifiedBadge: "Not Verified",
+        accountCreatedLabel: "Account Created",
+        accountStatusLabel: "Account Status",
+        accountStatusActive: "Active",
+        accountStatusSuspended: "Suspended",
+        updateProfileButton: "Update Profile",
+        profileUpdatedSuccess: "Profile updated successfully",
+
+        // Security Settings Section
+        securityTitle: "Security",
+        changePasswordTitle: "Change Password",
+        currentPasswordLabel: "Current Password",
+        newPasswordLabel: "New Password",
+        changePasswordButton: "Change Password",
+        passwordChangedSuccess: "Password changed successfully",
+        noPasswordSet: "OAuth-only account - no password set",
+
+        // Connected Accounts
+        connectedAccountsTitle: "Connected Accounts",
+        connectedSince: "Connected since",
+        unlinkButton: "Unlink",
+        noConnectedAccounts: "No OAuth accounts connected",
+        unlinkConfirm: "Are you sure you want to unlink this account?",
+        unlinkSuccess: "Account unlinked successfully",
+        unlinkError: "Cannot unlink the only authentication method",
+
+        // Active Sessions
+        activeSessionsTitle: "Active Sessions",
+        currentSessionBadge: "Current Session",
+        deviceLabel: "Device",
+        ipAddressLabel: "IP Address",
+        lastActiveLabel: "Last Active",
+        revokeSessionButton: "Revoke",
+        revokeAllOtherButton: "Revoke All Other Sessions",
+        noActiveSessions: "No active sessions",
+        revokeSessionConfirm: "Are you sure you want to revoke this session?",
+        revokeAllConfirm: "Are you sure you want to revoke all other sessions?",
+        sessionRevokedSuccess: "Session revoked successfully",
+        allSessionsRevokedSuccess: "All other sessions have been revoked",
+
+        // Data Privacy
+        dataPrivacyTitle: "Data Privacy",
+        exportDataButton: "Download My Data",
+        exportDataDescription: "Download all your personal data in JSON format (GDPR)",
+        exportDataSuccess: "Your data has been downloaded",
+        deleteAccountButton: "Delete My Account",
+        deleteAccountDescription: "Permanently delete your account and all your data",
+        deleteAccountWarning: "This action is irreversible. All your data will be permanently deleted.",
+        deleteAccountConfirm: "Are you sure you want to delete your account?",
+        deleteAccountPasswordLabel: "Enter your password to confirm",
+        deleteAccountConfirmButton: "Yes, Delete My Account",
+        deleteAccountCancelButton: "Cancel",
+        accountDeletedSuccess: "Your account has been deleted",
+
+        // Subscription & Roles
+        subscriptionTitle: "Subscription & Roles",
+        currentRoleLabel: "Current Role",
+        roleUser: "User",
+        rolePremium: "Premium",
+        roleCoach: "Coach",
+        roleAdmin: "Administrator",
+        upgradeToPremiumButton: "Upgrade to Premium",
+        upgradeToPremiumDescription: "Access exclusive features and premium content",
+        premiumFeatures: "Premium Features",
+        premiumFeature1: "Advanced meditation programs",
+        premiumFeature2: "Personalized workout plans",
+        premiumFeature3: "Detailed sleep analytics",
+        premiumFeature4: "Priority support",
+
+        // Errors
+        errorLoadingProfile: "Error loading profile",
+        errorUpdatingProfile: "Error updating profile",
+        errorChangingPassword: "Error changing password",
+        errorRevokingSession: "Error revoking session",
+        errorUnlinkingAccount: "Error unlinking account",
+        errorDeletingAccount: "Error deleting account",
+    },
+
     badges: {
         latestBadgesTitle: "Your latest badges",
         viewAllBadgesLink: "See all my badges",

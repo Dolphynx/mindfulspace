@@ -15,6 +15,7 @@ import { ExerciceSessionModule } from '@mindfulspace/api/sessions/exercice-sessi
 import { ResourcesModule } from './resources/resources.module';
 import { ProgramsModule} from "@mindfulspace/api/programs/program.module";
 import { BadgesModule } from "./badges/badges.module";
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { BadgesModule } from "./badges/badges.module";
     AiModule,
     ResourcesModule,
     BadgesModule,
+    UsersModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
