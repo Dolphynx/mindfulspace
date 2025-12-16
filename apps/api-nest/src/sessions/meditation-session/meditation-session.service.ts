@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { MeditationSessionSource, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 import { MeditationTypeDto } from './dto/meditation-type.dto';
 import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
+
+interface SoundCloudResolveResponse {
+    stream_url?: string;
+}
 
 /**
  * Service de gestion des séances de méditation.
@@ -11,7 +17,8 @@ import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
  * @remarks
  * Cette couche encapsule toute la logique de persistance liée :
  * - à la création de séances de méditation ;
- * - à la récupération d’historiques (7 derniers jours, hier, etc.) ;
+ * - à la récupération d’historiques filtrés (N derniers jours, plage de dates, etc.) ;
+ * - au calcul de résumés quotidiens (hier ou date ciblée) ;
  * - à la récupération des types de méditation ;
  * - au filtrage des contenus en fonction du type et de la durée.
  *
@@ -21,7 +28,13 @@ import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
  */
 @Injectable()
 export class MeditationSessionService {
-  constructor(private readonly prisma: PrismaService) {}
+
+  private readonly logger = new Logger(MeditationSessionService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly http: HttpService
+  ) {}
 
   /**
    * Crée une nouvelle séance de méditation pour un utilisateur donné.
@@ -30,10 +43,7 @@ export class MeditationSessionService {
    * @param dto Données nécessaires à la création de la séance.
    * @returns La séance de méditation créée.
    */
-  async create(
-    userId: string,
-    dto: CreateMeditationSessionDto,
-  ) {
+  async create(userId: string, dto: CreateMeditationSessionDto) {
     // Date logique de la séance -> on fixe l'heure à midi pour éviter les surprises UTC
     const date = new Date(dto.dateSession);
     date.setHours(12, 0, 0, 0);
@@ -60,21 +70,30 @@ export class MeditationSessionService {
   }
 
   /**
-   * Calcule un résumé des 7 derniers jours de méditation pour un utilisateur donné.
+   * Calcule un résumé des N derniers jours de méditation pour un utilisateur donné.
+   *
+   * @remarks
+   * Cette méthode généralise l’ancien comportement spécifique aux 7 derniers jours.
+   * Elle retourne un tableau minimal pour chaque séance, incluant notamment :
+   * - `date` (format `YYYY-MM-DD`) ;
+   * - `durationSeconds` ;
+   * - `moodAfter` ;
+   * - `meditationTypeId`.
    *
    * @param userId Identifiant de l’utilisateur.
-   * @returns Un tableau contenant, par jour, la durée totale et quelques métadonnées.
+   * @param days Nombre de jours à remonter dans le passé.
+   * @returns Un tableau contenant, par séance, la durée totale et quelques métadonnées.
    */
-  async getLast7Days(userId: string) {
+  async getLastNDays(userId: string, days: number) {
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(now.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
+    const from = new Date(now);
+    from.setDate(now.getDate() - days);
+    from.setHours(0, 0, 0, 0);
 
     const sessions = await this.prisma.meditationSession.findMany({
       where: {
         userId,
-        startedAt: { gte: sevenDaysAgo },
+        startedAt: { gte: from },
       },
       orderBy: { startedAt: 'asc' },
     });
@@ -83,7 +102,105 @@ export class MeditationSessionService {
       date: s.startedAt ? s.startedAt.toISOString().split('T')[0] : null,
       durationSeconds: s.durationSeconds,
       moodAfter: s.moodAfter,
-      // Si l’on souhaite exploiter le type côté front :
+      meditationTypeId: s.meditationTypeId,
+    }));
+  }
+
+  /**
+   * Calcule un résumé des 7 derniers jours de méditation pour un utilisateur donné.
+   *
+   * @remarks
+   * Méthode conservée pour compatibilité interne ; elle délègue vers {@link getLastNDays}.
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Un tableau contenant, par séance, la durée totale et quelques métadonnées.
+   */
+  async getLast7Days(userId: string) {
+    return this.getLastNDays(userId, 7);
+  }
+
+  /**
+   * Récupère les séances de méditation d’un utilisateur dans une plage de dates donnée.
+   *
+   * @remarks
+   * Les dates sont exprimées au format `YYYY-MM-DD`. Si seule la date de début ou
+   * de fin est fournie, le filtrage est appliqué dans un seul sens.
+   *
+   * Le résultat adopte le même format minimaliste que {@link getLastNDays}.
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @param options Objet contenant `from` et/ou `to` au format `YYYY-MM-DD`.
+   * @returns Un tableau de séances filtrées dans la plage indiquée.
+   */
+  async getSessionsBetweenDates(
+    userId: string,
+    options: { from?: string; to?: string },
+  ) {
+    const { from, to } = options;
+    const where: Prisma.MeditationSessionWhereInput = {
+      userId,
+    };
+
+    if (from || to) {
+      const startedAt: Prisma.DateTimeFilter = {};
+
+      if (from) {
+        const fromDate = new Date(from);
+        if (Number.isNaN(fromDate.getTime())) {
+          throw new Error('Invalid "from" date format, expected YYYY-MM-DD');
+        }
+        fromDate.setHours(0, 0, 0, 0);
+        startedAt.gte = fromDate;
+      }
+
+      if (to) {
+        const toDate = new Date(to);
+        if (Number.isNaN(toDate.getTime())) {
+          throw new Error('Invalid "to" date format, expected YYYY-MM-DD');
+        }
+        // On considère `to` inclusif, donc on filtre jusqu’au début du jour suivant (exclus)
+        toDate.setHours(0, 0, 0, 0);
+        const nextDay = new Date(toDate);
+        nextDay.setDate(toDate.getDate() + 1);
+        startedAt.lt = nextDay;
+      }
+
+      where.startedAt = startedAt;
+    }
+
+    const sessions = await this.prisma.meditationSession.findMany({
+      where,
+      orderBy: { startedAt: 'asc' },
+    });
+
+    return sessions.map((s) => ({
+      date: s.startedAt ? s.startedAt.toISOString().split('T')[0] : null,
+      durationSeconds: s.durationSeconds,
+      moodAfter: s.moodAfter,
+      meditationTypeId: s.meditationTypeId,
+    }));
+  }
+
+  /**
+   * Récupère l’historique complet des séances de méditation pour un utilisateur donné.
+   *
+   * @remarks
+   * Le format de retour est identique à celui de {@link getLastNDays},
+   * afin de faciliter la consommation côté frontend (graphes, historiques, etc.).
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Un tableau de toutes les séances de l’utilisateur concerné.
+   */
+  async getAllForUser(userId: string) {
+    const sessions = await this.prisma.meditationSession.findMany({
+      where: { userId },
+      orderBy: { startedAt: 'asc' },
+    });
+
+    return sessions.map((s) => ({
+      date: s.startedAt ? s.startedAt.toISOString().split('T')[0] : null,
+      durationSeconds: s.durationSeconds,
+      moodAfter: s.moodAfter,
       meditationTypeId: s.meditationTypeId,
     }));
   }
@@ -91,25 +208,65 @@ export class MeditationSessionService {
   /**
    * Calcule un résumé des séances de méditation effectuées la veille.
    *
+   * @remarks
+   * Méthode conservée pour compatibilité interne ; elle délègue vers
+   * {@link getDailySummary} sans fournir de date (=> “hier”).
+   *
    * @param userId Identifiant de l’utilisateur.
    * @returns Un objet contenant la durée totale de méditation et
    *          la dernière humeur renseignée après une séance.
    */
   async getYesterdaySummary(userId: string) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    return this.getDailySummary(userId);
+  }
 
-    const yesterdayStart = new Date(today);
-    yesterdayStart.setDate(today.getDate() - 1);
+  /**
+   * Calcule un résumé quotidien des séances de méditation pour une date donnée
+   * ou, par défaut, pour la veille.
+   *
+   * @remarks
+   * - Si `date` est fourni, il doit être au format `YYYY-MM-DD`.
+   * - Si `date` est omis, la méthode calcule les bornes de la veille.
+   *
+   * Le résumé inclut :
+   * - la durée cumulée de toutes les séances de la journée ;
+   * - la dernière humeur finale enregistrée.
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @param date Date cible au format `YYYY-MM-DD` (facultative).
+   * @returns Un objet `{ durationSeconds, moodAfter }`.
+   */
+  async getDailySummary(userId: string, date?: string) {
+    let dayStart: Date;
+    let dayEnd: Date;
 
-    const yesterdayEnd = new Date(today);
+    if (date) {
+      const parsed = new Date(date);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new Error('Invalid date format, expected YYYY-MM-DD');
+      }
+      parsed.setHours(0, 0, 0, 0);
+
+      dayStart = parsed;
+      dayEnd = new Date(parsed);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+    } else {
+      // Par défaut : on reprend la logique “hier”
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      dayStart = new Date(today);
+      dayStart.setDate(today.getDate() - 1);
+
+      dayEnd = new Date(today);
+    }
 
     const sessions = await this.prisma.meditationSession.findMany({
       where: {
         userId,
         startedAt: {
-          gte: yesterdayStart,
-          lt: yesterdayEnd,
+          gte: dayStart,
+          lt: dayEnd,
         },
       },
       orderBy: { startedAt: 'asc' },
@@ -173,6 +330,55 @@ export class MeditationSessionService {
   }
 
   /**
+   * Résout une URL de piste SoundCloud en URL de stream exploitable
+   * par un <audio> HTML.
+   *
+   * @param trackUrl URL publique de la piste SoundCloud
+   * @returns URL de stream (avec client_id) ou null en cas d'échec
+   */
+  private async resolveSoundCloudStream(trackUrl: string): Promise<string | null> {
+      const clientId = process.env.SOUNDCLOUD_CLIENT_ID;
+      if (!clientId) {
+          this.logger.warn(
+              'SOUNDCLOUD_CLIENT_ID is not set, cannot resolve SoundCloud URLs.',
+          );
+          return null;
+      }
+
+      try {
+          const apiUrl = 'https://api.soundcloud.com/resolve';
+
+          const response = await firstValueFrom(
+              this.http.get<SoundCloudResolveResponse>(apiUrl, {
+                  params: {
+                      url: trackUrl,
+                      client_id: clientId,
+                  },
+              }),
+          );
+
+          const data = response.data;
+
+          if (!data || typeof data.stream_url !== 'string') {
+              this.logger.warn(
+                  `SoundCloud resolve did not return a valid stream_url for ${trackUrl}`,
+              );
+              return null;
+          }
+
+          const streamUrl: string = data.stream_url;
+
+          return `${streamUrl}?client_id=${clientId}`;
+      } catch (error) {
+          this.logger.error(
+              `Error while resolving SoundCloud URL ${trackUrl}: ${String(error)}`,
+          );
+          return null;
+      }
+  }
+
+
+    /**
    * Récupère les contenus de méditation filtrés par type et,
    * éventuellement, par durée cible.
    *
@@ -238,10 +444,7 @@ export class MeditationSessionService {
 
     const items = await this.prisma.meditationContent.findMany({
       where,
-      orderBy: [
-        { sortOrder: 'asc' },
-        { title: 'asc' },
-      ],
+      orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
       select: {
         id: true,
         title: true,
@@ -253,19 +456,33 @@ export class MeditationSessionService {
         defaultMeditationTypeId: true,
         isPremium: true,
         mediaUrl: true,
+        soundcloudUrl: true, // ⬅️ nouveau
       },
     });
 
-    // Mapping vers ce que le front attend
-    return items.map((c) => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      mode: c.mode,
-      durationSeconds: c.defaultDurationSeconds,
-      meditationTypeId: c.defaultMeditationTypeId,
-      isPremium: c.isPremium,
-      mediaUrl: c.mediaUrl,
-    }));
+    // On résout éventuellement les URLs SoundCloud pour obtenir un vrai mediaUrl
+    const resolved = await Promise.all(
+      items.map(async (c) => {
+        let mediaUrl = c.mediaUrl;
+
+        if (!mediaUrl && c.soundcloudUrl) {
+          const scStream = await this.resolveSoundCloudStream(c.soundcloudUrl);
+          mediaUrl = scStream ?? null;
+        }
+
+        return {
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          mode: c.mode,
+          durationSeconds: c.defaultDurationSeconds,
+          meditationTypeId: c.defaultMeditationTypeId,
+          isPremium: c.isPremium,
+          mediaUrl, // déjà “prêt à jouer” (local ou SoundCloud)
+        };
+      }),
+    );
+
+    return resolved;
   }
 }

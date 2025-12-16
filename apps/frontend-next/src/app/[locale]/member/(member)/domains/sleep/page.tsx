@@ -8,6 +8,7 @@ import {useSleepSessions} from "@/hooks/useSleepSessions";
 import {useTranslations} from "@/i18n/TranslationContext";
 import {SleepHistoryCard} from "@/components/sleep/SleepHistoryCard";
 import DomainSwitcher from "@/components/DomainSwitcher";
+import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 export default function SleepPage() {
     const t = useTranslations("domainSleep");
@@ -20,13 +21,12 @@ export default function SleepPage() {
     } = useSleepSessions();
 
     return (
-        <SessionDashboardLayout
+        <OceanWavesBackground headerOffsetPx={80} wavesHeight="70vh">
+            <div className="mx-auto max-w-5xl pt-6 pb-24">
+                <main className="text-brandText flex flex-col">
+                    <SessionDashboardLayout
             hero={
                 <div className="flex flex-col items-center">
-                    <PageHero
-                        title={t("title")}
-                        subtitle={t("subtitle")}
-                    />
                     {/* Sélecteur des 3 domaines sous le hero */}
                     <DomainSwitcher current="sleep" />
                 </div>
@@ -42,7 +42,7 @@ export default function SleepPage() {
                         </p>
 
                         <SleepManualForm
-                        onCreateSession={createSession}/>
+                        onCreateSessionAction={createSession}/>
                     </div>
                 </SessionCard>
             }
@@ -53,6 +53,9 @@ export default function SleepPage() {
                     errorType={errorType}
                 />
             }
-        />
+                    />
+                </main>
+            </div>
+        </OceanWavesBackground>
     );
 }

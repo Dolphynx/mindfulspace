@@ -1,3 +1,5 @@
+import {apiFetch} from "@/lib/api/client";
+
 export type SleepSession = {
     id: string;
     date: string;
@@ -16,21 +18,29 @@ const API_BASE_URL =
 
 
 export async function fetchLastSleepSessions(baseUrl: string = API_BASE_URL,): Promise<SleepSession[]> {
-    const res = await fetch(`${baseUrl}/sleep/last7days`, {
+    const res = await apiFetch(`${baseUrl}/sleep/last7days`, {
         cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to load sleep sessions");
     return res.json();
 }
 
+export type CreateSleepSessionResponse = {
+    session: unknown;
+    newBadges?: unknown[];
+};
+
 export async function createSleepSession(
     payload: CreateSleepSessionPayload,
     baseUrl: string = API_BASE_URL,
-): Promise<void> {
-    const res = await fetch(`${baseUrl}/sleep`, {
+): Promise<CreateSleepSessionResponse> {
+    const res = await apiFetch(`${baseUrl}/sleep`, {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
     });
+
     if (!res.ok) throw new Error("Failed to create sleep session");
+
+    return res.json() as Promise<CreateSleepSessionResponse>;
 }

@@ -2,14 +2,17 @@
 
 import PageHero from "@/components/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { useWorkoutSessions } from "@/hooks/useWorkoutSessions";
-import { WorkoutHistoryCard } from "@/components/exercise/WorkoutHistoryCard";
-import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
+import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
+import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
-import {WorkoutStartSessionCard} from "@/components/exercise/WorkoutStartSessionCard";
-import {WorkoutStartSection} from "@/components/exercise/WorkoutStartSection";
+import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
 import DomainSwitcher from "@/components/DomainSwitcher";
+import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
+import { usePrograms } from "@/hooks/usePrograms";
+import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";
+import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 /**
  * Maps error types from the hook to translated messages.
@@ -33,52 +36,64 @@ export default function ExercicePage() {
         loading,
         errorType,
         createSession,
-    } = useWorkoutSessions();
+    } = useExerciceSessions();
 
     const globalErrorMessage = getErrorMessage(t, errorType);
 
     return (
+        <OceanWavesBackground headerOffsetPx={80} wavesHeight="70vh">
+            <div className="mx-auto max-w-5xl pt-6 pb-24">
         <main className="text-brandText flex flex-col">
             <SessionDashboardLayout
                 hero={
                     <div className="flex flex-col items-center">
-                        <PageHero
-                            title={t("title")}
-                            subtitle={t("subtitle")}
-                        />
                         {/* Sélecteur des 3 domaines sous le hero */}
                         <DomainSwitcher current="exercise" />
                     </div>
                 }
                 globalErrorMessage={globalErrorMessage}
                 leftTop={
-                    <SessionCard>
-                        <ExerciseManualForm
-                            types={types}
-                            onCreateSession={createSession}
-                        />
-                    </SessionCard>
+                    <>
+                        <SessionCard>
+                            <TodayExercices/>
+                        </SessionCard>
+                        <SessionCard>
+                            <ExerciceStartSection
+                                types={types}
+                                onCreateSession={createSession}
+                            />
+                        </SessionCard>
+                    </>
+
                 }
 
                 leftBottom={
-                    <SessionCard>
-                        <WorkoutStartSection
-                            types={types}
-                            onCreateSession={createSession}
-                        />
-                    </SessionCard>
+                    <>
+                        <SessionCard>
+                            <ExerciceManualForm
+                                types={types}
+                                onCreateSessionAction={createSession}/>
+                        </SessionCard>
+                        <SessionCard>
+                            <WorkoutProgramsStartCard />
+                        </SessionCard>
+                    </>
                 }
 
 
+
                 rightColumn={
-                    <WorkoutHistoryCard
+                    <ExerciceHistoryCard
                         sessions={sessions}
                         loading={loading}
                         errorType={errorType}
                         types={types}
                     />
                 }
+
             />
         </main>
+            </div>
+        </OceanWavesBackground>
     );
 }

@@ -20,11 +20,16 @@ const en = {
         coach: "Become a coach",
         contact: "Contact",
         clientSpace: "Client area",
-
         breathing: "Breathing",
         dashboard: "Dashboard",
         objectives: "Goals",
         becomeCoach: "Become a coach",
+        world: "My world",
+        world2: "My wellness map",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbar: {
@@ -36,6 +41,12 @@ const en = {
         dashboard: "Dashboard",
         objectives: "Goals",
         mobileToggle: "Open menu",
+        world: "My world",
+        world2: "My wellness map",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbarCoach: {
@@ -236,6 +247,9 @@ const en = {
         empty: "No resources match your search yet.",
 
         premiumBadge: "Premium",
+        premiumIconAlt: "Premium content",
+        lockedPremiumResource: "Premium resource reserved for premium members",
+        lockedPremiumTooltip: "Become a premium member to access this content",
         readTimeSuffix: "min",
     },
 
@@ -300,7 +314,9 @@ const en = {
         history_title: "Your recent nights",
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
         history_nights: "nights",
+        last7_empty: "No sleep recorded in the last 7 days.",
         history_average: "hours in average"
+
     },
 
     domainExercice: {
@@ -332,7 +348,33 @@ const en = {
 
         // History
         history_title: "Your recent exercise sessions",
-        history_placeholder: "Your session history will appear here once you record some."
+        history_placeholder: "Your session history will appear here once you record some.",
+
+        // Workout Programs
+        program_start_title: "Subscribe to a workout program",
+        program_start_description: "Discover guided programs designed to help you stay consistent.",
+        program_start_button: "See available programs",
+
+        program_list_loading: "Loading programs…",
+        program_list_title: "Available workout programs",
+        program_list_days: "days",
+        program_list_seeDetails: "See details",
+        program_list_daysPerWeek: "days/week",
+        program_details_back: "Back",
+        program_details_subscribe: "Subscribe",
+        program_details_unsubscribe: "Unsubscribe",
+
+        exercice_plan_today_title: "Today's exercises",
+        exercice_plan_today_empty: "Nothing planned today 🙂",
+        exercice_plan_loading: "Loading...",
+
+        weekday_0: "Sunday",
+        weekday_1: "Monday",
+        weekday_2: "Tuesday",
+        weekday_3: "Wednesday",
+        weekday_4: "Thursday",
+        weekday_5: "Friday",
+        weekday_6: "Saturday",
     },
 
     domainMeditation: {
@@ -479,7 +521,9 @@ const en = {
         sleepAlt: "Sleep",
         exerciceAlt: "Exercise",
         meditationAlt: "Meditation",
+        encodeSessionTitle: "Log a session"
     },
+
     resourceDetailPage: {
         heroSubtitle: "Explore this well-being resource",
         backToList: "Back to resources",
@@ -493,7 +537,10 @@ const en = {
         notFoundText: "This resource does not exist or is no longer available.",
         readTimeSuffix: "min read",
         premiumBadge: "Premium",
-        noContent: "The content of this resource is not yet available."
+        noContent: "The content of this resource is not yet available.",
+        forbiddenTitle: "Access restricted",
+        forbiddenText: "This resource is reserved for premium members. Please sign in with a premium account to access it.",
+        backToListCTA: "Back to resources list"
     },
 
     notFoundPage: {
@@ -720,6 +767,61 @@ const en = {
         resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
         resetPasswordFailed: "Password reset failed",
     },
+
+    badges: {
+        latestBadgesTitle: "Your latest badges",
+        viewAllBadgesLink: "See all my badges",
+
+        toastUnlockedTitle: "New badge unlocked",
+        toastUnlockedSubtitle: "You just unlocked a badge!",
+
+        allBadgesTitle: "My badges",
+        loading: "Loading…",
+
+        badgesCount: "{count} badges earned",
+        noBadgesYet: "No badges yet.",
+        noBadgesYetLong:
+            "Keep practicing (sleep, meditation, exercise) to unlock new badges.",
+        earnedOnLabel: "Earned on",
+        recentlyEarnedTitle: "Recently earned badges",
+
+        meditation: {
+            first: {
+                title: "First meditation session",
+                description: "You completed your very first meditation session.",
+            },
+            five: {
+                title: "5 meditation sessions completed",
+                description: "You’ve completed 5 sessions. Keep going!",
+            },
+            streak3: {
+                title: "3-day meditation streak",
+                description: "You meditated 3 days in a row. Great consistency!",
+            },
+        },
+
+        exercice: {
+            first: {
+                title: "First exercise session",
+                description: "You logged your first exercise session.",
+            },
+        },
+
+        sleep: {
+            first: {
+                title: "First tracked night of sleep",
+                description: "You logged your first night of sleep.",
+            },
+        },
+
+        generic: {
+            firstSession: {
+                title: "First MindfulSpace session",
+                description: "Welcome! You started using MindfulSpace.",
+            },
+        },
+    },
+
 
 };
 

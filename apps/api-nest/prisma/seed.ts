@@ -4,6 +4,8 @@ import {
   MeditationSessionSource,
   MeditationMode,
   MeditationVisualType,
+  BadgeDomain,
+  BadgeMetricType,
 } from "@prisma/client";
 import * as argon2 from "argon2";
 
@@ -17,12 +19,22 @@ async function main() {
   // ---------------------------------------------------------------------------
   console.log("🔄 Clearing existing domain data (safe)...");
 
-  // D'abord les sessions qui dépendent des users / types / contenus
-  await prisma.exerciceSession.deleteMany();
-  await prisma.exerciceStep.deleteMany();
-  await prisma.workoutSession.deleteMany();
-  await prisma.sleepSession.deleteMany();
-  await prisma.meditationSession.deleteMany();
+  // D'abord les sessions et séries qui dépendent des users / types / contenus
+  await prisma.exerciceSerie.deleteMany();      // dépend de ExerciceSession + ExerciceContent
+  await prisma.exerciceStep.deleteMany();       // dépend de ExerciceContent
+  await prisma.exerciceSession.deleteMany();    // dépend de User
+  await prisma.sleepSession.deleteMany();       // dépend de User
+  await prisma.meditationSession.deleteMany();  // dépend de User + MeditationType + MeditationContent
+
+  // User-specific workout programs (copie de Program pour un user)
+  await prisma.userProgramExerciceItem.deleteMany();
+  await prisma.userProgramDay.deleteMany();
+  await prisma.userProgram.deleteMany();
+
+  // Programmes d'exercices (gabarits)
+  await prisma.programExerciceItem.deleteMany();
+  await prisma.programDay.deleteMany();
+  await prisma.program.deleteMany();
 
   // Programmes & contenus de méditation (si présents)
   await prisma.meditationProgramItem?.deleteMany().catch(() => {});
@@ -31,14 +43,18 @@ async function main() {
   await prisma.meditationContent?.deleteMany().catch(() => {});
   await prisma.meditationType?.deleteMany().catch(() => {});
 
-  // Types d'exercices
-  await prisma.exerciceType.deleteMany();
+  // Types d'exercices (moderne : ExerciceContent)
+  await prisma.exerciceContent.deleteMany();
 
   // Resources (full reset)
   await prisma.resourceTagOnResource?.deleteMany().catch(() => {});
   await prisma.resource.deleteMany();
   await prisma.resourceTag.deleteMany();
   await prisma.resourceCategory.deleteMany();
+
+  // Badges (d'abord les UserBadge, puis le catalogue)
+  await prisma.userBadge.deleteMany();
+  await prisma.badgeDefinition.deleteMany();
 
   console.log("✔ Domain data cleared.");
 
@@ -377,7 +393,7 @@ async function main() {
 
   console.log("  ✅ Created admin@mindfulspace.app (role: admin)");
 
-  // User "demo@mindfulspace.app" utilisé pour les sessions de démo
+  // User "demo@mindfulspace.app" utilisé pour les sessions de déмо
   const demoUser = await prisma.user.upsert({
     where: { email: "demo@mindfulspace.app" },
     update: {},
@@ -416,7 +432,7 @@ async function main() {
   console.log("    - premium@mindfulspace.app (premium)");
   console.log("    - coach@mindfulspace.app (coach)");
   console.log("    - admin@mindfulspace.app (admin)");
-  console.log("    - demo@mindfulspace.app (user, pour les données de démo)");
+  console.log("    - demo@mindfulspace.app (user, pour les données de déмо)");
   console.log("✅ All passwords are properly hashed with Argon2id");
 
   // ---------------------------------------------------------------------------
@@ -473,6 +489,7 @@ async function main() {
     sortOrder: number;
     isPremium: boolean;
     mediaUrl?: string | null;
+    soundcloudUrl?: string | null;
   };
 
   const meditationContentsData: MeditationContentSeed[] = [
@@ -500,7 +517,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Respiration en vagues (visuelle)",
@@ -539,7 +556,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Flamme de présence (timer)",
@@ -578,7 +595,7 @@ async function main() {
       defaultDurationSeconds: 900,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Body scan avec silhouette (timer)",
@@ -617,7 +634,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: true,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Cercle de bienveillance (timer)",
@@ -649,6 +666,7 @@ async function main() {
         isActive: true,
         isPremium: content.isPremium,
         mediaUrl: content.mediaUrl ?? null,
+        soundcloudUrl: content.soundcloudUrl ?? null,
       },
     });
     meditationContents.push(created);
@@ -700,9 +718,9 @@ async function main() {
     { name: "Overhead Press", Description: "Shoulder barbell press" },
   ];
 
-  for (const type of baseExercises) {
-    await prisma.exerciceType.create({
-      data: type,
+  for (const ex of baseExercises) {
+    await prisma.exerciceContent.create({
+      data: ex,
     });
   }
 
@@ -710,7 +728,7 @@ async function main() {
 
   console.log("🌞 Seeding Sun Salutation...");
 
-  const sunSalutation = await prisma.exerciceType.create({
+  const sunSalutation = await prisma.exerciceContent.create({
     data: {
       name: "Sun Salutation",
       Description: "A traditional flowing sequence of yoga postures.",
@@ -807,7 +825,7 @@ async function main() {
   for (const step of sunSalutationSteps) {
     await prisma.exerciceStep.create({
       data: {
-        exerciceTypeId: sunSalutation.id,
+        exerciceContentId: sunSalutation.id,
         order: step.order,
         title: step.title,
         description: step.description,
@@ -819,22 +837,107 @@ async function main() {
   console.log("✔ Sun Salutation seeded with 11 steps.");
   console.log("✔ ExerciceType seeded");
 
+  // ---------------------------------------------------------------------------
+  // 2.x Workout Programs (demo)
+  // ---------------------------------------------------------------------------
+  console.log("🌱 Seeding workout programs...");
+
+  // Get some exercise type IDs
+  const pushUps = await prisma.exerciceContent.findUnique({ where: { name: "Push Ups" } });
+  const squats = await prisma.exerciceContent.findUnique({ where: { name: "Squats" } });
+  const plank = await prisma.exerciceContent.findUnique({ where: { name: "Plank" } });
+  const burpees = await prisma.exerciceContent.findUnique({ where: { name: "Burpees" } });
+
+  if (!pushUps || !squats || !plank || !burpees) {
+    throw new Error("Some required exercise types not found");
+  }
+
+  // Program #1
+  await prisma.program.create({
+    data: {
+      title: "Full Body Beginner",
+      description: "A simple 2-day full body routine.",
+      days: {
+        create: [
+          {
+            title: "Day 1 – Full Body A",
+            order: 1,
+            weekday: 1,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Day 2 – Full Body B",
+            order: 2,
+            weekday: 3,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+                { exerciceContentId: burpees.id, defaultRepetitionCount: 8, defaultSets: 2 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  // Program #2
+  await prisma.program.create({
+    data: {
+      title: "Upper / Lower Split",
+      description: "Classic 4-day weekly split.",
+      days: {
+        create: [
+          {
+            title: "Upper",
+            order: 1,
+            weekday: 1,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 4 },
+                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            title: "Lower",
+            order: 2,
+            weekday: 3,
+            exerciceItems: {
+              create: [
+                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 4 },
+                { exerciceContentId: burpees.id, defaultRepetitionCount: 10, defaultSets: 3 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("✔ Workout programs seeded.");
+
   // 2.5 Sessions demo liées au user "demo@..."
   console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 
-  const workout = await prisma.workoutSession.create({
+  const workout = await prisma.exerciceSession.create({
     data: {
       quality: 4,
       dateSession: new Date(),
       userId: demoUser.id,
-      exerciceSessions: {
+      exerciceSerie: {
         create: [
           {
-            exerciceType: { connect: { name: "Push Ups" } },
+            exerciceContent: { connect: { name: "Push Ups" } },
             repetitionCount: 20,
           },
           {
-            exerciceType: { connect: { name: "Squats" } },
+            exerciceContent: { connect: { name: "Squats" } },
             repetitionCount: 15,
           },
         ],
@@ -985,6 +1088,7 @@ async function main() {
       content: "…",
       type: ResourceType.GUIDE,
       isFeatured: true,
+      isPremium: true,
       readTimeMin: 5,
       authorName: "Équipe MindfulSpace",
       categoryId: guideCat.id,
@@ -996,7 +1100,146 @@ async function main() {
 
   console.log("✔ Resources seeded.");
 
-  console.log("🌱 Seeding done.");
+  // 2.7 Badges (definitions uniquement, pas de UserBadge)
+  console.log("🌱 Seeding badge definitions...");
+
+  type BadgeSeed = {
+    slug: string;
+    domain: BadgeDomain;
+    metric: BadgeMetricType;
+    threshold: number;
+    titleKey: string;
+    descriptionKey: string;
+    iconKey?: string | null;
+    highlightDurationHours?: number | null;
+    sortOrder: number;
+  };
+
+  const badgeDefinitionsData: BadgeSeed[] = [
+    {
+      slug: "first-meditation",
+      domain: BadgeDomain.MEDITATION,
+      metric: BadgeMetricType.TOTAL_MEDITATION_SESSIONS,
+      threshold: 1,
+      titleKey: "badges.meditation.first.title",
+      descriptionKey: "badges.meditation.first.description",
+      iconKey: "badge-meditation-1.png",
+      highlightDurationHours: 168, // 7 jours
+      sortOrder: 10,
+    },
+    {
+      slug: "five-meditations",
+      domain: BadgeDomain.MEDITATION,
+      metric: BadgeMetricType.TOTAL_MEDITATION_SESSIONS,
+      threshold: 5,
+      titleKey: "badges.meditation.five.title",
+      descriptionKey: "badges.meditation.five.description",
+      iconKey: "badge-meditation-5.png",
+      highlightDurationHours: 168,
+      sortOrder: 20,
+    },
+    {
+      slug: "meditation-streak-3",
+      domain: BadgeDomain.MEDITATION,
+      metric: BadgeMetricType.MEDITATION_STREAK_DAYS,
+      threshold: 3,
+      titleKey: "badges.meditation.streak3.title",
+      descriptionKey: "badges.meditation.streak3.description",
+      iconKey: "badge-meditation-streak-3.png",
+      highlightDurationHours: 168,
+      sortOrder: 30,
+    },
+    {
+      slug: "first-exercice",
+      domain: BadgeDomain.EXERCICE,
+      metric: BadgeMetricType.TOTAL_EXERCICE_SESSIONS,
+      threshold: 1,
+      titleKey: "badges.exercice.first.title",
+      descriptionKey: "badges.exercice.first.description",
+      iconKey: "badge-exercice-1.png",
+      highlightDurationHours: 168,
+      sortOrder: 40,
+    },
+    {
+      slug: "first-sleep",
+      domain: BadgeDomain.SLEEP,
+      metric: BadgeMetricType.TOTAL_SLEEP_NIGHTS,
+      threshold: 1,
+      titleKey: "badges.sleep.first.title",
+      descriptionKey: "badges.sleep.first.description",
+      iconKey: "badge-sleep-1.png",
+      highlightDurationHours: 168,
+      sortOrder: 50,
+    },
+    {
+      slug: "first-session-any",
+      domain: BadgeDomain.GENERIC,
+      metric: BadgeMetricType.TOTAL_SESSIONS_ANY,
+      threshold: 1,
+      titleKey: "badges.generic.firstSession.title",
+      descriptionKey: "badges.generic.firstSession.description",
+      iconKey: "badge-generic-start.png",
+      highlightDurationHours: 168,
+      sortOrder: 5,
+    },
+  ];
+
+  for (const badge of badgeDefinitionsData) {
+    await prisma.badgeDefinition.upsert({
+      where: { slug: badge.slug },
+      update: {
+        domain: badge.domain,
+        metric: badge.metric,
+        threshold: badge.threshold,
+        titleKey: badge.titleKey,
+        descriptionKey: badge.descriptionKey,
+        iconKey: badge.iconKey ?? null,
+        highlightDurationHours: badge.highlightDurationHours ?? null,
+        sortOrder: badge.sortOrder,
+        isActive: true,
+      },
+      create: {
+        slug: badge.slug,
+        domain: badge.domain,
+        metric: badge.metric,
+        threshold: badge.threshold,
+        titleKey: badge.titleKey,
+        descriptionKey: badge.descriptionKey,
+        iconKey: badge.iconKey ?? null,
+        highlightDurationHours: badge.highlightDurationHours ?? null,
+        sortOrder: badge.sortOrder,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log(`✔ ${badgeDefinitionsData.length} badge definitions seeded.`);
+
+    // 2.8 Demo user badges (lier quelques badges de base à demoUser)
+    console.log("🌱 Seeding demo user badges...");
+
+    // On associe par exemple les badges "first-meditation" et "first-sleep" au demoUser
+    const demoUserBadgeDefinitions = await prisma.badgeDefinition.findMany({
+        where: {
+            slug: { in: ["first-meditation", "first-sleep"] },
+        },
+    });
+
+    for (const def of demoUserBadgeDefinitions) {
+        await prisma.userBadge.create({
+            data: {
+                userId: demoUser.id,
+                badgeId: def.id,
+            },
+        });
+    }
+
+    console.log(
+        `✔ Seeded ${demoUserBadgeDefinitions.length} badges for demo user.`,
+    );
+
+
+    console.log("🌱 Seeding done.");
 }
 
 main()
