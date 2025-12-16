@@ -3,6 +3,7 @@ import { MeditationSessionService } from './meditation-session.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { BadgesService } from '@mindfulspace/api/badges/badges.service';
 
 /**
@@ -131,7 +132,7 @@ export class MeditationSessionController {
   }
 
   /**
-   * Récupère l’ensemble des séances de méditation enregistrées en base.
+   * Récupère l'ensemble des séances de méditation enregistrées en base.
    *
    * @remarks
    * Utilisation typique :
@@ -139,8 +140,11 @@ export class MeditationSessionController {
    * - back-office interne,
    * - contrôles ponctuels.
    *
+   * **Sécurité** : Réservé aux administrateurs uniquement.
+   *
    * @returns La liste complète des séances, généralement triées par date.
    */
+  @Roles('admin')
   @Get('admin/meditation-sessions')
   findAll() {
     return this.meditationService.findAll();

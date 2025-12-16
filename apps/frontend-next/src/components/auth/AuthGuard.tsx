@@ -26,7 +26,7 @@ export function AuthGuard({ children, roles }: AuthGuardProps) {
             const locale = segments[1] || "fr";
 
             const redirectTo = encodeURIComponent(pathname || `/${locale}`);
-            router.replace(`/${locale}/auth/login?redirectTo=${encodeURIComponent(pathname)}`);
+            router.replace(`/${locale}/auth/login?redirectTo=${redirectTo}`);
             return;
         }
 
