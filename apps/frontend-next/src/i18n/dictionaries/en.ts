@@ -1,4 +1,6 @@
-const en = {
+import type { Messages } from "./fr";
+
+const en: Messages = {
     /*
      * Common
      */

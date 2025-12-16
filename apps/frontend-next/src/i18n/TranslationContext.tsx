@@ -1,150 +1,179 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import React, { createContext, useCallback, useContext } from "react";
 import type { Locale } from "./config";
 import type { Messages } from "./get-dictionary";
 
 /**
- * Structure portée par le contexte de traduction.
+ * Valeur exposée par le contexte de traduction.
  *
- * Fournit :
- * - la locale active
- * - l’ensemble des messages i18n chargés pour cette locale
+ * @remarks
+ * Le contexte fournit :
+ * - la locale active (déduite du segment de route `[locale]`),
+ * - le dictionnaire de traduction correspondant,
+ * - un point d’accès centralisé aux données i18n côté client.
  *
- * Cette valeur est distribuée dans l’arbre React via `TranslationContext`.
+ * Le chargement des traductions reste exclusivement côté serveur
+ * (`getDictionary`), le client ne fait que consommer ces données.
  */
 type TranslationContextValue = {
-    /** Code de langue actif (ex.: "fr", "en"). */
+    /** Locale active de l’application. */
     locale: Locale;
 
-    /** Dictionnaire des messages associés à cette locale. */
-    messages: Messages;
+    /** Dictionnaire de traduction correspondant à la locale active. */
+    dictionary: Messages;
 };
 
 /**
- * Contexte React contenant la configuration i18n (locale + messages).
+ * Contexte React interne pour l’i18n.
  *
- * Par défaut, la valeur est `null` afin de pouvoir lever une erreur
- * claire si un composant consomme la traduction hors provider.
+ * @remarks
+ * Initialisé à `null` afin de pouvoir détecter toute utilisation
+ * hors d’un `TranslationProvider` et lever une erreur explicite.
  */
-const TranslationContext = createContext<TranslationContextValue | null>(
-    null,
-);
+const TranslationContext = createContext<TranslationContextValue | null>(null);
 
 /**
- * Composant provider enveloppant une portion de l’arbre
- * pour injecter :
- * - la locale active
- * - le dictionnaire de messages
+ * Récupère une valeur imbriquée dans un objet à partir d’un chemin
+ * exprimé en notation pointée (ex: `"navbar.home"`).
  *
- * Ce provider doit englober toute section de l'application
- * nécessitant l’usage du hook `useTranslations`.
+ * @remarks
+ * Cette fonction est volontairement défensive :
+ * - vérifie la nature des objets traversés,
+ * - évite toute exception en cas de clé manquante,
+ * - retourne `undefined` si le chemin n’existe pas.
  *
- * @param props.locale Locale active.
- * @param props.messages Ensemble des messages i18n pour cette locale.
- * @param props.children Sous-arbre devant accéder aux traductions.
+ * @param obj - Objet source (dictionnaire complet ou sous-objet).
+ * @param path - Chemin de clé imbriquée séparé par des points.
+ * @returns La valeur trouvée ou `undefined` si le chemin est invalide.
+ */
+function getNestedValue(obj: unknown, path: string): unknown {
+    if (!obj || typeof obj !== "object") return undefined;
+
+    return path.split(".").reduce<unknown>((acc, key) => {
+        if (!acc || typeof acc !== "object") return undefined;
+        if (Object.prototype.hasOwnProperty.call(acc, key)) {
+            return (acc as Record<string, unknown>)[key];
+        }
+        return undefined;
+    }, obj);
+}
+
+/**
+ * Provider i18n principal de l’application.
+ *
+ * @remarks
+ * Ce provider doit être utilisé dans `app/[locale]/layout.tsx`.
+ * Il rend accessibles :
+ * - la locale active,
+ * - le dictionnaire de traduction,
+ * à l’ensemble des composants client descendants.
+ *
+ * Le provider ne contient aucune logique de chargement : il se
+ * contente de propager les données calculées côté serveur.
+ *
+ * @param props - Propriétés du provider.
+ * @param props.locale - Locale active de l’application.
+ * @param props.dictionary - Dictionnaire correspondant à la locale.
+ * @param props.children - Arbre de composants descendants.
+ * @returns Provider React encapsulant `children`.
  */
 export function TranslationProvider({
                                         locale,
-                                        messages,
+                                        dictionary,
                                         children,
                                     }: {
     locale: Locale;
-    messages: Messages;
+    dictionary: Messages;
     children: React.ReactNode;
 }) {
     return (
-        <TranslationContext.Provider value={{ locale, messages }}>
+        <TranslationContext.Provider value={{ locale, dictionary }}>
             {children}
         </TranslationContext.Provider>
     );
 }
 
 /**
- * Recherche une valeur dans un objet imbriqué à partir d’un chemin
- * de type `"a.b.c"`.
+ * Accès interne au contexte de traduction.
  *
- * Ce mécanisme permet d’adresser proprement des clés i18n
- * structurées en profondeur.
+ * @remarks
+ * Cette fonction centralise la vérification de la présence du
+ * `TranslationProvider` afin d’éviter la duplication de code
+ * dans les hooks publics.
  *
- * @param obj Objet racine dans lequel naviguer.
- * @param path Chemin sous forme de segments séparés par des points.
- * @returns La valeur trouvée si elle est une chaîne, sinon `undefined`.
+ * @returns Valeur du contexte i18n.
+ * @throws Error Si utilisé en dehors d’un `TranslationProvider`.
  */
-function getNestedValue(obj: unknown, path: string): string | undefined {
-    const segments = path.split(".");
-
-    let current: unknown = obj;
-
-    for (const segment of segments) {
-        if (
-            current !== null &&
-            typeof current === "object" &&
-            Object.prototype.hasOwnProperty.call(current, segment)
-        ) {
-            current = (current as Record<string, unknown>)[segment];
-        } else {
-            return undefined;
-        }
+function useTranslationContext(): TranslationContextValue {
+    const ctx = useContext(TranslationContext);
+    if (!ctx) {
+        throw new Error(
+            "useTranslations/useLocale must be used within a TranslationProvider."
+        );
     }
-
-    return typeof current === "string" ? current : undefined;
+    return ctx;
 }
 
 /**
- * Hook permettant d’obtenir une fonction de traduction.
+ * Retourne la locale actuellement active.
  *
- * Fonctionnement :
- * - Lit le contexte (locale + messages)
- * - Permet éventuellement de cibler un namespace
- * - Retourne une fonction `t(key)` qui cherche la clé dans le dictionnaire
+ * @remarks
+ * Permet d’éviter de re-parser l’URL (`usePathname`) dans les composants
+ * client. La locale est fournie directement par le contexte i18n.
  *
- * Si la clé n’est pas trouvée, la valeur retournée est la clé brute,
- * ce qui permet une tolérance lors du développement.
+ * @returns La locale active.
+ */
+export function useLocale(): Locale {
+    return useTranslationContext().locale;
+}
+
+/**
+ * Hook principal de traduction côté client.
  *
- * @param namespace Namespace optionnel du dictionnaire à cibler
- *                  (ex.: `"domainMeditation"`, `"errors"`, etc.).
- * @throws Erreur si utilisé hors `<TranslationProvider>`.
- * @returns Fonction de traduction.
+ * @remarks
+ * - `useTranslations("namespace")` renvoie une fonction `t(key)`.
+ * - `key` peut être :
+ *   - simple : `"title"`,
+ *   - imbriquée : `"hero.title"`.
+ *
+ * En cas de clé manquante :
+ * - en environnement de développement, un warning est affiché
+ *   afin de faciliter la détection des erreurs ;
+ * - en production, la clé est renvoyée telle quelle pour éviter
+ *   toute interruption du rendu.
+ *
+ * La fonction retournée est mémoïsée (`useCallback`) afin de
+ * garantir une référence stable entre les renders.
+ *
+ * @param namespace - Namespace racine des traductions (ex: `"navbar"`).
+ * @returns Fonction de traduction `t(key)`.
  */
 export function useTranslations(namespace?: string) {
-    const ctx = useContext(TranslationContext);
+    const { dictionary, locale } = useTranslationContext();
 
-    if (!ctx) {
-        throw new Error(
-            "useTranslations must be used inside <TranslationProvider>",
-        );
-    }
+    return useCallback(
+        /**
+         * Traduit une clé relative au namespace fourni.
+         *
+         * @param key - Clé de traduction (simple ou imbriquée).
+         * @returns Texte traduit, ou la clé en fallback si introuvable.
+         */
+        (key: string): string => {
+            const fullPath = namespace ? `${namespace}.${key}` : key;
 
-    const { locale, messages } = ctx;
+            const value = getNestedValue(dictionary, fullPath);
+            if (typeof value === "string") return value;
 
-    // Dans cette implémentation, les `messages` sont déjà filtrés par locale
-    const localeMessages = messages;
+            if (process.env.NODE_ENV === "development") {
+                // eslint-disable-next-line no-console
+                console.warn(
+                    `[i18n] Missing translation: "${fullPath}" (locale="${locale}")`
+                );
+            }
 
-    if (!localeMessages) {
-        return (key: string) => key;
-    }
-
-    // Sélection du namespace si fourni
-    const namespaceValue =
-        namespace != null
-            ? (localeMessages as Record<string, unknown>)[namespace]
-            : localeMessages;
-
-    // Si le namespace n'est pas un objet valide, on retombe sur l’objet complet
-    const dictionary =
-        namespace != null &&
-        namespaceValue !== null &&
-        typeof namespaceValue === "object"
-            ? namespaceValue
-            : localeMessages;
-
-    /**
-     * Fonction retournée permettant de résoudre une clé de traduction.
-     * @param key Clé textuelle (ex.: `"wizard_stepType_title"`).
-     */
-    return (key: string): string => {
-        const value = getNestedValue(dictionary, key);
-        return value ?? key;
-    };
+            return key;
+        },
+        [dictionary, locale, namespace]
+    );
 }
