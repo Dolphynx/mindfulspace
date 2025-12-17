@@ -194,7 +194,7 @@ The `PublicNavbar` automatically handles authentication:
 
 ## 📚 Full Documentation
 
-See [AUTHENTICATION.md](./AUTHENTICATION.md) for:
+See [AUTHENTICATION.md](AUTHENTICATION.md) for:
 - Complete API reference
 - Advanced usage examples
 - Styling customization

@@ -320,4 +320,4 @@ Before deploying to production:
 - Google OAuth: https://developers.google.com/identity/protocols/oauth2
 - GitHub OAuth: https://docs.github.com/en/developers/apps/building-oauth-apps
 
-Or check the main documentation: [AUTHENTICATION.md](./AUTHENTICATION.md)
+Or check the main documentation: [AUTHENTICATION.md](AUTHENTICATION.md)

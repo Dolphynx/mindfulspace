@@ -165,7 +165,7 @@ After running the seed script, these roles are available:
 
 ## 📚 Full Documentation
 
-See [AUTHENTICATION.md](./AUTHENTICATION.md) for complete documentation including:
+See [AUTHENTICATION.md](AUTHENTICATION.md) for complete documentation including:
 - Detailed API reference
 - Security features
 - Frontend integration examples
@@ -217,4 +217,4 @@ Your authentication system is now configured with:
 - ✅ Rate limiting
 - ✅ Secure password hashing (Argon2)
 
-Need help? Check [AUTHENTICATION.md](./AUTHENTICATION.md) for full documentation!
+Need help? Check [AUTHENTICATION.md](AUTHENTICATION.md) for full documentation!
