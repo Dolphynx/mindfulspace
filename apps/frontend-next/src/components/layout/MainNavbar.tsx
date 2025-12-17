@@ -43,7 +43,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
 import { apiFetch } from "@/lib/api/client";
 

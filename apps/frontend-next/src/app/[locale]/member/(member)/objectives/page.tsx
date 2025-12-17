@@ -21,7 +21,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import PageHero from '@/components/PageHero';
+import PageHero from '@/components/layout/PageHero';
 
 /**
  * Types pour refléter les objets renvoyés par l’API backend.

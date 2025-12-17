@@ -19,7 +19,7 @@
  * - La locale est déterminée à partir du segment dynamique [locale].
  */
 
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 

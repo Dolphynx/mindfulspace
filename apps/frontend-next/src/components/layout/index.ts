@@ -29,3 +29,7 @@ export { AdminNavbar } from "./AdminNavbar";
 export { MainNavbar } from "./MainNavbar";
 
 export { default as AppShell } from "./AppShell";
+
+export * from "./GlobalNotice";
+export * from "./OceanWavesBackground";
+export * from "./PageHero";

@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 
 /**
  * Page /mantra

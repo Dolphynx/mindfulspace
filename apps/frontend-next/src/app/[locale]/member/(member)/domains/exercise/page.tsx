@@ -1,6 +1,6 @@
 "use client";
 
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { useExerciceSessions } from "@/hooks/useExerciceSessions";
 import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
@@ -8,7 +8,7 @@ import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
 import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
-import DomainSwitcher from "@/components/DomainSwitcher";
+import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
 import { usePrograms } from "@/hooks/usePrograms";
 import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import {MoodValue} from "@/lib";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 
 type SleepManualFormProps = {
     onCreateSessionAction: (payload: {

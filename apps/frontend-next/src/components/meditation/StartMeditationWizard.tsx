@@ -6,7 +6,7 @@ import {
     useMeditationContents,
     type MeditationContent,
 } from "@/hooks/useMeditationContents";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { createMeditationSession } from "@/lib/api/meditation";

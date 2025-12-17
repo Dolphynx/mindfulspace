@@ -7,7 +7,7 @@
  */
 
 import Link from "next/link";
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { Locale } from "@/i18n/config";
 

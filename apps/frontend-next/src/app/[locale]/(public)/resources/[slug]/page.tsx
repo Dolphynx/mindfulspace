@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 
 /**

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
-import GlobalNotice from "@/components/GlobalNotice";
+import GlobalNotice from "@/components/layout/GlobalNotice";
 import { CookieBanner, CookiePreferencesModal, Footer } from "@/components/layout";
 
 import {

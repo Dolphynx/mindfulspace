@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 
 export function ClientNavbar() {
     const pathname = usePathname();
