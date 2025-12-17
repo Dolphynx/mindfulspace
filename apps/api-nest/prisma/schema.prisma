@@ -323,6 +323,9 @@ model User {
   oauthAccounts           OAuthAccount[]
   userRoles               UserRole[]
 
+  // Content authorship
+  authoredResources Resource[] // Resources created by this user
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt // mis à jour automatiquement à chaque write
 
@@ -493,9 +496,13 @@ model Resource {
   type        ResourceType // type de ressource (article, vidéo…)
   isPremium   Boolean      @default(false) // contenu premium ou non
   isFeatured  Boolean      @default(false) // mis en avant sur la home
-  authorName  String? // nom de l’auteur si pertinent
+  authorName  String? // nom de l'auteur si pertinent
   readTimeMin Int? // estimation du temps de lecture
   externalUrl String? // lien externe éventuel (YouTube, blog…)
+
+  // Author tracking for ownership and CRUD permissions
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   categoryId String
   category   ResourceCategory @relation(fields: [categoryId], references: [id])
@@ -512,14 +519,15 @@ model Resource {
 
   @@index([title]) // recherche plein texte partielle sur le titre
   @@index([summary]) // idem pour le résumé
+  @@index([authorId]) // for filtering by author
 }
 
 model ResourceTagOnResource {
   resourceId String
   tagId      String
 
-  resource Resource    @relation(fields: [resourceId], references: [id])
-  tag      ResourceTag @relation(fields: [tagId], references: [id])
+  resource Resource    @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag      ResourceTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([resourceId, tagId]) // table de jonction N-N (clé composite)
 }

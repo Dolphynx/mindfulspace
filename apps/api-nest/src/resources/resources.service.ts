@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from "@nestjs/common";
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
+import { CreateResourceDto } from "./dto/create-resource.dto";
+import { UpdateResourceDto } from "./dto/update-resource.dto";
 import { Prisma } from "@prisma/client";
 import { CurrentUserType } from "../auth/types/current-user.type";
 
@@ -226,13 +228,15 @@ export class ResourcesService {
       );
     }
 
-    // Protection premium : seuls les rôles "premium" ou "admin"
+    // Protection premium : seuls les rôles "premium", "coach" ou "admin"
     // sont autorisés à consulter une ressource premium.
     if (resource.isPremium) {
       const roles: string[] = user?.roles ?? [];
 
       const hasAccess: boolean =
-        roles.includes("premium") || roles.includes("admin");
+        roles.includes("premium") ||
+        roles.includes("coach") ||
+        roles.includes("admin");
 
       if (!hasAccess) {
         throw new ForbiddenException("Premium resource");
@@ -240,5 +244,253 @@ export class ResourcesService {
     }
 
     return resource;
+  }
+
+  /**
+   * Create a new resource
+   *
+   * @param authorId - User ID from JWT (creator of the resource)
+   * @param dto - Resource data
+   * @returns Created resource
+   * @throws BadRequestException if category doesn't exist or slug is duplicate
+   */
+  async create(authorId: string, dto: CreateResourceDto) {
+    // Validate that category exists
+    const category = await this.prisma.resourceCategory.findUnique({
+      where: { id: dto.categoryId },
+    });
+
+    if (!category) {
+      throw new BadRequestException(`Category with ID "${dto.categoryId}" does not exist`);
+    }
+
+    // Validate that all tags exist (if provided)
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      const tags = await this.prisma.resourceTag.findMany({
+        where: { id: { in: dto.tagIds } },
+      });
+
+      if (tags.length !== dto.tagIds.length) {
+        throw new BadRequestException('One or more tag IDs are invalid');
+      }
+    }
+
+    // Validate meditation program exists (if provided)
+    if (dto.meditationProgramId) {
+      const program = await this.prisma.meditationProgram.findUnique({
+        where: { id: dto.meditationProgramId },
+      });
+
+      if (!program) {
+        throw new BadRequestException(`Meditation program with ID "${dto.meditationProgramId}" does not exist`);
+      }
+    }
+
+    // Create resource with tag connections
+    const { tagIds, ...resourceData } = dto;
+
+    return this.prisma.resource.create({
+      data: {
+        ...resourceData,
+        authorId,
+        tags: tagIds
+          ? {
+              create: tagIds.map((tagId: string) => ({
+                tag: { connect: { id: tagId } },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        tags: {
+          include: { tag: true },
+        },
+        author: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Update an existing resource
+   *
+   * @param resourceId - Resource UUID
+   * @param userId - Current user ID (from JWT)
+   * @param userRoles - Current user roles (from JWT)
+   * @param dto - Updated resource data
+   * @returns Updated resource
+   * @throws NotFoundException if resource doesn't exist
+   * @throws ForbiddenException if user doesn't have permission to edit
+   */
+  async update(
+    resourceId: string,
+    userId: string,
+    userRoles: string[],
+    dto: UpdateResourceDto,
+  ) {
+    // Fetch existing resource
+    const resource = await this.prisma.resource.findUnique({
+      where: { id: resourceId },
+    });
+
+    if (!resource) {
+      throw new NotFoundException(`Resource with ID "${resourceId}" not found`);
+    }
+
+    // Authorization check: owner or admin
+    const isOwner = resource.authorId === userId;
+    const isAdmin = userRoles.includes('admin');
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to edit this resource');
+    }
+
+    // Only admins can set isFeatured
+    if (dto.isFeatured !== undefined && !isAdmin) {
+      throw new ForbiddenException('Only admins can feature resources');
+    }
+
+    // Validate category exists (if being updated)
+    if (dto.categoryId) {
+      const category = await this.prisma.resourceCategory.findUnique({
+        where: { id: dto.categoryId },
+      });
+
+      if (!category) {
+        throw new BadRequestException(`Category with ID "${dto.categoryId}" does not exist`);
+      }
+    }
+
+    // Validate tags exist (if being updated)
+    if (dto.tagIds && dto.tagIds.length > 0) {
+      const tags = await this.prisma.resourceTag.findMany({
+        where: { id: { in: dto.tagIds } },
+      });
+
+      if (tags.length !== dto.tagIds.length) {
+        throw new BadRequestException('One or more tag IDs are invalid');
+      }
+    }
+
+    // Validate meditation program exists (if being updated)
+    if (dto.meditationProgramId) {
+      const program = await this.prisma.meditationProgram.findUnique({
+        where: { id: dto.meditationProgramId },
+      });
+
+      if (!program) {
+        throw new BadRequestException(`Meditation program with ID "${dto.meditationProgramId}" does not exist`);
+      }
+    }
+
+    // Handle tag updates (replace existing tags)
+    const { tagIds, ...resourceData } = dto;
+
+    return this.prisma.resource.update({
+      where: { id: resourceId },
+      data: {
+        ...resourceData,
+        tags: tagIds
+          ? {
+              // Delete existing tags and create new ones
+              deleteMany: {},
+              create: tagIds.map((tagId: string) => ({
+                tag: { connect: { id: tagId } },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        tags: {
+          include: { tag: true },
+        },
+        author: {
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Delete a resource
+   *
+   * @param resourceId - Resource UUID
+   * @param userId - Current user ID (from JWT)
+   * @param userRoles - Current user roles (from JWT)
+   * @throws NotFoundException if resource doesn't exist
+   * @throws ForbiddenException if user doesn't have permission to delete
+   */
+  async delete(resourceId: string, userId: string, userRoles: string[]) {
+    // Fetch existing resource
+    const resource = await this.prisma.resource.findUnique({
+      where: { id: resourceId },
+    });
+
+    if (!resource) {
+      throw new NotFoundException(`Resource with ID "${resourceId}" not found`);
+    }
+
+    // Authorization check: owner or admin
+    const isOwner = resource.authorId === userId;
+    const isAdmin = userRoles.includes('admin');
+    const isCoach = userRoles.includes('coach');
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to delete this resource');
+    }
+
+    // Coaches cannot delete resources linked to meditation programs (only admins can)
+    if (isCoach && !isAdmin && resource.meditationProgramId) {
+      throw new ForbiddenException(
+        'Cannot delete resources linked to meditation programs. Contact an admin.',
+      );
+    }
+
+    // Delete resource (tags will be cascade deleted automatically via database constraint)
+    await this.prisma.resource.delete({
+      where: { id: resourceId },
+    });
+  }
+
+  /**
+   * Get all resources created by a specific author
+   * Used for coach dashboard to show "my resources"
+   *
+   * @param authorId - Author user ID
+   * @returns List of resources by this author
+   */
+  async findByAuthor(authorId: string) {
+    return this.prisma.resource.findMany({
+      where: { authorId },
+      include: {
+        category: true,
+        tags: {
+          include: { tag: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Get all tags (for form dropdowns)
+   *
+   * @returns List of all resource tags
+   */
+  async findAllTags() {
+    return this.prisma.resourceTag.findMany({
+      orderBy: { name: 'asc' },
+    });
   }
 }

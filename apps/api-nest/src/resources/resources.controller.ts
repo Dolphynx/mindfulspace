@@ -1,7 +1,10 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, HttpCode, HttpStatus } from "@nestjs/common";
 import { ResourcesService } from "./resources.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
+import { CreateResourceDto } from "./dto/create-resource.dto";
+import { UpdateResourceDto } from "./dto/update-resource.dto";
 import { Public } from "../auth/decorators/public.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CurrentUserType } from "@mindfulspace/api/auth/types/current-user.type";
 
@@ -98,5 +101,89 @@ export class ResourcesController {
   ) {
     // return this.resourcesService.findOneBySlug(slug);
     return this.resourcesService.findOneBySlugForUser(slug, user);
+  }
+
+  /**
+   * Get all tags (for form dropdowns)
+   *
+   * @returns List of all resource tags
+   */
+  @Public()
+  @Get('tags/all')
+  findAllTags() {
+    return this.resourcesService.findAllTags();
+  }
+
+  /**
+   * Create a new resource
+   * Only coaches and admins can create resources
+   * Author is automatically set from JWT token
+   *
+   * @param userId - User ID from JWT
+   * @param dto - Resource data
+   * @returns Created resource
+   */
+  @Post()
+  @Roles('coach', 'admin')
+  create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateResourceDto,
+  ) {
+    return this.resourcesService.create(userId, dto);
+  }
+
+  /**
+   * Update an existing resource
+   * Owners can update their own resources, admins can update any resource
+   * Only admins can set isFeatured flag
+   *
+   * @param resourceId - Resource UUID
+   * @param userId - Current user ID from JWT
+   * @param userRoles - Current user roles from JWT
+   * @param dto - Updated resource data
+   * @returns Updated resource
+   */
+  @Put(':id')
+  @Roles('coach', 'admin')
+  update(
+    @Param('id') resourceId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('roles') userRoles: string[],
+    @Body() dto: UpdateResourceDto,
+  ) {
+    return this.resourcesService.update(resourceId, userId, userRoles, dto);
+  }
+
+  /**
+   * Delete a resource
+   * Owners can delete their own resources, admins can delete any resource
+   * Coaches cannot delete resources linked to meditation programs
+   *
+   * @param resourceId - Resource UUID
+   * @param userId - Current user ID from JWT
+   * @param userRoles - Current user roles from JWT
+   */
+  @Delete(':id')
+  @Roles('coach', 'admin')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteResource(
+    @Param('id') resourceId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('roles') userRoles: string[],
+  ) {
+    await this.resourcesService.delete(resourceId, userId, userRoles);
+  }
+
+  /**
+   * Get all resources created by the current user
+   * Used for coach dashboard to show "my resources"
+   *
+   * @param userId - Current user ID from JWT
+   * @returns List of user's resources
+   */
+  @Get('my-resources/list')
+  @Roles('coach', 'admin')
+  findMyResources(@CurrentUser('id') userId: string) {
+    return this.resourcesService.findByAuthor(userId);
   }
 }

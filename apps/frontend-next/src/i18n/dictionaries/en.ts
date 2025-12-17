@@ -51,10 +51,24 @@ const en = {
 
     navbarCoach: {
         emptyPlaceholder: "Coach menu",
+        resources: "My resources",
+        backToApp: "Back to app",
     },
 
     navbarAdmin: {
         emptyPlaceholder: "Admin menu",
+        resources: "Resource management",
+        sessions: "Meditation sessions",
+        backToApp: "Back to app",
+    },
+
+    adminDashboard: {
+        tabs: {
+            dashboard: "Dashboard",
+            resources: "Resources",
+            sessions: "Sessions",
+        },
+        backToApp: "Back to App",
     },
 
     /*
@@ -125,7 +139,7 @@ const en = {
 
         section3Title: "3. Your consent",
         section3Text:
-            "On your first visit, a banner allows you to accept or refuse non-essential cookies. You can modify your choice at any time via the “Cookie preferences” link at the bottom of the page.",
+            "On your first visit, a banner allows you to accept or refuse non-essential cookies. You can modify your choice at any time via the \"Cookie preferences\" link at the bottom of the page.",
 
         section4Title: "4. Personal data",
         section4Text:
@@ -251,6 +265,8 @@ const en = {
         lockedPremiumResource: "Premium resource reserved for premium members",
         lockedPremiumTooltip: "Become a premium member to access this content",
         readTimeSuffix: "min",
+        manageMyResources: "Manage my resources",
+        viewAllResources: "View all resources",
     },
 
     breathingSession: {
@@ -623,7 +639,7 @@ const en = {
             "We use essential cookies to make the site work. With your consent, we also use cookies to analyse usage and personalise your experience.",
         acceptAll: "OK for me",
         choose: "Let me choose",
-        hint: "You can change your choices at any time in “Cookies”.",
+        hint: "You can change your choices at any time in \"Cookies\".",
     },
 
     cookieModal: {
@@ -881,7 +897,7 @@ const en = {
             },
             five: {
                 title: "5 meditation sessions completed",
-                description: "You’ve completed 5 sessions. Keep going!",
+                description: "You've completed 5 sessions. Keep going!",
             },
             streak3: {
                 title: "3-day meditation streak",
@@ -910,6 +926,160 @@ const en = {
             },
         },
     },
+
+    /*
+     * Resources Management
+     */
+    resourcesManagement: {
+        title: "Resources Management",
+        myResources: "My Resources",
+        allResources: "All Resources",
+        createResource: "Create Resource",
+        editResource: "Edit Resource",
+        deleteResource: "Delete Resource",
+
+        // List view
+        noResources: "No resources",
+        noResourcesDescription: "You haven't created any resources yet.",
+        searchPlaceholder: "Search resources...",
+        filterByCategory: "Filter by category",
+        allCategories: "All categories",
+
+        // Resource types
+        types: {
+            ARTICLE: "Article",
+            VIDEO: "Video",
+            GUIDE: "Guide",
+            MEDITATION_PROGRAM: "Meditation Program",
+            EXERCICE_PROGRAM: "Exercise Program",
+        },
+
+        // Form labels
+        form: {
+            title: "Title",
+            titlePlaceholder: "Resource title",
+            titleHelper: "The title will appear in the resources list",
+
+            slug: "Slug (URL)",
+            slugPlaceholder: "resource-title",
+            slugHelper: "URL-friendly identifier (lowercase letters, numbers, and hyphens only)",
+            generateSlug: "Generate automatically",
+
+            summary: "Summary",
+            summaryPlaceholder: "Short description of the resource",
+            summaryHelper: "Appears in resource cards (max 500 characters)",
+
+            content: "Content",
+            contentPlaceholder: "Full content of the resource (Markdown supported)",
+            contentHelper: "The full content of your resource",
+
+            type: "Resource Type",
+            typeHelper: "Choose the content type",
+
+            category: "Category",
+            categoryHelper: "Main category of the resource",
+            selectCategory: "Select a category",
+
+            tags: "Tags",
+            tagsHelper: "Select relevant tags (optional)",
+            selectTags: "Select tags",
+
+            isPremium: "Premium content",
+            isPremiumHelper: "Reserve for premium users",
+
+            isFeatured: "Featured",
+            isFeaturedHelper: "Display on the homepage (admin only)",
+
+            authorName: "Author Name",
+            authorNamePlaceholder: "Dr. Sarah Johnson",
+            authorNameHelper: "Name displayed as author (optional)",
+
+            readTimeMin: "Reading time (min)",
+            readTimeMinPlaceholder: "8",
+            readTimeMinHelper: "Estimated reading time in minutes",
+            calculateReadTime: "Calculate automatically",
+
+            externalUrl: "External URL",
+            externalUrlPlaceholder: "https://youtu.be/...",
+            externalUrlHelper: "Link to a YouTube video or external article (optional)",
+
+            meditationProgram: "Meditation Program",
+            meditationProgramHelper: "Link to an existing meditation program (optional)",
+            selectProgram: "Select a program",
+        },
+
+        // Actions
+        actions: {
+            save: "Save",
+            cancel: "Cancel",
+            edit: "Edit",
+            delete: "Delete",
+            create: "Create",
+            back: "Back",
+            viewPublic: "View public version",
+        },
+
+        // Success messages
+        success: {
+            created: "Resource created successfully",
+            updated: "Resource updated successfully",
+            deleted: "Resource deleted successfully",
+        },
+
+        // Error messages
+        errors: {
+            loadFailed: "Error loading resources",
+            createFailed: "Error creating resource",
+            updateFailed: "Error updating resource",
+            deleteFailed: "Error deleting resource",
+            notFound: "Resource not found",
+            unauthorized: "You don't have permission to edit this resource",
+            slugExists: "This slug is already in use",
+            invalidSlug: "Slug must contain only lowercase letters, numbers, and hyphens",
+            requiredField: "This field is required",
+            minLength: "Too short",
+            maxLength: "Too long",
+            invalidUrl: "Invalid URL",
+        },
+
+        // Delete confirmation
+        deleteConfirm: {
+            title: "Delete resource?",
+            message: "Are you sure you want to delete this resource? This action is irreversible.",
+            warningLinked: "Warning: This resource is linked to a meditation program. Only administrators can delete it.",
+            confirm: "Yes, delete",
+            cancel: "No, cancel",
+        },
+
+        // Resource card
+        card: {
+            premium: "Premium",
+            featured: "Featured",
+            readTime: "{{minutes}} min read",
+            author: "By {{author}}",
+            createdAt: "Created on {{date}}",
+            updatedAt: "Updated on {{date}}",
+            views: "{{count}} view",
+            views_plural: "{{count}} views",
+        },
+
+        // Filters
+        filters: {
+            all: "All",
+            premium: "Premium only",
+            free: "Free only",
+            featured: "Featured",
+            myResources: "My resources",
+        },
+
+        // Stats
+        stats: {
+            total: "Total",
+            premium: "Premium",
+            free: "Free",
+            featured: "Featured",
+        },
+    }
 
 
 };

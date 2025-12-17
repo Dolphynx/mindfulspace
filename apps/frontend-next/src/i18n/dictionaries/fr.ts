@@ -9,7 +9,7 @@ const fr = {
     metadataLayout: {
         defaultTitle: "MindfulSpace – Prends soin de ton esprit",
         description:
-            "MindfulSpace t’aide à suivre ton bien-être (sommeil, respiration, méditation) et à développer une routine plus apaisée. Projet étudiant HELMo.",
+            "MindfulSpace t'aide à suivre ton bien-être (sommeil, respiration, méditation) et à développer une routine plus apaisée. Projet étudiant HELMo.",
     },
 
     /*
@@ -51,10 +51,24 @@ const fr = {
 
     navbarCoach: {
         emptyPlaceholder: "Menu coach",
+        resources: "Mes ressources",
+        backToApp: "Retour à l'app",
     },
 
     navbarAdmin: {
         emptyPlaceholder: "Menu admin",
+        resources: "Gestion des ressources",
+        sessions: "Sessions de méditation",
+        backToApp: "Retour à l'app",
+    },
+
+    adminDashboard: {
+        tabs: {
+            dashboard: "Tableau de bord",
+            resources: "Ressources",
+            sessions: "Sessions",
+        },
+        backToApp: "Retour à l'app",
     },
 
     /*
@@ -110,25 +124,25 @@ const fr = {
         intro:
             "Cette page décrit comment MindfulSpace utilise les cookies et technologies similaires sur cette application. Ce projet est réalisé dans un cadre académique fictif et ne collecte aucune donnée à des fins commerciales.",
 
-        section1Title: "1. Qu’est-ce qu’un cookie ?",
+        section1Title: "1. Qu'est-ce qu'un cookie ?",
         section1Text:
-            "Un cookie est un petit fichier texte enregistré sur votre appareil lors de la consultation d’un site web. Il permet à un site de reconnaître votre navigateur ou de mémoriser certaines informations.",
+            "Un cookie est un petit fichier texte enregistré sur votre appareil lors de la consultation d'un site web. Il permet à un site de reconnaître votre navigateur ou de mémoriser certaines informations.",
 
         section2Title: "2. Types de cookies utilisés",
         section2EssentialTitle: "Essentiels :",
         section2EssentialDesc: "nécessaires au bon fonctionnement du site (ex. mémorisation du consentement).",
         section2AnalyticsTitle: "Analytiques :",
-        section2AnalyticsDesc: "permettent d’améliorer l’expérience utilisateur via des statistiques anonymisées. Ces cookies sont désactivés par défaut.",
+        section2AnalyticsDesc: "permettent d'améliorer l'expérience utilisateur via des statistiques anonymisées. Ces cookies sont désactivés par défaut.",
         section2PersonalizationTitle: "Personnalisation :",
         section2PersonalizationDesc: "adaptent le contenu affiché. Désactivés par défaut.",
 
         section3Title: "3. Votre consentement",
         section3Text:
-            "Lors de votre première visite, une bannière vous permet d’accepter ou de refuser les cookies non essentiels. Vous pouvez modifier ce choix à tout moment via le lien “Préférences cookies” en bas de page.",
+            "Lors de votre première visite, une bannière vous permet d'accepter ou de refuser les cookies non essentiels. Vous pouvez modifier ce choix à tout moment via le lien \"Préférences cookies\" en bas de page.",
 
         section4Title: "4. Données personnelles",
         section4Text:
-            "MindfulSpace ne collecte, ne conserve ni ne partage aucune donnée personnelle. Les informations affichées dans l’application sont entièrement fictives et ne sont pas transmises à des tiers.",
+            "MindfulSpace ne collecte, ne conserve ni ne partage aucune donnée personnelle. Les informations affichées dans l'application sont entièrement fictives et ne sont pas transmises à des tiers.",
 
         section5Title: "5. Contact",
         section5Text: "Pour toute question concernant cette politique, vous pouvez nous écrire à :",
@@ -140,10 +154,10 @@ const fr = {
 
         card1Title: "Impossible de joindre le serveur",
         card1Intro:
-            "MindfulSpace n’arrive pas à se connecter. Cela peut être dû à une coupure de votre connexion internet ou à un problème réseau temporaire.",
+            "MindfulSpace n'arrive pas à se connecter. Cela peut être dû à une coupure de votre connexion internet ou à un problème réseau temporaire.",
         card1Item1: "Vérifiez que votre Wi-Fi ou vos données mobiles sont activés.",
         card1Item2:
-            "Si possible, rapprochez-vous de votre routeur ou d’une zone de meilleure couverture.",
+            "Si possible, rapprochez-vous de votre routeur ou d'une zone de meilleure couverture.",
         card1Item3: "Essayez de recharger la page une fois la connexion rétablie.",
         card1Note:
             "Si vous aviez déjà ouvert certaines pages, elles peuvent encore être visibles même hors connexion.",
@@ -164,7 +178,7 @@ const fr = {
         why2Title: "Développer sa pratique",
         why2Text: "Élargir son impact et proposer un accompagnement structuré grâce à nos outils.",
         why3Title: "Faire une différence",
-        why3Text: "Aider les autres à atteindre leurs objectifs de santé mentale et d’équilibre.",
+        why3Text: "Aider les autres à atteindre leurs objectifs de santé mentale et d'équilibre.",
         why4Title: "Gagner en reconnaissance",
         why4Text: "Obtenir une certification et renforcer sa crédibilité professionnelle.",
 
@@ -175,13 +189,13 @@ const fr = {
         program1Duration: "4 semaines",
         program1Item1: "Principes du coaching",
         program1Item2: "Compétences en communication",
-        program1Item3: "Techniques de définition d’objectifs",
+        program1Item3: "Techniques de définition d'objectifs",
 
         program2Title: "Nutrition & Hygiène de vie",
         program2Duration: "3 semaines",
         program2Item1: "Bases de la nutrition",
         program2Item2: "Interventions liées au mode de vie",
-        program2Item3: "Construction d’habitudes durables",
+        program2Item3: "Construction d'habitudes durables",
 
         program3Title: "Santé mentale & Pleine conscience",
         program3Duration: "3 semaines",
@@ -228,13 +242,13 @@ const fr = {
         ctaTitle: "Prêt à commencer votre parcours ?",
         ctaSubtitle:
             "Rejoignez les coachs certifiés MindfulSpace et faites une réelle différence dans la vie des autres.",
-        ctaButtonPrimary: "S’inscrire maintenant",
+        ctaButtonPrimary: "S'inscrire maintenant",
         ctaButtonSecondary: "En savoir plus",
     },
 
     resourcesPage: {
         heroTitle: "Ressources",
-        heroSubtitle: "Explore notre collection d’articles et de guides autour du bien-être.",
+        heroSubtitle: "Explore notre collection d'articles et de guides autour du bien-être.",
 
         searchLabel: "Rechercher une ressource",
         searchPlaceholder: "Tape un mot-clé (méditation, sommeil, stress...)",
@@ -250,6 +264,8 @@ const fr = {
         lockedPremiumResource: "Ressource premium réservée aux membres premium",
         lockedPremiumTooltip: "Devenez membre premium pour accéder à ce contenu",
         readTimeSuffix: "min",
+        manageMyResources: "Gestion de mes ressources",
+        viewAllResources: "Voir toutes les ressources",
     },
     breathingSession: {
         title: "Respiration guidée",
@@ -310,7 +326,7 @@ const fr = {
 
         // Historique
         history_title: "Vos dernières nuits",
-        history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
+        history_placeholder: "L'historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
         history_nights: "nuits",
         last7_empty: "Aucune donnée enregistrée sur les 7 derniers jours.",
         history_average: "heures en moyenne"
@@ -318,13 +334,13 @@ const fr = {
 
     domainExercice: {
         title: "Exercice",
-        subtitle: "Suivez et enregistrez vos séances d’exercice.",
+        subtitle: "Suivez et enregistrez vos séances d'exercice.",
 
         // Encodage manuel
         manualForm_title: "Encoder une séance passée",
-        manualForm_description: "Indiquez la date, le type d’exercice et le nombre de répétitions.",
+        manualForm_description: "Indiquez la date, le type d'exercice et le nombre de répétitions.",
         manualForm_dateLabel: "Date de la séance",
-        manualForm_typeLabel: "Type d’exercice",
+        manualForm_typeLabel: "Type d'exercice",
         manualForm_repetitionsLabel: "Nombre de répétitions",
         manualForm_qualityLabel: "Qualité / effort ressenti",
         manualForm_saveButton: "Enregistrer la séance",
@@ -334,20 +350,20 @@ const fr = {
         manualForm_button: "Encoder une session",
 
         // Lancer une séance guidée
-        start_title: "Lancer une séance d’exercice",
+        start_title: "Lancer une séance d'exercice",
         start_button: "Commencer exercice",
         start_description: "Choisissez un exercice et laissez-vous guider pas à pas.",
-        start_placeholder: "Le démarrage guidé d’une séance d’exercice sera bientôt disponible.",
+        start_placeholder: "Le démarrage guidé d'une séance d'exercice sera bientôt disponible.",
         start_nextButton: "Suivant",
         start_prevButton: "Précédent",
         start_finishButton: "Terminé",
 
         // Historique
-        history_title: "Vos dernières séances d’exercice",
+        history_title: "Vos dernières séances d'exercice",
         history_placeholder: "Votre historique apparaîtra ici dès que vous aurez enregistré des séances.",
 
         // Workout Programs
-        program_start_title: "S'abonner à un programme d’exercice",
+        program_start_title: "S'abonner à un programme d'exercice",
         program_start_description: "Découvrez des programmes guidés pour rester régulier.",
         program_start_button: "Voir les programmes disponibles",
 
@@ -406,7 +422,7 @@ const fr = {
 
         // --- Wizard: humeur après ---
         wizard_stepMoodAfter_title: "Comment te sens-tu après cette séance ?",
-        wizard_saveError: "Une erreur est survenue lors de l’enregistrement de ta séance.",
+        wizard_saveError: "Une erreur est survenue lors de l'enregistrement de ta séance.",
         wizard_saving: "Enregistrement…",
         wizard_save: "Enregistrer ma séance",
 
@@ -532,10 +548,10 @@ const fr = {
         errorGeneric: "Impossible de charger cette ressource pour le moment.",
         errorNetwork: "Problème de connexion réseau. Veuillez réessayer plus tard.",
         notFoundTitle: "Ressource introuvable",
-        notFoundText: "Cette ressource n’existe pas ou n’est plus disponible.",
+        notFoundText: "Cette ressource n'existe pas ou n'est plus disponible.",
         readTimeSuffix: "min de lecture",
         premiumBadge: "Premium",
-        noContent: "Le contenu de cette ressource n’est pas encore disponible.",
+        noContent: "Le contenu de cette ressource n'est pas encore disponible.",
         forbiddenTitle: "Accès réservé",
         forbiddenText: "Cette ressource est réservée aux membres premium. Connectez-vous avec un compte premium pour y accéder.",
         backToListCTA: "Retour à la liste des ressources"
@@ -544,34 +560,34 @@ const fr = {
     notFoundPage: {
         heroTitle: "Page introuvable",
         heroSubtitle: "On dirait que cette page a décidé de méditer ailleurs.",
-        heading: "Cette page semble s’être perdue en chemin.",
+        heading: "Cette page semble s'être perdue en chemin.",
         bodyIntro:
-            "L’adresse que vous avez saisie ne correspond à aucune page MindfulSpace. Le lien peut être erroné ou la page avoir été déplacée.",
+            "L'adresse que vous avez saisie ne correspond à aucune page MindfulSpace. Le lien peut être erroné ou la page avoir été déplacée.",
         bodyBack:
-            "Vous pouvez revenir à un espace familier en retournant à l’accueil.",
-        backHome: "⬅ Retour à l’accueil",
-        secondTitle: "Besoin d’un repère ?",
+            "Vous pouvez revenir à un espace familier en retournant à l'accueil.",
+        backHome: "⬅ Retour à l'accueil",
+        secondTitle: "Besoin d'un repère ?",
         secondText:
             "Prenez une respiration, puis utilisez le menu principal pour retrouver votre tableau de bord, vos séances ou vos objectifs.",
     },
 
     errorPage: {
         heroTitle: "Un imprévu est survenu",
-        heroSubtitle: "Même MindfulSpace a parfois besoin d’un moment pour souffler.",
-        heading: "Une petite turbulence technique s’est invitée.",
+        heroSubtitle: "Même MindfulSpace a parfois besoin d'un moment pour souffler.",
+        heading: "Une petite turbulence technique s'est invitée.",
         body:
-            "Une erreur s’est produite pendant le chargement de cette page. Vous pouvez essayer de réessayer ou revenir à l’accueil de MindfulSpace.",
+            "Une erreur s'est produite pendant le chargement de cette page. Vous pouvez essayer de réessayer ou revenir à l'accueil de MindfulSpace.",
         retry: "Réessayer",
-        backHome: "⬅ Retour à l’accueil",
+        backHome: "⬅ Retour à l'accueil",
         secondTitle: "Rappel important",
         secondText:
-            "MindfulSpace reste un projet académique fictif. Ne l’utilisez pas pour des situations d’urgence ou des besoins médicaux.",
+            "MindfulSpace reste un projet académique fictif. Ne l'utilisez pas pour des situations d'urgence ou des besoins médicaux.",
     },
 
     adminHome: {
         title: "Espace administrateur",
         subtitle: "Section réservée à la gestion et au suivi du projet MindfulSpace.",
-        placeholder: "Zone à implémenter : ajoutez ici les écrans d’administration (utilisateurs, contenus, paramètres…).",
+        placeholder: "Zone à implémenter : ajoutez ici les écrans d'administration (utilisateurs, contenus, paramètres…).",
     },
 
     coachHome: {
@@ -619,7 +635,7 @@ const fr = {
     cookieBanner: {
         title: "Cookies & bien-être 🍪",
         description:
-            "On utilise des cookies essentiels pour faire fonctionner le site. Avec ton accord, on utilise aussi des cookies pour analyser l’usage et personnaliser ton expérience.",
+            "On utilise des cookies essentiels pour faire fonctionner le site. Avec ton accord, on utilise aussi des cookies pour analyser l'usage et personnaliser ton expérience.",
         acceptAll: "OK pour moi",
         choose: "Je choisis",
         hint: "Tu peux modifier tes choix à tout moment dans « Cookies ».",
@@ -630,7 +646,7 @@ const fr = {
 
         analyticsTitle: "Cookies analytiques",
         analyticsDescription:
-            "Nous aident à comprendre comment l’application est utilisée.",
+            "Nous aident à comprendre comment l'application est utilisée.",
 
         personalizationTitle: "Personnalisation",
         personalizationDescription:
@@ -638,7 +654,7 @@ const fr = {
 
         essentialTitle: "Cookies essentiels",
         essentialDescription:
-            "Nécessaires au fonctionnement de l’application.",
+            "Nécessaires au fonctionnement de l'application.",
 
         cancel: "Annuler",
         save: "Enregistrer",
@@ -886,8 +902,8 @@ const fr = {
 
         exercice: {
             first: {
-                title: "Première séance d’exercice",
-                description: "Tu as enregistré ta première séance d’exercice.",
+                title: "Première séance d'exercice",
+                description: "Tu as enregistré ta première séance d'exercice.",
             },
         },
 
@@ -903,6 +919,160 @@ const fr = {
                 title: "Première session MindfulSpace",
                 description: "Bienvenue ! Tu as commencé à utiliser MindfulSpace.",
             },
+        },
+    },
+
+    /*
+     * Resources Management
+     */
+    resourcesManagement: {
+        title: "Gestion des ressources",
+        myResources: "Mes ressources",
+        allResources: "Toutes les ressources",
+        createResource: "Créer une ressource",
+        editResource: "Modifier la ressource",
+        deleteResource: "Supprimer la ressource",
+
+        // List view
+        noResources: "Aucune ressource",
+        noResourcesDescription: "Vous n'avez pas encore créé de ressources.",
+        searchPlaceholder: "Rechercher des ressources...",
+        filterByCategory: "Filtrer par catégorie",
+        allCategories: "Toutes les catégories",
+
+        // Resource types
+        types: {
+            ARTICLE: "Article",
+            VIDEO: "Vidéo",
+            GUIDE: "Guide",
+            MEDITATION_PROGRAM: "Programme de méditation",
+            EXERCICE_PROGRAM: "Programme d'exercice",
+        },
+
+        // Form labels
+        form: {
+            title: "Titre",
+            titlePlaceholder: "Titre de la ressource",
+            titleHelper: "Le titre apparaîtra dans la liste des ressources",
+
+            slug: "Slug (URL)",
+            slugPlaceholder: "titre-de-la-ressource",
+            slugHelper: "URL conviviale (lettres minuscules, chiffres et tirets uniquement)",
+            generateSlug: "Générer automatiquement",
+
+            summary: "Résumé",
+            summaryPlaceholder: "Courte description de la ressource",
+            summaryHelper: "Apparaît dans les cartes de ressources (max 500 caractères)",
+
+            content: "Contenu",
+            contentPlaceholder: "Contenu complet de la ressource (Markdown supporté)",
+            contentHelper: "Le contenu complet de votre ressource",
+
+            type: "Type de ressource",
+            typeHelper: "Choisissez le type de contenu",
+
+            category: "Catégorie",
+            categoryHelper: "Catégorie principale de la ressource",
+            selectCategory: "Sélectionner une catégorie",
+
+            tags: "Tags",
+            tagsHelper: "Sélectionnez des tags pertinents (optionnel)",
+            selectTags: "Sélectionner des tags",
+
+            isPremium: "Contenu premium",
+            isPremiumHelper: "Réserver aux utilisateurs premium",
+
+            isFeatured: "Mis en avant",
+            isFeaturedHelper: "Afficher sur la page d'accueil (admin uniquement)",
+
+            authorName: "Nom de l'auteur",
+            authorNamePlaceholder: "Dr. Sarah Johnson",
+            authorNameHelper: "Nom affiché comme auteur (optionnel)",
+
+            readTimeMin: "Temps de lecture (min)",
+            readTimeMinPlaceholder: "8",
+            readTimeMinHelper: "Estimation du temps de lecture en minutes",
+            calculateReadTime: "Calculer automatiquement",
+
+            externalUrl: "URL externe",
+            externalUrlPlaceholder: "https://youtu.be/...",
+            externalUrlHelper: "Lien vers une vidéo YouTube ou un article externe (optionnel)",
+
+            meditationProgram: "Programme de méditation",
+            meditationProgramHelper: "Lier à un programme de méditation existant (optionnel)",
+            selectProgram: "Sélectionner un programme",
+        },
+
+        // Actions
+        actions: {
+            save: "Enregistrer",
+            cancel: "Annuler",
+            edit: "Modifier",
+            delete: "Supprimer",
+            create: "Créer",
+            back: "Retour",
+            viewPublic: "Voir la version publique",
+        },
+
+        // Success messages
+        success: {
+            created: "Ressource créée avec succès",
+            updated: "Ressource mise à jour avec succès",
+            deleted: "Ressource supprimée avec succès",
+        },
+
+        // Error messages
+        errors: {
+            loadFailed: "Erreur lors du chargement des ressources",
+            createFailed: "Erreur lors de la création de la ressource",
+            updateFailed: "Erreur lors de la mise à jour de la ressource",
+            deleteFailed: "Erreur lors de la suppression de la ressource",
+            notFound: "Ressource introuvable",
+            unauthorized: "Vous n'avez pas la permission de modifier cette ressource",
+            slugExists: "Ce slug est déjà utilisé",
+            invalidSlug: "Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets",
+            requiredField: "Ce champ est requis",
+            minLength: "Trop court",
+            maxLength: "Trop long",
+            invalidUrl: "URL invalide",
+        },
+
+        // Delete confirmation
+        deleteConfirm: {
+            title: "Supprimer la ressource ?",
+            message: "Êtes-vous sûr de vouloir supprimer cette ressource ? Cette action est irréversible.",
+            warningLinked: "Attention : Cette ressource est liée à un programme de méditation. Seuls les administrateurs peuvent la supprimer.",
+            confirm: "Oui, supprimer",
+            cancel: "Non, annuler",
+        },
+
+        // Resource card
+        card: {
+            premium: "Premium",
+            featured: "Mis en avant",
+            readTime: "{{minutes}} min de lecture",
+            author: "Par {{author}}",
+            createdAt: "Créé le {{date}}",
+            updatedAt: "Mis à jour le {{date}}",
+            views: "{{count}} vue",
+            views_plural: "{{count}} vues",
+        },
+
+        // Filters
+        filters: {
+            all: "Toutes",
+            premium: "Premium uniquement",
+            free: "Gratuites uniquement",
+            featured: "Mises en avant",
+            myResources: "Mes ressources",
+        },
+
+        // Stats
+        stats: {
+            total: "Total",
+            premium: "Premium",
+            free: "Gratuites",
+            featured: "Mises en avant",
         },
     }
 

@@ -95,6 +95,17 @@ export default function UserMenu() {
             >
               {t('profileSettings')}
             </Link>
+
+            {/* Admin Panel Link */}
+            {user.roles.includes('admin') && (
+              <Link
+                href={`/${locale}/admin`}
+                className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
+                onClick={() => setIsOpen(false)}
+              >
+                ⚙️ Admin Panel
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-brandBorder py-1">
