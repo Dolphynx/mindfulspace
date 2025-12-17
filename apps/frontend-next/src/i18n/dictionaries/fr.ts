@@ -340,7 +340,8 @@ const fr = {
         manualForm_title: "Encoder une séance passée",
         manualForm_description: "Indiquez la date, le type d'exercice et le nombre de répétitions.",
         manualForm_dateLabel: "Date de la séance",
-        manualForm_typeLabel: "Type d'exercice",
+        manualForm_typeLabel: "Type d’exercice",
+        manualForm_typePlaceholder: "Choisis un exercice",
         manualForm_repetitionsLabel: "Nombre de répétitions",
         manualForm_qualityLabel: "Qualité / effort ressenti",
         manualForm_saveButton: "Enregistrer la séance",
@@ -898,6 +899,10 @@ const fr = {
                 title: "5 séances de méditation complétées",
                 description: "Tu as complété 5 séances. Continue comme ça !",
             },
+            streak3: {
+                title: "3-jour de meditation",
+                description: "Tu as médité 3 jours d'affilée !",
+            },
         },
 
         exercice: {
@@ -1076,6 +1081,7 @@ const fr = {
         },
     }
 
-};
+}; // optionnel, juste pour garder un "shape"
 
+export type Messages = typeof fr;
 export default fr;

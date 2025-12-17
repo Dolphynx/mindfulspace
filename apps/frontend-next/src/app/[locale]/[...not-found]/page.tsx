@@ -3,7 +3,8 @@
  * ----------------------
  * Cette page attrape toutes les routes inconnues sous `/[locale]/*`.
  *
- * IMPORTANT (Next TS):
+ * IMPORTANT (Next):
+ * - Dans les routes dynamiques, `params` peut être une Promise → il faut l'await.
  * - Une page Next (`page.tsx`) ne peut accepter que `{ params, searchParams }`.
  * - On calcule la locale ici, puis on la passe à un composant client.
  * - Next.js 15+ requires params to be awaited

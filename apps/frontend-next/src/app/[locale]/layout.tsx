@@ -63,7 +63,7 @@ export default async function RootLayout({
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
         <ServiceWorkerRegister />
-        <TranslationProvider locale={locale} messages={messages}>
+        <TranslationProvider locale={locale} dictionary={messages}>
             <AuthProvider>
                 {children}
             </AuthProvider>
