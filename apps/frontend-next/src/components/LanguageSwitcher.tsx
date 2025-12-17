@@ -15,7 +15,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+import { locales, isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
 const LOCALE_COOKIE = "locale";
 
@@ -63,9 +63,10 @@ export default function LanguageSwitcher() {
      * Locales disponibles dans le switcher.
      *
      * @remarks
-     * Idéalement, cette liste doit rester alignée avec la configuration i18n globale.
+     * Cette liste est alignée avec la configuration i18n globale.
      */
-    const LOCALES: Locale[] = ["fr", "en"];
+    //const LOCALES: Locale[] = ["fr", "en"];
+    const LOCALES: readonly Locale[] = locales;
 
     /**
      * Bascule de langue en conservant la route actuelle.
@@ -76,6 +77,7 @@ export default function LanguageSwitcher() {
      * - Si la locale demandée est identique à la locale courante, ne fait rien.
      * - Stocke la préférence dans un cookie essentiel.
      * - Reconstruit le chemin en remplaçant uniquement le segment de locale.
+     * - Si un jour il y a des routes sans /locale/ => le chemin sera incorrect !!!
      */
     function handleSwitch(nextLocale: Locale) {
         if (nextLocale === currentLocale) return;
