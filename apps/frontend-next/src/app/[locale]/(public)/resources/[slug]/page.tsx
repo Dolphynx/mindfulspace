@@ -96,6 +96,7 @@ export default function ResourceDetailPage() {
     const [error, setError] = useState<string | null>(null);
     const [isForbidden, setIsForbidden] = useState(false);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         // Si pas de slug (string vide), on ne lance rien
         if (!slug) return;
@@ -164,7 +165,7 @@ export default function ResourceDetailPage() {
         }
 
         loadResource(slug);
-    }, [slug, t]);
+    }, [slug]);
 
     // Titre à afficher dans le hero : soit celui de la ressource, soit une valeur fallback
     const pageTitle =

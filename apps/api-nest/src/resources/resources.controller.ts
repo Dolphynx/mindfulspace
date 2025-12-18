@@ -2,7 +2,8 @@ import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ResourcesService } from "./resources.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
 import { Public } from "../auth/decorators/public.decorator";
-import { Roles } from "../auth/decorators/roles.decorator";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { CurrentUserType } from "@mindfulspace/api/auth/types/current-user.type";
 
 /**
  * Contrôleur responsable de l’exposition des ressources via l’API.
@@ -15,7 +16,8 @@ import { Roles } from "../auth/decorators/roles.decorator";
  * - **GET `/resources/categories`** :
  *   liste des catégories de ressources, avec comptage associé.
  * - **GET `/resources/:slug`** :
- *   récupération des détails d’une ressource individuelle via son slug.
+ *   récupération des détails d’une ressource individuelle via son slug,
+ *   avec gestion des ressources premium (via les rôles utilisateur).
  *
  * Toute la logique métier et l’accès aux données sont délégués au
  * service {@link ResourcesService}.
@@ -24,7 +26,8 @@ import { Roles } from "../auth/decorators/roles.decorator";
  *
  * @remarks Swagger
  * Les décorateurs Swagger (`@ApiTags`, `@ApiOperation`, `@ApiResponse`, …)
- * peuvent être ajoutés directement sur les méthodes si nécessaire.
+ * peuvent être ajoutés directement sur les méthodes si nécessaire
+ * dans ce contrôleur.
  */
 @Controller("resources")
 export class ResourcesController {
@@ -37,6 +40,9 @@ export class ResourcesController {
    * Les filtres supportés sont :
    * - `q` : terme de recherche libre (titre, résumé, tags…),
    * - `categorySlug` : slug de catégorie pour restreindre les résultats.
+   *
+   * Le DTO {@link GetResourcesDto} gère la validation et la
+   * transformation des paramètres de requête.
    *
    * @param query Paramètres de filtrage mappés via {@link GetResourcesDto}.
    * @returns Une liste de ressources correspondant aux critères fournis.
@@ -64,16 +70,33 @@ export class ResourcesController {
   }
 
   /**
-   * Récupère une ressource unique identifiée par son slug.
+   * Récupère une ressource unique identifiée par son slug, en appliquant
+   * les règles d’accès premium selon les rôles de l’utilisateur.
+   *
+   * @remarks
+   * - La route est marquée `@Public()`, ce qui permet un accès anonyme.
+   * - Si la ressource est premium, l’accès n’est autorisé que pour les
+   *   utilisateurs possédant le rôle `premium` ou `admin`.
+   * - La logique de contrôle d’accès est implémentée dans
+   *   {@link ResourcesService.findOneBySlugForUser}.
    *
    * @param slug Identifiant textuel unique de la ressource.
-   * @returns La ressource correspondante si elle existe.
+   * @param user Utilisateur courant (optionnel), injecté via `@CurrentUser()`
+   *             à partir du token JWT lorsqu’il est présent.
+   * @returns La ressource correspondante si elle existe et que l’accès est autorisé.
    *
    * @throws NotFoundException si aucune ressource ne correspond au slug.
+   * @throws ForbiddenException si la ressource est premium et que l’utilisateur
+   *         n’a pas les droits nécessaires.
    */
-  @Roles('premium', 'admin')
+  // @Roles('premium', 'admin')
+  @Public()
   @Get(":slug")
-  findOne(@Param("slug") slug: string) {
-    return this.resourcesService.findOneBySlug(slug);
+  findOne(
+    @Param("slug") slug: string,
+    @CurrentUser() user: CurrentUserType,
+  ) {
+    // return this.resourcesService.findOneBySlug(slug);
+    return this.resourcesService.findOneBySlugForUser(slug, user);
   }
 }

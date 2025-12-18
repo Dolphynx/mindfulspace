@@ -1,0 +1,11 @@
+{
+  "entryPoints": ["apps/api-nest/src"],
+  "entryPointStrategy": "expand",
+  "tsconfig": "apps/api-nest/tsconfig.json",
+  "out": "apps/frontend-next/public/docs/backend",
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts",
+    "apps/api-nest/src/main.ts"
+  ]
+}

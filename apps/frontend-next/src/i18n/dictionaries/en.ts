@@ -1,4 +1,6 @@
-const en = {
+import type { Messages } from "./fr";
+
+const en: Messages = {
     /*
      * Common
      */
@@ -20,11 +22,16 @@ const en = {
         coach: "Become a coach",
         contact: "Contact",
         clientSpace: "Client area",
-
         breathing: "Breathing",
         dashboard: "Dashboard",
         objectives: "Goals",
         becomeCoach: "Become a coach",
+        world: "My world",
+        world2: "My wellness map",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbar: {
@@ -36,6 +43,12 @@ const en = {
         dashboard: "Dashboard",
         objectives: "Goals",
         mobileToggle: "Open menu",
+        world: "My world",
+        world2: "My wellness map",
+        badges: "My badges",
+        meditation: "Meditation",
+        exercise: "Exercises",
+        sleep: "Sleep"
     },
 
     navbarCoach: {
@@ -510,7 +523,9 @@ const en = {
         sleepAlt: "Sleep",
         exerciceAlt: "Exercise",
         meditationAlt: "Meditation",
+        encodeSessionTitle: "Log a session"
     },
+
     resourceDetailPage: {
         heroSubtitle: "Explore this well-being resource",
         backToList: "Back to resources",
@@ -756,38 +771,59 @@ const en = {
     },
 
     badges: {
-        latestBadgesTitle: "Tes derniers badges",
+        latestBadgesTitle: "Your latest badges",
+        viewAllBadgesLink: "See all my badges",
 
-        toastUnlockedTitle: "Nouveau badge débloqué",
-        toastUnlockedSubtitle: "Tu viens de débloquer un badge !",
+        toastUnlockedTitle: "New badge unlocked",
+        toastUnlockedSubtitle: "You just unlocked a badge!",
+
+        allBadgesTitle: "My badges",
+        loading: "Loading…",
+
+        badgesCount: "{count} badges earned",
+        noBadgesYet: "No badges yet.",
+        noBadgesYetLong:
+            "Keep practicing (sleep, meditation, exercise) to unlock new badges.",
+        earnedOnLabel: "Earned on",
+        recentlyEarnedTitle: "Recently earned badges",
 
         meditation: {
             first: {
                 title: "First meditation session",
+                description: "You completed your very first meditation session.",
             },
             five: {
                 title: "5 meditation sessions completed",
+                description: "You’ve completed 5 sessions. Keep going!",
             },
             streak3: {
                 title: "3-day meditation streak",
+                description: "You meditated 3 days in a row. Great consistency!",
             },
         },
+
         exercice: {
             first: {
-                title: "First workout session",
+                title: "First exercise session",
+                description: "You logged your first exercise session.",
             },
         },
+
         sleep: {
             first: {
                 title: "First tracked night of sleep",
+                description: "You logged your first night of sleep.",
             },
         },
+
         generic: {
             firstSession: {
                 title: "First MindfulSpace session",
+                description: "Welcome! You started using MindfulSpace.",
             },
         },
     },
+
 
 };
 

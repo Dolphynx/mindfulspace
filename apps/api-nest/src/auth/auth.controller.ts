@@ -9,6 +9,7 @@ import {
   UseGuards,
   Get,
   ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
@@ -94,7 +95,7 @@ export class AuthController {
     const refreshToken = req.cookies?.['refresh_token'] || dto?.refreshToken;
 
     if (!refreshToken) {
-      throw new Error('Refresh token not provided');
+      throw new BadRequestException('Refresh token not provided');
     }
 
     const tokens = await this.authService.refreshTokens(refreshToken, userAgent, ipAddress);
@@ -204,12 +205,12 @@ export class AuthController {
 
     const accessToken = await this.authService['jwtService'].signAsync(payload, {
       secret: this.authService['configService'].get('JWT_ACCESS_SECRET'),
-      expiresIn: '15m',
+      expiresIn: '2h',
     });
 
     const refreshToken = this.authService['cryptoService'].generateRefreshToken();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     await this.authService['prisma'].refreshToken.create({
       data: {
@@ -264,12 +265,12 @@ export class AuthController {
 
     const accessToken = await this.authService['jwtService'].signAsync(payload, {
       secret: this.authService['configService'].get('JWT_ACCESS_SECRET'),
-      expiresIn: '15m',
+      expiresIn: '2h',
     });
 
     const refreshToken = this.authService['cryptoService'].generateRefreshToken();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     await this.authService['prisma'].refreshToken.create({
       data: {
@@ -293,21 +294,21 @@ export class AuthController {
    * Helper method to set auth cookies
    */
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
-    // Access token cookie (15 minutes)
+    // Access token cookie (2 hours for PWA/mobile)
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       sameSite: 'strict',
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 2 * 60 * 60 * 1000, // 2 hours
       path: '/',
     });
 
-    // Refresh token cookie (7 days)
+    // Refresh token cookie (30 days for PWA/mobile)
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: '/',
     });
   }

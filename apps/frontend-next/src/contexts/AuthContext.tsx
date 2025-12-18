@@ -5,7 +5,8 @@
  * Provides authentication state and methods throughout the app
  */
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { User, getCurrentUser, login as apiLogin, logout as apiLogout, register as apiRegister, LoginData, RegisterData } from '@/lib/api/auth';
 
 interface AuthContextType {
@@ -22,6 +23,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+  const checkInProgress = useRef(false);
 
   // Fetch current user on mount
   useEffect(() => {
@@ -40,6 +44,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
+  // Periodic auth check (every 5 minutes) to detect token expiration
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Éviter les appels multiples simultanés
+      if (checkInProgress.current) return;
+      checkInProgress.current = true;
+
+      try {
+        await getCurrentUser();
+        // Token still valid
+      } catch (error) {
+        // Token expired or invalid
+        if (user !== null) {
+          console.log('Session expired, logging out...');
+          setUser(null);
+
+          // Rediriger vers login seulement si on est sur une page protégée
+          const segments = (pathname ?? '').split('/');
+          const locale = segments[1] || 'fr';
+          const isPublicRoute = pathname?.includes('/auth/') || pathname === `/${locale}` || pathname?.includes('/resources');
+
+          if (!isPublicRoute) {
+            router.replace(`/${locale}/auth/login?redirectTo=${encodeURIComponent(pathname || `/${locale}`)}`);
+          }
+        }
+      } finally {
+        checkInProgress.current = false;
+      }
+    };
+
+    // Vérifier toutes les 5 minutes
+    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+
+    // Cleanup
+    return () => clearInterval(interval);
+  }, [user, pathname, router]);
+
   const login = useCallback(async (data: LoginData) => {
     const response = await apiLogin(data);
     setUser(response.user);
@@ -50,8 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await apiLogout();
-    setUser(null);
+    try {
+      await apiLogout();
+    } catch (error) {
+      // Ignore errors - user might already be logged out
+      console.warn('Logout error (ignored):', error);
+    } finally {
+      // Always clear user state, even if API call fails
+      setUser(null);
+    }
   }, []);
 
   const refreshUser = useCallback(async () => {

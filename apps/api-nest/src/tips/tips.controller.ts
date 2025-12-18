@@ -10,6 +10,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { TipsService } from './tips.service';
 import { ApiTags, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import { Public } from "../auth/decorators/public.decorator";
 
 @ApiTags('tips')
 @Controller('tips')
@@ -25,6 +26,7 @@ export class TipsController {
    * Paramètres :
    * - locale (query string, optionnelle) : ex. "fr", "en", "fr-BE".
    */
+  @Public()
   @Get('random')
   @ApiOkResponse({ description: 'Retourne une astuce aléatoire' })
   @ApiQuery({

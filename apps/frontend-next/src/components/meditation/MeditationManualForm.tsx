@@ -5,21 +5,70 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/MoodPicker";
 import { MoodValue } from "@/lib";
 
+/**
+ * Version minimale d’un type de méditation,
+ * suffisante pour l’encodage manuel.
+ */
 type MeditationTypeLite = {
+    /**
+     * Identifiant unique du type.
+     */
     id: string;
+
+    /**
+     * Slug utilisé pour la traduction i18n.
+     */
     slug: string;
 };
 
+/**
+ * Props du composant {@link MeditationManualForm}.
+ */
 type MeditationManualFormProps = {
+    /**
+     * Liste des types de méditation disponibles.
+     */
     types: MeditationTypeLite[];
-    onCreateSession: (payload: {
+
+    /**
+     * Action de création de session de méditation.
+     *
+     * @remarks
+     * La logique métier (API, mutation, gestion d’erreur)
+     * est volontairement externalisée dans le parent.
+     */
+    onCreateSessionAction: (payload: {
         durationSeconds: number;
         moodAfter?: MoodValue;
         dateSession: string;
         meditationTypeId: string;
     }) => Promise<void>;
+
+    /**
+     * Ouvre le formulaire dès le rendu initial.
+     *
+     * @default false
+     */
+    defaultOpen?: boolean;
+
+    /**
+     * Mode compact :
+     * - masque le header (titre / description / bouton ouvrir),
+     * - affiche directement le formulaire.
+     *
+     * @default false
+     */
+    compact?: boolean;
 };
 
+/**
+ * Convertit une date issue d’un `<input type="date">`
+ * en ISO string, normalisée à midi (12:00).
+ *
+ * @remarks
+ * Normaliser à midi évite les décalages de jour
+ * liés aux fuseaux horaires.
+ */
 function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
@@ -30,6 +79,10 @@ function dateInputToNoonIso(dateStr: string): string {
     return date.toISOString();
 }
 
+/**
+ * Génère la valeur par défaut pour un champ date (`YYYY-MM-DD`)
+ * correspondant à la date du jour.
+ */
 function buildTodayDateInput(): string {
     const now = new Date();
     const y = now.getFullYear();
@@ -38,29 +91,83 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
+/**
+ * Formulaire d’encodage manuel d’une session de méditation.
+ *
+ * @remarks
+ * Ce composant est volontairement :
+ * - **stateless côté données métier** (API gérée par le parent),
+ * - **réutilisable** (mode normal vs compact),
+ * - **i18n-ready** (namespace `domainMeditation`).
+ *
+ * Cas d’usage :
+ * - Page domaine Méditation → mode normal (collapsible).
+ * - Page Serenity / World → mode compact + `defaultOpen`.
+ */
 export default function MeditationManualForm({
                                                  types,
-                                                 onCreateSession,
+                                                 onCreateSessionAction,
+                                                 defaultOpen = false,
+                                                 compact = false,
                                              }: MeditationManualFormProps) {
     const t = useTranslations("domainMeditation");
 
-    const [isOpen, setIsOpen] = useState(false);
+    /**
+     * État d’ouverture du formulaire (mode non-compact).
+     */
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    /**
+     * Valeur du champ date.
+     */
     const [dateInput, setDateInput] = useState<string>(() =>
         buildTodayDateInput(),
     );
-    const [manualDuration, setManualDuration] = useState<number>(10);
-    const [manualQuality, setManualQuality] =
-        useState<MoodValue | null>(3 as MoodValue);
-    const [savingManual, setSavingManual] = useState(false);
-    const [selectedTypeId, setSelectedTypeId] =
-        useState<string | null>(null);
 
+    /**
+     * Durée de la session (en minutes).
+     */
+    const [manualDuration, setManualDuration] = useState<number>(10);
+
+    /**
+     * Qualité / ressenti après la séance.
+     */
+    const [manualQuality, setManualQuality] = useState<MoodValue | null>(
+        3 as MoodValue,
+    );
+
+    /**
+     * Indique si une soumission est en cours.
+     */
+    const [savingManual, setSavingManual] = useState(false);
+
+    /**
+     * Type de méditation sélectionné.
+     */
+    const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
+
+    /**
+     * Pré-sélection automatique du premier type disponible.
+     */
     useEffect(() => {
         if (!selectedTypeId && types.length > 0) {
             setSelectedTypeId(types[0].id);
         }
     }, [types, selectedTypeId]);
 
+    /**
+     * Synchronise l’état d’ouverture si `defaultOpen` change.
+     *
+     * @remarks
+     * Cas rare, mais utile si le parent contrôle dynamiquement l’ouverture.
+     */
+    useEffect(() => {
+        if (defaultOpen) setIsOpen(true);
+    }, [defaultOpen]);
+
+    /**
+     * Réinitialise tous les champs du formulaire.
+     */
     function resetForm() {
         setDateInput(buildTodayDateInput());
         setManualDuration(10);
@@ -68,14 +175,21 @@ export default function MeditationManualForm({
         setSelectedTypeId(null);
     }
 
+    /**
+     * Soumission du formulaire.
+     *
+     * @remarks
+     * - Valide les champs requis.
+     * - Appelle l’action fournie par le parent.
+     * - Réinitialise le formulaire en cas de succès.
+     */
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         if (!selectedTypeId) return;
 
         setSavingManual(true);
-
         try {
-            await onCreateSession({
+            await onCreateSessionAction({
                 durationSeconds: manualDuration * 60,
                 moodAfter: manualQuality ?? undefined,
                 dateSession: dateInputToNoonIso(dateInput),
@@ -83,7 +197,9 @@ export default function MeditationManualForm({
             });
 
             resetForm();
-            setIsOpen(false);
+
+            // En mode compact, on reste ouvert.
+            setIsOpen(defaultOpen || compact);
         } finally {
             setSavingManual(false);
         }
@@ -91,38 +207,46 @@ export default function MeditationManualForm({
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        {t("manualForm_title")}
-                    </h2>
-                    <p className="text-sm text-slate-700">
-                        {t("manualForm_description")}
-                    </p>
+            {/* -------------------------------------------------------------- */}
+            {/* Header (uniquement en mode non-compact)                         */}
+            {/* -------------------------------------------------------------- */}
+            {!compact && (
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-semibold text-slate-800">
+                            {t("manualForm_title")}
+                        </h2>
+                        <p className="text-sm text-slate-700">
+                            {t("manualForm_description")}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(true)}
+                        className={`rounded-full bg-teal-500 px-5 py-2 text-sm font-medium text-white transition-all duration-500 ${
+                            isOpen
+                                ? "opacity-0 scale-95 pointer-events-none"
+                                : "opacity-100 scale-100 delay-700"
+                        }`}
+                    >
+                        {t("manualForm_button")}
+                    </button>
                 </div>
+            )}
 
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(true)}
-                    className={`rounded-full bg-teal-500 px-5 py-2 text-sm font-medium text-white transition-all duration-500 ${
-                        isOpen
-                            ? "opacity-0 scale-95 pointer-events-none"
-                            : "opacity-100 scale-100 delay-700"
-                    }`}
-                >
-                    {t("manualForm_button")}
-                </button>
-            </div>
-
+            {/* -------------------------------------------------------------- */}
+            {/* Formulaire (toujours visible en compact)                        */}
+            {/* -------------------------------------------------------------- */}
             <div
-                className={`transition-all duration-1000 overflow-hidden ${
-                    isOpen
-                        ? "max-h-[600px] opacity-100 mt-2"
+                className={`transition-all duration-700 overflow-hidden ${
+                    compact || isOpen
+                        ? "max-h-[700px] opacity-100"
                         : "max-h-0 opacity-0"
                 }`}
             >
                 <form
-                    className="space-y-6 rounded-2xl bg-white/80 p-4 shadow-sm"
+                    className="space-y-5 rounded-2xl bg-white p-4 shadow-sm"
                     onSubmit={handleSubmit}
                 >
                     {/* DATE */}
@@ -145,9 +269,7 @@ export default function MeditationManualForm({
                         </label>
                         <select
                             value={selectedTypeId ?? ""}
-                            onChange={(e) =>
-                                setSelectedTypeId(e.target.value || null)
-                            }
+                            onChange={(e) => setSelectedTypeId(e.target.value || null)}
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm shadow-sm"
                         >
                             <option value="">
@@ -161,13 +283,11 @@ export default function MeditationManualForm({
                         </select>
                     </div>
 
-                    {/* SLIDER */}
+                    {/* DURÉE */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_durationLabel")}:{" "}
-                            <span className="font-semibold">
-                                {manualDuration} min
-                            </span>
+                            <span className="font-semibold">{manualDuration} min</span>
                         </label>
                         <input
                             type="range"
@@ -175,14 +295,12 @@ export default function MeditationManualForm({
                             max={60}
                             step={5}
                             value={manualDuration}
-                            onChange={(e) =>
-                                setManualDuration(Number(e.target.value))
-                            }
+                            onChange={(e) => setManualDuration(Number(e.target.value))}
                             className="w-full"
                         />
                     </div>
 
-                    {/* MOOD */}
+                    {/* RESSENTI */}
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-600">
                             {t("manualForm_qualityLabel")}
@@ -208,16 +326,18 @@ export default function MeditationManualForm({
                                 : t("manualForm_saveButton")}
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                resetForm();
-                                setIsOpen(false);
-                            }}
-                            className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
-                        >
-                            {t("manualForm_cancelButton")}
-                        </button>
+                        {!compact && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    resetForm();
+                                    setIsOpen(false);
+                                }}
+                                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                            >
+                                {t("manualForm_cancelButton")}
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>

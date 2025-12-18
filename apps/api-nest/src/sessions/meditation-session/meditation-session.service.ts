@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { MeditationSessionSource, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateMeditationSessionDto } from './dto/meditation-session.dto';
 import { MeditationTypeDto } from './dto/meditation-type.dto';
 import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
+
+interface SoundCloudResolveResponse {
+    stream_url?: string;
+}
 
 /**
  * Service de gestion des séances de méditation.
@@ -22,7 +28,13 @@ import { mapMeditationTypeToDto } from './mapper/meditation-type.mapper';
  */
 @Injectable()
 export class MeditationSessionService {
-  constructor(private readonly prisma: PrismaService) {}
+
+  private readonly logger = new Logger(MeditationSessionService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly http: HttpService
+  ) {}
 
   /**
    * Crée une nouvelle séance de méditation pour un utilisateur donné.
@@ -318,6 +330,55 @@ export class MeditationSessionService {
   }
 
   /**
+   * Résout une URL de piste SoundCloud en URL de stream exploitable
+   * par un <audio> HTML.
+   *
+   * @param trackUrl URL publique de la piste SoundCloud
+   * @returns URL de stream (avec client_id) ou null en cas d'échec
+   */
+  private async resolveSoundCloudStream(trackUrl: string): Promise<string | null> {
+      const clientId = process.env.SOUNDCLOUD_CLIENT_ID;
+      if (!clientId) {
+          this.logger.warn(
+              'SOUNDCLOUD_CLIENT_ID is not set, cannot resolve SoundCloud URLs.',
+          );
+          return null;
+      }
+
+      try {
+          const apiUrl = 'https://api.soundcloud.com/resolve';
+
+          const response = await firstValueFrom(
+              this.http.get<SoundCloudResolveResponse>(apiUrl, {
+                  params: {
+                      url: trackUrl,
+                      client_id: clientId,
+                  },
+              }),
+          );
+
+          const data = response.data;
+
+          if (!data || typeof data.stream_url !== 'string') {
+              this.logger.warn(
+                  `SoundCloud resolve did not return a valid stream_url for ${trackUrl}`,
+              );
+              return null;
+          }
+
+          const streamUrl: string = data.stream_url;
+
+          return `${streamUrl}?client_id=${clientId}`;
+      } catch (error) {
+          this.logger.error(
+              `Error while resolving SoundCloud URL ${trackUrl}: ${String(error)}`,
+          );
+          return null;
+      }
+  }
+
+
+    /**
    * Récupère les contenus de méditation filtrés par type et,
    * éventuellement, par durée cible.
    *
@@ -395,19 +456,33 @@ export class MeditationSessionService {
         defaultMeditationTypeId: true,
         isPremium: true,
         mediaUrl: true,
+        soundcloudUrl: true, // ⬅️ nouveau
       },
     });
 
-    // Mapping vers ce que le front attend
-    return items.map((c) => ({
-      id: c.id,
-      title: c.title,
-      description: c.description,
-      mode: c.mode,
-      durationSeconds: c.defaultDurationSeconds,
-      meditationTypeId: c.defaultMeditationTypeId,
-      isPremium: c.isPremium,
-      mediaUrl: c.mediaUrl,
-    }));
+    // On résout éventuellement les URLs SoundCloud pour obtenir un vrai mediaUrl
+    const resolved = await Promise.all(
+      items.map(async (c) => {
+        let mediaUrl = c.mediaUrl;
+
+        if (!mediaUrl && c.soundcloudUrl) {
+          const scStream = await this.resolveSoundCloudStream(c.soundcloudUrl);
+          mediaUrl = scStream ?? null;
+        }
+
+        return {
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          mode: c.mode,
+          durationSeconds: c.defaultDurationSeconds,
+          meditationTypeId: c.defaultMeditationTypeId,
+          isPremium: c.isPremium,
+          mediaUrl, // déjà “prêt à jouer” (local ou SoundCloud)
+        };
+      }),
+    );
+
+    return resolved;
   }
 }

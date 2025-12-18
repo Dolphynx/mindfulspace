@@ -209,16 +209,16 @@ export class AuthService {
       roles,
     };
 
-    // Generate access token (short-lived: 15 minutes)
+    // Generate access token (2 hours for PWA/mobile)
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get('JWT_ACCESS_SECRET'),
-      expiresIn: '15m',
+      expiresIn: '2h',
     });
 
-    // Generate refresh token (long-lived: 7 days)
+    // Generate refresh token (long-lived: 30 days for PWA/mobile)
     const refreshToken = this.cryptoService.generateRefreshToken();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
     // Store refresh token in database
     await this.prisma.refreshToken.create({

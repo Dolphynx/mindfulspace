@@ -489,6 +489,7 @@ async function main() {
     sortOrder: number;
     isPremium: boolean;
     mediaUrl?: string | null;
+    soundcloudUrl?: string | null;
   };
 
   const meditationContentsData: MeditationContentSeed[] = [
@@ -516,7 +517,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Respiration en vagues (visuelle)",
@@ -555,7 +556,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Flamme de présence (timer)",
@@ -594,7 +595,7 @@ async function main() {
       defaultDurationSeconds: 900,
       sortOrder: 20,
       isPremium: false,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Body scan avec silhouette (timer)",
@@ -633,7 +634,7 @@ async function main() {
       defaultDurationSeconds: 600,
       sortOrder: 20,
       isPremium: true,
-      mediaUrl: "/audio/respi_751ko.mp3",
+      mediaUrl: "/audio/respi_751ko.mp3"
     },
     {
       title: "Cercle de bienveillance (timer)",
@@ -665,6 +666,7 @@ async function main() {
         isActive: true,
         isPremium: content.isPremium,
         mediaUrl: content.mediaUrl ?? null,
+        soundcloudUrl: content.soundcloudUrl ?? null,
       },
     });
     meditationContents.push(created);
