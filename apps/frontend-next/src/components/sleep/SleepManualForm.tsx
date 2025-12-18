@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import {MoodValue} from "@/lib";
 import MoodPicker from "@/components/MoodPicker";
+import {savePendingSleepSession} from "@/offline-sync/sleepSessionQueue";
 
 type SleepManualFormProps = {
     onCreateSessionAction: (payload: {
@@ -33,17 +34,32 @@ export default function SleepManualForm({onCreateSessionAction}: SleepManualForm
     );
 
     async function handleSubmit(e: FormEvent) {
+        console.log("SleepManualForm handleSubmit");
         e.preventDefault();
-        // future API call
+        setSavingManual(true);
+
+        const payload = {
+            hours: durationHours,
+            quality: manualQuality ?? undefined,
+            dateSession: dateInputToNoonIso(dateInput),
+        };
 
         try {
-            await onCreateSessionAction({
-                hours: durationHours,
-                quality: manualQuality ?? undefined,
-                dateSession: dateInputToNoonIso(dateInput),
-            });
+            if (!navigator.onLine) {
+                console.log("📴 Offline — saving sleep session locally");
+                await savePendingSleepSession(payload);
 
+                // setMessage?.("💾 Données enregistrées hors-ligne");
+                resetForm();
+                return;
+            }
+
+            // If online
+            await onCreateSessionAction(payload);
             resetForm();
+        } catch (e) {
+            console.error(e);
+            // setMessage?.("❌ Erreur lors de l’enregistrement");
         } finally {
             setSavingManual(false);
         }

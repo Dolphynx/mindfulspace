@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import MoodPicker from "@/components/MoodPicker";
 import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
+import {syncPendingSessions} from "@/offline-sync/sync";
+import {queueSession} from "@/offline-sync/sessionQueue";
 
 type SessionType = {
     id: string;
@@ -94,31 +96,43 @@ export default function QuickLogCard() {
     }, [baseUrl]);
 
     async function handleSubmit() {
+        console.log("QuickLogCard handleSubmit");
         if (!selectedType) return;
 
         setLoading(true);
         setMessage(null);
 
+        const payload = {
+            value,
+            quality,
+            dateSession: date.toISOString(),
+            sessionTypeId: selectedType.id,
+            expectedUnit: selectedType.units?.[0]?.sessionUnit.value,
+        };
+
+        if (!navigator.onLine) {
+            await queueSession(payload);
+            setMessage(`💾 ${t("savedOffline")}`);
+            setLoading(false);
+            return;
+        }
+
         try {
             const res = await fetch(`${baseUrl}/sessions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    value,
-                    quality,
-                    dateSession: date.toISOString(),
-                    sessionTypeId: selectedType.id,
-                    expectedUnit: selectedType.units?.[0]?.sessionUnit.value,
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             setMessage(`✅ ${t("success")}`);
+            await syncPendingSessions(baseUrl);
             // simple mais efficace pour garder la UI synchro
             window.location.reload();
         } catch (e) {
-            console.error(e);
-            setMessage(`❌ ${t("error")}`);
+            // network failed mid-request → fallback to offline queue
+            await queueSession(payload);
+            setMessage(`💾 ${t("savedOffline")}`);
         } finally {
             setLoading(false);
         }
