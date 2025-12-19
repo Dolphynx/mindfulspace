@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type {CSSProperties, ReactNode} from "react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -78,9 +78,18 @@ export default function AppShell({ navbar, children }: AppShellProps) {
      */
     const segments = pathname?.split("/") ?? [];
     const isSession = segments.includes("seance");
+    const isWorldV2 = segments.includes("world-v2");
+    const isImmersive = isSession || isWorldV2;
 
     const [openPrefs, setOpenPrefs] = useState(false);
     const [prefs, setPrefs] = useState<CookiePrefs>(getInitialPrefs);
+
+    type CSSVars = Record<`--${string}`, string | number>;
+    type StyleWithVars = CSSProperties & CSSVars;
+
+    const topBarStyle: StyleWithVars = {
+        "--app-top-offset": "180px",
+    };
 
     /**
      * Initialise des features optionnelles selon les préférences cookies stockées.
@@ -117,7 +126,9 @@ export default function AppShell({ navbar, children }: AppShellProps) {
             {/* Header sticky unifié : Notice + Navbar                              */}
             {/* ------------------------------------------------------------------ */}
             {!isSession && (
-                <div className="sticky top-0 z-[100]">
+                <div
+                    style={topBarStyle}
+                    className="sticky top-0 z-[100]">
                     <GlobalNotice />
                     {navbar}
                 </div>
@@ -132,7 +143,7 @@ export default function AppShell({ navbar, children }: AppShellProps) {
 
                 <main className="flex-1 min-h-0">{children}</main>
 
-                {!isSession && (
+                {!isImmersive && (
                     <Footer onOpenPreferencesAction={() => setOpenPrefs(true)} />
                 )}
             </div>

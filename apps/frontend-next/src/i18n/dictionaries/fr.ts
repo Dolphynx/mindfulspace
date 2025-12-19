@@ -298,6 +298,14 @@ const fr = {
         subtitle: "Conseils et outils pour améliorer la qualité de votre sommeil.",
         empty: "Contenu prochainement disponible…",
 
+        history_summary_nights: "nuits",
+        history_summary_hoursAvg: "heures en moyenne",
+        history_toggle_expand: "Afficher le détail",
+        history_toggle_collapse: "Masquer le détail",
+        history_totalSleepLabel: "Sommeil au total",
+        history_totalNightsLabel: "Nombre de nuits",
+        history_averageQualityLabel: "Qualité moyenne",
+
         // Encodage manuel (unique pour le sommeil)
         manualForm_title: "Encoder une nuit de sommeil",
         manualForm_description: "Notez vos heures de coucher et de lever, ainsi que la qualité de votre nuit.",
@@ -313,12 +321,54 @@ const fr = {
         history_placeholder: "L’historique de vos nuits apparaîtra ici dès que vous aurez encodé quelques jours.",
         history_nights: "nuits",
         last7_empty: "Aucune donnée enregistrée sur les 7 derniers jours.",
-        history_average: "heures en moyenne"
+        history_average: "heures en moyenne",
+
+        detail: {
+            kpisTitle: "Indicateurs",
+            trendTitle: "Tendance",
+            historyTitle: "Historique",
+            kpi: {
+                weekHours: "Heures (7 jours)",
+                avg30: "Moyenne (30 jours)",
+                streak: "Série",
+                streakBestPrefix: "Meilleure série :",
+                avgQuality: "Qualité moyenne",
+                na: "—",
+            },
+            trendHours30: "Heures par nuit (30 derniers jours)",
+            trendSma5: "Lissage (5)",
+            insightsTitle: "Insights (30 jours)",
+            insights: {
+                activeNights: "Nuits encodées",
+                bestNight: "Meilleure nuit",
+                goodQuality: "Qualité ≥ 4/5",
+                goodQualityHint: "sur les nuits encodées",
+                variability: "Variabilité",
+                variabilityHint: "écart-type (h)",
+                activeDays: "Jours actifs",
+                totalMinutes: "Temps total",
+                bestDay: "Meilleur jour",
+                top3Types: "Top 3 types",
+                coverage: "Couverture",
+                goodQualityShort: "≥ 4/5",
+            },
+        },
     },
 
     domainExercice: {
         title: "Exercice",
         subtitle: "Suivez et enregistrez vos séances d’exercice.",
+
+        history_summary_sessions: "séances",
+        history_summary_exercises: "exercices",
+        history_toggle_expand: "Afficher le détail",
+        history_toggle_collapse: "Masquer le détail",
+        history_totalRepsLabel: "Répétitions au total",
+        history_totalSessionsLabel: "Nombre de séances",
+        history_averageQualityLabel: "Qualité moyenne",
+        history_dayLabel: "Jour",
+        history_totalLabel: "au total",
+        history_sessionsLabel: "séance",
 
         // Encodage manuel
         manualForm_title: "Encoder une séance passée",
@@ -372,6 +422,33 @@ const fr = {
         weekday_4: "Jeudi",
         weekday_5: "Vendredi",
         weekday_6: "Samedi",
+
+        detail: {
+            kpisTitle: "Indicateurs",
+            trendTitle: "Tendance",
+            historyTitle: "Historique",
+            kpi: {
+                weekReps: "Répétitions (7 jours)",
+                avg30: "Moyenne (30 jours)",
+                streak: "Série",
+                streakBestPrefix: "Meilleure série :",
+                topExercise: "Exercice favori",
+                na: "—",
+            },
+            trend30: "Volume (30 derniers jours)",
+            trendSma5: "Lissage (5)",
+            insightsTitle: "Insights (30 jours)",
+            insights: {
+                activeDays: "Jours actifs",
+                totalMinutes: "Temps total",
+                bestDay: "Meilleur jour",
+                top3: "Top 3 types",
+                totalReps: "Total répétitions",
+                coverage: "Couverture",
+                intensity: "Intensité",
+                intensityHint: "Répétitions par séance",
+            },
+        },
     },
 
     domainMeditation: {
@@ -512,7 +589,33 @@ const fr = {
         },
 
         last7_summary_sessions: "séances",
-        last7_summary_minutes: "minutes"
+        last7_summary_minutes: "minutes",
+
+        detail: {
+            kpisTitle: "Indicateurs",
+            trendTitle: "Tendance",
+            historyTitle: "Historique",
+            kpi: {
+                weekMinutes: "Minutes (7 jours)",
+                avg30: "Moyenne (30 jours)",
+                streak: "Série",
+                streakBestPrefix: "Meilleure série :",
+                topType: "Type favori",
+                na: "—",
+            },
+            trendMinutes30: "Minutes par session (30 derniers jours)",
+            trendSma5: "Lissage (5)",
+            insightsTitle: "Insights (30 jours)",
+            insights: {
+                activeDays: "Jours actifs",
+                totalMinutes: "Temps total",
+                bestDay: "Meilleur jour",
+                top3Types: "Top 3 types",
+                coverage: "Couverture",
+                moodCoverage: "Humeur renseignée",
+                moodCoverageShort: "Humeur",
+            },
+        },
     },
 
     publicWorld: {
@@ -520,7 +623,133 @@ const fr = {
         sleepAlt: "Sommeil",
         exerciceAlt: "Exercice",
         meditationAlt: "Méditation",
-        encodeSessionTitle: "Encoder une session"
+        encodeSessionTitle: "Encoder une session",
+        quickLogTitle: "Quick log",
+        quickLogAriaSleep: "Quick log : sommeil",
+        quickLogAriaMeditation: "Quick log : méditation",
+        quickLogAriaExercise: "Quick log : exercice",
+        quickLogToastSaved: "✅ Session enregistrée",
+        worldStartTitle: "Mon monde",
+        worldStartSubtitle: "Un aperçu, puis démarre quand tu veux.",
+        worldStartCta: "Démarrer",
+        worldPanelTitle: "MY WORLD",
+        worldPanelCloseAria: "Fermer le panneau",
+        worldPanelBackAria: "Revenir en arrière",
+        worldPanelHomeAria: "Revenir à l’aperçu",
+        startSessionTitle: "Démarrer une séance",
+    },
+
+    world: {
+        domainDetail: {
+            back: "Retour",
+            subtitle: "Analyse de tes sessions : tendance, régularité, évolution…",
+        },
+
+        sections: {
+            quickActionsTitle: "Actions rapides",
+            quickActionsAria: "Section des actions rapides",
+            domainsTitle: "Domaines",
+            domainsAria: "Section de sélection des domaines",
+        },
+
+        overview: {
+            chipWeekMinutes: "min cette semaine",
+            chipWellbeing: "Bien-être :",
+
+            todayTitle: "Aujourd’hui",
+            quickLogCta: "Encoder",
+
+            snapshotTitle: "Aperçu",
+
+            todayExercisesTitle: "Exercices du jour",
+            todayActionsTitle: "Actions du jour",
+
+            encodeSessionCta: "Encoder une séance",
+            encodeSessionSubtitle: "Ajouter rapidement une session (sommeil, méditation, exercice).",
+            startSessionCta: "Démarrer une séance",
+            startSessionSubtitle: "Lancer une séance guidée (méditation, exercice).",
+
+            todayActionsHint: "Astuce : un petit encodage régulier fait progresser tes stats et tes badges.",
+
+            viewAll: "Voir tous les badges",
+            recentBadgesTitle: "Tes derniers badges",
+
+            viewDetail: "Voir le détail",
+            encode: "Encoder",
+
+            sleepMainKpi: "Durée moyenne",
+            sleepKpiA: "Durée :",
+            sleepKpiB: "Qualité :",
+
+            meditationMainKpi: "7 derniers jours",
+            meditationKpiA: "Séances :",
+            meditationKpiB: "Minutes :",
+
+            exerciseMainKpi: "Cette semaine",
+            exerciseKpiA: "Séances :",
+            exerciseKpiB: "Objectifs :",
+
+            programSubscribeCta: "M'abonner à un programme d'exercices",
+            programSubscribeTitle: "Programmes d'exercices",
+            programSubscribeSubtitle: "Choisis un programme pour planifier tes exercices et suivre ta progression.",
+            programsCta: "M’abonner à un programme d’exercices",
+            programsSubtitle: "Choisir un programme et recevoir des exercices planifiés.",
+
+            chipStreak: "Streak :",
+            metricsLoadError: "Impossible de charger les métriques.",
+            sleepFootnoteEmpty: "Aucune nuit encodée cette semaine.",
+            sleepFootnoteLastNight: "Dernière nuit :",
+            meditationFootnoteEmpty: "Aucune humeur enregistrée.",
+            meditationFootnoteMood: "Humeur moyenne :",
+            exerciseFootnoteEmpty: "Aucune qualité encodée.",
+            exerciseFootnoteQuality: "Qualité moyenne :",
+
+            recentBadgesEmpty: "Aucun badge à afficher pour le moment.",
+
+            topSummaryAria: "Résumé de vos données des 7 derniers jours",
+
+            trendTitle: "Tendance",
+            last7Days: "7 derniers jours",
+            wellbeingBarLabel: "Bien-être",
+            statusImprove: "À améliorer",
+            statusStable: "Stable",
+        },
+
+        panel: {
+            titles: {
+                overview: "MY WORLD",
+                badges: "Badges",
+                quickLog: "Quick log",
+                startSession: "Démarrer une séance",
+            },
+            backAria: "Retour",
+            closeAria: "Fermer",
+        },
+
+        startSession: {
+            title: "Démarrer une séance",
+            hint: "Choisis un type de séance et lance-toi.",
+        },
+
+        programs: {
+            title: "Programmes d’exercices",
+            switchHint: "Plus tard : programmes méditation aussi.",
+        },
+
+        cards: {
+            encodeSessionTitle: "Encoder une session",
+        },
+
+        actions: {
+            quickLog: "Encodage rapide",
+            viewAllBadges: "Voir tous mes badges",
+        },
+
+        domains: {
+            sleep: "Sommeil",
+            meditation: "Méditation",
+            exercise: "Exercice",
+        },
     },
 
     resourceDetailPage: {
@@ -805,6 +1034,10 @@ const fr = {
                 title: "Première séance d’exercice",
                 description: "Tu as enregistré ta première séance d’exercice.",
             },
+            streak3: {
+                title: "3-jour d'exercices",
+                description: "Tu as fait des exercices 3 jours d'affilée !",
+            },
         },
 
         sleep: {
@@ -819,6 +1052,11 @@ const fr = {
                 title: "Première session MindfulSpace",
                 description: "Bienvenue ! Tu as commencé à utiliser MindfulSpace.",
             },
+        },
+
+        quickLogSaved: {
+            title: "Session enregistrée",
+            description: "Bravo pour cette nouvelle étape !",
         },
     }
 

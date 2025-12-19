@@ -10,54 +10,27 @@ import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import { apiFetch } from "@/lib/api/client";
 import type { BadgeToastItem } from "@/types/badges";
 import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
+import { useWorldHubOptional } from "@/feature/world/hub/WorldHubProvider";
 
 const MAX_BADGES = 3;
 
-/**
- * Retire le namespace `badges.` d'une clé i18n afin d'utiliser la clé relative
- * attendue par le scope `useTranslations("badges")`.
- *
- * @param key - Clé brute potentiellement préfixée (ex: `badges.zen10.title`).
- * @returns Clé sans namespace (ex: `zen10.title`), ou chaîne vide si invalide.
- */
 function stripBadgesNamespace(key?: string | null) {
     if (!key) return "";
     return key.startsWith("badges.") ? key.slice("badges.".length) : key;
 }
 
-/**
- * Résout le titre localisé d'un badge.
- *
- * @param t - Fonction de traduction (scope `badges`).
- * @param badge - Badge à afficher.
- * @returns Titre traduit, ou chaîne vide si la clé est absente.
- */
 function getBadgeTitle(t: (k: string) => string, badge: BadgeToastItem) {
     const key = stripBadgesNamespace(badge.titleKey);
     if (!key) return "";
     return t(key);
 }
 
-/**
- * Résout la description localisée d'un badge.
- *
- * @param t - Fonction de traduction (scope `badges`).
- * @param badge - Badge à afficher.
- * @returns Description traduite, ou chaîne vide si la clé est absente.
- */
 function getBadgeDescription(t: (k: string) => string, badge: BadgeToastItem) {
     const key = stripBadgesNamespace(badge.descriptionKey);
     if (!key) return "";
     return t(key);
 }
 
-/**
- * Popover affichant les informations détaillées d'un badge (titre, description, lien).
- *
- * @remarks
- * Le popover est positionné en absolu sous le bouton du badge. L'alignement
- * est configurable pour s'adapter aux contraintes de mise en page.
- */
 function BadgePopover({
                           badge,
                           t,
@@ -92,9 +65,7 @@ function BadgePopover({
                     <div className="text-sm font-semibold text-slate-800 leading-snug">
                         {title}
                     </div>
-                    <div className="mt-1 text-xs text-slate-600 leading-snug">
-                        {desc}
-                    </div>
+                    <div className="mt-1 text-xs text-slate-600 leading-snug">{desc}</div>
 
                     <div className="mt-2">
                         <Link
@@ -110,12 +81,6 @@ function BadgePopover({
     );
 }
 
-/**
- * Bouton icône représentant un badge, pouvant ouvrir/fermer un popover associé.
- *
- * @remarks
- * Le bouton expose `aria-expanded` afin d'indiquer l'état d'ouverture du popover.
- */
 function BadgeIconButton({
                              badge,
                              t,
@@ -151,17 +116,6 @@ function BadgeIconButton({
     );
 }
 
-/**
- * Bandeau affichant les derniers badges mis en avant pour l'utilisateur.
- *
- * @param compact - Si `true`, affiche une version compacte du bandeau.
- *
- * @remarks
- * - Charge au maximum {@link MAX_BADGES} badges depuis l'API.
- * - La popover est contrôlée via l'identifiant de badge ouvert (`openId`).
- * - Fermeture automatique sur clic extérieur et touche `Escape`.
- * - N'affiche rien si la donnée est en cours de chargement ou si aucun badge n'est disponible.
- */
 export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
     const t = useTranslations("badges");
 
@@ -170,33 +124,23 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
     const hrefAllBadges = `/${locale}/member/badges`;
 
+    // ✅ World refresh (optionnel)
+    const world = useWorldHubOptional();
+    const refreshKey = world?.refreshKey ?? 0;
+
     const [badges, setBadges] = useState<BadgeToastItem[]>([]);
     const [loading, setLoading] = useState(false);
-
-    /**
-     * Identifiant du badge actuellement ouvert dans la popover.
-     *
-     * @remarks
-     * `null` signifie qu'aucune popover n'est affichée.
-     */
     const [openId, setOpenId] = useState<string | null>(null);
 
-    /**
-     * Référence du wrapper permettant de détecter les clics en dehors du composant.
-     */
     const wrapRef = useRef<HTMLDivElement | null>(null);
 
-    /**
-     * Charge les badges mis en avant.
-     *
-     * @remarks
-     * - Utilise un drapeau `cancelled` pour éviter un `setState` après un unmount.
-     * - En cas de réponse inattendue, ne lève pas d'erreur côté UI et se contente de logs.
-     */
     useEffect(() => {
         let cancelled = false;
 
         async function load() {
+            // ✅ évite popover “accroché” si la liste change
+            setOpenId(null);
+
             setLoading(true);
 
             try {
@@ -208,6 +152,7 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
                         res.status,
                         await res.text().catch(() => "<no-body>"),
                     );
+                    if (!cancelled) setBadges([]);
                     return;
                 }
 
@@ -215,16 +160,16 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
 
                 if (!Array.isArray(raw)) {
                     console.warn("[HomeBadgesStrip] Expected array, got:", raw);
+                    if (!cancelled) setBadges([]);
                     return;
                 }
 
                 const mapped = raw.map(mapApiBadgeToToastItem).slice(0, MAX_BADGES);
 
-                if (!cancelled) {
-                    setBadges(mapped);
-                }
+                if (!cancelled) setBadges(mapped);
             } catch (err) {
                 console.error("[HomeBadgesStrip] Loading error:", err);
+                if (!cancelled) setBadges([]);
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -234,15 +179,9 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
         return () => {
             cancelled = true;
         };
-    }, []);
+        // ✅ re-fetch quand bumpRefreshKey() est appelé (si WorldHubProvider est présent)
+    }, [refreshKey]);
 
-    /**
-     * Gestion des interactions globales de fermeture de la popover.
-     *
-     * @remarks
-     * - Clic extérieur : fermeture.
-     * - Touche `Escape` : fermeture.
-     */
     useEffect(() => {
         function onDown(e: MouseEvent) {
             if (!wrapRef.current) return;
@@ -263,9 +202,6 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
         };
     }, []);
 
-    /**
-     * Badge correspondant au popover actuellement ouvert.
-     */
     const openBadge = useMemo(
         () => badges.find((b) => b.id === openId) ?? null,
         [badges, openId],
@@ -274,9 +210,6 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
     if (loading) return null;
     if (badges.length === 0) return null;
 
-    /**
-     * Ajustement du `z-index` afin de garantir que la popover passe au-dessus des autres couches UI.
-     */
     const wrapperZ = openBadge ? "z-50" : "z-10";
 
     if (compact) {
@@ -301,7 +234,9 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
                                 badge={badge}
                                 t={t}
                                 isOpen={isOpen}
-                                onToggle={() => setOpenId((prev) => (prev === badge.id ? null : badge.id))}
+                                onToggle={() =>
+                                    setOpenId((prev) => (prev === badge.id ? null : badge.id))
+                                }
                             />
                         );
                     })}
@@ -343,7 +278,9 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
                                 badge={badge}
                                 t={t}
                                 isOpen={isOpen}
-                                onToggle={() => setOpenId((prev) => (prev === badge.id ? null : badge.id))}
+                                onToggle={() =>
+                                    setOpenId((prev) => (prev === badge.id ? null : badge.id))
+                                }
                             />
                         );
                     })}

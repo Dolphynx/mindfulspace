@@ -1,6 +1,5 @@
 "use client";
 
-import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { useExerciceSessions } from "@/hooks/useExerciceSessions";
 import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
@@ -10,7 +9,6 @@ import { SessionCard } from "@/components/session/SessionCard";
 import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
 import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
-import { usePrograms } from "@/hooks/usePrograms";
 import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";
 import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
@@ -87,7 +85,6 @@ export default function ExercicePage() {
                         sessions={sessions}
                         loading={loading}
                         errorType={errorType}
-                        types={types}
                     />
                 }
 

@@ -16,14 +16,35 @@ import { useSleepSessions } from "@/hooks/useSleepSessions";
 
 import type { MoodValue } from "@/lib";
 
+/**
+ * Identifiant de domaine supporté par le panneau.
+ *
+ * @remarks
+ * Sert à piloter l'état (onglet actif) et le rendu des formulaires.
+ */
 type DomainKey = "sleep" | "meditation" | "exercise";
 
+/**
+ * Définition d'un onglet (domaine) dans le panneau "Quick log".
+ */
 type DomainTab = {
+    /** Clé unique du domaine. */
     key: DomainKey;
+
+    /** Clé de traduction (scope `publicWorld`) associée au label/alt du domaine. */
     labelKey: "sleepAlt" | "meditationAlt" | "exerciceAlt";
+
+    /** Source de l'icône (dans `/public/images/...`). */
     iconSrc: string;
 };
 
+/**
+ * Liste des onglets disponibles dans le panneau "Quick log".
+ *
+ * @remarks
+ * Centraliser cette config évite la duplication du mapping
+ * (domaine -> label -> icône).
+ */
 const TABS: DomainTab[] = [
     { key: "sleep", labelKey: "sleepAlt", iconSrc: "/images/icone_sleep.png" },
     { key: "meditation", labelKey: "meditationAlt", iconSrc: "/images/icone_meditation.png" },
@@ -31,13 +52,20 @@ const TABS: DomainTab[] = [
 ];
 
 /**
- * Panneau "Quick log" permettant d'encoder une session de bien-être (sommeil, méditation, exercice)
- * via un système d'onglets et des formulaires dédiés.
+ * Panneau "Quick log" (legacy) permettant d'encoder une session
+ * via des formulaires dédiés (sleep/meditation/exercise).
  *
  * @remarks
- * - Sur desktop, le formulaire est affiché dans un panneau flottant sous la bande d'icônes.
- * - Sur mobile, le formulaire est rendu uniquement lorsqu'il est ouvert afin d'éviter l'affichage
- *   d'un conteneur vide.
+ * - L'UI propose une "strip" d'icônes (onglets).
+ * - Sur desktop : le formulaire apparaît dans un panneau absolu.
+ * - Sur mobile : le formulaire est rendu dans le flux, uniquement si ouvert.
+ *
+ * **Note d'architecture :**
+ * Dans la future page SPA "My World", ce panneau est un candidat à être
+ * remplacé par une vue interne "QuickLogView" unique et transversale :
+ * - un quick log global,
+ * - sélection du domaine à l'intérieur,
+ * - compatibilité avec l'historique et les badges.
  */
 export default function DomainTabsPanel() {
     const tWorld = useTranslations("publicWorld");
@@ -46,10 +74,12 @@ export default function DomainTabsPanel() {
     const [active, setActive] = useState<DomainKey | null>(null);
     const [isOpen, setIsOpen] = useState<boolean>(false);
 
-    const activeTab = useMemo(
-        () => (active ? TABS.find((x) => x.key === active) : null),
-        [active],
-    );
+    /**
+     * Configuration de l'onglet actif (si défini).
+     */
+    const activeTab = useMemo(() => (active ? TABS.find((x) => x.key === active) : null), [active]);
+
+    // --- Data/hooks domain-specific ------------------------------------------------
 
     const {
         types: meditationTypes,
@@ -65,14 +95,20 @@ export default function DomainTabsPanel() {
         createSession: createExerciceSession,
     } = useExerciceSessions();
 
-    const {
-        loading: sleepLoading,
-        errorType: sleepErrorType,
-        createSession: createSleepSession,
-    } = useSleepSessions();
+    const { loading: sleepLoading, errorType: sleepErrorType, createSession: createSleepSession } =
+        useSleepSessions();
 
+    /**
+     * Indique si au moins un domaine est en chargement.
+     */
     const anyLoading = meditationLoading || exerciceLoading || sleepLoading;
 
+    /**
+     * Message d'erreur générique si un hook signale une erreur.
+     *
+     * @remarks
+     * Si tu veux être plus précis : mapper les `errorType` vers des messages dédiés.
+     */
     const errorText =
         meditationErrorType || exerciceErrorType || sleepErrorType
             ? tCommon?.("genericError") ?? "Une erreur est survenue."
@@ -92,6 +128,13 @@ export default function DomainTabsPanel() {
         setIsOpen(true);
     }
 
+    // --- Action wrappers (typed, no any) -------------------------------------------
+
+    /**
+     * Handler de création de session de méditation.
+     *
+     * @param payload - Données nécessaires à la création côté API.
+     */
     const onCreateMeditationSessionAction = async (payload: {
         durationSeconds: number;
         moodAfter?: MoodValue;
@@ -99,12 +142,22 @@ export default function DomainTabsPanel() {
         meditationTypeId: string;
     }) => createMeditationSession(payload);
 
+    /**
+     * Handler de création de session d'exercice.
+     *
+     * @param payload - Données nécessaires à la création côté API.
+     */
     const onCreateExerciceSessionAction = async (payload: {
         dateSession: string;
         quality?: MoodValue;
         exercices: { exerciceContentId: string; repetitionCount: number }[];
     }) => createExerciceSession(payload);
 
+    /**
+     * Handler de création de session de sommeil.
+     *
+     * @param payload - Données nécessaires à la création côté API.
+     */
     const onCreateSleepSessionAction = async (payload: {
         hours: number;
         quality?: MoodValue;
@@ -144,12 +197,7 @@ export default function DomainTabsPanel() {
                                         isActive ? "ring-2 ring-slate-300" : "hover:bg-slate-50/40",
                                     ].join(" ")}
                                 >
-                                    <Image
-                                        src={tab.iconSrc}
-                                        alt={tWorld(tab.labelKey)}
-                                        fill
-                                        className="object-contain"
-                                    />
+                                    <Image src={tab.iconSrc} alt={tWorld(tab.labelKey)} fill className="object-contain" />
                                 </button>
                             );
                         })}
@@ -187,9 +235,7 @@ export default function DomainTabsPanel() {
                         </div>
 
                         <div className="mt-4">
-                            {active === "sleep" && (
-                                <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
-                            )}
+                            {active === "sleep" && <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />}
 
                             {active === "meditation" && (
                                 <MeditationManualForm
@@ -231,15 +277,11 @@ export default function DomainTabsPanel() {
 
                         <div className="mt-2 min-h-[18px] text-xs text-slate-500">
                             {anyLoading ? (tCommon?.("loading") ?? "Chargement…") : ""}
-                            {!anyLoading && errorText ? (
-                                <span className="text-rose-700">{errorText}</span>
-                            ) : null}
+                            {!anyLoading && errorText ? <span className="text-rose-700">{errorText}</span> : null}
                         </div>
 
                         <div className="mt-3">
-                            {active === "sleep" && (
-                                <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
-                            )}
+                            {active === "sleep" && <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />}
 
                             {active === "meditation" && (
                                 <MeditationManualForm
