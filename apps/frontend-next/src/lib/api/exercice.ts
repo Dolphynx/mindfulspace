@@ -201,3 +201,35 @@ export async function createExerciceSession(
 
     return res.json() as Promise<CreateExerciceSessionResponse>;
 }
+
+export type ExerciceSessionsDetailQuery =
+    | { lastDays: number }
+    | { from: string; to?: string }
+    | { to: string; from?: string };
+
+export async function fetchExerciceSessionsDetail(
+    query: ExerciceSessionsDetailQuery = { lastDays: 30 },
+    baseUrl = API_BASE_URL,
+): Promise<ExerciceSession[]> {
+    const params = new URLSearchParams();
+
+    if ("lastDays" in query) {
+        params.set("lastDays", String(query.lastDays));
+    } else {
+        if (query.from) params.set("from", query.from);
+        if (query.to) params.set("to", query.to);
+    }
+
+    const res = await apiFetch(`${baseUrl}/exercices?${params.toString()}`, {
+        cache: "no-store",
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return [];
+
+    return data
+        .map(normalizeExerciceSession)
+        .filter((s): s is ExerciceSession => s !== null);
+}

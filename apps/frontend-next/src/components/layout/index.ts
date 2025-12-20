@@ -22,10 +22,12 @@ export { default as CookiePreferencesModal } from "./CookiePreferencesModal";
 export { default as Footer } from "./Footer";
 export { default as FooterCookiesLink } from "./FooterCookiesLink";
 
-export { ClientNavbar } from "./Navbar";
-export { PublicNavbar } from "./PublicNavbar";
 export { CoachNavbar } from "./CoachNavbar";
 export { AdminNavbar } from "./AdminNavbar";
 export { MainNavbar } from "./MainNavbar";
 
 export { default as AppShell } from "./AppShell";
+
+export * from "./GlobalNotice";
+export * from "./OceanWavesBackground";
+export * from "./PageHero";

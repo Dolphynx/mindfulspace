@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
 
 /**
@@ -61,14 +61,6 @@ type MeditationManualFormProps = {
     compact?: boolean;
 };
 
-/**
- * Convertit une date issue d’un `<input type="date">`
- * en ISO string, normalisée à midi (12:00).
- *
- * @remarks
- * Normaliser à midi évite les décalages de jour
- * liés aux fuseaux horaires.
- */
 function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
@@ -79,10 +71,6 @@ function dateInputToNoonIso(dateStr: string): string {
     return date.toISOString();
 }
 
-/**
- * Génère la valeur par défaut pour un champ date (`YYYY-MM-DD`)
- * correspondant à la date du jour.
- */
 function buildTodayDateInput(): string {
     const now = new Date();
     const y = now.getFullYear();
@@ -91,19 +79,6 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-/**
- * Formulaire d’encodage manuel d’une session de méditation.
- *
- * @remarks
- * Ce composant est volontairement :
- * - **stateless côté données métier** (API gérée par le parent),
- * - **réutilisable** (mode normal vs compact),
- * - **i18n-ready** (namespace `domainMeditation`).
- *
- * Cas d’usage :
- * - Page domaine Méditation → mode normal (collapsible).
- * - Page Serenity / World → mode compact + `defaultOpen`.
- */
 export default function MeditationManualForm({
                                                  types,
                                                  onCreateSessionAction,
@@ -112,62 +87,27 @@ export default function MeditationManualForm({
                                              }: MeditationManualFormProps) {
     const t = useTranslations("domainMeditation");
 
-    /**
-     * État d’ouverture du formulaire (mode non-compact).
-     */
     const [isOpen, setIsOpen] = useState(defaultOpen);
-
-    /**
-     * Valeur du champ date.
-     */
     const [dateInput, setDateInput] = useState<string>(() =>
         buildTodayDateInput(),
     );
-
-    /**
-     * Durée de la session (en minutes).
-     */
     const [manualDuration, setManualDuration] = useState<number>(10);
-
-    /**
-     * Qualité / ressenti après la séance.
-     */
     const [manualQuality, setManualQuality] = useState<MoodValue | null>(
         3 as MoodValue,
     );
-
-    /**
-     * Indique si une soumission est en cours.
-     */
     const [savingManual, setSavingManual] = useState(false);
-
-    /**
-     * Type de méditation sélectionné.
-     */
     const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
 
-    /**
-     * Pré-sélection automatique du premier type disponible.
-     */
     useEffect(() => {
         if (!selectedTypeId && types.length > 0) {
             setSelectedTypeId(types[0].id);
         }
     }, [types, selectedTypeId]);
 
-    /**
-     * Synchronise l’état d’ouverture si `defaultOpen` change.
-     *
-     * @remarks
-     * Cas rare, mais utile si le parent contrôle dynamiquement l’ouverture.
-     */
     useEffect(() => {
         if (defaultOpen) setIsOpen(true);
     }, [defaultOpen]);
 
-    /**
-     * Réinitialise tous les champs du formulaire.
-     */
     function resetForm() {
         setDateInput(buildTodayDateInput());
         setManualDuration(10);
@@ -175,19 +115,12 @@ export default function MeditationManualForm({
         setSelectedTypeId(null);
     }
 
-    /**
-     * Soumission du formulaire.
-     *
-     * @remarks
-     * - Valide les champs requis.
-     * - Appelle l’action fournie par le parent.
-     * - Réinitialise le formulaire en cas de succès.
-     */
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         if (!selectedTypeId) return;
 
         setSavingManual(true);
+
         try {
             await onCreateSessionAction({
                 durationSeconds: manualDuration * 60,
@@ -197,9 +130,8 @@ export default function MeditationManualForm({
             });
 
             resetForm();
-
-            // En mode compact, on reste ouvert.
             setIsOpen(defaultOpen || compact);
+
         } finally {
             setSavingManual(false);
         }
@@ -207,9 +139,6 @@ export default function MeditationManualForm({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* -------------------------------------------------------------- */}
-            {/* Header (uniquement en mode non-compact)                         */}
-            {/* -------------------------------------------------------------- */}
             {!compact && (
                 <div className="flex items-start justify-between gap-4">
                     <div>
@@ -235,9 +164,6 @@ export default function MeditationManualForm({
                 </div>
             )}
 
-            {/* -------------------------------------------------------------- */}
-            {/* Formulaire (toujours visible en compact)                        */}
-            {/* -------------------------------------------------------------- */}
             <div
                 className={`transition-all duration-700 overflow-hidden ${
                     compact || isOpen

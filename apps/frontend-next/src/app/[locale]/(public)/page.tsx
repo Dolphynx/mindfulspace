@@ -1,7 +1,7 @@
 // src/app/[locale]/(public)/page.tsx
 
 import Link from "next/link";
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 

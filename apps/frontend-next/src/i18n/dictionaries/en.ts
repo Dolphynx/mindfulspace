@@ -302,6 +302,14 @@ const en: Messages = {
         subtitle: "Tools and tips to improve your sleep quality.",
         empty: "Content coming soon…",
 
+        history_summary_nights: "nights",
+        history_summary_hoursAvg: "hours on average",
+        history_toggle_expand: "Show details",
+        history_toggle_collapse: "Hide details",
+        history_totalSleepLabel: "Total sleep",
+        history_totalNightsLabel: "Total nights",
+        history_averageQualityLabel: "Average quality",
+
         // Manual logging (only mode for sleep)
         manualForm_title: "Log a night of sleep",
         manualForm_description: "Record your bedtime, wake-up time and how restful your night felt.",
@@ -317,13 +325,55 @@ const en: Messages = {
         history_placeholder: "Your sleep history will appear here as soon as you log a few nights.",
         history_nights: "nights",
         last7_empty: "No sleep recorded in the last 7 days.",
-        history_average: "hours in average"
+        history_average: "hours in average",
+
+        detail: {
+            kpisTitle: "Key metrics",
+            trendTitle: "Trend",
+            historyTitle: "History",
+            kpi: {
+                weekHours: "Hours (7 days)",
+                avg30: "Average (30 days)",
+                streak: "Streak",
+                streakBestPrefix: "Best streak:",
+                avgQuality: "Average quality",
+                na: "—",
+            },
+            trendHours30: "Hours per night (last 30 days)",
+            trendSma5: "Smoothing (5)",
+            insightsTitle: "Insights (30 days)",
+            insights: {
+                activeNights: "Logged nights",
+                bestNight: "Best night",
+                goodQuality: "Quality ≥ 4/5",
+                goodQualityHint: "of logged nights",
+                variability: "Variability",
+                variabilityHint: "std dev (h)",
+                activeDays: "Active days",
+                totalMinutes: "Total time",
+                bestDay: "Best day",
+                top3Types: "Top 3 types",
+                coverage: "Coverage",
+                goodQualityShort: "≥ 4/5",
+            },
+        },
 
     },
 
     domainExercice: {
         title: "Exercise",
         subtitle: "Track and log your exercise sessions.",
+
+        history_summary_sessions: "sessions",
+        history_summary_exercises: "exercises",
+        history_toggle_expand: "Show details",
+        history_toggle_collapse: "Hide details",
+        history_totalRepsLabel: "Total reps",
+        history_totalSessionsLabel: "Total sessions",
+        history_averageQualityLabel: "Average quality",
+        history_dayLabel: "Day",
+        history_totalLabel: "total",
+        history_sessionsLabel: "session",
 
         // Manual logging
         manualForm_title: "Log a past session",
@@ -377,6 +427,33 @@ const en: Messages = {
         weekday_4: "Thursday",
         weekday_5: "Friday",
         weekday_6: "Saturday",
+
+        detail: {
+            kpisTitle: "Key metrics",
+            trendTitle: "Trend",
+            historyTitle: "History",
+            kpi: {
+                weekReps: "Reps (7 days)",
+                avg30: "Average (30 days)",
+                streak: "Streak",
+                streakBestPrefix: "Best streak:",
+                topExercise: "Top exercise",
+                na: "—",
+            },
+            trend30: "Volume (last 30 days)",
+            trendSma5: "Smoothing (5)",
+            insightsTitle: "Insights (30 days)",
+            insights: {
+                activeDays: "Active days",
+                totalMinutes: "Total time",
+                bestDay: "Best day",
+                top3: "Top 3 types",
+                totalReps: "Total repetitions",
+                coverage: "Coverage",
+                intensity: "Intensity",
+                intensityHint: "Reps per session",
+            },
+        },
     },
 
     domainMeditation: {
@@ -515,7 +592,33 @@ const en: Messages = {
         },
 
         last7_summary_sessions: "sessions",
-        last7_summary_minutes: "minutes"
+        last7_summary_minutes: "minutes",
+
+        detail: {
+            kpisTitle: "Key metrics",
+            trendTitle: "Trend",
+            historyTitle: "History",
+            kpi: {
+                weekMinutes: "Minutes (7 days)",
+                avg30: "Average (30 days)",
+                streak: "Streak",
+                streakBestPrefix: "Best streak:",
+                topType: "Top type",
+                na: "—",
+            },
+            trendMinutes30: "Minutes per session (last 30 days)",
+            trendSma5: "Smoothing (5)",
+            insightsTitle: "Insights (30 days)",
+            insights: {
+                activeDays: "Active days",
+                totalMinutes: "Total time",
+                bestDay: "Best day",
+                top3Types: "Top 3 types",
+                coverage: "Coverage",
+                moodCoverage: "Mood recorded",
+                moodCoverageShort: "Mood",
+            },
+        },
     },
 
     publicWorld: {
@@ -523,7 +626,133 @@ const en: Messages = {
         sleepAlt: "Sleep",
         exerciceAlt: "Exercise",
         meditationAlt: "Meditation",
-        encodeSessionTitle: "Log a session"
+        encodeSessionTitle: "Log a session",
+        quickLogTitle: "Quick log",
+        quickLogAriaSleep: "Quick log: sleep",
+        quickLogAriaMeditation: "Quick log: meditation",
+        quickLogAriaExercise: "Quick log: exercise",
+        quickLogToastSaved: "✅ Session saved",
+        worldStartTitle: "My world",
+        worldStartSubtitle: "A quick glance, then start whenever you’re ready.",
+        worldStartCta: "Start",
+        worldPanelTitle: "MY WORLD",
+        worldPanelCloseAria: "Close panel",
+        worldPanelBackAria: "Go back",
+        worldPanelHomeAria: "Back to overview",
+        startSessionTitle: "Start a session",
+    },
+
+    world: {
+        domainDetail: {
+            back: "Back",
+            subtitle: "Session analysis: trends, consistency, progression…",
+        },
+
+        sections: {
+            quickActionsTitle: "Quick actions",
+            quickActionsAria: "Quick actions section",
+            domainsTitle: "Domains",
+            domainsAria: "Domain selection section",
+        },
+
+        overview: {
+            chipWeekMinutes: "min this week",
+            chipWellbeing: "Well-being:",
+
+            todayTitle: "Today",
+            quickLogCta: "Log",
+
+            snapshotTitle: "Snapshot",
+
+            todayExercisesTitle: "Exercises of the day",
+            todayActionsTitle: "Today’s actions",
+
+            encodeSessionCta: "Log a session",
+            encodeSessionSubtitle: "Quickly add a session (sleep, meditation, exercise).",
+            startSessionCta: "Start a session",
+            startSessionSubtitle: "Launch a guided session (meditation, exercise).",
+
+            todayActionsHint: "Tip: small, regular logs improve your stats and help you earn badges.",
+
+            viewAll: "View all badges",
+            recentBadgesTitle: "Your latest badges",
+
+            viewDetail: "View details",
+            encode: "Log",
+
+            sleepMainKpi: "Average duration",
+            sleepKpiA: "Duration:",
+            sleepKpiB: "Quality:",
+
+            meditationMainKpi: "Last 7 days",
+            meditationKpiA: "Sessions:",
+            meditationKpiB: "Minutes:",
+
+            exerciseMainKpi: "This week",
+            exerciseKpiA: "Sessions:",
+            exerciseKpiB: "Goals:",
+
+            programSubscribeCta: "Subscribe to an exercise program",
+            programSubscribeTitle: "Exercise programs",
+            programSubscribeSubtitle: "Pick a program to plan your workouts and track your progress.",
+            programsCta: "Subscribe to an exercise program",
+            programsSubtitle: "Pick a program and get scheduled workouts.",
+
+            chipStreak: "Streak:",
+            metricsLoadError: "Unable to load metrics.",
+            sleepFootnoteEmpty: "No sleep logged this week.",
+            sleepFootnoteLastNight: "Last night:",
+            meditationFootnoteEmpty: "No mood recorded.",
+            meditationFootnoteMood: "Average mood:",
+            exerciseFootnoteEmpty: "No quality recorded.",
+            exerciseFootnoteQuality: "Average quality:",
+
+            recentBadgesEmpty: "No badges to display for now.",
+
+            topSummaryAria: "Preview of your last 7 days datas",
+
+            trendTitle: "Trend",
+            last7Days: "Last 7 days",
+            wellbeingBarLabel: "Wellbeing",
+            statusImprove: "Needs improvement",
+            statusStable: "Stable",
+        },
+
+        panel: {
+            titles: {
+                overview: "MY WORLD",
+                badges: "Badges",
+                quickLog: "Quick log",
+                startSession: "Start a session",
+            },
+            backAria: "Back",
+            closeAria: "Close",
+        },
+
+        startSession: {
+            title: "Start a session",
+            hint: "Pick a session type and get started.",
+        },
+
+        programs: {
+            title: "Exercise programs",
+            switchHint: "Later: meditation programs too.",
+        },
+
+        cards: {
+            encodeSessionTitle: "Log a session",
+        },
+
+        actions: {
+            quickLog: "Quick log",
+            viewAllBadges: "View all my badges",
+        },
+
+        domains: {
+            sleep: "Sleep",
+            meditation: "Meditation",
+            exercise: "Exercise",
+        },
     },
 
     resourceDetailPage: {
@@ -807,6 +1036,10 @@ const en: Messages = {
                 title: "First exercise session",
                 description: "You logged your first exercise session.",
             },
+            streak3: {
+                title: "3-day exercice streak",
+                description: "You made exercises 3 days in a row. Great consistency!",
+            },
         },
 
         sleep: {
@@ -821,6 +1054,11 @@ const en: Messages = {
                 title: "First MindfulSpace session",
                 description: "Welcome! You started using MindfulSpace.",
             },
+        },
+
+        quickLogSaved: {
+            title: "Session saved",
+            description: "Well done for this new step !",
         },
     },
 

@@ -3,7 +3,7 @@
 import {useEffect, useState} from "react";
 import type { ExerciceContentItem } from "@/lib/api/exercice";
 import { useTranslations } from "@/i18n/TranslationContext";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import {MoodValue} from "@/lib";   // ✅ use the real one
 
 type Props = {

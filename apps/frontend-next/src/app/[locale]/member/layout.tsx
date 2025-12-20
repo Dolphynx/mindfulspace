@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {AppShell, MainNavbar} from "@/components/layout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { BadgeToastProvider } from "@/components/badges/BadgeToastProvider";
+import {AppToastProvider} from "@/components/toasts/AppToastProvider";
 
 /**
  * Layout du module member (espace authentifié).
@@ -28,9 +29,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     return (
         <AuthGuard roles={["user", "premium", "coach", "admin"]}>
             <BadgeToastProvider>
-                <AppShell navbar={<MainNavbar mode="client" />}>
-                    {children}
-                </AppShell>
+                <AppToastProvider>
+                    <AppShell navbar={<MainNavbar mode="client" />}>
+                        {children}
+                    </AppShell>
+                </AppToastProvider>
             </BadgeToastProvider>
         </AuthGuard>
     );

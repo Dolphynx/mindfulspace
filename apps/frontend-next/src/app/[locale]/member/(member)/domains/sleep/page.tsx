@@ -1,13 +1,13 @@
 "use client";
 
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
 import SleepManualForm from "@/components/sleep/SleepManualForm";
 import {useSleepSessions} from "@/hooks/useSleepSessions";
 import {useTranslations} from "@/i18n/TranslationContext";
 import {SleepHistoryCard} from "@/components/sleep/SleepHistoryCard";
-import DomainSwitcher from "@/components/DomainSwitcher";
+import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 export default function SleepPage() {

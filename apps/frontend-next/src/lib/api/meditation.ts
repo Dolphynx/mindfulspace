@@ -225,3 +225,17 @@ export async function createMeditationSession(
 
     return res.json() as Promise<CreateMeditationSessionResponse>;
 }
+
+export async function fetchMeditationSessionsDetail(
+    lastDays: number = 30,
+): Promise<MeditationSession[]> {
+    const res = await apiFetch(`/me/meditation-sessions?lastDays=${lastDays}`, {
+        cache: "no-store",
+    });
+
+    if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+    }
+
+    return res.json() as Promise<MeditationSession[]>;
+}

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateExerciceSessionDto } from './dto/exercice-session.dto';
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class ExerciceSessionService {
@@ -242,6 +243,61 @@ export class ExerciceSessionService {
             },
         });
     }
+
+  async getLastNDays(userId: string, n: number) {
+    const from = new Date();
+    from.setDate(from.getDate() - n);
+    from.setHours(0, 0, 0, 0);
+
+    const where: Prisma.ExerciceSessionWhereInput = {
+      userId,
+      dateSession: { gte: from },
+    };
+
+    const sessions = await this.prisma.exerciceSession.findMany({
+      where,
+      orderBy: { dateSession: "asc" },
+      include: {
+        exerciceSerie: { include: { exerciceContent: true } },
+      },
+    });
+
+    return sessions.map((s) => this.normalizeSession(s));
+  }
+
+  async getSessionsBetweenDates(
+    userId: string,
+    range: { from?: string; to?: string },
+  ) {
+    const dateFilter: Prisma.DateTimeFilter = {};
+
+    if (range.from) {
+      const d = new Date(range.from);
+      d.setHours(0, 0, 0, 0);
+      dateFilter.gte = d;
+    }
+
+    if (range.to) {
+      const d = new Date(range.to);
+      d.setHours(23, 59, 59, 999);
+      dateFilter.lte = d;
+    }
+
+    const where: Prisma.ExerciceSessionWhereInput = {
+      userId,
+      ...(Object.keys(dateFilter).length > 0 ? { dateSession: dateFilter } : {}),
+    };
+
+    const sessions = await this.prisma.exerciceSession.findMany({
+      where,
+      orderBy: { dateSession: "asc" },
+      include: {
+        exerciceSerie: { include: { exerciceContent: true } },
+      },
+    });
+
+    return sessions.map((s) => this.normalizeSession(s));
+  }
 
     /**
      * Normalise une séance brute Prisma vers le format attendu par le frontend.
