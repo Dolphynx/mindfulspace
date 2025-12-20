@@ -1,22 +1,40 @@
 "use client";
 
-import React from "react";
+/**
+ * @file ActionTile.tsx
+ * @description
+ * Tuile d’action compacte utilisée dans le World Hub.
+ *
+ * Objectifs :
+ * - Présenter une action claire (titre + sous-titre).
+ * - Mettre en avant un CTA unique.
+ * - Offrir une hiérarchie visuelle cohérente via un rail et un glow décoratif.
+ *
+ * Contrainte Next (App Router) :
+ * Les props d’un Client Component pouvant être rendu depuis un Server Component
+ * doivent être sérialisables. Les fonctions (ex: `onClick`) ne le sont pas.
+ *
+ * Ce composant évite donc les callbacks en props et expose une clé d’action
+ * sérialisable {@link ActionTileAction}. L’exécution est déléguée au hub côté client.
+ */
+
+import { useWorldHub } from "@/feature/world/hub/WorldHubProvider";
 
 /**
- * Tons visuels supportés par le composant ActionTile.
- *
- * Chaque ton pilote :
- * - la couleur du rail latéral,
- * - le halo décoratif (glow),
- * - le style du bouton d’action (CTA).
+ * Tons visuels supportés par {@link ActionTile}.
  */
-type Tone = "blue" | "purple" | "green";
+export type Tone = "blue" | "purple" | "green";
+
+/**
+ * Actions supportées par {@link ActionTile}.
+ *
+ * Cette valeur est sérialisable et permet d’éviter le passage de fonctions
+ * (non sérialisables) via les props, ce qui prévient l’erreur TS71007.
+ */
+export type ActionTileAction = "quickLog" | "startSession" | "programs";
 
 /**
  * Mapping des styles Tailwind par ton.
- *
- * Cette structure centralise la déclinaison visuelle du composant
- * afin d’éviter toute duplication de classes conditionnelles.
  */
 const toneStyles: Record<Tone, { rail: string; glow: string; cta: string }> = {
     blue: {
@@ -37,23 +55,9 @@ const toneStyles: Record<Tone, { rail: string; glow: string; cta: string }> = {
 };
 
 /**
- * Tuile d’action compacte utilisée dans le World Hub.
- *
- * Objectifs UI :
- * - Présenter une action claire (titre + sous-titre).
- * - Mettre en avant un CTA unique.
- * - Offrir une hiérarchie visuelle cohérente via un rail et un glow décoratif.
- *
- * Le composant est volontairement stateless et entièrement piloté
- * par ses propriétés.
+ * Propriétés de {@link ActionTile}.
  */
-export function ActionTile({
-                               title,
-                               subtitle,
-                               ctaLabel,
-                               onClick,
-                               tone = "blue",
-                           }: {
+export type ActionTileProps = {
     /** Titre principal de l’action. */
     title: string;
 
@@ -63,20 +67,62 @@ export function ActionTile({
     /** Libellé du bouton d’action (CTA). */
     ctaLabel: string;
 
-    /** Handler déclenché au clic sur le CTA. */
-    onClick: () => void;
+    /**
+     * Clé d’action sérialisable.
+     *
+     * L’action est exécutée côté client via le World Hub.
+     */
+    action: ActionTileAction;
 
     /**
      * Ton visuel de la tuile.
      *
-     * Par défaut : `"blue"`.
+     * @defaultValue `"blue"`
      */
     tone?: Tone;
-}) {
-    /**
-     * Styles résolus à partir du ton sélectionné.
-     */
+};
+
+/**
+ * Tuile d’action compacte (titre + sous-titre + CTA).
+ *
+ * @param props - Propriétés du composant.
+ * @returns Tuile d’action stylée.
+ */
+export function ActionTile({
+                               title,
+                               subtitle,
+                               ctaLabel,
+                               action,
+                               tone = "blue",
+                           }: ActionTileProps) {
     const s = toneStyles[tone];
+
+    const { openQuickLog, openStartSession, openPrograms } = useWorldHub();
+
+    /**
+     * Exécute l’action correspondante côté client.
+     *
+     * Remarque : les handlers du hub peuvent avoir une signature plus large que `() => void`.
+     * L’appel est encapsulé pour garantir une compatibilité avec `onClick`.
+     */
+    function handleActionClick() {
+        switch (action) {
+            case "quickLog":
+                openQuickLog();
+                break;
+            case "startSession":
+                openStartSession();
+                break;
+            case "programs":
+                openPrograms();
+                break;
+            default: {
+                // Exhaustivité TypeScript
+                const _exhaustive: never = action;
+                return _exhaustive;
+            }
+        }
+    }
 
     return (
         <div className="relative overflow-hidden rounded-2xl border border-white/45 bg-white/65 shadow-sm transition hover:shadow-md hover:-translate-y-[1px]">
@@ -93,14 +139,12 @@ export function ActionTile({
                     <div className="text-sm font-semibold text-slate-900">
                         {title}
                     </div>
-                    <div className="mt-1 text-xs text-slate-600">
-                        {subtitle}
-                    </div>
+                    <div className="mt-1 text-xs text-slate-600">{subtitle}</div>
                 </div>
 
                 <button
                     type="button"
-                    onClick={onClick}
+                    onClick={handleActionClick}
                     className={[
                         "shrink-0 rounded-xl px-3 py-2 text-xs font-semibold shadow-sm transition",
                         s.cta,

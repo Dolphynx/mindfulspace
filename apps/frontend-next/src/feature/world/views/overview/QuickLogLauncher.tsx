@@ -1,33 +1,37 @@
+// File: src/feature/world/views/overview/QuickLogLauncher.tsx
 "use client";
 
 import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { Domain } from "../../hub/types";
+import { useWorldHub } from "../../hub/WorldHubProvider";
+
+/**
+ * @file QuickLogLauncher.tsx
+ * @description
+ * Lanceur Quick Log par domaine (sélecteur d’icônes).
+ *
+ * Contrainte Next.js (App Router) :
+ * - Les props doivent être sérialisables (TS71007).
+ * - Les callbacks (ex: `onChange`) ne sont pas sérialisables.
+ *
+ * Stratégie :
+ * - Remplacer le callback par une action directe via {@link useWorldHub}.
+ * - Le composant déclenche l’ouverture du Quick Log au clic.
+ */
 
 /**
  * Propriétés du composant {@link QuickLogLauncher}.
  */
-type Props = {
+export type QuickLogLauncherProps = {
     /**
-     * Domaine actuellement actif / sélectionné.
+     * Domaine actuellement actif / sélectionné (pour le style `aria-pressed`).
      */
     active: Domain;
-
-    /**
-     * Callback déclenché lors d’un changement de domaine.
-     *
-     * @param d - Domaine sélectionné.
-     */
-    onChange: (d: Domain) => void;
 };
 
 /**
  * Configuration statique des boutons Quick Log par domaine.
- *
- * Chaque entrée définit :
- * - la clé du domaine,
- * - la clé de traduction pour le texte alternatif / tooltip,
- * - la source de l’icône associée.
  */
 const ITEMS: {
     key: Domain;
@@ -42,20 +46,12 @@ const ITEMS: {
 /**
  * Lanceur Quick Log par domaine.
  *
- * Rôle :
- * - Afficher une rangée de boutons correspondant aux domaines disponibles.
- * - Indiquer visuellement le domaine actif.
- * - Permettre la sélection d’un domaine pour le Quick Log.
- *
- * Accessibilité :
- * - Utilise `aria-pressed` pour refléter l’état actif.
- * - Fournit un `title` et un `alt` traduits pour chaque icône.
- *
  * @param props - Propriétés du composant.
- * @returns Sélecteur de domaine pour le Quick Log.
+ * @returns Sélecteur de domaine ouvrant le Quick Log sur le domaine choisi.
  */
-export function QuickLogLauncher({ active, onChange }: Props) {
+export function QuickLogLauncher({ active }: QuickLogLauncherProps) {
     const tWorld = useTranslations("publicWorld");
+    const { openQuickLog } = useWorldHub();
 
     return (
         <div className="flex items-center justify-start gap-3">
@@ -66,7 +62,7 @@ export function QuickLogLauncher({ active, onChange }: Props) {
                     <button
                         key={it.key}
                         type="button"
-                        onClick={() => onChange(it.key)}
+                        onClick={() => openQuickLog(it.key)}
                         aria-pressed={isActive}
                         title={tWorld(it.labelKey)}
                         className={[

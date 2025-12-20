@@ -1,6 +1,7 @@
+// File: src/feature/world/views/startSession/StartSessionView.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { Domain } from "../../hub/types";
 import { useWorldHub } from "../../hub/WorldHubProvider";
@@ -16,6 +17,29 @@ import { useAuthRequired } from "@/hooks/useAuthRequired";
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
 
 /**
+ * @file StartSessionView.tsx
+ * @description
+ * Vue “Démarrer une session” du drawer SPA.
+ *
+ * Responsabilités :
+ * - Sélection du domaine (méditation / exercice) via {@link StartSessionLauncher}.
+ * - Délégation au composant métier correspondant :
+ *   - `StartMeditationWizard` pour la méditation,
+ *   - `ExerciceStartSection` pour l’exercice.
+ * - Centralisation du rafraîchissement World Hub (bumpRefreshKey) après enregistrement.
+ * - Contrôle d’accès premium (même logique que la page “/domains/meditation”).
+ *
+ * Contrainte Next.js (App Router) :
+ * - Éviter de passer des callbacks en props à des Client Components importables côté serveur (TS71007).
+ *
+ * Stratégie :
+ * - Le “domaine actif” est dérivé de `state.drawerStack` (source de vérité).
+ * - {@link StartSessionLauncher} déclenche `openStartSession(domain)` au clic (pas de `onChange`).
+ *
+ * @returns Vue “Start Session”.
+ */
+
+/**
  * Domaine autorisé pour la vue “Start Session”.
  *
  * Le domaine "sleep" est exclu : le démarrage concerne uniquement
@@ -23,22 +47,6 @@ import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldR
  */
 type StartDomain = Exclude<Domain, "sleep">;
 
-/**
- * Vue “Démarrer une session” du drawer SPA.
- *
- * Responsabilités :
- * - Sélection du domaine (méditation / exercice) via `StartSessionLauncher`.
- * - Délégation au composant métier correspondant :
- *   - `StartMeditationWizard` pour la méditation,
- *   - `ExerciceStartSection` pour l’exercice.
- * - Centralisation du rafraîchissement World Hub (bumpRefreshKey) après enregistrement.
- * - Contrôle d’accès premium (même logique que la page “/domains/meditation”).
- *
- * Modèle de navigation interne :
- * - La sortie du flux méditation utilise `openOverview()` (navigation via hub, pas via Next router).
- *
- * @returns Vue “Start Session”.
- */
 export function StartSessionView() {
     const tWorld = useTranslations("world");
     const tCommon = useTranslations("common");
@@ -53,16 +61,15 @@ export function StartSessionView() {
     const { refresh, withRefresh } = useOptionalWorldRefresh();
 
     /**
-     * Domaine initial depuis la stack du drawer.
+     * Domaine actif dérivé de la pile de vues du drawer.
      *
-     * Si la vue a été ouverte via une action contextualisée, `startSession.domain`
-     * peut pré-sélectionner le domaine.
+     * Source de vérité :
+     * - la vue courante est le sommet de `drawerStack`,
+     * - si cette vue est `startSession`, son champ `domain` pilote l’écran affiché.
      */
     const topView = state.drawerStack[state.drawerStack.length - 1];
-    const initialDomain: StartDomain =
-        topView?.type === "startSession" ? topView.domain ?? "meditation" : "meditation";
-
-    const [active, setActive] = useState<StartDomain>(initialDomain);
+    const active: StartDomain =
+        topView?.type === "startSession" ? (topView.domain ?? "meditation") : "meditation";
 
     const {
         types: exerciceTypes,
@@ -73,16 +80,11 @@ export function StartSessionView() {
 
     /**
      * Contrôle d’accès premium pour la méditation.
-     *
-     * Un utilisateur est considéré comme premium s’il possède un rôle
-     * "premium" ou "admin" (comparaison insensible à la casse).
      */
     const { user } = useAuthRequired();
     const canAccessPremium =
         !!user &&
-        user.roles
-            .map((r) => r.toLowerCase())
-            .some((role) => ["premium", "admin"].includes(role));
+        user.roles.map((r) => r.toLowerCase()).some((role) => ["premium", "admin"].includes(role));
 
     /**
      * Sous-titre affiché sous le titre principal (domaine actif).
@@ -95,9 +97,6 @@ export function StartSessionView() {
 
     /**
      * Texte d’erreur générique si la partie “exercice” signale une erreur.
-     *
-     * Remarque :
-     * - Les erreurs du flux méditation sont supposées gérées par `StartMeditationWizard`.
      */
     const errorText = exErrorType ? tCommon("genericError") ?? "Une erreur est survenue." : null;
 
@@ -110,15 +109,12 @@ export function StartSessionView() {
 
                 <div className="mt-1 text-xs text-slate-500">
                     {subtitle}
-                    {exLoading
-                        ? ` · ${tCommon("loading")}`
-                        : errorText
-                            ? ` · ${errorText}`
-                            : ""}
+                    {exLoading ? ` · ${tCommon("loading")}` : errorText ? ` · ${errorText}` : ""}
                 </div>
             </div>
 
-            <StartSessionLauncher active={active} onChange={setActive} />
+            {/* Lanceur de sélection : déclenche une ré-ouverture de “start session” sur le domaine choisi via le hub */}
+            <StartSessionLauncher active={active} />
 
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
                 {active === "meditation" ? (
@@ -130,16 +126,12 @@ export function StartSessionView() {
                 ) : (
                     <ExerciceStartSection
                         types={exerciceTypes ?? []}
-                        onCreateSession={(payload) =>
-                            withRefresh(() => createExerciceSession(payload))
-                        }
+                        onCreateSession={(payload) => withRefresh(() => createExerciceSession(payload))}
                     />
                 )}
             </div>
 
-            <div className="text-xs text-slate-500">
-                {tWorld("startSession.hint")}
-            </div>
+            <div className="text-xs text-slate-500">{tWorld("startSession.hint")}</div>
         </div>
     );
 }

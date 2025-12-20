@@ -1,41 +1,43 @@
+// File: src/feature/world/views/overview/StartSessionLauncher.tsx
 "use client";
 
 import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { Domain } from "../../hub/types";
+import { useWorldHub } from "../../hub/WorldHubProvider";
+
+/**
+ * @file StartSessionLauncher.tsx
+ * @description
+ * Lanceur de démarrage de session par domaine.
+ *
+ * Contrainte Next.js :
+ * - Pas de callbacks en props (TS71007).
+ *
+ * Stratégie :
+ * - Déclencher l’action via {@link useWorldHub}.
+ */
 
 /**
  * Domaine autorisé pour le démarrage d’une session.
  *
- * Le domaine "sleep" est explicitement exclu :
- * seules les sessions de méditation et d’exercice peuvent être démarrées.
+ * Le domaine "sleep" est exclu : seules les sessions de méditation et d’exercice
+ * peuvent être démarrées.
  */
-type StartDomain = Exclude<Domain, "sleep">;
+export type StartDomain = Exclude<Domain, "sleep">;
 
 /**
  * Propriétés du composant {@link StartSessionLauncher}.
  */
-type Props = {
+export type StartSessionLauncherProps = {
     /**
-     * Domaine actuellement sélectionné pour le démarrage de session.
+     * Domaine actuellement sélectionné (pour le style `aria-pressed`).
      */
     active: StartDomain;
-
-    /**
-     * Callback déclenché lors d’un changement de domaine.
-     *
-     * @param d - Domaine sélectionné.
-     */
-    onChange: (d: StartDomain) => void;
 };
 
 /**
  * Configuration statique des domaines disponibles pour le démarrage de session.
- *
- * Chaque entrée définit :
- * - la clé du domaine,
- * - la clé de traduction pour le texte alternatif / tooltip,
- * - la source de l’icône associée.
  */
 const ITEMS: {
     key: StartDomain;
@@ -49,23 +51,12 @@ const ITEMS: {
 /**
  * Lanceur de démarrage de session par domaine.
  *
- * Rôle :
- * - Afficher les domaines disponibles pour le démarrage d’une session.
- * - Mettre en évidence le domaine actif.
- * - Permettre la sélection du domaine cible avant le lancement.
- *
- * Contraintes fonctionnelles :
- * - Le domaine "sleep" n’est pas proposé (sessions non démarrables).
- *
- * Accessibilité :
- * - Utilise `aria-pressed` pour refléter l’état actif.
- * - Fournit un `title` et un `alt` traduits pour chaque icône.
- *
  * @param props - Propriétés du composant.
- * @returns Sélecteur de domaine pour le démarrage de session.
+ * @returns Sélecteur de domaine ouvrant la vue “start session” sur le domaine choisi.
  */
-export function StartSessionLauncher({ active, onChange }: Props) {
+export function StartSessionLauncher({ active }: StartSessionLauncherProps) {
     const tWorld = useTranslations("publicWorld");
+    const { openStartSession } = useWorldHub();
 
     return (
         <div className="flex items-center justify-start gap-3">
@@ -76,7 +67,7 @@ export function StartSessionLauncher({ active, onChange }: Props) {
                     <button
                         key={it.key}
                         type="button"
-                        onClick={() => onChange(it.key)}
+                        onClick={() => openStartSession(it.key)}
                         aria-pressed={isActive}
                         title={tWorld(it.labelKey)}
                         className={[

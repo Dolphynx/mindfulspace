@@ -20,6 +20,8 @@ import { useBadgeToasts } from "@/components";
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
 
 /**
+ * @file QuickLogView.tsx
+ * @description
  * Vue “Quick Log” du drawer SPA.
  *
  * Responsabilités :
@@ -29,11 +31,13 @@ import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldR
  *   (via `withRefresh` → `bumpRefreshKey` si le provider est présent).
  * - Déclencher un toast de badge (pattern “récompense”) puis naviguer vers l’overview.
  *
- * Remarques d’architecture :
- * - Les formulaires exigent des handlers de type `Promise<void>`, ce composant sert
- *   d’adaptateur entre ces signatures et les hooks de création de session.
- * - La navigation de sortie utilise `openOverview()` plutôt qu’un routage Next,
- *   conformément au modèle SPA interne du World Hub.
+ * Contrainte Next.js (App Router) :
+ * - Éviter de passer des callbacks en props à des Client Components importables côté serveur (TS71007).
+ *
+ * Stratégie :
+ * - Le “domaine actif” est dérivé de `state.drawerStack` (source de vérité).
+ * - Le composant {@link QuickLogLauncher} déclenche l’ouverture du Quick Log
+ *   avec le domaine choisi (pas de callback `onChange`).
  *
  * @returns Vue Quick Log.
  */
@@ -53,24 +57,30 @@ export function QuickLogView() {
     const { withRefresh } = useOptionalWorldRefresh();
 
     /**
-     * Domaine pré-sélectionné (optionnel) en provenance de la pile de vues.
+     * Domaine actif dérivé de la pile de vues du drawer.
      *
-     * La vue courante est supposée être le dernier élément de `drawerStack`.
+     * Source de vérité :
+     * - la vue courante est le sommet de `drawerStack`,
+     * - si cette vue est `quickLog`, son champ `domain` pilote le formulaire affiché.
+     *
+     * Avantage :
+     * - aucune gestion locale via `setActive` nécessaire,
+     * - évite de passer des callbacks dans des props (TS71007).
      */
     const topView = state.drawerStack[state.drawerStack.length - 1];
-
-    const initialDomain: Domain | null =
-        topView?.type === "quickLog" ? topView.domain ?? null : null;
-
-    const [active, setActive] = useState<Domain>(initialDomain ?? "sleep");
+    const active: Domain =
+        topView?.type === "quickLog" ? (topView.domain ?? "sleep") : "sleep";
 
     /**
-     * État toast local.
+     * État toast local (non utilisé pour l’affichage de badge, conservé pour compatibilité).
      *
-     * Remarque : l’affichage du toast est conditionné à `toast != null`.
-     * La logique de timer est préparée via des refs pour éviter les fuites lors du unmount.
+     * Remarque : l’affichage du toast de badge est géré par `useBadgeToasts`.
      */
     const [toast] = useState<string | null>(null);
+
+    /**
+     * Références de timers pour éviter les fuites lors du unmount.
+     */
     const toastTimerRef = useRef<number | null>(null);
     const navTimerRef = useRef<number | null>(null);
 
@@ -83,8 +93,6 @@ export function QuickLogView() {
 
     /**
      * Déclenche un “badge toast” de succès puis navigue vers l’overview après un délai.
-     *
-     * Le toast est géré par `useBadgeToasts` et non par l’état `toast`.
      *
      * @returns void
      */
@@ -152,11 +160,6 @@ export function QuickLogView() {
     /**
      * Handler de création de session sommeil adapté à la signature attendue par `SleepManualForm`.
      *
-     * Séquence :
-     * - POST via `createSleepSession`,
-     * - refresh global via `withRefresh`,
-     * - feedback utilisateur + navigation.
-     *
      * @param payload - Données de la session (sommeil).
      * @returns Promesse résolue lorsque l’action est terminée.
      */
@@ -209,15 +212,12 @@ export function QuickLogView() {
 
                 <div className="mt-1 text-xs text-slate-500">
                     {domainLabel}
-                    {anyLoading
-                        ? ` · ${tCommon("loading")}`
-                        : errorText
-                            ? ` · ${errorText}`
-                            : ""}
+                    {anyLoading ? ` · ${tCommon("loading")}` : errorText ? ` · ${errorText}` : ""}
                 </div>
             </div>
 
-            <QuickLogLauncher active={active} onChange={setActive} />
+            {/* Lanceur de sélection : déclenche une ré-ouverture du Quick Log sur le domaine choisi via le hub */}
+            <QuickLogLauncher active={active} />
 
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
                 {active === "sleep" && (

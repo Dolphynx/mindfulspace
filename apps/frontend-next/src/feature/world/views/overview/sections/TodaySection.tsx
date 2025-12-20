@@ -6,58 +6,30 @@
  * Section “Aujourd’hui” de l’overview du World Hub.
  *
  * Cette section regroupe :
- * - le plan du jour (exercices) via un composant dédié,
- * - des actions transverses sous forme de tuiles (Quick Log, démarrer une session, programmes),
+ * - le plan du jour (exercices) via {@link TodayExercices},
+ * - des actions transverses sous forme de tuiles via {@link ActionTile},
  * - un CTA d’accès rapide au Quick Log placé dans l’en-tête de la carte.
  *
- * Le composant est purement “composition UI” :
- * - pas de logique métier,
- * - la navigation est déléguée à des handlers fournis en props.
+ * Contrat d’architecture :
+ * - Les composants UI reçoivent des props sérialisables.
+ * - Les actions interactives sont déclenchées côté client via le hub.
+ *   (Évite TS71007 : fonctions non sérialisables en props.)
  */
 
 import { TodayExercices } from "@/components/exercise/ExerciceDayPlan";
 import { CardShell } from "@/feature/world/views/shared/CardShell";
 import { ActionTile } from "@/feature/world/ui/ActionTile";
-
-/**
- * Propriétés du composant {@link TodaySection}.
- */
-export type TodaySectionProps = {
-    /**
-     * Fonction de traduction pour le namespace `world`.
-     */
-    t: (key: string) => string;
-
-    /**
-     * Handler d’ouverture du panneau Quick Log.
-     */
-    onOpenQuickLog: () => void;
-
-    /**
-     * Handler d’ouverture du panneau de démarrage de session.
-     */
-    onOpenStartSession: () => void;
-
-    /**
-     * Handler d’ouverture du panneau Programmes.
-     */
-    onOpenPrograms: () => void;
-};
+import { useTranslations } from "@/i18n/TranslationContext";
+import { useWorldHub } from "@/feature/world/hub/WorldHubProvider";
 
 /**
  * Section “Aujourd’hui” (plan du jour + tuiles d’actions).
  *
- * Structure :
- * - Enveloppe `CardShell` avec un bouton d’action à droite (Quick Log).
- * - Grille en deux colonnes sur large écran :
- *   - gauche : plan du jour (exercices),
- *   - droite : actions transverses (3 tuiles + un hint).
- *
- * @param props - Propriétés du composant.
  * @returns Section “Aujourd’hui”.
  */
-export function TodaySection(props: TodaySectionProps) {
-    const { t, onOpenQuickLog, onOpenStartSession, onOpenPrograms } = props;
+export function TodaySection() {
+    const t = useTranslations("world");
+    const { openQuickLog } = useWorldHub();
 
     return (
         <CardShell
@@ -66,7 +38,7 @@ export function TodaySection(props: TodaySectionProps) {
                 <button
                     type="button"
                     className="rounded-xl bg-white/60 hover:bg-white/80 transition px-3 py-2 text-xs text-slate-700"
-                    onClick={onOpenQuickLog}
+                    onClick={() => openQuickLog()}
                 >
                     {t("overview.quickLogCta")}
                 </button>
@@ -93,7 +65,7 @@ export function TodaySection(props: TodaySectionProps) {
                             title={t("overview.encodeSessionCta")}
                             subtitle={t("overview.encodeSessionSubtitle")}
                             ctaLabel={t("overview.quickLogCta")}
-                            onClick={onOpenQuickLog}
+                            action="quickLog"
                         />
 
                         <ActionTile
@@ -101,7 +73,7 @@ export function TodaySection(props: TodaySectionProps) {
                             title={t("overview.startSessionCta")}
                             subtitle={t("overview.startSessionSubtitle")}
                             ctaLabel={t("overview.startSessionCta")}
-                            onClick={onOpenStartSession}
+                            action="startSession"
                         />
 
                         <ActionTile
@@ -109,7 +81,7 @@ export function TodaySection(props: TodaySectionProps) {
                             title={t("overview.programsCta")}
                             subtitle={t("overview.programsSubtitle")}
                             ctaLabel={t("overview.viewDetail")}
-                            onClick={onOpenPrograms}
+                            action="programs"
                         />
                     </div>
 

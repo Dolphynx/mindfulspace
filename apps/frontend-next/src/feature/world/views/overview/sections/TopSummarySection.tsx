@@ -1,3 +1,4 @@
+// File: src/feature/world/views/overview/sections/TopSummarySection.tsx
 "use client";
 
 /**
@@ -14,7 +15,18 @@
  * - absence de données (`!hasData` ou `overview.data == null`) :
  *   - panneau d’erreur côté snapshot,
  *   - bloc badges toujours rendu (liste potentiellement vide gérée par `WorldBadgesStrip`).
+ *
+ * Contrainte Next.js (App Router) :
+ * - Les props d’un Client Component pouvant être importé/rendu côté serveur doivent être sérialisables.
+ * - Les fonctions (ex: `t`, handlers) ne le sont pas et déclenchent TS71007.
+ *
+ * Stratégie :
+ * - La traduction est obtenue via {@link useTranslations}.
+ * - Les actions de navigation sont obtenues via {@link useWorldHub}.
  */
+
+import { useTranslations } from "@/i18n/TranslationContext";
+import { useWorldHub } from "@/feature/world/hub/WorldHubProvider";
 
 import { WorldBadgesStrip } from "@/feature/world/components/WorldBadgesStrip";
 import { WorldSnapshotPanel } from "@/feature/world/components/WorldSnapshotPanel";
@@ -30,46 +42,35 @@ type OverviewResult = ReturnType<typeof useWorldOverview>;
 
 /**
  * Propriétés du composant {@link TopSummarySection}.
+ *
+ * Remarque : aucune fonction n’est acceptée en props (évite TS71007).
  */
 export type TopSummarySectionProps = {
-    /**
-     * Fonction de traduction pour le namespace `world`.
-     */
-    t: (key: string) => string;
-
-    /**
-     * Résultat du hook d’overview (contient état + données éventuelles).
-     */
+    /** Résultat du hook d’overview (contient état + données éventuelles). */
     overview: OverviewResult;
 
-    /**
-     * Indique si les métriques sont en cours de chargement.
-     */
+    /** Indique si les métriques sont en cours de chargement. */
     isLoading: boolean;
 
-    /**
-     * Indique si des données valides sont disponibles (contrat de la vue parente).
-     */
+    /** Indique si des données valides sont disponibles (contrat de la vue parente). */
     hasData: boolean;
-
-    /**
-     * Handler d’ouverture du panneau “Badges”.
-     */
-    onOpenBadges: () => void;
 };
 
 /**
  * Section de synthèse (snapshot + badges récents).
  *
  * Structure :
- * - Enveloppe `CardShell` (titre + sous-titre optionnel).
+ * - Enveloppe {@link CardShell}.
  * - Grille responsive en 2 colonnes à partir de `lg`.
  *
  * @param props - Propriétés du composant.
  * @returns Section de synthèse supérieure.
  */
 export function TopSummarySection(props: TopSummarySectionProps) {
-    const { t, overview, isLoading, hasData, onOpenBadges } = props;
+    const { overview, isLoading, hasData } = props;
+
+    const t = useTranslations("world");
+    const { openBadges } = useWorldHub();
 
     if (isLoading) {
         return (
@@ -100,7 +101,10 @@ export function TopSummarySection(props: TopSummarySectionProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <ErrorPanel
                         title={t("overview.snapshotTitle")}
-                        message={t("overview.metricsLoadError") ?? "Impossible de charger les métriques."}
+                        message={
+                            t("overview.metricsLoadError") ??
+                            "Impossible de charger les métriques."
+                        }
                     />
 
                     <div className="rounded-2xl bg-white/60 border border-white/40 p-4">
@@ -111,7 +115,7 @@ export function TopSummarySection(props: TopSummarySectionProps) {
 
                             <button
                                 type="button"
-                                onClick={onOpenBadges}
+                                onClick={() => openBadges()}
                                 className="rounded-xl bg-white/60 hover:bg-white/80 transition px-3 py-2 text-xs text-slate-700"
                             >
                                 {t("overview.viewAll")}
@@ -160,7 +164,7 @@ export function TopSummarySection(props: TopSummarySectionProps) {
 
                         <button
                             type="button"
-                            onClick={onOpenBadges}
+                            onClick={() => openBadges()}
                             className="rounded-xl bg-white/60 hover:bg-white/80 transition px-3 py-2 text-xs text-slate-700"
                         >
                             {t("overview.viewAll")}
