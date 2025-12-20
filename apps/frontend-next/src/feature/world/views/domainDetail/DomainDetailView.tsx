@@ -3,13 +3,14 @@
 /**
  * @file DomainDetailView.tsx
  * @description
- * Domain detail container view for the World Hub (SPA world-v2).
+ * Conteneur de détail de domaine pour le World Hub (SPA world-v2).
  *
- * This view:
- * - Renders a header with a back action.
- * - Displays the selected domain title and a shared subtitle.
- * - Delegates domain-specific content rendering to dedicated components.
- * - Remounts the inner content when the hub refresh key changes.
+ * Responsabilités :
+ * - Afficher un en-tête avec action de retour (navigation interne du hub).
+ * - Afficher le titre du domaine sélectionné et un sous-titre commun.
+ * - Déléguer le rendu du contenu métier à un composant dédié par domaine.
+ * - Forcer le remontage (remount) du contenu interne lorsque `refreshKey` change,
+ *   afin de réinitialiser les états locaux et relancer les hooks de chargement.
  */
 
 import { useMemo } from "react";
@@ -24,21 +25,23 @@ import { SleepDomainDetail } from "./domains/SleepDomainDetail";
 import { ExerciseDomainDetail } from "./domains/ExerciseDomainDetail";
 
 /**
- * Props for {@link DomainDetailView}.
+ * Propriétés du composant {@link DomainDetailView}.
  */
 export type DomainDetailViewProps = {
     /**
-     * Domain identifier.
+     * Identifiant du domaine à afficher.
      */
     domain: Domain;
 };
 
 /**
- * Returns the translated title for a given domain.
+ * Résout le titre traduit d’un domaine.
  *
- * @param domain - Domain identifier.
- * @param t - Translation function for the "world" namespace.
- * @returns Translated domain title.
+ * Les clés de traduction appartiennent au namespace `world` (ex. `world.domains.sleep`).
+ *
+ * @param domain - Identifiant du domaine.
+ * @param t - Fonction de traduction associée au namespace `world`.
+ * @returns Titre traduit du domaine.
  */
 function getDomainTitle(domain: Domain, t: (key: string) => string): string {
     if (domain === "sleep") return t("domains.sleep");
@@ -47,10 +50,17 @@ function getDomainTitle(domain: Domain, t: (key: string) => string): string {
 }
 
 /**
- * Domain detail view.
+ * Vue de détail d’un domaine (conteneur).
  *
- * @param props - Component props.
- * @returns The domain detail container view.
+ * Fonctionnement :
+ * - Le titre est dérivé via `getDomainTitle` et mémoïsé.
+ * - Le bouton “retour” déclenche `goBack()` (pile de navigation interne du hub).
+ * - Le contenu métier est rendu conditionnellement selon `domain`.
+ * - Le wrapper interne utilise `key={refreshKey}` pour forcer un remount
+ *   lorsque le hub signale un rafraîchissement global.
+ *
+ * @param props - Propriétés du composant.
+ * @returns Vue conteneur affichant le détail du domaine sélectionné.
  */
 export function DomainDetailView(props: DomainDetailViewProps) {
     const { domain } = props;
@@ -58,6 +68,9 @@ export function DomainDetailView(props: DomainDetailViewProps) {
     const t = useTranslations("world");
     const { goBack, refreshKey } = useWorldHub();
 
+    /**
+     * Titre traduit du domaine, recalculé uniquement lorsque `domain` ou `t` change.
+     */
     const title = useMemo(() => getDomainTitle(domain, t), [domain, t]);
 
     return (
@@ -78,7 +91,7 @@ export function DomainDetailView(props: DomainDetailViewProps) {
                 </div>
             </header>
 
-            {/* key=refreshKey -> remount when a session is encoded (bumpRefreshKey) */}
+            {/* key=refreshKey : force un remount lors d’un rafraîchissement global (bumpRefreshKey) */}
             <div key={refreshKey}>
                 {domain === "sleep" && <SleepDomainDetail />}
                 {domain === "meditation" && <MeditationDomainDetail />}

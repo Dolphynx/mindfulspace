@@ -1,11 +1,19 @@
-// File: src/feature/world/views/overview/sections/TopSummarySection.tsx
-
 "use client";
 
 /**
  * @file TopSummarySection.tsx
  * @description
- * Overview top summary section. Renders the snapshot panel on the left and recent badges on the right.
+ * Section de synthèse en haut de l’overview du World Hub.
+ *
+ * Cette section affiche :
+ * - à gauche : le panneau “snapshot” (KPIs transverses),
+ * - à droite : les derniers badges mis en avant.
+ *
+ * Gestion d’état :
+ * - `isLoading` : skeletons afin de préserver le layout.
+ * - absence de données (`!hasData` ou `overview.data == null`) :
+ *   - panneau d’erreur côté snapshot,
+ *   - bloc badges toujours rendu (liste potentiellement vide gérée par `WorldBadgesStrip`).
  */
 
 import { WorldBadgesStrip } from "@/feature/world/components/WorldBadgesStrip";
@@ -15,43 +23,50 @@ import { CardShell } from "@/feature/world/views/shared/CardShell";
 import { SkeletonPanel } from "@/feature/world/views/overview/components/OverviewSkeletons";
 import { ErrorPanel } from "@/feature/world/views/overview/components/OverviewErrors";
 
+/**
+ * Type utilitaire : résultat du hook `useWorldOverview`.
+ */
 type OverviewResult = ReturnType<typeof useWorldOverview>;
 
 /**
- * Props for {@link TopSummarySection}.
+ * Propriétés du composant {@link TopSummarySection}.
  */
 export type TopSummarySectionProps = {
     /**
-     * Translation function for the "world" namespace.
+     * Fonction de traduction pour le namespace `world`.
      */
     t: (key: string) => string;
 
     /**
-     * World overview hook result.
+     * Résultat du hook d’overview (contient état + données éventuelles).
      */
     overview: OverviewResult;
 
     /**
-     * Whether metrics are currently loading.
+     * Indique si les métriques sont en cours de chargement.
      */
     isLoading: boolean;
 
     /**
-     * Whether metrics have been successfully loaded.
+     * Indique si des données valides sont disponibles (contrat de la vue parente).
      */
     hasData: boolean;
 
     /**
-     * Handler to open the badges panel.
+     * Handler d’ouverture du panneau “Badges”.
      */
     onOpenBadges: () => void;
 };
 
 /**
- * Top summary section (snapshot + recent badges).
+ * Section de synthèse (snapshot + badges récents).
  *
- * @param props - Component props.
- * @returns A section component.
+ * Structure :
+ * - Enveloppe `CardShell` (titre + sous-titre optionnel).
+ * - Grille responsive en 2 colonnes à partir de `lg`.
+ *
+ * @param props - Propriétés du composant.
+ * @returns Section de synthèse supérieure.
  */
 export function TopSummarySection(props: TopSummarySectionProps) {
     const { t, overview, isLoading, hasData, onOpenBadges } = props;
@@ -65,6 +80,7 @@ export function TopSummarySection(props: TopSummarySectionProps) {
             >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <SkeletonPanel />
+
                     <div className="rounded-2xl bg-white/60 border border-white/40 p-4">
                         <div className="h-4 w-24 rounded bg-white/70" />
                         <div className="mt-3 h-10 rounded-2xl bg-white/60 border border-white/40" />

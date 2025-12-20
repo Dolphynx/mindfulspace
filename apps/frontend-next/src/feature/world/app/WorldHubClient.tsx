@@ -4,24 +4,28 @@ import type { ReactNode } from "react";
 import { WorldHubProvider } from "../hub/WorldHubProvider";
 
 /**
- * Point d'entrée client de la SPA "My World".
+ * Point d’entrée **client-side** du périmètre “My World”.
  *
- * @remarks
- * Ce composant encapsule :
- * - un état global "world hub" (drawer ouvert/fermé + route interne du panneau),
- * - un overlay/drawer par-dessus la map (`PanelOverlay`),
- * - et n'altère pas le rendu de la map (passée via `children`).
+ * Ce composant établit le contexte React nécessaire au fonctionnement du
+ * “World Hub” (navigation interne au panneau / overlay) au-dessus d’un contenu
+ * de fond (typiquement la map) fourni via `children`.
  *
- * **Principe d'architecture :**
- * - La page map (background) reste stable.
- * - Le drawer est un "layer" au-dessus (SPA).
- * - Toute navigation interne du drawer passe par le provider
- *   et non par le routeur Next.
+ * ## Responsabilités
+ * - Déclarer l’exécution côté client via la directive Next `"use client"`.
+ * - Fournir le contexte global `WorldHubProvider` à l’ensemble du sous-arbre.
+ * - Préserver l’indépendance du contenu de fond (`children`) vis-à-vis de l’état
+ *   du hub (l’overlay se gère en surcouche via le provider et ses consommateurs).
+ *
+ * ## Notes d’architecture
+ * - La navigation interne du hub est pilotée par un état applicatif (provider),
+ *   et non par le routeur Next.js.
+ * - Les composants consommateurs (ex. overlay/drawer) sont attendus plus bas
+ *   dans l’arbre et s’abonnent au contexte du hub.
+ *
+ * @param props - Propriétés du composant.
+ * @param props.children - Contenu de fond (“background”) à rendre sous la surcouche.
+ * @returns Arbre React enveloppé par le provider du hub.
  */
 export default function WorldHubClient({ children }: { children: ReactNode }) {
-    return (
-        <WorldHubProvider>
-            {children}
-        </WorldHubProvider>
-    );
+    return <WorldHubProvider>{children}</WorldHubProvider>;
 }

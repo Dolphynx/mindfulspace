@@ -2,14 +2,32 @@
 
 import { DottedSparkline } from "@/feature/world/ui/DottedSparkline";
 
+/**
+ * Palette de tons supportée par la carte KPI.
+ *
+ * Utilisée pour dériver les classes Tailwind (rail, glow, CTA, etc.).
+ */
 type Tone = "blue" | "purple" | "green";
 
+/**
+ * Retourne les classes Tailwind associées à un ton visuel.
+ *
+ * Cette fonction centralise la “thématisation” de la carte (fond lumineux, rail latéral,
+ * bouton principal, et styles de puces) afin d’éviter la duplication de classes.
+ *
+ * @param tone - Ton demandé pour la carte.
+ * @returns Dictionnaire de classes Tailwind par rôle UI.
+ */
 function toneClasses(tone: Tone) {
     if (tone === "green") {
         return {
+            /** Halo lumineux (glow) utilisé pour les blobs décoratifs. */
             glow: "bg-emerald-200/20",
+            /** Rail latéral vertical décoratif. */
             rail: "bg-emerald-500/60",
+            /** Bouton principal (CTA primaire). */
             primary: "bg-emerald-600 hover:bg-emerald-700 text-white",
+            /** Style de “chip” (prévu pour des badges/étiquettes). */
             chip: "bg-emerald-50/60 border-emerald-100 text-emerald-900",
         };
     }
@@ -29,8 +47,18 @@ function toneClasses(tone: Tone) {
     };
 }
 
+/**
+ * Découpe une chaîne de KPI attendue au format `"Label : value"`.
+ *
+ * La logique est volontairement tolérante :
+ * - Si aucun `:` n’est présent, la valeur est conservée telle quelle et le label est vide.
+ * - Le `:` est conservé dans le label (ex. `"Sommeil :"`) afin de permettre un rendu
+ *   conforme à la source textuelle.
+ *
+ * @param text - Texte du KPI (ex. `"Sommeil : 7h20"`).
+ * @returns Objet `{ label, value }` prêt à être affiché.
+ */
 function splitKpi(text: string) {
-    // attend "Label : value"
     const idx = text.indexOf(":");
     if (idx === -1) return { label: "", value: text.trim() };
     return {
@@ -39,26 +67,87 @@ function splitKpi(text: string) {
     };
 }
 
+/**
+ * Carte de domaine affichant deux KPIs, une micro-tendance (sparkline) et deux CTA.
+ *
+ * Composant **client-side** (Next.js) destiné à une UI “dashboard”/hub :
+ * - Header : titre + sous-titre + label de période.
+ * - Corps : deux KPIs + un encart récapitulatif avec sparkline.
+ * - Actions : CTA primaire (ouvrir le domaine) + CTA secondaire (quick log).
+ *
+ * L’apparence est modulée via `tone` (thèmes Tailwind) et le graphe via `sparklineData`.
+ */
 export function DomainCardKpiV2(props: {
+    /** Titre affiché dans l’en-tête de la carte. */
     title: string;
+    /** Sous-titre (texte descriptif) affiché sous le titre. */
     subtitle: string;
+
+    /**
+     * KPI A (format texte), typiquement au format `"Label : value"`.
+     * Exemple : `"Sommeil : 7h20"`.
+     */
     kpiA: string;
+
+    /**
+     * KPI B (format texte), typiquement au format `"Label : value"`.
+     * Exemple : `"Objectif : 5/7"`.
+     */
     kpiB: string;
+
+    /** Note de bas de bloc (texte secondaire) affichée dans l’encart du sparkline. */
     footnote: string;
+
+    /** Libellé du bouton principal. */
     primaryCta: string;
+
+    /** Libellé du bouton secondaire. */
     secondaryCta: string;
+
+    /**
+     * Handler du CTA principal.
+     * Attendu : ouverture du panneau/drawer correspondant au domaine.
+     */
     onOpen: () => void;
+
+    /**
+     * Handler du CTA secondaire.
+     * Attendu : ouverture d’une action rapide (saisie / quick log).
+     */
     onQuickLog: () => void;
+
+    /**
+     * Ton visuel de la carte (thème Tailwind).
+     * Par défaut : `"blue"`.
+     */
     tone?: Tone;
-    sparklineData?: number[]; // fake data now, real later
-    sparklineLabel?: string;  // ex: "7 jours"
+
+    /**
+     * Données du sparkline.
+     * Si non fourni, un jeu de valeurs par défaut est utilisé.
+     */
+    sparklineData?: number[];
+
+    /**
+     * Libellé de période affiché dans l’en-tête (ex. `"7 jours"`).
+     * Par défaut : `"7 jours"`.
+     */
+    sparklineLabel?: string; // ex: "7 jours"
 }) {
+    /** Ton résolu avec valeur par défaut. */
     const tone: Tone = props.tone ?? "blue";
+    /** Classes Tailwind dérivées du ton. */
     const s = toneClasses(tone);
 
+    /** KPI A (label/valeur) prêt à afficher. */
     const kA = splitKpi(props.kpiA);
+    /** KPI B (label/valeur) prêt à afficher. */
     const kB = splitKpi(props.kpiB);
 
+    /**
+     * Série du sparkline.
+     * Valeur de secours utilisée en l’absence de données réelles.
+     */
     const spark = props.sparklineData ?? [10, 12, 9, 14, 12, 13, 11];
 
     return (

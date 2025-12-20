@@ -2,8 +2,22 @@
 
 import React from "react";
 
+/**
+ * Tons visuels supportés par les composants UI partagés (KPI / visuals).
+ *
+ * Chaque ton influence :
+ * - la couleur du ring (bordure/halo),
+ * - le dégradé de la barre latérale,
+ * - le style des chips (badge de hint / pourcentage / pastilles).
+ */
 type Tone = "slate" | "blue" | "purple" | "green";
 
+/**
+ * Résout les classes Tailwind associées à un ton.
+ *
+ * @param tone - Ton visuel sélectionné.
+ * @returns Ensemble de classes (ring, barre latérale, chip).
+ */
 function toneClasses(tone: Tone) {
     switch (tone) {
         case "blue":
@@ -33,6 +47,19 @@ function toneClasses(tone: Tone) {
     }
 }
 
+/**
+ * Section structurante pour regrouper un bloc UI sous un titre.
+ *
+ * Structure :
+ * - Un header avec titre à gauche et une zone optionnelle à droite.
+ * - Le contenu libre `children` en dessous.
+ *
+ * @param props - Propriétés de la section.
+ * @param props.title - Titre affiché.
+ * @param props.children - Contenu du bloc.
+ * @param props.right - Contenu optionnel aligné à droite du titre (ex. badge, actions).
+ * @returns Section structurée.
+ */
 export function Section(props: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
     return (
         <section className="space-y-3">
@@ -45,6 +72,21 @@ export function Section(props: { title: string; children: React.ReactNode; right
     );
 }
 
+/**
+ * Sparkline SVG simple pour visualiser une série temporelle.
+ *
+ * Comportement :
+ * - Si `values.length <= 1`, rend un placeholder (bloc vide).
+ * - Sinon, normalise les valeurs entre min/max et produit une polyline.
+ *
+ * Notes :
+ * - Largeur/hauteur de `viewBox` fixes (w = 520, h = 120) pour un rendu stable.
+ * - Padding interne appliqué afin d’éviter de coller la polyline aux bords.
+ *
+ * @param props - Propriétés du composant.
+ * @param props.values - Série de valeurs à tracer.
+ * @returns Bloc contenant le sparkline (ou un placeholder si insuffisant).
+ */
 export function Sparkline(props: { values: number[] }) {
     const values = props.values ?? [];
     const w = 520;
@@ -86,6 +128,21 @@ export function Sparkline(props: { values: number[] }) {
 
 // ---------- Visuals (donut, rating, pills) ----------
 
+/**
+ * Visual “donut” affichant un pourcentage et un libellé.
+ *
+ * Contraintes :
+ * - `pct` est borné dans [0, 100] puis arrondi.
+ * - Le donut est dessiné avec deux cercles :
+ *   - un fond (track),
+ *   - un arc (progress) via `strokeDasharray`.
+ *
+ * @param props - Propriétés du donut.
+ * @param props.pct - Pourcentage à afficher (0..100).
+ * @param props.tone - Ton visuel (influence la chip de pourcentage).
+ * @param props.label - Libellé descriptif affiché à côté (et utile pour l’UI).
+ * @returns Donut SVG accompagné d’un label et d’une chip de pourcentage.
+ */
 function Donut(props: { pct: number; tone?: Tone; label?: string }) {
     const pct = Math.max(0, Math.min(100, Math.round(props.pct)));
     const r = 18;
@@ -97,7 +154,15 @@ function Donut(props: { pct: number; tone?: Tone; label?: string }) {
     return (
         <div className="flex items-center gap-3">
             <svg width="44" height="44" viewBox="0 0 44 44" className="shrink-0">
-                <circle cx="22" cy="22" r={r} strokeWidth="6" className="text-slate-200" stroke="currentColor" fill="none" />
+                <circle
+                    cx="22"
+                    cy="22"
+                    r={r}
+                    strokeWidth="6"
+                    className="text-slate-200"
+                    stroke="currentColor"
+                    fill="none"
+                />
                 <circle
                     cx="22"
                     cy="22"
@@ -118,13 +183,28 @@ function Donut(props: { pct: number; tone?: Tone; label?: string }) {
             <div className="min-w-0">
                 <div className="text-xs text-slate-500">{props.label}</div>
                 <div className="text-sm font-semibold text-slate-800">
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 ${tone.chip}`}>{pct}%</span>
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 ${tone.chip}`}>
+                        {pct}%
+                    </span>
                 </div>
             </div>
         </div>
     );
 }
 
+/**
+ * Visual “rating” sous forme de pastilles (pips) avec affichage `v/max`.
+ *
+ * Comportement :
+ * - `value` est arrondi et borné dans [0, max].
+ * - Le rendu montre `max` pastilles, remplies selon `value`.
+ *
+ * @param props - Propriétés du rating.
+ * @param props.value - Note numérique.
+ * @param props.max - Valeur maximale (défaut : 5).
+ * @param props.tone - Ton visuel (appliqué aux pastilles remplies).
+ * @returns Indicateur de note sous forme de pastilles.
+ */
 function RatingPips(props: { value: number; max?: number; tone?: Tone }) {
     const max = props.max ?? 5;
     const v = Math.max(0, Math.min(max, Math.round(props.value)));
@@ -145,11 +225,29 @@ function RatingPips(props: { value: number; max?: number; tone?: Tone }) {
                     />
                 );
             })}
-            <span className="ml-2 text-xs text-slate-500">{v}/{max}</span>
+            <span className="ml-2 text-xs text-slate-500">
+                {v}/{max}
+            </span>
         </div>
     );
 }
 
+/**
+ * Visual “pills” affichant une liste de libellés sous forme de chips.
+ *
+ * Comportement :
+ * - Filtre les valeurs falsy.
+ * - Affiche au maximum `max` éléments.
+ * - Si la liste dépasse `max`, affiche une pastille “+rest”.
+ * - Si aucun élément, affiche `emptyLabel`.
+ *
+ * @param props - Propriétés de la liste.
+ * @param props.items - Libellés à afficher.
+ * @param props.emptyLabel - Libellé affiché si la liste est vide.
+ * @param props.tone - Ton visuel appliqué aux chips.
+ * @param props.max - Nombre maximum de chips affichées (défaut : 3).
+ * @returns Ensemble de pills ou un fallback texte.
+ */
 function Pills(props: { items: string[]; emptyLabel: string; tone?: Tone; max?: number }) {
     const max = props.max ?? 3;
     const items = props.items.filter(Boolean);
@@ -169,23 +267,48 @@ function Pills(props: { items: string[]; emptyLabel: string; tone?: Tone; max?: 
                     className={`max-w-[220px] truncate rounded-full border px-2 py-0.5 text-xs ${t.chip}`}
                     title={it}
                 >
-          {it}
-        </span>
+                    {it}
+                </span>
             ))}
             {rest > 0 && (
                 <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600">
-          +{rest}
-        </span>
+                    +{rest}
+                </span>
             )}
         </div>
     );
 }
 
+/**
+ * Descripteur typé d’un visuel optionnel affiché dans une `KpiCard`.
+ *
+ * - `donut` : pourcentage + label.
+ * - `rating` : note `value/max`.
+ * - `pills` : liste de libellés (top N, tags, etc.).
+ */
 type KpiVisual =
     | { kind: "donut"; pct: number; label: string }
     | { kind: "rating"; value: number; max?: number }
     | { kind: "pills"; items: string[]; emptyLabel: string; max?: number };
 
+/**
+ * Carte KPI générique, supportant :
+ * - un label (petit, uppercase),
+ * - une valeur principale,
+ * - un hint optionnel (chip),
+ * - un visuel optionnel (donut / rating / pills).
+ *
+ * Le rendu est modulé par un ton (`Tone`) afin d’assurer une cohérence visuelle
+ * entre domaines.
+ *
+ * @param props - Propriétés de la carte.
+ * @param props.label - Libellé de la KPI.
+ * @param props.value - Valeur principale (formatée).
+ * @param props.hint - Indication secondaire optionnelle (ex. delta %, meilleur streak).
+ * @param props.tone - Ton visuel de la carte (défaut : `"slate"`).
+ * @param props.visual - Visuel optionnel rendu à droite.
+ * @returns Carte KPI.
+ */
 export function KpiCard(props: {
     label: string;
     value: string;
@@ -197,8 +320,12 @@ export function KpiCard(props: {
     const t = toneClasses(tone);
 
     return (
-        <div className={`relative overflow-hidden rounded-2xl bg-white/90 border border-slate-100 shadow-sm ring-1 ${t.ring}`}>
-            <span className={`pointer-events-none absolute inset-y-3 left-3 w-1 rounded-full bg-gradient-to-b ${t.bar}`} />
+        <div
+            className={`relative overflow-hidden rounded-2xl bg-white/90 border border-slate-100 shadow-sm ring-1 ${t.ring}`}
+        >
+            <span
+                className={`pointer-events-none absolute inset-y-3 left-3 w-1 rounded-full bg-gradient-to-b ${t.bar}`}
+            />
 
             <div className="p-5 pl-7">
                 <div className="flex items-start justify-between gap-4">
@@ -206,13 +333,17 @@ export function KpiCard(props: {
                         <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                             {props.label}
                         </div>
-                        <div className="mt-2 text-2xl font-semibold text-slate-900">{props.value}</div>
+                        <div className="mt-2 text-2xl font-semibold text-slate-900">
+                            {props.value}
+                        </div>
 
                         {props.hint && (
                             <div className="mt-2">
-                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${t.chip}`}>
-                  {props.hint}
-                </span>
+                                <span
+                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${t.chip}`}
+                                >
+                                    {props.hint}
+                                </span>
                             </div>
                         )}
                     </div>

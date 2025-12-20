@@ -8,11 +8,33 @@ import { clampRange, computeStreak, pctDelta, simpleMovingAverage } from "../sha
 import { MeditationHistoryCard } from "@/components/meditation/MeditationHistoryCard";
 import { useMeditationSessionsDetail } from "@/hooks/useMeditationSessionsDetail";
 
+/**
+ * Trie des entrées `Map<K, number>` par valeur décroissante et retourne les `n` premières.
+ *
+ * @typeParam K - Type des clés de la map.
+ * @param entries - Source des paires (clé, score/volume).
+ * @param n - Nombre maximal d’entrées à retourner.
+ * @returns Tableau d’entrées triées, tronqué à `n`.
+ */
 function topN<K>(entries: Map<K, number>, n: number) {
     return [...entries.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
 }
 
-/** Petit donut SVG, discret (sans libs) */
+/**
+ * Donut SVG minimaliste (sans dépendance) affichant un pourcentage.
+ *
+ * Objectif :
+ * - Fournir un repère visuel compact pour une couverture ou un taux.
+ *
+ * Contraintes :
+ * - La valeur est bornée dans l’intervalle [0, 100].
+ * - Le rendu repose sur un `strokeDasharray` calculé à partir de la circonférence.
+ *
+ * @param props - Propriétés du donut.
+ * @param props.valuePct - Pourcentage à afficher (0..100).
+ * @param props.label - Libellé accessible appliqué à l’élément SVG.
+ * @returns Donut SVG accompagné de la valeur texte.
+ */
 function Donut({
                    valuePct,
                    label,
@@ -53,6 +75,23 @@ function Donut({
     );
 }
 
+/**
+ * Carte d’insight (KPI) au rendu visuel accentué.
+ *
+ * Structure :
+ * - Un titre (petit, uppercase).
+ * - Une valeur principale (grande, tabulaire).
+ * - Un sous-titre optionnel.
+ * - Une zone “right” optionnelle (ex. donut).
+ *
+ * @param props - Propriétés de la carte.
+ * @param props.title - Libellé de l’indicateur.
+ * @param props.value - Valeur principale (déjà formatée pour l’affichage).
+ * @param props.subtitle - Texte secondaire optionnel.
+ * @param props.right - Élément optionnel affiché à droite (visuel/complément).
+ * @param props.tone - Palette de dégradé appliquée à la barre verticale décorative.
+ * @returns Carte stylée d’indicateur.
+ */
 function InsightCard({
                          title,
                          value,
@@ -95,6 +134,17 @@ function InsightCard({
     );
 }
 
+/**
+ * Liste de chips affichant une série de libellés.
+ *
+ * Comportement :
+ * - Retourne `null` si la liste est vide.
+ * - Affiche les éléments en wrap avec ellipsis (`truncate`) et `title` pour l’accessibilité.
+ *
+ * @param props - Propriétés du composant.
+ * @param props.items - Libellés à afficher.
+ * @returns Ensemble de chips ou `null`.
+ */
 function ChipList({ items }: { items: string[] }) {
     if (items.length === 0) return null;
 
@@ -113,10 +163,35 @@ function ChipList({ items }: { items: string[] }) {
     );
 }
 
+/**
+ * Vue de détail du domaine Méditation.
+ *
+ * Cette vue agrège des indicateurs sur les sessions de méditation :
+ * - KPIs : minutes semaine, moyenne 30j, streak, type le plus fréquent.
+ * - Insights : jours actifs, couverture 30j, total minutes, meilleur jour, couverture humeur.
+ * - Tendance : moyenne mobile simple (SMA 5) sur les minutes par session.
+ * - Historique : délégation à `MeditationHistoryCard`.
+ *
+ * Les calculs sont réalisés dans un `useMemo` afin de limiter les recomputations
+ * aux changements de `sessions` et `types`.
+ *
+ * @returns Contenu React de la vue de détail Méditation.
+ */
 export function MeditationDomainDetail() {
     const t = useTranslations("domainMeditation");
     const { sessions, loading, errorType, types } = useMeditationSessionsDetail(30);
 
+    /**
+     * Calculs dérivés pour l’affichage.
+     *
+     * Étapes :
+     * - Tri chronologique et fenêtrage 30 éléments.
+     * - Streak (courant/meilleur) sur l’ensemble des jours disponibles.
+     * - Minutes par session et agrégats (moyenne 30j, total 30j, meilleur jour).
+     * - Comparaison semaine A/B (minutes) et delta en pourcentage.
+     * - Fréquence des types (top 1 + top 3) en s’appuyant sur `types`.
+     * - Couverture humeur (pourcentage de sessions ayant un `moodAfter` non nul).
+     */
     const computed = useMemo(() => {
         const all = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
         const last30 = clampRange(all, 30);
@@ -161,7 +236,6 @@ export function MeditationDomainDetail() {
 
         const trend = simpleMovingAverage(minutesPerSession, 5);
 
-        // INSIGHTS (quantitatif)
         const uniqueDays = new Set(last30.map((s) => s.date));
         const activeDays = uniqueDays.size;
         const coveragePct = Math.round((activeDays / 30) * 100);
@@ -192,17 +266,32 @@ export function MeditationDomainDetail() {
         };
     }, [sessions, types]);
 
+    /**
+     * Indication affichée sous la KPI de streak si un meilleur streak existe.
+     */
     const streakHint =
         computed.streakBest > 0 ? `${t("detail.kpi.streakBestPrefix")} ${computed.streakBest}` : undefined;
 
+    /**
+     * Libellé de delta hebdomadaire affiché en sous-titre de la KPI “minutes semaine”.
+     */
     const deltaLabel = `${computed.deltaWeek}%`;
 
+    /**
+     * Résolution du nom i18n d’un type de méditation à partir de son slug.
+     *
+     * @param slug - Slug du type de méditation.
+     * @returns Nom traduit du type.
+     */
     const typeName = (slug: string) => t(`meditationTypes.${slug}.name`);
+
+    /**
+     * Top 3 des types (noms traduits) dérivés des slugs calculés.
+     */
     const top3Names = computed.top3TypeSlugs.map(typeName);
 
     return (
         <div className="space-y-6">
-            {/* KPI */}
             <Section title={t("detail.kpisTitle")}>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <InsightCard
@@ -234,7 +323,6 @@ export function MeditationDomainDetail() {
                 </div>
             </Section>
 
-            {/* INSIGHTS (plus visuel) */}
             <Section title={t("detail.insightsTitle")}>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <InsightCard
@@ -265,12 +353,10 @@ export function MeditationDomainDetail() {
                                 {t("detail.insights.top3Types")}
                             </div>
 
-                            {/* ✅ Fix: chips en wrap, texte plus petit, pas de collision */}
                             <ChipList items={top3Names.length > 0 ? top3Names : [t("detail.kpi.na")]} />
                         </div>
                     </div>
 
-                    {/* bonus visuel utile : couverture humeur */}
                     <div className="sm:col-span-2 lg:col-span-4">
                         <div className="mt-1 rounded-2xl border border-slate-100 bg-white/70 p-4">
                             <div className="flex items-center justify-between gap-3">
@@ -287,7 +373,6 @@ export function MeditationDomainDetail() {
                 </div>
             </Section>
 
-            {/* TREND */}
             <Section title={t("detail.trendTitle")}>
                 <div className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
@@ -300,7 +385,6 @@ export function MeditationDomainDetail() {
                 </div>
             </Section>
 
-            {/* HISTORY */}
             <Section title={t("detail.historyTitle")}>
                 <MeditationHistoryCard sessions={sessions} loading={loading} errorType={errorType} types={types} />
             </Section>

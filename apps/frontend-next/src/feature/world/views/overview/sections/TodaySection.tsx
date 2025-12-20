@@ -3,7 +3,16 @@
 /**
  * @file TodaySection.tsx
  * @description
- * Overview "Today" section. Renders the daily plan and the transversal actions.
+ * Section “Aujourd’hui” de l’overview du World Hub.
+ *
+ * Cette section regroupe :
+ * - le plan du jour (exercices) via un composant dédié,
+ * - des actions transverses sous forme de tuiles (Quick Log, démarrer une session, programmes),
+ * - un CTA d’accès rapide au Quick Log placé dans l’en-tête de la carte.
+ *
+ * Le composant est purement “composition UI” :
+ * - pas de logique métier,
+ * - la navigation est déléguée à des handlers fournis en props.
  */
 
 import { TodayExercices } from "@/components/exercise/ExerciceDayPlan";
@@ -11,35 +20,41 @@ import { CardShell } from "@/feature/world/views/shared/CardShell";
 import { ActionTile } from "@/feature/world/ui/ActionTile";
 
 /**
- * Props for {@link TodaySection}.
+ * Propriétés du composant {@link TodaySection}.
  */
 export type TodaySectionProps = {
     /**
-     * Translation function for the "world" namespace.
+     * Fonction de traduction pour le namespace `world`.
      */
     t: (key: string) => string;
 
     /**
-     * Handler to open the Quick Log panel.
+     * Handler d’ouverture du panneau Quick Log.
      */
     onOpenQuickLog: () => void;
 
     /**
-     * Handler to open the Start Session panel.
+     * Handler d’ouverture du panneau de démarrage de session.
      */
     onOpenStartSession: () => void;
 
     /**
-     * Handler to open the Programs panel.
+     * Handler d’ouverture du panneau Programmes.
      */
     onOpenPrograms: () => void;
 };
 
 /**
- * Today section (daily plan + action tiles).
+ * Section “Aujourd’hui” (plan du jour + tuiles d’actions).
  *
- * @param props - Component props.
- * @returns A section component.
+ * Structure :
+ * - Enveloppe `CardShell` avec un bouton d’action à droite (Quick Log).
+ * - Grille en deux colonnes sur large écran :
+ *   - gauche : plan du jour (exercices),
+ *   - droite : actions transverses (3 tuiles + un hint).
+ *
+ * @param props - Propriétés du composant.
+ * @returns Section “Aujourd’hui”.
  */
 export function TodaySection(props: TodaySectionProps) {
     const { t, onOpenQuickLog, onOpenStartSession, onOpenPrograms } = props;
@@ -98,7 +113,9 @@ export function TodaySection(props: TodaySectionProps) {
                         />
                     </div>
 
-                    <div className="mt-4 text-xs text-slate-500">{t("overview.todayActionsHint")}</div>
+                    <div className="mt-4 text-xs text-slate-500">
+                        {t("overview.todayActionsHint")}
+                    </div>
                 </div>
             </div>
         </CardShell>

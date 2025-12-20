@@ -1,11 +1,20 @@
-// File: src/feature/world/views/overview/sections/DomainsSection.tsx
-
 "use client";
 
 /**
  * @file DomainsSection.tsx
  * @description
- * Overview domains section. Renders the three domain KPI cards (sleep, meditation, exercise).
+ * Section “Domaines” de l’overview du World Hub.
+ *
+ * Responsabilités :
+ * - Afficher les trois cartes KPI des domaines (sleep, meditation, exercise).
+ * - Gérer les états d’UI liés au chargement :
+ *   - skeletons pendant `isLoading`,
+ *   - cartes d’erreur si les données ne sont pas disponibles,
+ *   - rendu des KPI à partir du DTO en cas de succès.
+ *
+ * Le composant reste volontairement “présentation + branchements” :
+ * - il ne déclenche pas le chargement (reçu via `overview`),
+ * - il délègue la navigation aux callbacks fournis.
  */
 
 import type { Domain } from "@/feature/world/hub/types";
@@ -15,52 +24,63 @@ import { SkeletonCard } from "@/feature/world/views/overview/components/Overview
 import { ErrorCard } from "@/feature/world/views/overview/components/OverviewErrors";
 import { formatHoursMinutes } from "@/feature/world/views/overview/utils/format";
 
+/**
+ * Type utilitaire : résultat du hook `useWorldOverview`.
+ *
+ * Cette forme permet de typer `overview` sans ré-exporter explicitement
+ * un type dédié depuis le hook.
+ */
 type OverviewResult = ReturnType<typeof useWorldOverview>;
 
 /**
- * Props for {@link DomainsSection}.
+ * Propriétés du composant {@link DomainsSection}.
  */
 export type DomainsSectionProps = {
     /**
-     * Translation function for the "world" namespace.
+     * Fonction de traduction pour le namespace `world`.
      */
     t: (key: string) => string;
 
     /**
-     * World overview hook result.
+     * Résultat du hook d’overview (contient état + données éventuelles).
      */
     overview: OverviewResult;
 
     /**
-     * Whether metrics are currently loading.
+     * Indique si les métriques sont en cours de chargement.
      */
     isLoading: boolean;
 
     /**
-     * Whether metrics have been successfully loaded.
+     * Indique si des données valides sont disponibles (contrat de la vue parente).
      */
     hasData: boolean;
 
     /**
-     * Handler to open domain detail view.
+     * Handler d’ouverture de la vue de détail d’un domaine.
      *
-     * @param domain - Domain identifier.
+     * @param domain - Identifiant du domaine.
      */
     onOpenDomainDetail: (domain: Domain) => void;
 
     /**
-     * Handler to open Quick Log optionally pre-selected for a domain.
+     * Handler d’ouverture du Quick Log avec (optionnellement) un domaine pré-sélectionné.
      *
-     * @param domain - Optional domain identifier.
+     * @param domain - Identifiant optionnel du domaine.
      */
     onOpenQuickLog: (domain?: Domain) => void;
 };
 
 /**
- * Domains section containing the three domain KPI cards.
+ * Section affichant les trois cartes KPI de domaine.
  *
- * @param props - Component props.
- * @returns A section component.
+ * Stratégie d’UI :
+ * - `isLoading` : rend 3 cartes skeleton pour préserver le layout.
+ * - absence de données (`!hasData` ou `overview.data == null`) : rend 3 cartes d’erreur.
+ * - sinon : rend les 3 cartes `DomainCardKpiV2` alimentées par `overview.data`.
+ *
+ * @param props - Propriétés du composant.
+ * @returns Section “Domaines”.
  */
 export function DomainsSection(props: DomainsSectionProps) {
     const { t, overview, isLoading, hasData, onOpenDomainDetail, onOpenQuickLog } = props;
@@ -68,7 +88,10 @@ export function DomainsSection(props: DomainsSectionProps) {
     if (isLoading) {
         return (
             <section aria-label={t("sections.domainsAria")}>
-                <div className="text-sm font-semibold text-slate-700">{t("sections.domainsTitle")}</div>
+                <div className="text-sm font-semibold text-slate-700">
+                    {t("sections.domainsTitle")}
+                </div>
+
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <SkeletonCard />
                     <SkeletonCard />
@@ -79,13 +102,17 @@ export function DomainsSection(props: DomainsSectionProps) {
     }
 
     if (!hasData || overview.data == null) {
+        const msg = t("overview.metricsLoadError") ?? "Impossible de charger.";
         return (
             <section aria-label={t("sections.domainsAria")}>
-                <div className="text-sm font-semibold text-slate-700">{t("sections.domainsTitle")}</div>
+                <div className="text-sm font-semibold text-slate-700">
+                    {t("sections.domainsTitle")}
+                </div>
+
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <ErrorCard message={t("overview.metricsLoadError") ?? "Impossible de charger."} />
-                    <ErrorCard message={t("overview.metricsLoadError") ?? "Impossible de charger."} />
-                    <ErrorCard message={t("overview.metricsLoadError") ?? "Impossible de charger."} />
+                    <ErrorCard message={msg} />
+                    <ErrorCard message={msg} />
+                    <ErrorCard message={msg} />
                 </div>
             </section>
         );
@@ -95,7 +122,9 @@ export function DomainsSection(props: DomainsSectionProps) {
 
     return (
         <section aria-label={t("sections.domainsAria")}>
-            <div className="text-sm font-semibold text-slate-700">{t("sections.domainsTitle")}</div>
+            <div className="text-sm font-semibold text-slate-700">
+                {t("sections.domainsTitle")}
+            </div>
 
             <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
                 <DomainCardKpiV2

@@ -3,10 +3,15 @@
 /**
  * @file PanelBody.tsx
  * @description
- * Panel router for the World Hub (SPA world-v2).
+ * Routeur interne du contenu du panneau (drawer) du World Hub (SPA world-v2).
  *
- * This version removes the unused "domain" route and its placeholder view.
- * Behavior is unchanged as long as no code dispatches the "domain" view type.
+ * Ce module se base sur la vue courante exposée par `WorldHubProvider`
+ * afin de rendre le composant correspondant.
+ *
+ * Objectifs :
+ * - Centraliser le mapping `DrawerView -> ReactElement`.
+ * - Garder les vues métier découplées de la mécanique de routing interne.
+ * - Limiter la logique dans les composants d’UI (un seul point de décision).
  */
 
 import { useWorldHub } from "../hub/WorldHubProvider";
@@ -19,10 +24,14 @@ import { ProgramsView } from "../views/programs/ProgramsView";
 import { DomainDetailView } from "../views/domainDetail/DomainDetailView";
 
 /**
- * Resolves the view to render for the panel.
+ * Résout la vue à rendre dans le panneau en fonction de la vue courante.
  *
- * @param currentView - The current drawer view.
- * @returns The React element for the current view.
+ * Le type de `currentView` est dérivé de l’API du hub afin de :
+ * - rester synchronisé avec `WorldHubProvider` sans dupliquer les types,
+ * - bénéficier d’un typage exhaustif basé sur `currentView.type`.
+ *
+ * @param currentView - Vue courante du drawer (sommet de pile).
+ * @returns Élément React correspondant à la vue courante.
  */
 function renderPanelBody(currentView: ReturnType<typeof useWorldHub>["currentView"]) {
     switch (currentView.type) {
@@ -48,9 +57,13 @@ function renderPanelBody(currentView: ReturnType<typeof useWorldHub>["currentVie
 }
 
 /**
- * Panel body component.
+ * Corps du panneau (drawer) du World Hub.
  *
- * @returns The panel body content for the current view.
+ * Rôle :
+ * - Récupérer la vue courante depuis le contexte.
+ * - Déléguer le rendu au routeur interne `renderPanelBody`.
+ *
+ * @returns Contenu du panneau correspondant à la vue courante.
  */
 export function PanelBody() {
     const { currentView } = useWorldHub();

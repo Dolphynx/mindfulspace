@@ -7,10 +7,27 @@ import { clampRange, computeStreak, pctDelta, simpleMovingAverage } from "../sha
 import { SleepHistoryCard } from "@/components/sleep/SleepHistoryCard";
 import { useSleepSessionsDetail } from "@/hooks/useSleepSessionsDetail";
 
+/**
+ * Arrondit un nombre à 1 décimale.
+ *
+ * @param n - Valeur à arrondir.
+ * @returns Valeur arrondie à 1 chiffre après la virgule.
+ */
 function round1(n: number) {
     return Math.round(n * 10) / 10;
 }
 
+/**
+ * Calcule l’écart-type (population) d’une série de valeurs.
+ *
+ * Hypothèses :
+ * - Si la série contient 0 ou 1 élément, l’écart-type est défini à 0.
+ * - La variance est calculée sur `N` (et non `N - 1`), ce qui correspond
+ *   à une approche “population” plutôt que “échantillon”.
+ *
+ * @param values - Série numérique.
+ * @returns Écart-type de la série.
+ */
 function stdDev(values: number[]) {
     if (values.length <= 1) return 0;
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -18,6 +35,21 @@ function stdDev(values: number[]) {
     return Math.sqrt(variance);
 }
 
+/**
+ * Donut SVG minimaliste affichant un pourcentage.
+ *
+ * Objectif :
+ * - Visualiser une proportion (ex. couverture sur 30 jours, pourcentage “bonne qualité”).
+ *
+ * Contraintes :
+ * - `valuePct` est borné dans [0, 100] avant calcul.
+ * - Le rendu repose sur `strokeDasharray` sur une circonférence calculée.
+ *
+ * @param props - Propriétés du donut.
+ * @param props.valuePct - Valeur en pourcentage (0..100).
+ * @param props.label - Libellé accessible (appliqué à l’élément SVG).
+ * @returns Donut SVG accompagné de la valeur texte.
+ */
 function Donut({
                    valuePct,
                    label,
@@ -33,7 +65,14 @@ function Donut({
     return (
         <div className="flex items-center gap-2">
             <svg width="40" height="40" viewBox="0 0 40 40" aria-label={label}>
-                <circle cx="20" cy="20" r={r} fill="none" stroke="rgb(226 232 240)" strokeWidth="6" />
+                <circle
+                    cx="20"
+                    cy="20"
+                    r={r}
+                    fill="none"
+                    stroke="rgb(226 232 240)"
+                    strokeWidth="6"
+                />
                 <circle
                     cx="20"
                     cy="20"
@@ -51,8 +90,18 @@ function Donut({
     );
 }
 
+/**
+ * Indicateur visuel de note au format “pills” (5 segments).
+ *
+ * Interprétation :
+ * - La valeur est attendue dans l’intervalle 1..5.
+ * - Le composant borne la valeur dans [0, 5] pour éviter les débordements.
+ *
+ * @param props - Propriétés du composant.
+ * @param props.value - Note numérique (1..5).
+ * @returns Barre de 5 segments représentant la note.
+ */
 function RatingPills({ value }: { value: number }) {
-    // 1..5
     const v = Math.max(0, Math.min(5, value));
     return (
         <div className="flex items-center gap-1">
@@ -69,6 +118,23 @@ function RatingPills({ value }: { value: number }) {
     );
 }
 
+/**
+ * Carte d’insight (KPI) au rendu accentué, utilisée dans la vue Sommeil.
+ *
+ * Structure :
+ * - Titre (petit, uppercase)
+ * - Valeur principale (large, tabulaire)
+ * - Sous-titre optionnel
+ * - Zone optionnelle à droite (donut, rating, etc.)
+ *
+ * @param props - Propriétés de la carte.
+ * @param props.title - Libellé de l’indicateur.
+ * @param props.value - Valeur principale formatée.
+ * @param props.subtitle - Texte secondaire optionnel.
+ * @param props.right - Élément optionnel rendu à droite.
+ * @param props.tone - Déclinaison de dégradé appliquée à la barre latérale.
+ * @returns Carte d’indicateur.
+ */
 function InsightCard({
                          title,
                          value,
@@ -91,7 +157,9 @@ function InsightCard({
 
     return (
         <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/75 shadow-md backdrop-blur p-5">
-            <span className={`pointer-events-none absolute inset-y-5 left-3 w-1 rounded-full bg-gradient-to-b ${bar}`} />
+            <span
+                className={`pointer-events-none absolute inset-y-5 left-3 w-1 rounded-full bg-gradient-to-b ${bar}`}
+            />
             <div className="pl-4 flex items-start justify-between gap-4">
                 <div className="min-w-0">
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -110,10 +178,44 @@ function InsightCard({
     );
 }
 
+/**
+ * Vue de détail du domaine Sommeil.
+ *
+ * KPIs calculés :
+ * - Heures sur la semaine (et delta % vs semaine précédente).
+ * - Moyenne 30 jours (heures/nuit).
+ * - Streak (jours consécutifs enregistrés).
+ * - Qualité moyenne (échelle 1..5) si disponible.
+ *
+ * Insights :
+ * - Nuits actives et couverture sur 30 jours.
+ * - Meilleure nuit (max heures).
+ * - Pourcentage de nuits de “bonne qualité” (>= 4/5).
+ * - Variabilité des heures (écart-type, en heures).
+ *
+ * Tendance :
+ * - Moyenne mobile simple (SMA 5) sur les heures/nuit.
+ *
+ * Historique :
+ * - Délégué à `SleepHistoryCard`.
+ *
+ * @returns Contenu React de la vue de détail Sommeil.
+ */
 export function SleepDomainDetail() {
     const t = useTranslations("domainSleep");
     const { sessions, loading, errorType } = useSleepSessionsDetail(30);
 
+    /**
+     * Calculs dérivés mémoïsés à partir des sessions.
+     *
+     * Étapes :
+     * - Tri chronologique et fenêtrage 30 éléments.
+     * - Streak sur l’ensemble des jours disponibles.
+     * - Agrégats sur les heures/nuit (moyenne, meilleure nuit, tendance).
+     * - Comparaison semaine A/B sur le volume d’heures.
+     * - Agrégats de qualité si la donnée est renseignée.
+     * - Calcul de variabilité via écart-type.
+     */
     const computed = useMemo(() => {
         const all = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
         const last30 = clampRange(all, 30);
@@ -138,23 +240,40 @@ export function SleepDomainDetail() {
 
         const qualityVals = last30.map((s) => s.quality).filter((v): v is number => v != null);
         const avgQuality30 =
-            qualityVals.length > 0 ? Math.round(qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length) : null;
+            qualityVals.length > 0
+                ? Math.round(qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length)
+                : null;
 
         const trend = simpleMovingAverage(hoursPerNight, 5);
 
-        // INSIGHTS
+        /**
+         * Nombre de nuits actives sur la fenêtre (unicité par date).
+         */
         const uniqueDays = new Set(last30.map((s) => s.date));
         const activeNights = uniqueDays.size;
 
-        // ✅ Les % que tu ne comprenais pas: c’est un "coverage" (données encodées / 30 jours)
+        /**
+         * Couverture des 30 derniers jours.
+         *
+         * Exprime la proportion de jours avec une donnée encodée.
+         */
         const coveragePct = Math.round((activeNights / 30) * 100);
 
+        /**
+         * Meilleure nuit (max heures) sur la fenêtre.
+         */
         const bestNight = hoursPerNight.length > 0 ? Math.max(...hoursPerNight) : 0;
 
+        /**
+         * Pourcentage de nuits avec une qualité >= 4/5.
+         */
         const goodQualityCount = last30.filter((s) => (s.quality ?? 0) >= 4).length;
         const goodQualityPct = last30.length > 0 ? Math.round((goodQualityCount / last30.length) * 100) : 0;
 
-        const variability = round1(stdDev(hoursPerNight)); // écart-type (h)
+        /**
+         * Variabilité des heures de sommeil (écart-type, en heures).
+         */
+        const variability = round1(stdDev(hoursPerNight));
 
         return {
             weekAHours: Math.round(weekAHours),
@@ -174,14 +293,19 @@ export function SleepDomainDetail() {
         };
     }, [sessions]);
 
+    /**
+     * Indication de “meilleur streak” affichée si disponible.
+     */
     const streakHint =
         computed.streakBest > 0 ? `${t("detail.kpi.streakBestPrefix")} ${computed.streakBest}` : undefined;
 
+    /**
+     * Libellé du delta hebdomadaire (en pourcentage).
+     */
     const deltaLabel = `${computed.deltaWeek}%`;
 
     return (
         <div className="space-y-6">
-            {/* KPI */}
             <Section title={t("detail.kpisTitle")}>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <InsightCard
@@ -210,7 +334,6 @@ export function SleepDomainDetail() {
                 </div>
             </Section>
 
-            {/* INSIGHTS (corrigé visuellement) */}
             <Section title={t("detail.insightsTitle")}>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <InsightCard
@@ -231,7 +354,6 @@ export function SleepDomainDetail() {
                         tone="violet"
                         title={t("detail.insights.goodQuality")}
                         value={`${computed.insights.goodQualityPct}%`}
-                        // ✅ Fix: plus de grosse bulle → hint discret
                         subtitle={t("detail.insights.goodQualityHint")}
                         right={<Donut valuePct={computed.insights.goodQualityPct} />}
                     />
@@ -245,13 +367,10 @@ export function SleepDomainDetail() {
                 </div>
             </Section>
 
-            {/* TREND */}
             <Section title={t("detail.trendTitle")}>
                 <div className="rounded-2xl border border-slate-100 bg-white/90 p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                         <div className="text-sm text-slate-700">{t("detail.trendHours30")}</div>
-
-                        {/* ✅ "Lissage(5)" = moyenne mobile sur 5 points (SMA 5) */}
                         <div className="text-xs text-slate-500">{t("detail.trendSma5")}</div>
                     </div>
                     <div className="mt-3">
@@ -260,7 +379,6 @@ export function SleepDomainDetail() {
                 </div>
             </Section>
 
-            {/* HISTORY */}
             <Section title={t("detail.historyTitle")}>
                 <SleepHistoryCard sessions={sessions} loading={loading} errorType={errorType} />
             </Section>

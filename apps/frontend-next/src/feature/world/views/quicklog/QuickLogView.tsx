@@ -20,13 +20,22 @@ import { useBadgeToasts } from "@/components";
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
 
 /**
- * Vue "Quick log" dans le drawer SPA.
+ * Vue “Quick Log” du drawer SPA.
  *
- * @remarks
- * - Réutilise les `*ManualForm` existants (pas de duplication).
- * - Adapte les handlers async pour respecter `Promise<void>` côté forms.
- * - Supporte un domaine pré-sélectionné via le state (optionnel).
- * - ✅ Centralise le refresh (bumpRefreshKey) ici plutôt que dans les forms.
+ * Responsabilités :
+ * - Réutiliser les formulaires existants (`*ManualForm`) sans dupliquer l’UI.
+ * - Supporter un domaine pré-sélectionné via la stack du drawer (`quickLog.domain`).
+ * - Centraliser le rafraîchissement World Hub après création d’une session
+ *   (via `withRefresh` → `bumpRefreshKey` si le provider est présent).
+ * - Déclencher un toast de badge (pattern “récompense”) puis naviguer vers l’overview.
+ *
+ * Remarques d’architecture :
+ * - Les formulaires exigent des handlers de type `Promise<void>`, ce composant sert
+ *   d’adaptateur entre ces signatures et les hooks de création de session.
+ * - La navigation de sortie utilise `openOverview()` plutôt qu’un routage Next,
+ *   conformément au modèle SPA interne du World Hub.
+ *
+ * @returns Vue Quick Log.
  */
 export function QuickLogView() {
     const tWorld = useTranslations("publicWorld");
@@ -35,11 +44,18 @@ export function QuickLogView() {
     const { state, openOverview } = useWorldHub();
     const { pushBadges } = useBadgeToasts();
 
-    // ✅ refresh centralisé ici
+    /**
+     * Mécanisme de rafraîchissement facultatif du World Hub.
+     *
+     * `withRefresh` exécute une action asynchrone puis déclenche un refresh global
+     * (si le provider est disponible via `useWorldHubOptional` en interne).
+     */
     const { withRefresh } = useOptionalWorldRefresh();
 
     /**
-     * Domaine pré-sélectionné (optionnel) en provenance de la stack du drawer.
+     * Domaine pré-sélectionné (optionnel) en provenance de la pile de vues.
+     *
+     * La vue courante est supposée être le dernier élément de `drawerStack`.
      */
     const topView = state.drawerStack[state.drawerStack.length - 1];
 
@@ -48,8 +64,13 @@ export function QuickLogView() {
 
     const [active, setActive] = useState<Domain>(initialDomain ?? "sleep");
 
-    // --- toast (simple, sans lib) ---
-    const [toast, setToast] = useState<string | null>(null);
+    /**
+     * État toast local.
+     *
+     * Remarque : l’affichage du toast est conditionné à `toast != null`.
+     * La logique de timer est préparée via des refs pour éviter les fuites lors du unmount.
+     */
+    const [toast] = useState<string | null>(null);
     const toastTimerRef = useRef<number | null>(null);
     const navTimerRef = useRef<number | null>(null);
 
@@ -60,11 +81,16 @@ export function QuickLogView() {
         };
     }, []);
 
+    /**
+     * Déclenche un “badge toast” de succès puis navigue vers l’overview après un délai.
+     *
+     * Le toast est géré par `useBadgeToasts` et non par l’état `toast`.
+     *
+     * @returns void
+     */
     const showSuccessAndGoOverview = () => {
         const earnedAt = new Date().toISOString();
 
-        // La on pousse un fake badge...
-        // Il faudrait créer un type spécifique, genre ToastItem pour être propre
         pushBadges([
             {
                 id: `quicklog-saved-${earnedAt}`,
@@ -101,13 +127,22 @@ export function QuickLogView() {
         createSession: createSleepSession,
     } = useSleepSessions();
 
+    /**
+     * État dérivé : un des hooks est en cours de chargement.
+     */
     const anyLoading = meditationLoading || exerciceLoading || sleepLoading;
 
+    /**
+     * Texte d’erreur générique si au moins un hook signale une erreur.
+     */
     const errorText =
         meditationErrorType || exerciceErrorType || sleepErrorType
             ? tCommon("genericError")
             : null;
 
+    /**
+     * Libellé de domaine affiché dans le sous-titre.
+     */
     const domainLabel = useMemo(() => {
         if (active === "sleep") return tWorld("sleepAlt");
         if (active === "meditation") return tWorld("meditationAlt");
@@ -115,10 +150,15 @@ export function QuickLogView() {
     }, [active, tWorld]);
 
     /**
-     * Wrap pour respecter la signature attendue par les `ManualForm` :
-     * `Promise<void>`.
+     * Handler de création de session sommeil adapté à la signature attendue par `SleepManualForm`.
      *
-     * ✅ Ici on centralise le refresh : 1 POST puis bumpRefreshKey() (si WorldHubProvider présent).
+     * Séquence :
+     * - POST via `createSleepSession`,
+     * - refresh global via `withRefresh`,
+     * - feedback utilisateur + navigation.
+     *
+     * @param payload - Données de la session (sommeil).
+     * @returns Promesse résolue lorsque l’action est terminée.
      */
     const onCreateSleepSessionAction = async (payload: {
         hours: number;
@@ -129,6 +169,12 @@ export function QuickLogView() {
         showSuccessAndGoOverview();
     };
 
+    /**
+     * Handler de création de session méditation adapté à la signature attendue par `MeditationManualForm`.
+     *
+     * @param payload - Données de la session (méditation).
+     * @returns Promesse résolue lorsque l’action est terminée.
+     */
     const onCreateMeditationSessionAction = async (payload: {
         durationSeconds: number;
         moodAfter?: MoodValue;
@@ -139,6 +185,12 @@ export function QuickLogView() {
         showSuccessAndGoOverview();
     };
 
+    /**
+     * Handler de création de session exercice adapté à la signature attendue par `ExerciceManualForm`.
+     *
+     * @param payload - Données de la session (exercice).
+     * @returns Promesse résolue lorsque l’action est terminée.
+     */
     const onCreateExerciceSessionAction = async (payload: {
         dateSession: string;
         quality?: MoodValue;
@@ -150,11 +202,11 @@ export function QuickLogView() {
 
     return (
         <div className="space-y-4">
-            {/* Header interne de la vue */}
             <div>
                 <div className="text-sm font-semibold text-slate-800">
                     {tWorld("quickLogTitle")}
                 </div>
+
                 <div className="mt-1 text-xs text-slate-500">
                     {domainLabel}
                     {anyLoading
@@ -165,10 +217,8 @@ export function QuickLogView() {
                 </div>
             </div>
 
-            {/* Switch domaine (icônes) */}
             <QuickLogLauncher active={active} onChange={setActive} />
 
-            {/* Formulaires réutilisés */}
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
                 {active === "sleep" && (
                     <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
@@ -193,7 +243,6 @@ export function QuickLogView() {
                 )}
             </div>
 
-            {/* Toast */}
             {toast && (
                 <div
                     role="status"
