@@ -56,7 +56,7 @@ export default function RespirationPage() {
     /** Skip All → passer au dashboard */
     const handleSkipAll = () => {
         if (aliveRef.current)
-            router.push(`/${locale}/member/world`);
+            router.push(`/${locale}/member/world-v2`);
     };
 
     /** Effet principal : boucle respiration */

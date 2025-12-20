@@ -249,7 +249,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * Item spécifique au public : entrée vers l’espace member.
      */
     const publicItems: NavItem[] = [
-        { key: "clientSpace", href: (loc) => `/${loc}/member/world`, labelKey: "clientSpace" },
+        { key: "clientSpace", href: (loc) => `/${loc}/member/world-v2`, labelKey: "clientSpace" },
     ];
 
     /**
@@ -387,7 +387,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * On se base sur le mode effectif : si connecté, le logo mène naturellement vers le “world”.
      */
     const homeHref =
-        effectiveMode === "client" ? `/${locale}/member/world` : `/${locale}`;
+        effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">
