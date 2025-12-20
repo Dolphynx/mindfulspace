@@ -228,6 +228,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         },
         {
             key: "world",
+            href: (loc) => `/${loc}/member/world-v2`,
+            labelKey: "world",
+        },
+        /*{
+            key: "world",
             href: (loc) => `/${loc}/member/world`,
             labelKey: "world",
             children: [
@@ -237,7 +242,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                 { key: "sleep", href: (loc) => `/${loc}/member/domains/sleep`, labelKey: "sleep" },
                 { key: "badges", href: (loc) => `/${loc}/member/badges`, labelKey: "badges" },
             ],
-        },
+        },*/
     ];
 
     /**
