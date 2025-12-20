@@ -3,7 +3,8 @@
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { ProgramItem } from "@/lib/api/program";
 import { usePrograms } from "@/hooks/usePrograms";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
 
 export function ProgramDetails({
                                    program,
@@ -20,19 +21,34 @@ export function ProgramDetails({
         getSubscriptionStatus,
     } = usePrograms();
 
+    const { withRefresh } = useOptionalWorldRefresh();
+
     const [message, setMessage] = useState<string | null>(null);
     const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
-    const uniqueWeekdays = new Set(program.days.map((d) => d.weekday)).size;
+    const uniqueWeekdays = useMemo(
+        () => new Set(program.days.map((d) => d.weekday)).size,
+        [program.days]
+    );
 
     //
     // Check subscription status on mount
     //
     useEffect(() => {
+        let cancelled = false;
+
         (async () => {
-            const res = await getSubscriptionStatus(program.id);
-            setSubscriptionId(res.userProgramId);
+            try {
+                const res = await getSubscriptionStatus(program.id);
+                if (!cancelled) setSubscriptionId(res.userProgramId);
+            } catch {
+                if (!cancelled) setSubscriptionId(null);
+            }
         })();
+
+        return () => {
+            cancelled = true;
+        };
     }, [program.id, getSubscriptionStatus]);
 
     //
@@ -41,11 +57,11 @@ export function ProgramDetails({
     async function handleToggle() {
         try {
             if (subscriptionId) {
-                await unsubscribeFromProgram(subscriptionId);
+                await withRefresh(() => unsubscribeFromProgram(subscriptionId));
                 setSubscriptionId(null);
                 setMessage("Successfully unsubscribed!");
             } else {
-                await subscribeToProgram(program.id);
+                await withRefresh(() => subscribeToProgram(program.id));
                 const res = await getSubscriptionStatus(program.id);
                 setSubscriptionId(res.userProgramId);
                 setMessage("Successfully subscribed!");

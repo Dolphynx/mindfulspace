@@ -47,7 +47,6 @@ export type CreateProgramPayload = {
     }[];
 };
 
-
 // Types for the user’s copied programs
 export type UserProgramExercise = {
     id: string;
@@ -66,6 +65,11 @@ export type UserProgram = {
     id: string;
     programTitle: string;
     days: UserProgramDay[];
+};
+
+export type ProgramSubscriptionStatus = {
+    subscribed: boolean;
+    userProgramId: string | null;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -184,21 +188,23 @@ export async function subscribeToProgram(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
-export async function getProgramSubscriptionStatus(programId: string, baseUrl = API_BASE_URL) {
+export async function getProgramSubscriptionStatus(
+    programId: string,
+    baseUrl = API_BASE_URL
+): Promise<ProgramSubscriptionStatus> {
     const res = await apiFetch(`${baseUrl}/user/programs/status/${programId}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data = await res.json() as {
-        subscribed: boolean;
-        userProgramId: string | null;
-    };
-
+    const data = (await res.json()) as ProgramSubscriptionStatus;
     return data; // not just boolean
 }
 
-export async function unsubscribeFromProgram(userProgramId: string, baseUrl = API_BASE_URL) {
+export async function unsubscribeFromProgram(
+    userProgramId: string,
+    baseUrl = API_BASE_URL
+): Promise<void> {
     const res = await apiFetch(`${baseUrl}/user/programs/${userProgramId}`, {
-        method: "DELETE"
+        method: "DELETE",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
@@ -207,7 +213,7 @@ export async function unsubscribeFromProgram(userProgramId: string, baseUrl = AP
  * GET /user/programs  (fetch all subscriptions of current user)
  */
 export async function fetchUserPrograms(
-    baseUrl = API_BASE_URL,
+    baseUrl = API_BASE_URL
 ): Promise<UserProgram[]> {
     const res = await apiFetch(`${baseUrl}/user/programs`, {
         cache: "no-store",
@@ -225,8 +231,7 @@ export async function fetchUserPrograms(
             ? raw.days.map((d: any): UserProgramDay => ({
                 id: String(d.id ?? ""),
                 title: String(d.title ?? ""),
-                weekday:
-                    typeof d.weekday === "number" ? d.weekday : null,
+                weekday: typeof d.weekday === "number" ? d.weekday : null,
                 exercices: Array.isArray(d.exercices)
                     ? d.exercices.map((e: any): UserProgramExercise => ({
                         id: String(e.id ?? ""),
@@ -241,9 +246,3 @@ export async function fetchUserPrograms(
             : [],
     }));
 }
-
-
-
-
-
-
