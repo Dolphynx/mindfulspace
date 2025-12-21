@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import {useUserPrograms} from "@/hooks/useUserPrograms";
+import {UserProgram, UserProgramDay} from "@/lib/api/program";
 
 export function TodayExercices() {
     const t = useTranslations("domainExercice");
