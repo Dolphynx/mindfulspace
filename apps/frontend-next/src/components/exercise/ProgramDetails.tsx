@@ -104,11 +104,12 @@ export function ProgramDetails({
                         </p>
 
                         <ul className="pl-4 list-disc">
-                            {day.exerciceItems.map((ex, idx) => (
-                                <li key={idx}>
-                                    {ex.exerciceContent?.name} — {ex.defaultRepetitionCount} reps
+                            {day.exercices.map((ex) => (
+                                <li key={ex.id}>
+                                    {ex.exercice.name} — {ex.defaultRepetitionCount} reps
                                 </li>
                             ))}
+
                         </ul>
                     </div>
                 ))}

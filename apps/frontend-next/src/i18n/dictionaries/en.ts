@@ -753,6 +753,10 @@ const en: Messages = {
             meditation: "Meditation",
             exercise: "Exercise",
         },
+
+        toasts: {
+            sessionSaved: "Session saved",
+        },
     },
 
     resourceDetailPage: {

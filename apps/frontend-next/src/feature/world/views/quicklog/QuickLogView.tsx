@@ -15,102 +15,93 @@ import { useMeditationSessions } from "@/hooks/useMeditationSessions";
 import { useExerciceSessions } from "@/hooks/useExerciceSessions";
 import { useSleepSessions } from "@/hooks/useSleepSessions";
 import { QuickLogLauncher } from "../overview/QuickLogLauncher";
-import { useBadgeToasts } from "@/components";
 
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
+import { useNotifications } from "@/hooks/useNotifications";
 
 /**
- * @file QuickLogView.tsx
- * @description
  * Vue “Quick Log” du drawer SPA.
  *
- * Responsabilités :
- * - Réutiliser les formulaires existants (`*ManualForm`) sans dupliquer l’UI.
- * - Supporter un domaine pré-sélectionné via la stack du drawer (`quickLog.domain`).
- * - Centraliser le rafraîchissement World Hub après création d’une session
- *   (via `withRefresh` → `bumpRefreshKey` si le provider est présent).
- * - Déclencher un toast de badge (pattern “récompense”) puis naviguer vers l’overview.
+ * @remarks
+ * Cette vue réutilise les formulaires existants (`*ManualForm`) afin d’éviter
+ * toute duplication d’UI, tout en appliquant le flux SPA (drawer) :
+ * - sélection d’un domaine,
+ * - création de session,
+ * - rafraîchissement du World Hub,
+ * - feedback utilisateur (toast + confettis),
+ * - retour contrôlé à l’overview.
  *
- * Contrainte Next.js (App Router) :
- * - Éviter de passer des callbacks en props à des Client Components importables côté serveur (TS71007).
+ * Le domaine actif est dérivé de `state.drawerStack` (source de vérité),
+ * ce qui évite d’introduire une gestion locale du domaine et limite les props
+ * de callbacks vers des composants potentiellement importés côté serveur.
  *
- * Stratégie :
- * - Le “domaine actif” est dérivé de `state.drawerStack` (source de vérité).
- * - Le composant {@link QuickLogLauncher} déclenche l’ouverture du Quick Log
- *   avec le domaine choisi (pas de callback `onChange`).
- *
- * @returns Vue Quick Log.
+ * @returns La vue Quick Log.
  */
 export function QuickLogView() {
     const tWorld = useTranslations("publicWorld");
     const tCommon = useTranslations("common");
 
     const { state, openOverview } = useWorldHub();
-    const { pushBadges } = useBadgeToasts();
+    const { notifySessionSaved } = useNotifications();
 
     /**
      * Mécanisme de rafraîchissement facultatif du World Hub.
      *
+     * @remarks
      * `withRefresh` exécute une action asynchrone puis déclenche un refresh global
-     * (si le provider est disponible via `useWorldHubOptional` en interne).
+     * si le provider du World Hub supporte ce mécanisme (implémentation optionnelle).
      */
     const { withRefresh } = useOptionalWorldRefresh();
 
     /**
      * Domaine actif dérivé de la pile de vues du drawer.
      *
-     * Source de vérité :
-     * - la vue courante est le sommet de `drawerStack`,
-     * - si cette vue est `quickLog`, son champ `domain` pilote le formulaire affiché.
-     *
-     * Avantage :
-     * - aucune gestion locale via `setActive` nécessaire,
-     * - évite de passer des callbacks dans des props (TS71007).
+     * @remarks
+     * La vue courante correspond au sommet de `drawerStack`.
+     * Si cette vue est `quickLog`, son champ `domain` pilote le formulaire affiché.
+     * Un fallback est appliqué pour garantir un domaine valide.
      */
     const topView = state.drawerStack[state.drawerStack.length - 1];
     const active: Domain =
         topView?.type === "quickLog" ? (topView.domain ?? "sleep") : "sleep";
 
     /**
-     * État toast local (non utilisé pour l’affichage de badge, conservé pour compatibilité).
+     * État toast local (conservé tel quel).
      *
-     * Remarque : l’affichage du toast de badge est géré par `useBadgeToasts`.
+     * @remarks
+     * L’affichage principal des confirmations est géré par `AppToastProvider`.
+     * Cet état est laissé en place afin d’éviter un changement de comportement
+     * inattendu si une logique externe s’y réfère.
      */
     const [toast] = useState<string | null>(null);
 
     /**
-     * Références de timers pour éviter les fuites lors du unmount.
+     * Référence de timer de navigation.
+     *
+     * @remarks
+     * Utilisée pour annuler la navigation différée en cas de démontage du composant.
      */
-    const toastTimerRef = useRef<number | null>(null);
     const navTimerRef = useRef<number | null>(null);
 
     useEffect(() => {
         return () => {
-            if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
             if (navTimerRef.current) window.clearTimeout(navTimerRef.current);
         };
     }, []);
 
     /**
-     * Déclenche un “badge toast” de succès puis navigue vers l’overview après un délai.
+     * Affiche la confirmation “session enregistrée” puis navigue vers l’overview.
      *
-     * @returns void
+     * @remarks
+     * La confirmation est centralisée via {@link useNotifications} :
+     * - toast applicatif de succès,
+     * - confettis optionnels.
+     * La navigation est différée pour laisser le temps à l’utilisateur de percevoir le feedback.
      */
     const showSuccessAndGoOverview = () => {
-        const earnedAt = new Date().toISOString();
+        notifySessionSaved({ celebrate: true });
 
-        pushBadges([
-            {
-                id: `quicklog-saved-${earnedAt}`,
-                slug: "quicklog-saved",
-                earnedAt,
-                iconKey: "success",
-                titleKey: "badges.quickLogSaved.title",
-                descriptionKey: "badges.quickLogSaved.description",
-            },
-        ]);
-
-        window.setTimeout(() => {
+        navTimerRef.current = window.setTimeout(() => {
             openOverview();
         }, 800);
     };
@@ -136,12 +127,12 @@ export function QuickLogView() {
     } = useSleepSessions();
 
     /**
-     * État dérivé : un des hooks est en cours de chargement.
+     * Indique si au moins un hook est en cours de chargement.
      */
     const anyLoading = meditationLoading || exerciceLoading || sleepLoading;
 
     /**
-     * Texte d’erreur générique si au moins un hook signale une erreur.
+     * Message d’erreur générique si au moins un hook signale une erreur.
      */
     const errorText =
         meditationErrorType || exerciceErrorType || sleepErrorType
@@ -158,9 +149,9 @@ export function QuickLogView() {
     }, [active, tWorld]);
 
     /**
-     * Handler de création de session sommeil adapté à la signature attendue par `SleepManualForm`.
+     * Handler de création de session sommeil, adapté à la signature attendue par `SleepManualForm`.
      *
-     * @param payload - Données de la session (sommeil).
+     * @param payload Données de session sommeil.
      * @returns Promesse résolue lorsque l’action est terminée.
      */
     const onCreateSleepSessionAction = async (payload: {
@@ -173,9 +164,9 @@ export function QuickLogView() {
     };
 
     /**
-     * Handler de création de session méditation adapté à la signature attendue par `MeditationManualForm`.
+     * Handler de création de session méditation, adapté à la signature attendue par `MeditationManualForm`.
      *
-     * @param payload - Données de la session (méditation).
+     * @param payload Données de session méditation.
      * @returns Promesse résolue lorsque l’action est terminée.
      */
     const onCreateMeditationSessionAction = async (payload: {
@@ -189,9 +180,9 @@ export function QuickLogView() {
     };
 
     /**
-     * Handler de création de session exercice adapté à la signature attendue par `ExerciceManualForm`.
+     * Handler de création de session exercice, adapté à la signature attendue par `ExerciceManualForm`.
      *
-     * @param payload - Données de la session (exercice).
+     * @param payload Données de session exercice.
      * @returns Promesse résolue lorsque l’action est terminée.
      */
     const onCreateExerciceSessionAction = async (payload: {
@@ -216,7 +207,6 @@ export function QuickLogView() {
                 </div>
             </div>
 
-            {/* Lanceur de sélection : déclenche une ré-ouverture du Quick Log sur le domaine choisi via le hub */}
             <QuickLogLauncher active={active} />
 
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
