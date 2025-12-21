@@ -361,24 +361,28 @@ model UserProgramTranslation {
   title       String
   description String?
 
-  userProgram UserProgram @relation(fields: [userProgramId], references: [id])
-  language    Language    @relation(fields: [languageCode], references: [code])
+  userProgram UserProgram @relation(fields: [userProgramId], references: [id], onDelete: Cascade)
+
+  language Language @relation(fields: [languageCode], references: [code])
 
   @@unique([userProgramId, languageCode])
 }
 
 
+
 model UserProgramDay {
   id            String @id @default(uuid())
   userProgramId String
-  order         Int
-  weekday       Int?
+
+  order   Int
+  weekday Int?
 
   translations UserProgramDayTranslation[]
   exercices    UserProgramExerciceItem[]
 
   userProgram UserProgram @relation(fields: [userProgramId], references: [id], onDelete: Cascade)
 }
+
 
 model UserProgramDayTranslation {
   id               String @id @default(uuid())
@@ -387,25 +391,28 @@ model UserProgramDayTranslation {
 
   title String
 
-  userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id])
-  language       Language       @relation(fields: [languageCode], references: [code])
+  userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
+
+  language Language @relation(fields: [languageCode], references: [code])
 
   @@unique([userProgramDayId, languageCode])
 }
 
 
+
 model UserProgramExerciceItem {
-  id                 String @id @default(uuid())
-  userProgramDayId   String
-  exerciceContentId  String
+  id                String @id @default(uuid())
+  userProgramDayId  String
+  exerciceContentId String
 
   defaultRepetitionCount Int?
-  defaultSets Int?
+  defaultSets            Int?
 
   userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
-  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
+  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 }
+
 
 
 model User {

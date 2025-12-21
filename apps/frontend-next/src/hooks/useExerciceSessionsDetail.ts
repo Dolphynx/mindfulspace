@@ -8,18 +8,20 @@ import {
     type ExerciceContentItem,
 } from "@/lib/api/exercice";
 import type { ExerciceErrorType } from "@/hooks/useExerciceSessions";
+import {useLocaleFromPath} from "@/hooks/useLocalFromPath";
 
 export function useExerciceSessionsDetail(lastDays: number = 30) {
     const [sessions, setSessions] = useState<ExerciceSession[]>([]);
     const [types, setTypes] = useState<ExerciceContentItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorType, setErrorType] = useState<ExerciceErrorType>(null);
+    const locale = useLocaleFromPath();
 
     const load = useCallback(async () => {
         setLoading(true);
         setErrorType(null);
         try {
-            const data = await fetchExerciceSessionsDetail({ lastDays });
+            const data = await fetchExerciceSessionsDetail(locale, { lastDays });
             setSessions(data);
         } catch (e) {
             console.error("[useExerciceSessionsDetail] load failed", e);
@@ -31,7 +33,7 @@ export function useExerciceSessionsDetail(lastDays: number = 30) {
 
     const loadTypes = useCallback(async () => {
         try {
-            const data = await fetchExerciceContents();
+            const data = await fetchExerciceContents(locale);
             setTypes(data);
         } catch (e) {
             console.error("[useExerciceSessionsDetail] types failed", e);

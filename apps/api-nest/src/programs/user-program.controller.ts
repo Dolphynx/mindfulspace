@@ -13,6 +13,23 @@ export class UserProgramController {
   constructor(private readonly service: UserProgramService) {}
 
   /**
+   * Statut d’abonnement
+   * GET /user-programs/status/:programId
+   */
+  @Get('status/:programId')
+  async isSubscribed(
+    @CurrentUser('id') userId: string,
+    @Param('programId') programId: string,
+  ) {
+    const record = await this.service.isSubscribed(userId, programId);
+
+    return {
+      subscribed: !!record,
+      userProgramId: record?.id ?? null,
+    };
+  }
+
+  /**
    * Liste des programmes de l’utilisateur
    * GET /user-programs?lang=fr
    */
@@ -47,22 +64,5 @@ export class UserProgramController {
     @Param('id') id: string,
   ) {
     return this.service.delete(userId, id);
-  }
-
-  /**
-   * Statut d’abonnement
-   * GET /user-programs/status/:programId
-   */
-  @Get('status/:programId')
-  async isSubscribed(
-    @CurrentUser('id') userId: string,
-    @Param('programId') programId: string,
-  ) {
-    const record = await this.service.isSubscribed(userId, programId);
-
-    return {
-      subscribed: !!record,
-      userProgramId: record?.id ?? null,
-    };
   }
 }
