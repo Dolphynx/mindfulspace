@@ -753,6 +753,7 @@ const fr = {
 
         toasts: {
             sessionSaved: "Session enregistrée",
+            sessionSavedOffline: "Session enregistrée hors ligne",
         },
     },
 

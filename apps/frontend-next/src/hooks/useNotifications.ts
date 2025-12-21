@@ -50,6 +50,13 @@ export type NotificationsApi = {
     notifySessionSaved: (options?: NotifySessionSavedOptions) => void;
 
     /**
+     * Affiche une confirmation de succès “session enregistrée hors ligne” via le toast générique.
+     *
+     * @param options Options de notification (confettis, durée).
+     */
+    notifySessionSavedOffline: (options?: NotifySessionSavedOptions) => void;
+
+    /**
      * Affiche un toast d’erreur générique.
      *
      * @param message Message à afficher.
@@ -119,6 +126,23 @@ export function useNotifications(): NotificationsApi {
         }
 
         /**
+         * Affiche une confirmation de succès pour l’enregistrement hors ligne d’une session.
+         *
+         * @param options Options de notification.
+         */
+        function notifySessionSavedOffline(options: NotifySessionSavedOptions = {}) {
+            const { celebrate = false, autoCloseMs } = options;
+
+            pushToast({
+                kind: "success",
+                message: tWorld("toasts.sessionSavedOffline"),
+                autoCloseMs,
+            });
+
+            if (celebrate) fire();
+        }
+
+        /**
          * Affiche un toast d’erreur.
          *
          * @param message Message à afficher.
@@ -138,6 +162,6 @@ export function useNotifications(): NotificationsApi {
             pushToast({ kind: "info", message, autoCloseMs });
         }
 
-        return { notifyBadges, notifySessionSaved, notifyError, notifyInfo };
+        return { notifyBadges, notifySessionSaved, notifySessionSavedOffline, notifyError, notifyInfo };
     }, [fire, pushBadges, pushToast, tWorld]);
 }

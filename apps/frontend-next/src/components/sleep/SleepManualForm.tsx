@@ -5,6 +5,7 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import { MoodValue } from "@/lib";
 import MoodPicker from "@/components/shared/MoodPicker";
 import {queueSleepSession} from "@/offline-sync/sleep";
+import { useNotifications } from "@/hooks/useNotifications";
 
 type SleepManualFormProps = {
     onCreateSessionAction: (payload: {
@@ -24,6 +25,7 @@ function buildTodayDateInput(): string {
 
 export default function SleepManualForm({ onCreateSessionAction }: SleepManualFormProps) {
     const t = useTranslations("domainSleep");
+    const { notifySessionSavedOffline } = useNotifications();
 
     const [durationHours, setDurationHours] = useState<number>(8);
     const [savingManual, setSavingManual] = useState(false);
@@ -49,6 +51,9 @@ export default function SleepManualForm({ onCreateSessionAction }: SleepManualFo
             if (!navigator.onLine) {
                 console.log("📴 Offline — saving sleep session locally");
                 await queueSleepSession(payload);
+                notifySessionSavedOffline({
+                    celebrate: false,
+                });
 
                 // setMessage?.("💾 Données enregistrées hors-ligne");
                 resetForm();
@@ -113,7 +118,7 @@ export default function SleepManualForm({ onCreateSessionAction }: SleepManualFo
                     type="range"
                     min={4}
                     max={12}
-                    step={0.5}
+                    step={1}
                     value={durationHours}
                     onChange={(e) => setDurationHours(Number(e.target.value))}
                     className="w-full"
