@@ -2,7 +2,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 
 const DB_NAME = "mindfulspace-offline";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 export type OfflineSleepSession = {
     id?: number;
@@ -19,6 +19,13 @@ export type OfflineQueueItem = {
     createdAt: number;
 };
 
+export type OfflineSleepHistoryItem = {
+    date: string;          // YYYY-MM-DD (unique per day)
+    hours: number;
+    quality?: number;
+};
+
+
 
 export async function getDB(): Promise<IDBPDatabase> {
     if (typeof window === "undefined") {
@@ -31,6 +38,12 @@ export async function getDB(): Promise<IDBPDatabase> {
                 db.createObjectStore("offlineQueue", {
                     keyPath: "id",
                     autoIncrement: true,
+                });
+            }
+
+            if (!db.objectStoreNames.contains("sleepHistory")) {
+                db.createObjectStore("sleepHistory", {
+                    keyPath: "date",
                 });
             }
         },
