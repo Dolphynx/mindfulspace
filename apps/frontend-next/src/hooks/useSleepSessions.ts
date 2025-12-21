@@ -11,7 +11,7 @@ import {
 import { useBadgeToasts } from "@/components/badges/BadgeToastProvider";
 import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
 
-export type SleepErrorType = "load" | "save" | null;
+export type SleepErrorType = "load" | "save" | "offline" | null;
 
 type UseSleepSessionsResult = {
     sessions: SleepSession[];

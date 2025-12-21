@@ -51,7 +51,11 @@ export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
     const t = useTranslations("domainSleep");
     const [expanded, setExpanded] = useState(false);
 
-    const loadError = errorType === "load" ? t("errors.loadSessions") : null;
+    const loadError =
+        errorType === "load" ? t("errors.loadSessions") : null;
+    const offlineHint =
+        errorType === "offline" ? t("errors.offlineUsingCache") : null;
+
 
     const sorted = useMemo(
         () => [...sessions].sort((a, b) => b.date.localeCompare(a.date)),
