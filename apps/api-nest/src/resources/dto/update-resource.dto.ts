@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsEnum,
   IsBoolean,
   IsInt,
   IsUrl,
@@ -12,7 +11,6 @@ import {
   Matches,
   IsPositive,
 } from 'class-validator';
-import { ResourceType } from '@prisma/client';
 
 /**
  * DTO for updating an existing resource
@@ -58,13 +56,6 @@ export class UpdateResourceDto {
   @MinLength(50)
   @IsOptional()
   content?: string;
-
-  /**
-   * Resource type
-   */
-  @IsEnum(ResourceType)
-  @IsOptional()
-  type?: ResourceType;
 
   /**
    * Whether this resource requires premium subscription

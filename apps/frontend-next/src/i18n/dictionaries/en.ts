@@ -68,6 +68,7 @@ const en: Messages = {
         tabs: {
             dashboard: "Dashboard",
             resources: "Resources",
+            taxonomy: "Taxonomy",
             sessions: "Sessions",
         },
         backToApp: "Back to App",
@@ -555,10 +556,17 @@ const en: Messages = {
         notFoundText: "This resource does not exist or is no longer available.",
         readTimeSuffix: "min read",
         premiumBadge: "Premium",
+        featuredBadge: "Featured",
         noContent: "The content of this resource is not yet available.",
         forbiddenTitle: "Access restricted",
         forbiddenText: "This resource is reserved for premium members. Please sign in with a premium account to access it.",
-        backToListCTA: "Back to resources list"
+        backToListCTA: "Back to resources list",
+        authorLabel: "By",
+        publishedLabel: "Published on",
+        updatedLabel: "Updated on",
+        externalLinkTitle: "Related content",
+        externalLinkDescription: "An external link is associated with this resource to explore the topic further",
+        openExternalLink: "View link"
     },
 
     notFoundPage: {
@@ -611,6 +619,7 @@ const en: Messages = {
 
     langSwitcher: {
         label: "Language",
+        switchTo: "Switch to",
     },
 
     globalNotice: {
@@ -934,9 +943,11 @@ const en: Messages = {
      */
     resourcesManagement: {
         title: "Resources Management",
+        loading: "Loading...",
         myResources: "My Resources",
         allResources: "All Resources",
         createResource: "Create Resource",
+        createResourceDescription: "Create a new resource with automatic translation support",
         editResource: "Edit Resource",
         deleteResource: "Delete Resource",
 
@@ -1008,6 +1019,27 @@ const en: Messages = {
             meditationProgram: "Meditation Program",
             meditationProgramHelper: "Link to an existing meditation program (optional)",
             selectProgram: "Select a program",
+
+            sourceLocale: {
+                label: "Source Language",
+                helper: "Language in which you're writing the content",
+            },
+
+            metadataSection: "Resource Metadata",
+            readOnly: "Read-only",
+        },
+
+        // Wizard
+        wizard: {
+            translating: {
+                title: "Translating...",
+                description: "Our AI is translating your resource into other languages. This may take a few seconds.",
+            },
+            review: {
+                instructions: "Review and modify the automatically generated translations. You can adjust any field before saving.",
+                sourceLanguage: "Source Language",
+                translation: "Translation",
+            },
         },
 
         // Actions
@@ -1019,6 +1051,10 @@ const en: Messages = {
             create: "Create",
             back: "Back",
             viewPublic: "View public version",
+            translateAndReview: "Translate & Review",
+            translating: "Translating...",
+            saving: "Saving...",
+            saveAll: "Save All",
         },
 
         // Success messages
@@ -1042,6 +1078,7 @@ const en: Messages = {
             minLength: "Too short",
             maxLength: "Too long",
             invalidUrl: "Invalid URL",
+            translationFailed: "Automatic translation failed",
         },
 
         // Delete confirmation
@@ -1080,6 +1117,119 @@ const en: Messages = {
             premium: "Premium",
             free: "Free",
             featured: "Featured",
+        },
+    },
+
+    taxonomyManagement: {
+        title: "Taxonomy Management",
+        subtitle: "Manage categories and tags to organize your resources",
+
+        // Tabs
+        tabs: {
+            categories: "Categories",
+            tags: "Tags",
+        },
+
+        // Categories section
+        categories: {
+            title: "Resource Categories",
+            description: "Categories organize your resources into broad themes (Sleep, Stress, etc.)",
+            createNew: "New Category",
+            editCategory: "Edit Category",
+            deleteCategory: "Delete Category",
+            noCategories: "No categories",
+            noCategoriesDescription: "Start by creating your first category",
+            resourceCount: "{{count}} resource",
+            resourceCount_plural: "{{count}} resources",
+
+            form: {
+                name: "Category Name",
+                namePlaceholder: "E.g.: Sleep, Stress, Meditation",
+                nameHelper: "Name displayed to users",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "sleep",
+                slugHelper: "Unique identifier for URLs (lowercase letters, numbers and hyphens only)",
+
+                iconEmoji: "Icon (emoji)",
+                iconEmojiPlaceholder: "😴",
+                iconEmojiHelper: "Emoji displayed in the interface (optional)",
+            },
+
+            deleteConfirm: {
+                title: "Delete category?",
+                message: "Are you sure you want to delete this category?",
+                warningHasResources: "Cannot delete: {{count}} resource is using this category. Reassign or delete these resources first.",
+                warningHasResources_plural: "Cannot delete: {{count}} resources are using this category. Reassign or delete these resources first.",
+                confirm: "Yes, delete",
+                cancel: "Cancel",
+            },
+        },
+
+        // Tags section
+        tags: {
+            title: "Resource Tags",
+            description: "Tags allow finer content labeling (stress, sleep, relaxation, etc.)",
+            createNew: "New Tag",
+            editTag: "Edit Tag",
+            deleteTag: "Delete Tag",
+            noTags: "No tags",
+            noTagsDescription: "Start by creating your first tag",
+            resourceCount: "{{count}} resource",
+            resourceCount_plural: "{{count}} resources",
+
+            form: {
+                name: "Tag Name",
+                namePlaceholder: "E.g.: stress, sleep, relaxation",
+                nameHelper: "Name displayed to users",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "stress",
+                slugHelper: "Unique identifier for URLs (lowercase letters, numbers and hyphens only)",
+            },
+
+            deleteConfirm: {
+                title: "Delete tag?",
+                message: "Are you sure you want to delete this tag? It will be removed from all resources that use it.",
+                confirm: "Yes, delete",
+                cancel: "Cancel",
+            },
+        },
+
+        // Actions
+        actions: {
+            create: "Create",
+            save: "Save",
+            cancel: "Cancel",
+            edit: "Edit",
+            delete: "Delete",
+            close: "Close",
+        },
+
+        // Success messages
+        success: {
+            categoryCreated: "Category created successfully",
+            categoryUpdated: "Category updated successfully",
+            categoryDeleted: "Category deleted successfully",
+            tagCreated: "Tag created successfully",
+            tagUpdated: "Tag updated successfully",
+            tagDeleted: "Tag deleted successfully",
+        },
+
+        // Error messages
+        errors: {
+            categoryCreateFailed: "Error creating category",
+            categoryUpdateFailed: "Error updating category",
+            categoryDeleteFailed: "Error deleting category",
+            tagCreateFailed: "Error creating tag",
+            tagUpdateFailed: "Error updating tag",
+            tagDeleteFailed: "Error deleting tag",
+            loadFailed: "Error loading",
+            slugExists: "This slug is already in use",
+            invalidSlug: "Slug must only contain lowercase letters, numbers and hyphens",
+            requiredField: "This field is required",
+            minLength: "Too short (minimum {{min}} characters)",
+            maxLength: "Too long (maximum {{max}} characters)",
         },
     }
 

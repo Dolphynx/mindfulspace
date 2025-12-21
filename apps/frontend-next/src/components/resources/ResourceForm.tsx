@@ -2,8 +2,14 @@
 
 /**
  * ResourceForm Component
- * Reusable form for creating and editing resources
+ * Reusable form for creating and editing resources with translation support
  * Used by both coaches and admins
+ *
+ * Features:
+ * - Source locale selection
+ * - Tabbed interface for translations
+ * - Auto-translate functionality per locale
+ * - Manual translation editing
  */
 
 import { useState, useEffect } from 'react';
@@ -12,19 +18,36 @@ import {
   Resource,
   ResourceCategory,
   ResourceTag,
-  ResourceType,
   CreateResourceData,
   UpdateResourceData,
-  generateSlug,
   calculateReadTime,
-  getResourceTypeLabel,
+  getCategoryName,
+  getTagName,
 } from '@/lib/api/resources';
+import SourceLocaleSelector from './SourceLocaleSelector';
+import TranslationTabs from './TranslationTabs';
+import TranslationFields from './TranslationFields';
+
+interface Locale {
+  code: string;
+  name: string;
+}
+
+interface TranslationData {
+  title: string;
+  summary: string;
+  content: string;
+}
 
 interface ResourceFormProps {
   initialData?: Resource;
   categories: ResourceCategory[];
   tags: ResourceTag[];
-  onSubmit: (data: CreateResourceData | UpdateResourceData) => Promise<void>;
+  availableLocales?: Locale[];  // NEW: Locales to support
+  onSubmit: (
+    data: CreateResourceData | UpdateResourceData,
+    translations?: Record<string, TranslationData>
+  ) => Promise<void>;
   onCancel: () => void;
   isAdmin?: boolean;
   isLoading?: boolean;
@@ -34,6 +57,10 @@ export default function ResourceForm({
   initialData,
   categories,
   tags,
+  availableLocales = [
+    { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
+  ],
   onSubmit,
   onCancel,
   isAdmin = false,
@@ -41,13 +68,52 @@ export default function ResourceForm({
 }: ResourceFormProps) {
   const t = useTranslations('resourcesManagement');
 
-  // Form state
+  // Source locale state (NEW)
+  const [sourceLocale, setSourceLocale] = useState<string>(
+    initialData?.sourceLocale || availableLocales[0]?.code || 'fr'
+  );
+
+  // Active locale for tab navigation (NEW)
+  const [activeLocale, setActiveLocale] = useState<string>(sourceLocale);
+
+  // Translation state for all locales (NEW)
+  const [translations, setTranslations] = useState<Record<string, TranslationData>>(() => {
+    const initial: Record<string, TranslationData> = {};
+
+    // If initialData has translations array, load them all
+    if (initialData?.translations && initialData.translations.length > 0) {
+      initialData.translations.forEach((trans) => {
+        initial[trans.locale] = {
+          title: trans.title,
+          summary: trans.summary,
+          content: trans.content,
+        };
+      });
+    } else {
+      // Fallback: Initialize source locale with top-level data (for backward compatibility)
+      initial[sourceLocale] = {
+        title: initialData?.title || '',
+        summary: initialData?.summary || '',
+        content: initialData?.content || '',
+      };
+    }
+
+    // Initialize any missing locales as empty
+    availableLocales.forEach((locale) => {
+      if (!initial[locale.code]) {
+        initial[locale.code] = {
+          title: '',
+          summary: '',
+          content: '',
+        };
+      }
+    });
+
+    return initial;
+  });
+
+  // Form state (metadata fields)
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    slug: initialData?.slug || '',
-    summary: initialData?.summary || '',
-    content: initialData?.content || '',
-    type: initialData?.type || ResourceType.ARTICLE,
     isPremium: initialData?.isPremium || false,
     isFeatured: initialData?.isFeatured || false,
     authorName: initialData?.authorName || '',
@@ -58,17 +124,11 @@ export default function ResourceForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [autoGenerateSlug, setAutoGenerateSlug] = useState(!initialData);
 
-  // Auto-generate slug when title changes
+  // Update active locale when source locale changes
   useEffect(() => {
-    if (autoGenerateSlug && formData.title) {
-      setFormData((prev) => ({
-        ...prev,
-        slug: generateSlug(formData.title),
-      }));
-    }
-  }, [formData.title, autoGenerateSlug]);
+    setActiveLocale(sourceLocale);
+  }, [sourceLocale]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -106,39 +166,126 @@ export default function ResourceForm({
   };
 
   const handleAutoCalculateReadTime = () => {
-    if (formData.content) {
-      const readTime = calculateReadTime(formData.content);
+    const sourceData = translations[sourceLocale];
+    if (sourceData?.content) {
+      const readTime = calculateReadTime(sourceData.content);
       setFormData((prev) => ({ ...prev, readTimeMin: readTime }));
     }
   };
 
+  // Handle translation field changes (NEW)
+  const handleTranslationChange = (
+    locale: string,
+    field: 'title' | 'summary' | 'content',
+    value: string
+  ) => {
+    setTranslations((prev) => ({
+      ...prev,
+      [locale]: {
+        ...prev[locale],
+        [field]: value,
+      },
+    }));
+
+    // Clear errors for source locale fields
+    if (locale === sourceLocale && errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Auto-translate functionality (NEW)
+  const handleAutoTranslate = async (targetLocale: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const sourceData = translations[sourceLocale];
+
+    if (!sourceData.title || !sourceData.summary || !sourceData.content) {
+      throw new Error('Please fill in all source fields before translating');
+    }
+
+    // Call AI service to translate text directly from current form state
+    // This ensures we translate the CURRENT content, not what's in the database
+    const [translatedTitle, translatedSummary, translatedContent] = await Promise.all([
+      fetch(`${API_URL}/ai/translate-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: sourceData.title,
+          sourceLocale,
+          targetLocale,
+        }),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Failed to translate title');
+        return res.json();
+      }),
+      fetch(`${API_URL}/ai/translate-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: sourceData.summary,
+          sourceLocale,
+          targetLocale,
+        }),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Failed to translate summary');
+        return res.json();
+      }),
+      fetch(`${API_URL}/ai/translate-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: sourceData.content,
+          sourceLocale,
+          targetLocale,
+        }),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Failed to translate content');
+        return res.json();
+      }),
+    ]);
+
+    // Update translations state with AI-generated content
+    setTranslations((prev) => ({
+      ...prev,
+      [targetLocale]: {
+        title: translatedTitle.translatedText || translatedTitle,
+        summary: translatedSummary.translatedText || translatedSummary,
+        content: translatedContent.translatedText || translatedContent,
+      },
+    }));
+  };
+
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const sourceData = translations[sourceLocale];
 
-    if (!formData.title.trim()) {
+    // Validate source translation fields
+    if (!sourceData.title.trim()) {
       newErrors.title = t('errors.requiredField');
-    } else if (formData.title.length < 3) {
+    } else if (sourceData.title.length < 3) {
       newErrors.title = t('errors.minLength');
     }
 
-    if (!formData.slug.trim()) {
-      newErrors.slug = t('errors.requiredField');
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = t('errors.invalidSlug');
-    }
-
-    if (!formData.summary.trim()) {
+    if (!sourceData.summary.trim()) {
       newErrors.summary = t('errors.requiredField');
-    } else if (formData.summary.length < 10) {
+    } else if (sourceData.summary.length < 10) {
       newErrors.summary = t('errors.minLength');
     }
 
-    if (!formData.content.trim()) {
+    if (!sourceData.content.trim()) {
       newErrors.content = t('errors.requiredField');
-    } else if (formData.content.length < 50) {
+    } else if (sourceData.content.length < 50) {
       newErrors.content = t('errors.minLength');
     }
 
+    // Validate metadata fields
     if (!formData.categoryId) {
       newErrors.categoryId = t('errors.requiredField');
     }
@@ -164,18 +311,21 @@ export default function ResourceForm({
     e.preventDefault();
 
     if (!validateForm()) {
+      // Switch to source locale tab to show errors
+      setActiveLocale(sourceLocale);
       return;
     }
 
-    // Prepare data for submission
+    const sourceData = translations[sourceLocale];
+
+    // Prepare main resource data
     const submitData: CreateResourceData | UpdateResourceData = {
-      title: formData.title,
-      slug: formData.slug,
-      summary: formData.summary,
-      content: formData.content,
-      type: formData.type as ResourceType,
+      title: sourceData.title,
+      summary: sourceData.summary,
+      content: sourceData.content,
+      // Only include sourceLocale when creating (not when updating)
+      ...(!initialData && { sourceLocale }),
       isPremium: formData.isPremium,
-      // Only include isFeatured if user is admin
       ...(isAdmin && { isFeatured: formData.isFeatured }),
       authorName: formData.authorName || undefined,
       readTimeMin: formData.readTimeMin || undefined,
@@ -184,165 +334,65 @@ export default function ResourceForm({
       tagIds: formData.tagIds.length > 0 ? formData.tagIds : undefined,
     };
 
-    await onSubmit(submitData);
+    // Collect ALL translations including source locale (filter out empty ones)
+    // When editing, we need to update the source locale translation too!
+    const translationsToSubmit: Record<string, TranslationData> = {};
+    Object.entries(translations).forEach(([locale, data]) => {
+      if (data.title || data.summary || data.content) {
+        translationsToSubmit[locale] = data;
+      }
+    });
+
+    await onSubmit(submitData, translationsToSubmit);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Title */}
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-brandText"
-        >
-          {t('form.title')} *
-        </label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          placeholder={t('form.titlePlaceholder')}
-          className={`mt-1 block w-full rounded-lg border ${
-            errors.title ? 'border-red-500' : 'border-brandBorder'
-          } px-4 py-2 text-brandText focus:border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandGreen/20`}
-          disabled={isLoading}
-        />
-        {errors.title && (
-          <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-        )}
-        <p className="mt-1 text-xs text-brandText/60">
-          {t('form.titleHelper')}
-        </p>
-      </div>
+      {/* Source Locale Selector (NEW) */}
+      <SourceLocaleSelector
+        value={sourceLocale}
+        onChange={setSourceLocale}
+        availableLocales={availableLocales}
+        disabled={!!initialData || isLoading}  // Cannot change after creation
+      />
 
-      {/* Slug */}
-      <div>
-        <label
-          htmlFor="slug"
-          className="block text-sm font-medium text-brandText"
-        >
-          {t('form.slug')} *
-        </label>
-        <div className="mt-1 flex gap-2">
-          <input
-            type="text"
-            id="slug"
-            name="slug"
-            value={formData.slug}
-            onChange={(e) => {
-              handleChange(e);
-              setAutoGenerateSlug(false);
-            }}
-            placeholder={t('form.slugPlaceholder')}
-            className={`block w-full rounded-lg border ${
-              errors.slug ? 'border-red-500' : 'border-brandBorder'
-            } px-4 py-2 text-brandText focus:border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandGreen/20`}
-            disabled={isLoading}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              setAutoGenerateSlug(true);
-              setFormData((prev) => ({
-                ...prev,
-                slug: generateSlug(formData.title),
-              }));
-            }}
-            className="whitespace-nowrap rounded-lg border border-brandBorder bg-white px-4 py-2 text-sm font-medium text-brandText transition hover:bg-brandSurface"
-            disabled={isLoading || !formData.title}
-          >
-            {t('form.generateSlug')}
-          </button>
+      {/* Translation Tabs (NEW) */}
+      <TranslationTabs
+        activeLocale={activeLocale}
+        onLocaleChange={setActiveLocale}
+        sourceLocale={sourceLocale}
+        availableLocales={availableLocales}
+        translations={translations}
+      />
+
+      {/* Translation Fields (NEW) */}
+      <TranslationFields
+        locale={activeLocale}
+        data={translations[activeLocale]}
+        isSource={activeLocale === sourceLocale}
+        onChange={(field, value) => handleTranslationChange(activeLocale, field, value)}
+        onAutoTranslate={
+          activeLocale !== sourceLocale
+            ? () => handleAutoTranslate(activeLocale)
+            : undefined
+        }
+        disabled={isLoading}
+      />
+
+      {/* Show validation errors for source fields */}
+      {activeLocale === sourceLocale && Object.keys(errors).length > 0 && (
+        <div className="rounded-lg bg-red-50 p-4">
+          <p className="text-sm font-medium text-red-800">
+            {t('errors.validationFailed') || 'Please fix the errors above'}
+          </p>
         </div>
-        {errors.slug && (
-          <p className="mt-1 text-sm text-red-600">{errors.slug}</p>
-        )}
-        <p className="mt-1 text-xs text-brandText/60">{t('form.slugHelper')}</p>
-      </div>
+      )}
 
-      {/* Summary */}
-      <div>
-        <label
-          htmlFor="summary"
-          className="block text-sm font-medium text-brandText"
-        >
-          {t('form.summary')} *
-        </label>
-        <textarea
-          id="summary"
-          name="summary"
-          value={formData.summary}
-          onChange={handleChange}
-          placeholder={t('form.summaryPlaceholder')}
-          rows={3}
-          maxLength={500}
-          className={`mt-1 block w-full rounded-lg border ${
-            errors.summary ? 'border-red-500' : 'border-brandBorder'
-          } px-4 py-2 text-brandText focus:border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandGreen/20`}
-          disabled={isLoading}
-        />
-        {errors.summary && (
-          <p className="mt-1 text-sm text-red-600">{errors.summary}</p>
-        )}
-        <p className="mt-1 text-xs text-brandText/60">
-          {t('form.summaryHelper')} ({formData.summary.length}/500)
-        </p>
-      </div>
-
-      {/* Content */}
-      <div>
-        <label
-          htmlFor="content"
-          className="block text-sm font-medium text-brandText"
-        >
-          {t('form.content')} *
-        </label>
-        <textarea
-          id="content"
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          placeholder={t('form.contentPlaceholder')}
-          rows={12}
-          className={`mt-1 block w-full rounded-lg border ${
-            errors.content ? 'border-red-500' : 'border-brandBorder'
-          } px-4 py-2 font-mono text-sm focus:border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandGreen/20`}
-          disabled={isLoading}
-        />
-        {errors.content && (
-          <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-        )}
-        <p className="mt-1 text-xs text-brandText/60">
-          {t('form.contentHelper')}
-        </p>
-      </div>
-
-      {/* Type */}
-      <div>
-        <label
-          htmlFor="type"
-          className="block text-sm font-medium text-brandText"
-        >
-          {t('form.type')} *
-        </label>
-        <select
-          id="type"
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded-lg border border-brandBorder px-4 py-2 text-brandText focus:border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandGreen/20"
-          disabled={isLoading}
-        >
-          {Object.values(ResourceType).map((type) => (
-            <option key={type} value={type}>
-              {getResourceTypeLabel(type)}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-xs text-brandText/60">{t('form.typeHelper')}</p>
-      </div>
+      {/* Metadata fields divider */}
+      <hr className="border-brandBorder" />
+      <h3 className="text-lg font-semibold text-brandText">
+        {t('form.metadataSection') || 'Resource Metadata'}
+      </h3>
 
       {/* Category */}
       <div>
@@ -365,7 +415,7 @@ export default function ResourceForm({
           <option value="">{t('form.selectCategory')}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.iconEmoji} {category.name}
+              {category.iconEmoji} {getCategoryName(category, sourceLocale)}
             </option>
           ))}
         </select>
@@ -397,7 +447,7 @@ export default function ResourceForm({
         >
           {tags.map((tag) => (
             <option key={tag.id} value={tag.id}>
-              {tag.name}
+              {getTagName(tag, sourceLocale)}
             </option>
           ))}
         </select>
@@ -500,7 +550,7 @@ export default function ResourceForm({
             type="button"
             onClick={handleAutoCalculateReadTime}
             className="whitespace-nowrap rounded-lg border border-brandBorder bg-white px-4 py-2 text-sm font-medium text-brandText transition hover:bg-brandSurface"
-            disabled={isLoading || !formData.content}
+            disabled={isLoading || !translations[sourceLocale]?.content}
           >
             {t('form.calculateReadTime')}
           </button>

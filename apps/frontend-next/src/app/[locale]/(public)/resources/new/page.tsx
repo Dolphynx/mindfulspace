@@ -3,7 +3,7 @@
 /**
  * Create Resource Page
  * Accessible from public resources page for coaches/admins
- * Form for creating a new resource
+ * Form for creating a new resource with translation support
  */
 
 import { useState, useEffect } from 'react';
@@ -20,7 +20,14 @@ import {
   getCategories,
   getTags,
   createResource,
+  updateTranslation,
 } from '@/lib/api/resources';
+
+interface TranslationData {
+  title: string;
+  summary: string;
+  content: string;
+}
 
 export default function NewResourcePage() {
   const t = useTranslations('resourcesManagement');
@@ -35,6 +42,12 @@ export default function NewResourcePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Available locales for translation
+  const availableLocales = [
+    { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
+  ];
 
   // Check if user is coach or admin
   const isCoach = user?.roles.some((role) =>
@@ -76,13 +89,38 @@ export default function NewResourcePage() {
     }
   };
 
-  const handleSubmit = async (data: CreateResourceData | UpdateResourceData) => {
+  const handleSubmit = async (
+    data: CreateResourceData | UpdateResourceData,
+    translations?: Record<string, TranslationData>
+  ) => {
     try {
       setSubmitting(true);
       setError('');
       setSuccess('');
 
-      await createResource(data as CreateResourceData);
+      // Step 1: Create resource with source translation
+      const createdResource = await createResource(data as CreateResourceData);
+
+      // Step 2: Save translations for other locales (if any)
+      // IMPORTANT: Filter out the source locale - it's already created with the resource
+      if (translations && Object.keys(translations).length > 0) {
+        const sourceLocale = (data as CreateResourceData).sourceLocale || 'fr';
+        const targetTranslations = Object.entries(translations).filter(
+          ([localeCode]) => localeCode !== sourceLocale
+        );
+
+        if (targetTranslations.length > 0) {
+          await Promise.all(
+            targetTranslations.map(([localeCode, translationData]) =>
+              updateTranslation(createdResource.id, localeCode, {
+                title: translationData.title,
+                summary: translationData.summary,
+                content: translationData.content,
+              })
+            )
+          );
+        }
+      }
 
       setSuccess(t('success.created'));
 
@@ -127,6 +165,9 @@ export default function NewResourcePage() {
         <h1 className="mt-4 text-3xl font-bold text-brandText">
           {t('createResource')}
         </h1>
+        <p className="mt-2 text-brandText/60">
+          {t('createResourceDescription') || 'Create a new resource with automatic translation support'}
+        </p>
       </div>
 
       {/* Success message */}
@@ -148,6 +189,7 @@ export default function NewResourcePage() {
         <ResourceForm
           categories={categories}
           tags={tags}
+          availableLocales={availableLocales}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isAdmin={isAdmin}

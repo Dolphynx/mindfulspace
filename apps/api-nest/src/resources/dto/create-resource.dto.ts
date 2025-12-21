@@ -1,6 +1,5 @@
 import {
   IsString,
-  IsEnum,
   IsBoolean,
   IsInt,
   IsUrl,
@@ -12,16 +11,30 @@ import {
   Matches,
   IsPositive,
 } from 'class-validator';
-import { ResourceType } from '@prisma/client';
 
 /**
- * DTO for creating a new resource
+ * DTO for creating a new resource with translation support
  * Used by coaches and admins to create articles, videos, guides, etc.
+ *
+ * NOTE: Slug is auto-generated on the backend from the English title
+ * Translations are stored in ResourceTranslation table
  */
 export class CreateResourceDto {
   /**
-   * Resource title (editorial)
+   * Source language for this resource (fr, en, etc.)
+   * This indicates the language in which the content is written
+   * Default: "fr"
+   */
+  @IsString()
+  @MinLength(2)
+  @MaxLength(5)
+  @IsOptional()
+  sourceLocale?: string;
+
+  /**
+   * Resource title (in source language)
    * Example: "10 bienfaits de la méditation prouvés par la science"
+   * This will be stored in ResourceTranslation table
    */
   @IsString()
   @MinLength(3)
@@ -29,21 +42,9 @@ export class CreateResourceDto {
   title!: string;
 
   /**
-   * URL-friendly slug (must be unique)
-   * Example: "10-science-backed-benefits-of-meditation"
-   * Only lowercase letters, numbers, and hyphens
-   */
-  @IsString()
-  @MinLength(3)
-  @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'Slug must only contain lowercase letters, numbers, and hyphens',
-  })
-  slug!: string;
-
-  /**
-   * Short summary/teaser (shown in resource cards)
+   * Short summary/teaser (in source language)
    * Example: "Un tour d'horizon des effets positifs de la méditation..."
+   * This will be stored in ResourceTranslation table
    */
   @IsString()
   @MinLength(10)
@@ -51,18 +52,13 @@ export class CreateResourceDto {
   summary!: string;
 
   /**
-   * Full content (markdown or HTML)
+   * Full content (in source language, markdown or HTML)
    * Will be sanitized on the backend before storage
+   * This will be stored in ResourceTranslation table
    */
   @IsString()
   @MinLength(50)
   content!: string;
-
-  /**
-   * Resource type (ARTICLE, VIDEO, GUIDE, MEDITATION_PROGRAM, EXERCICE_PROGRAM)
-   */
-  @IsEnum(ResourceType)
-  type!: ResourceType;
 
   /**
    * Whether this resource requires premium subscription

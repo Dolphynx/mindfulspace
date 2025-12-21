@@ -3,6 +3,12 @@ import { ResourcesService } from "./resources.service";
 import { GetResourcesDto } from "./dto/get-resources.dto";
 import { CreateResourceDto } from "./dto/create-resource.dto";
 import { UpdateResourceDto } from "./dto/update-resource.dto";
+import { AutoTranslateDto } from "./dto/auto-translate.dto";
+import { CreateTranslationDto } from "./dto/create-translation.dto";
+import { CreateCategoryDto } from "./dto/create-category.dto";
+import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { CreateTagDto } from "./dto/create-tag.dto";
+import { UpdateTagDto } from "./dto/update-tag.dto";
 import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -185,5 +191,265 @@ export class ResourcesController {
   @Roles('coach', 'admin')
   findMyResources(@CurrentUser('id') userId: string) {
     return this.resourcesService.findByAuthor(userId);
+  }
+
+  /**
+   * Get all translations for a resource
+   * Public endpoint to retrieve all available language versions
+   *
+   * @param resourceId - Resource UUID
+   * @returns List of translations for this resource
+   */
+  @Public()
+  @Get(':id/translations')
+  getTranslations(@Param('id') resourceId: string) {
+    return this.resourcesService.getTranslations(resourceId);
+  }
+
+  /**
+   * Create or update a translation for a specific locale
+   * Coaches can manage translations for their own resources, admins for any resource
+   *
+   * @param resourceId - Resource UUID
+   * @param locale - Target locale (e.g., "en", "fr")
+   * @param dto - Translation data (title, summary, content)
+   * @returns Created or updated translation
+   */
+  @Put(':id/translations/:locale')
+  @Roles('coach', 'admin')
+  updateTranslation(
+    @Param('id') resourceId: string,
+    @Param('locale') locale: string,
+    @Body() dto: CreateTranslationDto,
+  ) {
+    return this.resourcesService.upsertTranslation(resourceId, locale, dto);
+  }
+
+  /**
+   * Auto-translate a resource to multiple target locales using AI
+   * Uses AI to translate title, summary, and content from source locale
+   * Coaches can auto-translate their own resources, admins can translate any resource
+   *
+   * @param resourceId - Resource UUID
+   * @param dto - Contains array of target locales (e.g., ["en", "es"])
+   * @returns Array of created/updated translations
+   */
+  @Post(':id/auto-translate')
+  @Roles('coach', 'admin')
+  autoTranslate(
+    @Param('id') resourceId: string,
+    @Body() dto: AutoTranslateDto,
+  ) {
+    return this.resourcesService.autoTranslate(resourceId, dto);
+  }
+
+  // ========================================
+  // CATEGORY MANAGEMENT ENDPOINTS (ADMIN ONLY)
+  // ========================================
+
+  /**
+   * Create a new resource category
+   * Admin-only endpoint
+   *
+   * @param dto - Category creation data (name, slug, iconEmoji)
+   * @returns Created category object
+   */
+  @Post('admin/categories')
+  @Roles('admin')
+  @HttpCode(HttpStatus.CREATED)
+  createCategory(@Body() dto: CreateCategoryDto) {
+    return this.resourcesService.createCategory(dto);
+  }
+
+  /**
+   * Update an existing resource category
+   * Admin-only endpoint
+   *
+   * @param categoryId - Category UUID
+   * @param dto - Category update data (partial)
+   * @returns Updated category object
+   */
+  @Put('admin/categories/:categoryId')
+  @Roles('admin')
+  updateCategory(
+    @Param('categoryId') categoryId: string,
+    @Body() dto: UpdateCategoryDto,
+  ) {
+    return this.resourcesService.updateCategory(categoryId, dto);
+  }
+
+  /**
+   * Delete a resource category
+   * Admin-only endpoint
+   * Cannot delete if resources are still using this category
+   *
+   * @param categoryId - Category UUID
+   * @returns Success message
+   */
+  @Delete('admin/categories/:categoryId')
+  @Roles('admin')
+  @HttpCode(HttpStatus.OK)
+  deleteCategory(@Param('categoryId') categoryId: string) {
+    return this.resourcesService.deleteCategory(categoryId);
+  }
+
+  // ========================================
+  // TAG MANAGEMENT ENDPOINTS (ADMIN ONLY)
+  // ========================================
+
+  /**
+   * Create a new resource tag
+   * Admin-only endpoint
+   *
+   * @param dto - Tag creation data (name, slug)
+   * @returns Created tag object
+   */
+  @Post('admin/tags')
+  @Roles('admin')
+  @HttpCode(HttpStatus.CREATED)
+  createTag(@Body() dto: CreateTagDto) {
+    return this.resourcesService.createTag(dto);
+  }
+
+  /**
+   * Update an existing resource tag
+   * Admin-only endpoint
+   *
+   * @param tagId - Tag UUID
+   * @param dto - Tag update data (partial)
+   * @returns Updated tag object
+   */
+  @Put('admin/tags/:tagId')
+  @Roles('admin')
+  updateTag(
+    @Param('tagId') tagId: string,
+    @Body() dto: UpdateTagDto,
+  ) {
+    return this.resourcesService.updateTag(tagId, dto);
+  }
+
+  /**
+   * Delete a resource tag
+   * Admin-only endpoint
+   * Can delete even if resources are using this tag
+   *
+   * @param tagId - Tag UUID
+   * @returns Success message
+   */
+  @Delete('admin/tags/:tagId')
+  @Roles('admin')
+  @HttpCode(HttpStatus.OK)
+  deleteTag(@Param('tagId') tagId: string) {
+    return this.resourcesService.deleteTag(tagId);
+  }
+
+  // ========================================
+  // CATEGORY TRANSLATION ENDPOINTS (ADMIN ONLY)
+  // ========================================
+
+  /**
+   * Get all translations for a category
+   * Public endpoint to retrieve all available language versions
+   *
+   * @param categoryId - Category UUID
+   * @returns List of translations for this category
+   */
+  @Public()
+  @Get('categories/:categoryId/translations')
+  getCategoryTranslations(@Param('categoryId') categoryId: string) {
+    return this.resourcesService.getCategoryTranslations(categoryId);
+  }
+
+  /**
+   * Create or update a translation for a specific category
+   * Admin-only endpoint
+   *
+   * @param categoryId - Category UUID
+   * @param locale - Target locale (e.g., "en", "fr")
+   * @param dto - Translation data (name)
+   * @returns Created or updated translation
+   */
+  @Put('admin/categories/:categoryId/translations/:locale')
+  @Roles('admin')
+  upsertCategoryTranslation(
+    @Param('categoryId') categoryId: string,
+    @Param('locale') locale: string,
+    @Body() dto: { name: string },
+  ) {
+    return this.resourcesService.upsertCategoryTranslation(categoryId, locale, dto);
+  }
+
+  /**
+   * Delete a translation for a specific category
+   * Admin-only endpoint
+   * Cannot delete source locale translation
+   *
+   * @param categoryId - Category UUID
+   * @param locale - Target locale to delete
+   * @returns Success message
+   */
+  @Delete('admin/categories/:categoryId/translations/:locale')
+  @Roles('admin')
+  @HttpCode(HttpStatus.OK)
+  deleteCategoryTranslation(
+    @Param('categoryId') categoryId: string,
+    @Param('locale') locale: string,
+  ) {
+    return this.resourcesService.deleteCategoryTranslation(categoryId, locale);
+  }
+
+  // ========================================
+  // TAG TRANSLATION ENDPOINTS (ADMIN ONLY)
+  // ========================================
+
+  /**
+   * Get all translations for a tag
+   * Public endpoint to retrieve all available language versions
+   *
+   * @param tagId - Tag UUID
+   * @returns List of translations for this tag
+   */
+  @Public()
+  @Get('tags/:tagId/translations')
+  getTagTranslations(@Param('tagId') tagId: string) {
+    return this.resourcesService.getTagTranslations(tagId);
+  }
+
+  /**
+   * Create or update a translation for a specific tag
+   * Admin-only endpoint
+   *
+   * @param tagId - Tag UUID
+   * @param locale - Target locale (e.g., "en", "fr")
+   * @param dto - Translation data (name)
+   * @returns Created or updated translation
+   */
+  @Put('admin/tags/:tagId/translations/:locale')
+  @Roles('admin')
+  upsertTagTranslation(
+    @Param('tagId') tagId: string,
+    @Param('locale') locale: string,
+    @Body() dto: { name: string },
+  ) {
+    return this.resourcesService.upsertTagTranslation(tagId, locale, dto);
+  }
+
+  /**
+   * Delete a translation for a specific tag
+   * Admin-only endpoint
+   * Cannot delete source locale translation
+   *
+   * @param tagId - Tag UUID
+   * @param locale - Target locale to delete
+   * @returns Success message
+   */
+  @Delete('admin/tags/:tagId/translations/:locale')
+  @Roles('admin')
+  @HttpCode(HttpStatus.OK)
+  deleteTagTranslation(
+    @Param('tagId') tagId: string,
+    @Param('locale') locale: string,
+  ) {
+    return this.resourcesService.deleteTagTranslation(tagId, locale);
   }
 }

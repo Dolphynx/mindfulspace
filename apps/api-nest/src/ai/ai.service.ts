@@ -89,6 +89,9 @@ export class AiService {
   private async callGroq(
     userPrompt: string,
     maxTokens = 150,
+    systemPrompt?: string,
+    temperature = 0.7,
+    skipMantraSplit = false,
   ): Promise<string> {
     this.ensureApiKey();
 
@@ -98,7 +101,7 @@ export class AiService {
         messages: [
           {
             role: 'system',
-            content:
+            content: systemPrompt ||
               'You are a kind, calm and positive meditation coach. ' +
               'Always follow the user instructions carefully and answer only with the requested content.',
           },
@@ -108,7 +111,7 @@ export class AiService {
           },
         ],
         max_tokens: maxTokens,
-        temperature: 0.7,
+        temperature,
       });
 
       const message = completion.choices[0]?.message?.content;
@@ -118,6 +121,10 @@ export class AiService {
         throw new InternalServerErrorException("Réponse vide de l'IA.");
       }
 
+      // Only split for mantra generation (legacy behavior)
+      if (skipMantraSplit) {
+        return message.trim();
+      }
       return message.split("C'est un mantra")[0].trim();
     } catch (error) {
       if (error instanceof Error) {
@@ -264,5 +271,67 @@ Constraints:
       this.logger.error(err);
       throw new InternalServerErrorException("Erreur dans la réponse de l'IA.");
     }
+  }
+
+  /**
+   * Translates text from one language to another using AI.
+   *
+   * @param text - The text to translate
+   * @param sourceLocale - Source language code (e.g., "fr", "en")
+   * @param targetLocale - Target language code (e.g., "en", "fr")
+   * @returns Translated text
+   */
+  async translateText(
+    text: string,
+    sourceLocale: string,
+    targetLocale: string,
+  ): Promise<string> {
+    const sourceLang = this.normalizeLocale(sourceLocale);
+    const targetLang = this.normalizeLocale(targetLocale);
+
+    if (!text.trim()) {
+      throw new InternalServerErrorException('Text is required for translation.');
+    }
+
+    if (sourceLang === targetLang) {
+      // No translation needed - same language
+      return text;
+    }
+
+    const systemPrompt = `You are a professional translator specializing in wellness and mindfulness content. Output ONLY the translated text with no preamble, no explanation, and no meta-commentary.`;
+
+    const prompt = `Translate this wellness resource category/tag name from ${sourceLang} to ${targetLang}.
+
+IMPORTANT:
+- This is a category or tag name for a mindfulness/wellness application.
+- Translate the NAME/LABEL only, do not define or explain the word.
+- Keep it short and concise (1-3 words maximum).
+- If it's already a proper noun or brand name, keep it unchanged.
+- Output ONLY the translated name, nothing else.
+
+Text to translate: ${text}`;
+
+    // Use higher token limit for translations (content can be long)
+    // Use temperature 0.3 for more consistent/literal translations
+    // Skip mantra split (5th parameter = true) - translations need full response
+    const raw = await this.callGroq(prompt, 4000, systemPrompt, 0.3, true);
+
+    // Remove common preamble patterns that Groq might add
+    let cleaned = this.sanitizeText(raw);
+
+    // Remove lines that start with "Here is the translation" or similar meta-commentary
+    const preamblePatterns = [
+      /^Here is the translation[^\n]*\n+/i,
+      /^Translation[^\n]*:\n+/i,
+      /^The translated text[^\n]*:\n+/i,
+      /^Translated to \w+[^\n]*:\n+/i,
+      /^From \w+ to \w+[^\n]*:\n+/i,
+    ];
+
+    for (const pattern of preamblePatterns) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+
+    return cleaned.trim();
   }
 }

@@ -111,7 +111,7 @@ model MeditationContent {
   maxDurationSeconds     Int? // durée maximale sensée pour ce contenu
 
   // Media unique (audio OU vidéo), optionnel si TIMER/VISUAL
-  mediaUrl String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
+  mediaUrl      String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
   soundcloudUrl String? //
 
   isActive  Boolean @default(true) // pour masquer un contenu sans le supprimer
@@ -196,17 +196,17 @@ model ExerciceContent {
   name        String @unique
   Description String
 
-  exerciceSessions        ExerciceSerie[]
-  steps                   ExerciceStep[] // all the steps for this exercise type
+  exerciceSessions     ExerciceSerie[]
+  steps                ExerciceStep[] // all the steps for this exercise type
   programExerciceItems ProgramExerciceItem[]
 
   UserProgramExerciceItem UserProgramExerciceItem[]
 }
 
 model ExerciceStep {
-  id             String          @id @default(uuid())
+  id                String          @id @default(uuid())
   exerciceContentId String
-  exerciceContent  ExerciceContent @relation(fields: [exerciceContentId], references: [id])
+  exerciceContent   ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
   order       Int // step number: 1, 2, 3, ...
   title       String? // optional, e.g. "Starting position"
@@ -218,10 +218,10 @@ model ExerciceStep {
 
 model ExerciceSerie {
   exerciceSessionId String // FK vers la séance globale
-  exerciceContentId   String // FK vers le type d'exercise
+  exerciceContentId String // FK vers le type d'exercise
 
   exerciceSession ExerciceSession @relation(fields: [exerciceSessionId], references: [id])
-  exerciceContent   ExerciceContent @relation(fields: [exerciceContentId], references: [id])
+  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
   repetitionCount Int // nombre de répétitions / unités pour cet exercise
 
@@ -240,7 +240,7 @@ model Program {
 }
 
 model ProgramDay {
-  id               String  @id @default(uuid())
+  id        String  @id @default(uuid())
   programId String
   program   Program @relation(fields: [programId], references: [id])
 
@@ -253,11 +253,11 @@ model ProgramDay {
 }
 
 model ProgramExerciceItem {
-  id             String @id @default(uuid())
-  programDayId   String
+  id                String @id @default(uuid())
+  programDayId      String
   exerciceContentId String
 
-  programDay   ProgramDay      @relation(fields: [programDayId], references: [id])
+  programDay      ProgramDay      @relation(fields: [programDayId], references: [id])
   exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
   defaultRepetitionCount Int?
@@ -265,16 +265,16 @@ model ProgramExerciceItem {
 }
 
 model UserProgram {
-  id          String @id @default(uuid())
-  userId      String
-  programId   String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  programId String
+  createdAt DateTime @default(now())
 
   // Copied structure
-  days  UserProgramDay[]
+  days UserProgramDay[]
 
-  user      User     @relation(fields: [userId], references: [id])
-  program   Program  @relation(fields: [programId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  program Program @relation(fields: [programId], references: [id])
 }
 
 model UserProgramDay {
@@ -290,18 +290,16 @@ model UserProgramDay {
 }
 
 model UserProgramExerciceItem {
-  id                 String @id @default(uuid())
-  userProgramDayId   String
-  exerciceContentId  String
+  id                String @id @default(uuid())
+  userProgramDayId  String
+  exerciceContentId String
 
   defaultRepetitionCount Int?
-  defaultSets Int?
+  defaultSets            Int?
 
-  userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
+  userProgramDay  UserProgramDay  @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
   exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
-
 }
-
 
 model User {
   id          String  @id @default(cuid())
@@ -312,7 +310,7 @@ model User {
   emailVerified Boolean @default(false)
   isActive      Boolean @default(true) // For soft deletes / account suspension
 
-  exerciceSessions    ExerciceSession[]
+  exerciceSessions   ExerciceSession[]
   sleepSessions      SleepSession[]
   meditationSessions MeditationSession[]
 
@@ -471,34 +469,79 @@ enum ResourceType {
 }
 
 model ResourceCategory {
-  id        String  @id @default(uuid())
-  name      String // nom de la catégorie (ex: "Sommeil")
-  slug      String  @unique // identifiant stable pour routing / filtres
-  iconEmoji String? // petit pictogramme dans l’UI (optionnel)
+  id           String  @id @default(uuid())
+  slug         String  @unique // identifiant stable pour routing / filtres
+  iconEmoji    String? // petit pictogramme dans l'UI (optionnel)
+  sourceLocale String  @default("fr") // langue source (fr, en, etc.)
 
-  resources Resource[]
+  resources    Resource[]
+  translations ResourceCategoryTranslation[] // traductions de la catégorie
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([sourceLocale]) // for filtering by source locale
+}
+
+model ResourceCategoryTranslation {
+  id         String @id @default(uuid())
+  categoryId String
+  locale     String // "fr" | "en" | "es" | "de" etc.
+
+  name String // nom traduit de la catégorie
+
+  category ResourceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, locale]) // une seule traduction par langue par catégorie
+  @@index([locale]) // recherche par langue
+  @@index([name]) // recherche par nom
 }
 
 model ResourceTag {
-  id   String @id @default(uuid())
-  name String // libellé lisible (ex: "Stress")
-  slug String @unique // identifiant pour filtres / URL
+  id           String @id @default(uuid())
+  slug         String @unique // identifiant pour filtres / URL
+  sourceLocale String @default("fr") // langue source (fr, en, etc.)
 
-  resources ResourceTagOnResource[]
+  resources    ResourceTagOnResource[]
+  translations ResourceTagTranslation[] // traductions du tag
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([sourceLocale]) // for filtering by source locale
+}
+
+model ResourceTagTranslation {
+  id     String @id @default(uuid())
+  tagId  String
+  locale String // "fr" | "en" | "es" | "de" etc.
+
+  name String // nom traduit du tag
+
+  tag ResourceTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tagId, locale]) // une seule traduction par langue par tag
+  @@index([locale]) // recherche par langue
+  @@index([name]) // recherche par nom
 }
 
 model Resource {
-  id          String       @id @default(uuid())
-  title       String // titre éditorial
-  slug        String       @unique // slug pour URL
-  summary     String // résumé court (teaser)
-  content     String // contenu complet (markdown, HTML…)
-  type        ResourceType // type de ressource (article, vidéo…)
-  isPremium   Boolean      @default(false) // contenu premium ou non
-  isFeatured  Boolean      @default(false) // mis en avant sur la home
-  authorName  String? // nom de l'auteur si pertinent
-  readTimeMin Int? // estimation du temps de lecture
-  externalUrl String? // lien externe éventuel (YouTube, blog…)
+  id   String @id @default(uuid())
+  slug String @unique // slug technique (toujours en anglais, généré auto)
+
+  // Champs déplacés vers ResourceTranslation : title, summary, content
+  isPremium    Boolean @default(false) // contenu premium ou non
+  isFeatured   Boolean @default(false) // mis en avant sur la home
+  sourceLocale String  @default("fr") // langue source (fr, en, etc.)
+  authorName   String? // nom de l'auteur si pertinent
+  readTimeMin  Int? // estimation du temps de lecture
+  externalUrl  String? // lien externe éventuel (YouTube, blog…)
 
   // Author tracking for ownership and CRUD permissions
   authorId String?
@@ -512,14 +555,34 @@ model Resource {
   meditationProgram   MeditationProgram? @relation(fields: [meditationProgramId], references: [id])
 
   // (WorkoutPrograms => à mettre en place)
-  tags ResourceTagOnResource[] // jonction N-N avec les tags
+  tags         ResourceTagOnResource[] // jonction N-N avec les tags
+  translations ResourceTranslation[] // traductions de la ressource
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([title]) // recherche plein texte partielle sur le titre
-  @@index([summary]) // idem pour le résumé
+  @@index([slug]) // recherche par slug
   @@index([authorId]) // for filtering by author
+  @@index([sourceLocale]) // for filtering by source locale
+}
+
+model ResourceTranslation {
+  id         String @id @default(uuid())
+  resourceId String
+  locale     String // "fr" | "en" | "es" | "de" etc.
+
+  title   String // titre traduit
+  summary String // résumé traduit
+  content String // contenu traduit (markdown, HTML…)
+
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([resourceId, locale]) // une seule traduction par langue par ressource
+  @@index([locale]) // recherche par langue
+  @@index([title]) // recherche plein texte partielle sur le titre
 }
 
 model ResourceTagOnResource {
@@ -555,48 +618,47 @@ enum BadgeMetricType {
 }
 
 model BadgeDefinition {
-  id        String   @id @default(cuid())
-  slug      String   @unique // ex: "first-meditation"
+  id   String @id @default(cuid())
+  slug String @unique // ex: "first-meditation"
 
   domain    BadgeDomain
   metric    BadgeMetricType
-  threshold Int        // ex: 1, 5, 10...
+  threshold Int // ex: 1, 5, 10...
 
   // Clés i18n (tu pourras les mapper à fr/en dans ton system actuel)
   titleKey       String // ex: "badges.meditation.first.title"
   descriptionKey String // ex: "badges.meditation.first.description"
 
   // Pour que le front sache quelle icône rendre
-  iconKey   String?    // ex: "badge-meditation-1"
+  iconKey String? // ex: "badge-meditation-1"
 
   // Gestion de l’affichage sur la home
   // null -> jamais mis en avant automatiquement
   highlightDurationHours Int? // ex: 168 = 7 jours
 
   sortOrder Int?
-  isActive  Boolean   @default(true)
+  isActive  Boolean @default(true)
 
   userBadges UserBadge[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserBadge {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  userId    String
-  badgeId   String
+  userId  String
+  badgeId String
 
-  earnedAt  DateTime @default(now())
+  earnedAt          DateTime @default(now())
   metricValueAtEarn Int?
 
-  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badge  BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   // Un user ne peut gagner un même badge qu’une seule fois
   @@unique([userId, badgeId])
-
   @@index([userId])
   @@index([badgeId])
 }

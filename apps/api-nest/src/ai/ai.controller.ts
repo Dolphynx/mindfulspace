@@ -174,4 +174,81 @@ export class AiController {
   ): Promise<ObjectivesResponseDto> {
     return this.aiService.generateObjectives(body.theme ?? '', body.locale);
   }
+
+  /**
+   * POST /ai/translate-text
+   * -----------------------
+   * Translates text from one language to another using AI.
+   *
+   * This endpoint is used by the resource creation wizard to translate
+   * resource content fields (title, summary, content) to target locales.
+   *
+   * @param body - Contains text, sourceLocale, and targetLocale
+   * @returns Translated text
+   */
+  @Post('translate-text')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Translate text using AI',
+    description:
+      'Translates text from source language to target language using AI. ' +
+      'Preserves formatting and maintains tone.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'The text to translate',
+          example: 'Méditation guidée pour débutants',
+        },
+        sourceLocale: {
+          type: 'string',
+          description: 'Source language code (e.g., "fr", "en")',
+          example: 'fr',
+        },
+        targetLocale: {
+          type: 'string',
+          description: 'Target language code (e.g., "en", "fr")',
+          example: 'en',
+        },
+      },
+      required: ['text', 'sourceLocale', 'targetLocale'],
+    },
+  })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        translatedText: {
+          type: 'string',
+          description: 'The translated text',
+          example: 'Guided meditation for beginners',
+        },
+      },
+    },
+    description: 'Text translated successfully.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request (missing required fields).',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Error calling AI provider or configuration missing.',
+  })
+  async translateText(
+    @Body()
+    body: {
+      text: string;
+      sourceLocale: string;
+      targetLocale: string;
+    },
+  ): Promise<{ translatedText: string }> {
+    const translatedText = await this.aiService.translateText(
+      body.text,
+      body.sourceLocale,
+      body.targetLocale,
+    );
+    return { translatedText };
+  }
 }

@@ -22,7 +22,14 @@ import {
   getTags,
   getResources,
   updateResource,
+  updateTranslation,
 } from '@/lib/api/resources';
+
+interface TranslationData {
+  title: string;
+  summary: string;
+  content: string;
+}
 
 export default function AdminEditResourcePage() {
   const t = useTranslations('resourcesManagement');
@@ -39,6 +46,12 @@ export default function AdminEditResourcePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Available locales for translation
+  const availableLocales = [
+    { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
+  ];
 
   useEffect(() => {
     loadData();
@@ -60,7 +73,17 @@ export default function AdminEditResourcePage() {
         return;
       }
 
-      setResource(resourceData);
+      // Populate resource with all translations for the form
+      // The form expects translations to be available in the format it understands
+      const resourceWithTranslations = {
+        ...resourceData,
+        // Add title/summary/content from source locale translation for backward compatibility
+        title: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.title || '',
+        summary: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.summary || '',
+        content: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.content || '',
+      };
+
+      setResource(resourceWithTranslations);
       setCategories(categoriesData);
       setTags(tagsData);
     } catch (err: any) {
@@ -70,13 +93,30 @@ export default function AdminEditResourcePage() {
     }
   };
 
-  const handleSubmit = async (data: CreateResourceData | UpdateResourceData) => {
+  const handleSubmit = async (
+    data: CreateResourceData | UpdateResourceData,
+    translations?: Record<string, TranslationData>
+  ) => {
     try {
       setSubmitting(true);
       setError('');
       setSuccess('');
 
+      // Update resource
       await updateResource(resourceId, data);
+
+      // Update translations (if any provided)
+      if (translations && Object.keys(translations).length > 0) {
+        await Promise.all(
+          Object.entries(translations).map(([localeCode, translationData]) =>
+            updateTranslation(resourceId, localeCode, {
+              title: translationData.title,
+              summary: translationData.summary,
+              content: translationData.content,
+            })
+          )
+        );
+      }
 
       setSuccess(t('success.updated'));
 
@@ -150,6 +190,7 @@ export default function AdminEditResourcePage() {
                 initialData={resource}
                 categories={categories}
                 tags={tags}
+                availableLocales={availableLocales}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 isAdmin={true}

@@ -6,30 +6,59 @@
  * WordPress-style admin interface with SPA tab navigation:
  * - Dashboard: Overview and statistics
  * - Resources: Resource management
+ * - Taxonomy: Categories and tags management
  * - Sessions: Meditation session management
  *
  * Route: /[locale]/admin
  */
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AdminDashboardShell from "@/components/admin/AdminDashboardShell";
 import { ResourcesList } from "@/components/resources";
 import { useTranslations } from "@/i18n/TranslationContext";
 
-type TabType = 'dashboard' | 'resources' | 'sessions';
+type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'sessions';
 
 export default function AdminPage() {
     const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const locale = pathname.split("/")[1] || "fr";
     const t = useTranslations("adminDashboard");
 
-    const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+    // Initialize activeTab from URL parameter or default to dashboard
+    const [activeTab, setActiveTab] = useState<TabType>(() => {
+        const tabParam = searchParams.get('tab') as TabType;
+        return tabParam && ['dashboard', 'resources', 'sessions'].includes(tabParam)
+            ? tabParam
+            : 'dashboard';
+    });
+
+    // Update URL when tab changes
+    useEffect(() => {
+        const currentTab = searchParams.get('tab');
+        if (activeTab !== 'dashboard' && currentTab !== activeTab) {
+            router.replace(`/${locale}/admin?tab=${activeTab}`, { scroll: false });
+        } else if (activeTab === 'dashboard' && currentTab) {
+            router.replace(`/${locale}/admin`, { scroll: false });
+        }
+    }, [activeTab, locale, router, searchParams]);
+
+    const handleTabChange = (tab: TabType) => {
+        if (tab === 'taxonomy') {
+            // Navigate to dedicated taxonomy page
+            router.push(`/${locale}/admin/taxonomy`);
+        } else {
+            // For other tabs, just switch the active tab (URL will update via useEffect)
+            setActiveTab(tab);
+        }
+    };
 
     return (
         <AdminDashboardShell
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
             locale={locale}
         >
             {/* Dashboard Tab */}

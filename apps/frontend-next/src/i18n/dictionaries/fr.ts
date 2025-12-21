@@ -66,6 +66,7 @@ const fr = {
         tabs: {
             dashboard: "Tableau de bord",
             resources: "Ressources",
+            taxonomy: "Taxonomie",
             sessions: "Sessions",
         },
         backToApp: "Retour à l'app",
@@ -552,10 +553,17 @@ const fr = {
         notFoundText: "Cette ressource n'existe pas ou n'est plus disponible.",
         readTimeSuffix: "min de lecture",
         premiumBadge: "Premium",
+        featuredBadge: "À la une",
         noContent: "Le contenu de cette ressource n'est pas encore disponible.",
         forbiddenTitle: "Accès réservé",
         forbiddenText: "Cette ressource est réservée aux membres premium. Connectez-vous avec un compte premium pour y accéder.",
-        backToListCTA: "Retour à la liste des ressources"
+        backToListCTA: "Retour à la liste des ressources",
+        authorLabel: "Par",
+        publishedLabel: "Publié le",
+        updatedLabel: "Modifié le",
+        externalLinkTitle: "Ressource complémentaire",
+        externalLinkDescription: "Un lien externe est associé à cette ressource pour approfondir le sujet",
+        openExternalLink: "Consulter le lien"
     },
 
     notFoundPage: {
@@ -609,6 +617,7 @@ const fr = {
 
     langSwitcher: {
         label: "Langue",
+        switchTo: "Passer en",
     },
 
     globalNotice: {
@@ -932,9 +941,11 @@ const fr = {
      */
     resourcesManagement: {
         title: "Gestion des ressources",
+        loading: "Chargement...",
         myResources: "Mes ressources",
         allResources: "Toutes les ressources",
         createResource: "Créer une ressource",
+        createResourceDescription: "Créez une nouvelle ressource avec support de traduction automatique",
         editResource: "Modifier la ressource",
         deleteResource: "Supprimer la ressource",
 
@@ -1006,6 +1017,27 @@ const fr = {
             meditationProgram: "Programme de méditation",
             meditationProgramHelper: "Lier à un programme de méditation existant (optionnel)",
             selectProgram: "Sélectionner un programme",
+
+            sourceLocale: {
+                label: "Langue source",
+                helper: "Langue dans laquelle vous rédigez le contenu",
+            },
+
+            metadataSection: "Métadonnées de la ressource",
+            readOnly: "Lecture seule",
+        },
+
+        // Wizard
+        wizard: {
+            translating: {
+                title: "Traduction en cours...",
+                description: "Notre IA traduit votre ressource dans les autres langues. Cela peut prendre quelques secondes.",
+            },
+            review: {
+                instructions: "Vérifiez et modifiez les traductions générées automatiquement. Vous pouvez ajuster n'importe quel champ avant de sauvegarder.",
+                sourceLanguage: "Langue source",
+                translation: "Traduction",
+            },
         },
 
         // Actions
@@ -1017,6 +1049,10 @@ const fr = {
             create: "Créer",
             back: "Retour",
             viewPublic: "Voir la version publique",
+            translateAndReview: "Traduire et réviser",
+            translating: "Traduction en cours...",
+            saving: "Enregistrement...",
+            saveAll: "Tout enregistrer",
         },
 
         // Success messages
@@ -1040,6 +1076,7 @@ const fr = {
             minLength: "Trop court",
             maxLength: "Trop long",
             invalidUrl: "URL invalide",
+            translationFailed: "Erreur lors de la traduction automatique",
         },
 
         // Delete confirmation
@@ -1078,6 +1115,119 @@ const fr = {
             premium: "Premium",
             free: "Gratuites",
             featured: "Mises en avant",
+        },
+    },
+
+    taxonomyManagement: {
+        title: "Gestion de la taxonomie",
+        subtitle: "Gérez les catégories et les tags pour organiser vos ressources",
+
+        // Tabs
+        tabs: {
+            categories: "Catégories",
+            tags: "Tags",
+        },
+
+        // Categories section
+        categories: {
+            title: "Catégories de ressources",
+            description: "Les catégories organisent vos ressources en grands thèmes (Sommeil, Stress, etc.)",
+            createNew: "Nouvelle catégorie",
+            editCategory: "Modifier la catégorie",
+            deleteCategory: "Supprimer la catégorie",
+            noCategories: "Aucune catégorie",
+            noCategoriesDescription: "Commencez par créer votre première catégorie",
+            resourceCount: "{{count}} ressource",
+            resourceCount_plural: "{{count}} ressources",
+
+            form: {
+                name: "Nom de la catégorie",
+                namePlaceholder: "Ex: Sommeil, Stress, Méditation",
+                nameHelper: "Nom affiché aux utilisateurs",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "sommeil",
+                slugHelper: "Identifiant unique pour les URLs (lettres minuscules, chiffres et tirets uniquement)",
+
+                iconEmoji: "Icône (emoji)",
+                iconEmojiPlaceholder: "😴",
+                iconEmojiHelper: "Emoji affiché dans l'interface (optionnel)",
+            },
+
+            deleteConfirm: {
+                title: "Supprimer la catégorie ?",
+                message: "Êtes-vous sûr de vouloir supprimer cette catégorie ?",
+                warningHasResources: "Impossible de supprimer : {{count}} ressource utilise cette catégorie. Réassignez ou supprimez ces ressources d'abord.",
+                warningHasResources_plural: "Impossible de supprimer : {{count}} ressources utilisent cette catégorie. Réassignez ou supprimez ces ressources d'abord.",
+                confirm: "Oui, supprimer",
+                cancel: "Annuler",
+            },
+        },
+
+        // Tags section
+        tags: {
+            title: "Tags de ressources",
+            description: "Les tags permettent un étiquetage plus fin du contenu (stress, sommeil, relaxation, etc.)",
+            createNew: "Nouveau tag",
+            editTag: "Modifier le tag",
+            deleteTag: "Supprimer le tag",
+            noTags: "Aucun tag",
+            noTagsDescription: "Commencez par créer votre premier tag",
+            resourceCount: "{{count}} ressource",
+            resourceCount_plural: "{{count}} ressources",
+
+            form: {
+                name: "Nom du tag",
+                namePlaceholder: "Ex: stress, sommeil, relaxation",
+                nameHelper: "Nom affiché aux utilisateurs",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "stress",
+                slugHelper: "Identifiant unique pour les URLs (lettres minuscules, chiffres et tirets uniquement)",
+            },
+
+            deleteConfirm: {
+                title: "Supprimer le tag ?",
+                message: "Êtes-vous sûr de vouloir supprimer ce tag ? Il sera retiré de toutes les ressources qui l'utilisent.",
+                confirm: "Oui, supprimer",
+                cancel: "Annuler",
+            },
+        },
+
+        // Actions
+        actions: {
+            create: "Créer",
+            save: "Enregistrer",
+            cancel: "Annuler",
+            edit: "Modifier",
+            delete: "Supprimer",
+            close: "Fermer",
+        },
+
+        // Success messages
+        success: {
+            categoryCreated: "Catégorie créée avec succès",
+            categoryUpdated: "Catégorie mise à jour avec succès",
+            categoryDeleted: "Catégorie supprimée avec succès",
+            tagCreated: "Tag créé avec succès",
+            tagUpdated: "Tag mis à jour avec succès",
+            tagDeleted: "Tag supprimé avec succès",
+        },
+
+        // Error messages
+        errors: {
+            categoryCreateFailed: "Erreur lors de la création de la catégorie",
+            categoryUpdateFailed: "Erreur lors de la mise à jour de la catégorie",
+            categoryDeleteFailed: "Erreur lors de la suppression de la catégorie",
+            tagCreateFailed: "Erreur lors de la création du tag",
+            tagUpdateFailed: "Erreur lors de la mise à jour du tag",
+            tagDeleteFailed: "Erreur lors de la suppression du tag",
+            loadFailed: "Erreur lors du chargement",
+            slugExists: "Ce slug est déjà utilisé",
+            invalidSlug: "Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets",
+            requiredField: "Ce champ est requis",
+            minLength: "Trop court (minimum {{min}} caractères)",
+            maxLength: "Trop long (maximum {{max}} caractères)",
         },
     }
 

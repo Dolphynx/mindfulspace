@@ -13,7 +13,8 @@ import {
   Resource,
   getResources,
   deleteResource,
-  getResourceTypeLabel,
+  enrichResourceWithTranslation,
+  getCategoryName,
 } from '@/lib/api/resources';
 
 export default function AdminResourcesPage() {
@@ -38,7 +39,11 @@ export default function AdminResourcesPage() {
       setLoading(true);
       setError('');
       const data = await getResources();
-      setResources(data);
+
+      // Enrich resources with translations for current locale
+      const enrichedData = data.map((r) => enrichResourceWithTranslation(r, locale));
+
+      setResources(enrichedData);
     } catch (err: any) {
       setError(err.message || t('errors.loadFailed'));
     } finally {
@@ -62,10 +67,11 @@ export default function AdminResourcesPage() {
   const filteredResources = resources.filter((resource) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const categoryName = resource.category ? getCategoryName(resource.category, locale) : '';
     return (
-      resource.title.toLowerCase().includes(query) ||
-      resource.summary.toLowerCase().includes(query) ||
-      resource.category?.name.toLowerCase().includes(query) ||
+      resource.title?.toLowerCase().includes(query) ||
+      resource.summary?.toLowerCase().includes(query) ||
+      categoryName.toLowerCase().includes(query) ||
       resource.author?.displayName?.toLowerCase().includes(query)
     );
   });
@@ -140,11 +146,8 @@ export default function AdminResourcesPage() {
               key={resource.id}
               className="rounded-lg border border-brandBorder bg-white p-6 transition hover:shadow-md"
             >
-              {/* Type & Status badges */}
+              {/* Status badges */}
               <div className="mb-3 flex flex-wrap gap-2">
-                <span className="rounded-full bg-brandSurface px-2 py-1 text-xs font-medium text-brandText">
-                  {getResourceTypeLabel(resource.type)}
-                </span>
                 {resource.isPremium && (
                   <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">
                     {t('card.premium')}
@@ -171,7 +174,7 @@ export default function AdminResourcesPage() {
               <div className="mb-4 space-y-1 text-xs text-brandText/60">
                 {resource.category && (
                   <div>
-                    {resource.category.iconEmoji} {resource.category.name}
+                    {resource.category.iconEmoji} {getCategoryName(resource.category, locale)}
                   </div>
                 )}
                 {resource.author && (

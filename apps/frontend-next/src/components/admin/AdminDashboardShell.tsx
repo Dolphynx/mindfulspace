@@ -15,12 +15,12 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
-import { LayoutDashboard, BookOpen, Activity, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Activity, ArrowLeft, Tags } from 'lucide-react';
 
 interface AdminDashboardShellProps {
   children: ReactNode;
-  activeTab: 'dashboard' | 'resources' | 'sessions';
-  onTabChange: (tab: 'dashboard' | 'resources' | 'sessions') => void;
+  activeTab: 'dashboard' | 'resources' | 'sessions' | 'taxonomy';
+  onTabChange: (tab: 'dashboard' | 'resources' | 'sessions' | 'taxonomy') => void;
   locale: string;
 }
 
@@ -44,6 +44,11 @@ export default function AdminDashboardShell({
       id: 'resources' as const,
       label: t('tabs.resources'),
       icon: BookOpen,
+    },
+    {
+      id: 'taxonomy' as const,
+      label: t('tabs.taxonomy'),
+      icon: Tags,
     },
     {
       id: 'sessions' as const,

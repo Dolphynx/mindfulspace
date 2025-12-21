@@ -20,6 +20,9 @@ import {
   getMyResources,
   getCategories,
   deleteResource,
+  enrichResourceWithTranslation,
+  getCategoryName,
+  getTagName,
   Resource,
   ResourceCategory,
 } from '@/lib/api/resources';
@@ -96,7 +99,10 @@ export default function ResourcesList({
           data = await getResources({ q: query, categorySlug });
         }
 
-        setResources(data);
+        // Enrich resources with translations for current locale
+        const enrichedData = data.map((r) => enrichResourceWithTranslation(r, locale));
+
+        setResources(enrichedData);
       } catch (error) {
         console.error('Error loading resources:', error);
       } finally {
@@ -105,7 +111,7 @@ export default function ResourcesList({
     }
 
     loadResources();
-  }, [mode, query, categorySlug]);
+  }, [mode, query, categorySlug, locale]);
 
   // ========== HANDLERS ==========
 
@@ -133,8 +139,8 @@ export default function ResourcesList({
   const filteredResources = mode === 'myResources'
     ? resources.filter((r) => {
         const matchesQuery = query
-          ? r.title.toLowerCase().includes(query.toLowerCase()) ||
-            r.summary.toLowerCase().includes(query.toLowerCase())
+          ? (r.title?.toLowerCase().includes(query.toLowerCase()) ?? false) ||
+            (r.summary?.toLowerCase().includes(query.toLowerCase()) ?? false)
           : true;
 
         const matchesCategory = categorySlug
@@ -168,7 +174,7 @@ export default function ResourcesList({
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-xs font-medium uppercase text-brandText-soft">
-              {r.category?.name || 'Uncategorized'}
+              {r.category ? getCategoryName(r.category, locale) : 'Uncategorized'}
             </span>
 
             <div className="flex items-center gap-2">
@@ -210,7 +216,7 @@ export default function ResourcesList({
                 key={tTag.tag.id}
                 className="rounded-full bg-white/60 px-2 py-0.5"
               >
-                {tTag.tag.name}
+                {getTagName(tTag.tag, locale)}
               </span>
             ))}
           </div>
@@ -229,7 +235,7 @@ export default function ResourcesList({
               href={
                 mode === 'admin'
                   ? `/${locale}/admin/resources/${r.id}/edit`
-                  : `/${locale}/resources/edit/${r.id}`
+                  : `/${locale}/resources/${r.slug}/edit`
               }
               className="flex-1 rounded-card bg-brandPrimary/10 hover:bg-brandPrimary/20 text-brandPrimary text-sm font-medium py-2 px-3 text-center transition-colors"
             >
@@ -344,7 +350,7 @@ export default function ResourcesList({
               {cat.iconEmoji && (
                 <span aria-hidden="true">{cat.iconEmoji}</span>
               )}
-              <span>{cat.name}</span>
+              <span>{getCategoryName(cat, locale)}</span>
 
               {cat._count?.resources !== undefined && (
                 <span className="text-[11px] opacity-70">

@@ -20,10 +20,16 @@ import {
   UpdateResourceData,
   getCategories,
   getTags,
-  getResources,
-  getMyResources,
+  getResourceBySlug,
   updateResource,
+  updateTranslation,
 } from '@/lib/api/resources';
+
+interface TranslationData {
+  title: string;
+  summary: string;
+  content: string;
+}
 
 export default function EditResourcePage() {
   const t = useTranslations('resourcesManagement');
@@ -32,7 +38,13 @@ export default function EditResourcePage() {
   const pathname = usePathname();
   const params = useParams();
   const locale = pathname.split('/')[1] || 'en';
-  const resourceId = params.id as string;
+  const slug = params.slug as string;
+
+  // Available locales for translation
+  const availableLocales = [
+    { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
+  ];
 
   const [resource, setResource] = useState<Resource | null>(null);
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
@@ -61,30 +73,39 @@ export default function EditResourcePage() {
   }, [user, isCoach, locale, router]);
 
   useEffect(() => {
-    if (isCoach && resourceId) {
+    if (isCoach && slug) {
       loadData();
     }
-  }, [isCoach, resourceId]);
+  }, [isCoach, slug]);
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // Admins can access all resources, coaches only their own
-      const [allResources, categoriesData, tagsData] = await Promise.all([
-        isAdmin ? getResources({}) : getMyResources(),
+      // Fetch resource by slug and categories/tags
+      const [resourceData, categoriesData, tagsData] = await Promise.all([
+        getResourceBySlug(slug),
         getCategories(),
         getTags(),
       ]);
 
-      const resourceData = allResources.find((r) => r.id === resourceId);
-
-      if (!resourceData) {
-        setError(t('errors.notFound'));
+      // Check authorization: owner or admin
+      if (!isAdmin && resourceData.authorId !== user?.id) {
+        setError(t('errors.unauthorized') || 'You do not have permission to edit this resource');
         return;
       }
 
-      setResource(resourceData);
+      // Populate resource with all translations for the form
+      // The form expects translations to be available in the format it understands
+      const resourceWithTranslations = {
+        ...resourceData,
+        // Add title/summary/content from source locale translation for backward compatibility
+        title: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.title || '',
+        summary: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.summary || '',
+        content: resourceData.translations?.find((tr) => tr.locale === resourceData.sourceLocale)?.content || '',
+      };
+
+      setResource(resourceWithTranslations);
       setCategories(categoriesData);
       setTags(tagsData);
     } catch (err: any) {
@@ -94,13 +115,34 @@ export default function EditResourcePage() {
     }
   };
 
-  const handleSubmit = async (data: CreateResourceData | UpdateResourceData) => {
+  const handleSubmit = async (
+    data: CreateResourceData | UpdateResourceData,
+    translations?: Record<string, TranslationData>
+  ) => {
     try {
       setSubmitting(true);
       setError('');
       setSuccess('');
 
-      await updateResource(resourceId, data);
+      if (!resource?.id) {
+        throw new Error('Resource ID not found');
+      }
+
+      // Update resource
+      await updateResource(resource.id, data);
+
+      // Update translations (if any provided)
+      if (translations && Object.keys(translations).length > 0) {
+        await Promise.all(
+          Object.entries(translations).map(([localeCode, translationData]) =>
+            updateTranslation(resource.id, localeCode, {
+              title: translationData.title,
+              summary: translationData.summary,
+              content: translationData.content,
+            })
+          )
+        );
+      }
 
       setSuccess(t('success.updated'));
 
@@ -182,6 +224,7 @@ export default function EditResourcePage() {
             initialData={resource}
             categories={categories}
             tags={tags}
+            availableLocales={availableLocales}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             isAdmin={isAdmin}
