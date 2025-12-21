@@ -78,7 +78,7 @@ export function BadgeToast({ badge, onClose }: BadgeToastProps) {
             {/* Icône du badge */}
             <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
                 <Image
-                    src={`/images/badges/${badge.iconKey ?? "default"}`}
+                    src={`/images/badges/${badge.iconKey ?? "default.png"}`}
                     alt=""
                     width={64}
                     height={64}
