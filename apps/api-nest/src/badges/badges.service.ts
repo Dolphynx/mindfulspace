@@ -1,10 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { BadgeMetricType } from "@prisma/client";
+import { BadgeMetricType, Prisma } from "@prisma/client";
 import { HighlightedBadgeDto, UserBadgeDto } from "./dto/badges.dto";
 
 @Injectable()
 export class BadgesService {
+  private readonly logger = new Logger(BadgesService.name);
+
   constructor(private prisma: PrismaService) {}
 
   /**
@@ -28,15 +30,37 @@ export class BadgesService {
     });
     const earnedIds = new Set(alreadyEarned.map((b) => b.badgeId));
 
+    const pendingBadges = allBadges.filter((b) => !earnedIds.has(b.id));
+    if (!pendingBadges.length) return [];
+
+    /**
+     * Optimisation (suppression N+1) :
+     * on calcule chaque métrique une seule fois par type.
+     *
+     * Le résultat fonctionnel ne change pas : la métrique dépend des sessions,
+     * pas des userBadges.
+     */
+    const uniqueMetrics = Array.from(new Set(pendingBadges.map((b) => b.metric)));
+
+    const metricEntries = await Promise.all(
+      uniqueMetrics.map(async (metric) => ({
+        metric,
+        value: await this.computeMetric(userId, metric),
+      })),
+    );
+
+    const metricValueByType = new Map<BadgeMetricType, number>(
+      metricEntries.map((e) => [e.metric, e.value]),
+    );
+
     const newlyEarned = [];
 
-    for (const badge of allBadges) {
-      // Badge déjà obtenu, on passe au suivant.
-      if (earnedIds.has(badge.id)) continue;
+    for (const badge of pendingBadges) {
+      const metricValue = metricValueByType.get(badge.metric) ?? 0;
 
-      const metricValue = await this.computeMetric(userId, badge.metric);
+      if (metricValue < badge.threshold) continue;
 
-      if (metricValue >= badge.threshold) {
+      try {
         const userBadge = await this.prisma.userBadge.create({
           data: {
             userId,
@@ -49,6 +73,19 @@ export class BadgesService {
           ...badge,
           userBadge,
         });
+      } catch (error) {
+        /**
+         * Concurrence : la contrainte @@unique([userId, badgeId]) peut déclencher P2002.
+         * Dans ce cas, le badge est déjà attribué : on ignore proprement.
+         */
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          continue;
+        }
+
+        throw error;
       }
     }
 
@@ -115,19 +152,17 @@ export class BadgesService {
 
     if (!sessions.length) return 0;
 
-    // Ensemble des jours distincts comportant au moins une session.
     const daysSet = new Set<string>();
 
     for (const s of sessions) {
       const date = s.startedAt ?? s.endedAt ?? s.createdAt;
-      const dayKey = date.toISOString().slice(0, 10); // YYYY-MM-DD
+      const dayKey = date.toISOString().slice(0, 10);
       daysSet.add(dayKey);
     }
 
     let streak = 0;
     const today = new Date();
 
-    // Parcours des jours en remontant depuis aujourd'hui
     while (true) {
       const d = new Date(today);
       d.setDate(today.getDate() - streak);
@@ -147,10 +182,12 @@ export class BadgesService {
    * Récupère l'ensemble des badges gagnés par un utilisateur.
    *
    * @param userId - Identifiant de l'utilisateur.
+   * @param limit - Optionnel. Nombre maximum de badges (clamp 1..50). Si absent : retourne tout.
    * @returns Liste des badges utilisateur, triés par date d'obtention décroissante.
    */
   getUserBadges(userId: string, limit?: number): Promise<UserBadgeDto[]> {
-    const safeLimit = clampLimit(limit, undefined, 1, 50); // undefined => pas de take
+    const safeLimit = clampLimit(limit, undefined, 1, 50);
+
     return this.prisma.userBadge.findMany({
       where: { userId },
       include: { badge: true },
@@ -196,22 +233,15 @@ export class BadgesService {
       orderBy: { earnedAt: "desc" },
     });
 
-    // NOTE: logs utiles en dev, à retirer en prod si besoin
-    console.log(
-      "[BadgesService] userBadges count=",
-      userBadges.length,
-      "for userId=",
-      userId,
+    this.logger.debug(
+      `[BadgesService] userBadges count=${userBadges.length} userId=${userId}`,
     );
 
     const visible = userBadges.filter((ub) => {
       const durationHours = ub.badge.highlightDurationHours;
 
-      console.log(
-        "[BadgesService] badge",
-        ub.badge.slug,
-        "durationHours=",
-        durationHours,
+      this.logger.debug(
+        `[BadgesService] badge=${ub.badge.slug} durationHours=${durationHours}`,
       );
 
       if (!durationHours || durationHours <= 0) return false;
@@ -222,10 +252,7 @@ export class BadgesService {
       return expiresAt > now;
     });
 
-    console.log(
-      "[BadgesService] visible badges after filter =",
-      visible.length,
-    );
+    this.logger.debug(`[BadgesService] visible badges after filter=${visible.length}`);
 
     return visible.slice(0, safeLimit).map(
       (ub): HighlightedBadgeDto => ({
@@ -241,17 +268,6 @@ export class BadgesService {
   }
 }
 
-/**
- * Applique un clamp au paramètre `limit` en garantissant :
- * - une valeur par défaut si undefined / NaN / <=0
- * - un minimum et un maximum
- *
- * @param limit - Valeur candidate.
- * @param defaultValue - Valeur de repli.
- * @param min - Minimum autorisé.
- * @param max - Maximum autorisé.
- * @returns Une valeur sûre pour l’API.
- */
 function clampLimit(
   limit: number | undefined,
   defaultValue: number | undefined,
