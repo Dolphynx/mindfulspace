@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { fetchUserPrograms, type UserProgram, type UserProgramDay } from "@/lib/api/program";
-import { useWorldHubOptional } from "@/feature/world/hub/WorldHubProvider";
 import {useUserPrograms} from "@/hooks/useUserPrograms";
 
 export function TodayExercices() {
@@ -60,7 +58,7 @@ export function TodayExercices() {
                     <ul className="mt-2 space-y-1">
                         {day.exercices.map((ex) => (
                             <li key={ex.id}>
-                                {ex.exerciceContentName} – {ex.defaultRepetitionCount ?? 0} reps
+                                {ex.exercice.name} – {ex.defaultRepetitionCount ?? 0} reps
                             </li>
                         ))}
                     </ul>

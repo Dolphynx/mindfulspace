@@ -54,12 +54,17 @@ export type CreateProgramPayload = {
     }[];
 };
 
-// Types for the user’s copied programs
 export type UserProgramExercise = {
     id: string;
-    exerciceContentName: string;
     defaultRepetitionCount: number | null;
+    defaultSets: number | null;
+    exercice: {
+        id: string;
+        name: string;
+        description: string | null;
+    };
 };
+
 
 export type UserProgramDay = {
     id: string;
@@ -67,6 +72,7 @@ export type UserProgramDay = {
     weekday: number | null;
     exercices: UserProgramExercise[];
 };
+
 
 export type ProgramSubscriptionStatus = {
     subscribed: boolean;

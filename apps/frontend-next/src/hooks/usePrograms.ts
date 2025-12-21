@@ -60,23 +60,23 @@ export function usePrograms(baseUrl?: string) {
             try {
                 await subscribeToProgram(programId);
                 // optional: refresh list if running UI depends on it
-                // await load();
+                await load();
             } catch (e) {
                 console.error("[usePrograms] subscribe failed", e);
                 setErrorType("save");
                 throw e;
             }
         },
-        [baseUrl]
+        []
     );
 
     const getSubscriptionStatus = useCallback(async (programId: string) => {
-        return await getProgramSubscriptionStatus(programId, baseUrl);
-    }, [baseUrl]);
+        return await getProgramSubscriptionStatus(programId);
+    }, []);
 
     const unsubscribe = useCallback(async (userProgramId: string) => {
-        await unsubscribeFromProgram(userProgramId, baseUrl);
-    }, [baseUrl]);
+        await unsubscribeFromProgram(userProgramId);
+    }, []);
 
     return {
         programs,
