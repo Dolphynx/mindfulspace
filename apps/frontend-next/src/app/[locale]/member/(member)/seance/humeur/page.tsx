@@ -20,7 +20,7 @@
  */
 
 import { useState } from "react";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue, moodToPercent } from "@/lib";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";

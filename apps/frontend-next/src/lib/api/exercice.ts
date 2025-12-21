@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api/client";
 export type ExerciceContentItem = {
     id: string;
     name: string;
-    Description: string;
+    description: string;
     steps: {
         id: string;
         order: number;
@@ -16,6 +16,7 @@ export type ExerciceContentItem = {
         imageUrl: string | null;
     }[];
 };
+
 
 export type ExerciceSession = {
     id: string;
@@ -58,9 +59,16 @@ type RawExerciceSession = {
 type RawExerciceContent = {
     id?: unknown;
     name?: unknown;
-    Description?: unknown;
+    description?: unknown;
     steps?: unknown;
 };
+
+function withLang(url: string, lang: string) {
+    const u = new URL(url);
+    u.searchParams.set("lang", lang);
+    return u.toString();
+}
+
 
 /* -------------------------------------------------------------------------- */
 /*  TYPE GUARDS                                                               */
@@ -84,10 +92,11 @@ function isRawExerciceContent(value: unknown): value is RawExerciceContent {
     return (
         typeof v.id === "string" &&
         typeof v.name === "string" &&
-        typeof v.Description === "string" &&
+        typeof v.description === "string" &&
         Array.isArray(v.steps)
     );
 }
+
 
 /* -------------------------------------------------------------------------- */
 /*  NORMALIZERS                                                               */
@@ -136,9 +145,10 @@ function normalizeExerciceContent(
     return {
         id: String(raw.id),
         name: String(raw.name),
-        Description: String(raw.Description),
+        description: String(raw.description),
         steps,
     };
+
 }
 
 /* -------------------------------------------------------------------------- */
@@ -147,11 +157,13 @@ function normalizeExerciceContent(
 
 /** GET /exercices/last7days */
 export async function fetchLastExerciceSessions(
-    baseUrl = API_BASE_URL
+    lang: string,
+    baseUrl = API_BASE_URL,
 ): Promise<ExerciceSession[]> {
-    const res = await apiFetch(`${baseUrl}/exercices/last7days`, {
-        cache: "no-store",
-    });
+    const res = await apiFetch(
+        withLang(`${baseUrl}/exercices/last7days`, lang),
+        { cache: "no-store" },
+    );
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -163,13 +175,16 @@ export async function fetchLastExerciceSessions(
         .filter((s): s is ExerciceSession => s !== null);
 }
 
+
 /** GET /exercices/types */
 export async function fetchExerciceContents(
-    baseUrl = API_BASE_URL
+    lang: string,
+    baseUrl = API_BASE_URL,
 ): Promise<ExerciceContentItem[]> {
-    const res = await apiFetch(`${baseUrl}/exercices/exercice-content`, {
-        cache: "no-store",
-    });
+    const res = await apiFetch(
+        withLang(`${baseUrl}/exercices/exercice-content`, lang),
+        { cache: "no-store" },
+    );
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -180,6 +195,7 @@ export async function fetchExerciceContents(
         .map(normalizeExerciceContent)
         .filter((t): t is ExerciceContentItem => t !== null);
 }
+
 
 /** POST /exercices */
 export type CreateExerciceSessionResponse = {
@@ -200,4 +216,42 @@ export async function createExerciceSession(
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     return res.json() as Promise<CreateExerciceSessionResponse>;
+}
+
+export type ExerciceSessionsDetailQuery =
+    | { lastDays: number }
+    | { from: string; to?: string }
+    | { to: string; from?: string };
+
+export async function fetchExerciceSessionsDetail(
+    lang: string,
+    query: ExerciceSessionsDetailQuery = { lastDays: 30 },
+    baseUrl = API_BASE_URL,
+): Promise<ExerciceSession[]> {
+
+    const params = new URLSearchParams();
+
+    if ("lastDays" in query) {
+        params.set("lastDays", String(query.lastDays));
+    } else {
+        if (query.from) params.set("from", query.from);
+        if (query.to) params.set("to", query.to);
+    }
+
+    const url = withLang(
+        `${baseUrl}/exercices?${params.toString()}`,
+        lang,
+    );
+
+    const res = await apiFetch(url, { cache: "no-store" });
+
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return [];
+
+    return data
+        .map(normalizeExerciceSession)
+        .filter((s): s is ExerciceSession => s !== null);
 }

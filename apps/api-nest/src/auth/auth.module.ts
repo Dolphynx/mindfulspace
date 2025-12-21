@@ -29,8 +29,12 @@ const providers: Array<any> = [
     provide: APP_GUARD,
     useClass: JwtAuthGuard,
   },
-  // RBAC guards (use @Roles() or @Permissions() decorators to activate)
-  RolesGuard,
+  // Apply Roles guard globally (use @Roles() decorator to activate role-based protection)
+  {
+    provide: APP_GUARD,
+    useClass: RolesGuard,
+  },
+  // Permissions guard (use @Permissions() decorator to activate permission-based protection)
   PermissionsGuard,
 ];
 
@@ -52,7 +56,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: '15m' },
+        signOptions: { expiresIn: '2h' }, // 2 hours for PWA/mobile compatibility
       }),
       inject: [ConfigService],
     }),

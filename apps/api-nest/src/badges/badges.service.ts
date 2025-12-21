@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { BadgeMetricType, Prisma } from "@prisma/client";
+import { BadgeMetricType } from "@prisma/client";
 import { HighlightedBadgeDto, UserBadgeDto } from "./dto/badges.dto";
 
 @Injectable()
@@ -11,9 +11,8 @@ export class BadgesService {
    * Évalue l'ensemble des badges actifs pour un utilisateur et attribue
    * ceux dont les critères sont remplis.
    *
-   * @param userId Identifiant de l'utilisateur.
-   * @returns Liste des nouveaux badges gagnés, incluant la définition du badge
-   *          et l'entrée associée dans la table userBadge.
+   * @param userId - Identifiant de l'utilisateur.
+   * @returns Liste des nouveaux badges gagnés (badgeDefinition + userBadge).
    */
   async checkForNewBadges(userId: string) {
     const allBadges = await this.prisma.badgeDefinition.findMany({
@@ -59,8 +58,8 @@ export class BadgesService {
   /**
    * Calcule la valeur courante d'une métrique de badge pour un utilisateur.
    *
-   * @param userId Identifiant de l'utilisateur.
-   * @param metric Type de métrique à calculer.
+   * @param userId - Identifiant de l'utilisateur.
+   * @param metric - Type de métrique à calculer.
    * @returns Valeur numérique de la métrique.
    */
   private async computeMetric(
@@ -98,7 +97,7 @@ export class BadgesService {
    * Calcule le nombre de jours consécutifs de méditation à partir de la date courante,
    * en considérant les jours comportant au moins une session de méditation.
    *
-   * @param userId Identifiant de l'utilisateur.
+   * @param userId - Identifiant de l'utilisateur.
    * @returns Longueur de la série de jours consécutifs.
    */
   private async computeMeditationStreakDays(userId: string): Promise<number> {
@@ -147,34 +146,38 @@ export class BadgesService {
   /**
    * Récupère l'ensemble des badges gagnés par un utilisateur.
    *
-   * @param userId Identifiant de l'utilisateur.
+   * @param userId - Identifiant de l'utilisateur.
    * @returns Liste des badges utilisateur, triés par date d'obtention décroissante.
    */
-  async getUserBadges(userId: string): Promise<UserBadgeDto[]> {
+  getUserBadges(userId: string, limit?: number): Promise<UserBadgeDto[]> {
+    const safeLimit = clampLimit(limit, undefined, 1, 50); // undefined => pas de take
     return this.prisma.userBadge.findMany({
       where: { userId },
-      include: {
-        badge: true,
-      },
-      orderBy: {
-        earnedAt: "desc",
-      },
-    }) as unknown as UserBadgeDto[];
+      include: { badge: true },
+      orderBy: { earnedAt: "desc" },
+      ...(safeLimit ? { take: safeLimit } : {}),
+    }) as unknown as Promise<UserBadgeDto[]>;
   }
 
   /**
    * Récupère les badges récents d'un utilisateur destinés à être mis en avant.
    * Seuls les badges dont la durée de mise en avant n'est pas expirée sont retournés.
    *
-   * @param userId Identifiant de l'utilisateur.
-   * @param limit Nombre maximum de badges à retourner.
+   * Compatibilité :
+   * - `limit` absent / undefined => comportement historique : 3
+   * - `limit` présent => clamp (1..20) puis apply
+   *
+   * @param userId - Identifiant de l'utilisateur.
+   * @param limit - Nombre maximum de badges à retourner.
    * @returns Liste des badges mis en avant, dans un format aplati.
    */
   async getHighlightedBadges(
     userId: string,
-    limit = 3,
+    limit?: number,
   ): Promise<HighlightedBadgeDto[]> {
     const now = new Date();
+
+    const safeLimit = clampLimit(limit, 3, 1, 20);
 
     const userBadges = await this.prisma.userBadge.findMany({
       where: { userId },
@@ -193,6 +196,7 @@ export class BadgesService {
       orderBy: { earnedAt: "desc" },
     });
 
+    // NOTE: logs utiles en dev, à retirer en prod si besoin
     console.log(
       "[BadgesService] userBadges count=",
       userBadges.length,
@@ -223,7 +227,7 @@ export class BadgesService {
       visible.length,
     );
 
-    const result = visible.slice(0, limit).map(
+    return visible.slice(0, safeLimit).map(
       (ub): HighlightedBadgeDto => ({
         id: ub.id,
         badgeId: ub.badgeId,
@@ -234,7 +238,28 @@ export class BadgesService {
         iconKey: ub.badge.iconKey,
       }),
     );
-
-    return result;
   }
+}
+
+/**
+ * Applique un clamp au paramètre `limit` en garantissant :
+ * - une valeur par défaut si undefined / NaN / <=0
+ * - un minimum et un maximum
+ *
+ * @param limit - Valeur candidate.
+ * @param defaultValue - Valeur de repli.
+ * @param min - Minimum autorisé.
+ * @param max - Maximum autorisé.
+ * @returns Une valeur sûre pour l’API.
+ */
+function clampLimit(
+  limit: number | undefined,
+  defaultValue: number | undefined,
+  min: number,
+  max: number,
+): number | undefined {
+  if (limit === undefined || Number.isNaN(limit)) return defaultValue;
+  if (limit < min) return min;
+  if (limit > max) return max;
+  return limit;
 }

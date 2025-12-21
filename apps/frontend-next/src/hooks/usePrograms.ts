@@ -8,6 +8,7 @@ import {
     type ProgramItem,
     type CreateProgramPayload, unsubscribeFromProgram, getProgramSubscriptionStatus,
 } from "@/lib/api/program";
+import {useLocaleFromPath} from "@/hooks/useLocalFromPath";
 
 export type ProgramErrorType = "load" | "save" | "single" | null;
 
@@ -15,13 +16,14 @@ export function usePrograms(baseUrl?: string) {
     const [programs, setPrograms] = useState<ProgramItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorType, setErrorType] = useState<ProgramErrorType>(null);
+    const locale = useLocaleFromPath();
 
     const load = useCallback(async () => {
         setLoading(true);
         setErrorType(null);
 
         try {
-            const data = await fetchPrograms(baseUrl);
+            const data = await fetchPrograms(locale, baseUrl);
             setPrograms(data);
         } catch (e) {
             console.error("[usePrograms] load failed", e);
@@ -56,25 +58,25 @@ export function usePrograms(baseUrl?: string) {
             setErrorType(null);
 
             try {
-                await subscribeToProgram(programId, baseUrl);
+                await subscribeToProgram(programId);
                 // optional: refresh list if running UI depends on it
-                // await load();
+                await load();
             } catch (e) {
                 console.error("[usePrograms] subscribe failed", e);
                 setErrorType("save");
                 throw e;
             }
         },
-        [baseUrl]
+        []
     );
 
     const getSubscriptionStatus = useCallback(async (programId: string) => {
-        return await getProgramSubscriptionStatus(programId, baseUrl);
-    }, [baseUrl]);
+        return await getProgramSubscriptionStatus(programId);
+    }, []);
 
     const unsubscribe = useCallback(async (userProgramId: string) => {
-        await unsubscribeFromProgram(userProgramId, baseUrl);
-    }, [baseUrl]);
+        await unsubscribeFromProgram(userProgramId);
+    }, []);
 
     return {
         programs,

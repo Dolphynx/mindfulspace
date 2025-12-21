@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { ExerciceStartSessionCard } from "./ExerciceStartSessionCard";
-import type { ExerciceContentItem, CreateExerciceSessionPayload } from "@/lib/api/exercice";
+import { ExerciceStartSessionCard } from "@/components";
+import type {
+    ExerciceContentItem,
+    CreateExerciceSessionPayload,
+} from "@/lib/api/exercice";
 
 type Props = {
     types: ExerciceContentItem[];
-    onCreateSession: (payload: CreateExerciceSessionPayload) => Promise<void>;
+    // Important: peut renvoyer un objet (session/newBadges), pas forcément void
+    onCreateSession: (payload: CreateExerciceSessionPayload) => Promise<unknown>;
 };
 
 export function ExerciceStartSection({ types, onCreateSession }: Props) {
@@ -24,9 +28,7 @@ export function ExerciceStartSection({ types, onCreateSession }: Props) {
                         <h2 className="text-lg font-semibold text-slate-800">
                             {t("start_title")}
                         </h2>
-                        <p className="text-sm text-slate-700">
-                            {t("start_description")}
-                        </p>
+                        <p className="text-sm text-slate-700">{t("start_description")}</p>
                     </div>
 
                     <button
@@ -59,9 +61,8 @@ export function ExerciceStartSection({ types, onCreateSession }: Props) {
 
                                 setOpen(false); // CLOSE after finishing
                             }}
-                            onCancel={() => setOpen(false)}   // 👈 CLOSE when cancelling
+                            onCancel={() => setOpen(false)} // CLOSE when cancelling
                         />
-
                     </div>
                 )}
             </div>

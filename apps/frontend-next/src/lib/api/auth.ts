@@ -3,7 +3,7 @@
  * Handles all authentication-related API calls
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { apiFetch } from './client';
 
 export interface User {
   id: string;
@@ -36,9 +36,8 @@ export interface LoginData {
  * Register a new user
  */
 export async function register(data: RegisterData): Promise<{ message: string; userId: string }> {
-  const res = await fetch(`${API_URL}/auth/register`, {
+  const res = await apiFetch('/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 
@@ -54,9 +53,8 @@ export async function register(data: RegisterData): Promise<{ message: string; u
  * Verify email with token
  */
 export async function verifyEmail(token: string): Promise<{ message: string }> {
-  const res = await fetch(`${API_URL}/auth/verify-email`, {
+  const res = await apiFetch('/auth/verify-email', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
   });
 
@@ -72,10 +70,8 @@ export async function verifyEmail(token: string): Promise<{ message: string }> {
  * Login with email and password
  */
 export async function login(data: LoginData): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await apiFetch('/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include', // Important for cookies
     body: JSON.stringify(data),
   });
 
@@ -91,13 +87,22 @@ export async function login(data: LoginData): Promise<AuthResponse> {
  * Logout current user
  */
 export async function logout(): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  });
+  try {
+    const res = await apiFetch('/auth/logout', {
+      method: 'POST',
+    });
 
-  if (!res.ok) {
-    throw new Error('Logout failed');
+    // Si 401, l'utilisateur est déjà déconnecté (token expiré)
+    // On ne lance pas d'erreur dans ce cas
+    if (!res.ok && res.status !== 401) {
+      throw new Error('Logout failed');
+    }
+  } catch (error) {
+    // Si l'erreur n'est pas une 401, on la propage
+    if (error instanceof Error && !error.message.includes('Unauthorized')) {
+      throw error;
+    }
+    // Sinon, on ignore (déjà déconnecté)
   }
 }
 
@@ -105,9 +110,7 @@ export async function logout(): Promise<void> {
  * Get current authenticated user
  */
 export async function getCurrentUser(): Promise<User> {
-  const res = await fetch(`${API_URL}/auth/me`, {
-    credentials: 'include',
-  });
+  const res = await apiFetch('/auth/me');
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: 'Not authenticated' }));
@@ -121,9 +124,8 @@ export async function getCurrentUser(): Promise<User> {
  * Request password reset
  */
 export async function forgotPassword(email: string): Promise<{ message: string }> {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+  const res = await apiFetch('/auth/forgot-password', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
 
@@ -139,9 +141,8 @@ export async function forgotPassword(email: string): Promise<{ message: string }
  * Reset password with token
  */
 export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-  const res = await fetch(`${API_URL}/auth/reset-password`, {
+  const res = await apiFetch('/auth/reset-password', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, newPassword }),
   });
 
@@ -157,9 +158,8 @@ export async function resetPassword(token: string, newPassword: string): Promise
  * Refresh access token
  */
 export async function refreshToken(): Promise<{ accessToken: string; refreshToken: string }> {
-  const res = await fetch(`${API_URL}/auth/refresh`, {
+  const res = await apiFetch('/auth/refresh', {
     method: 'POST',
-    credentials: 'include',
   });
 
   if (!res.ok) {

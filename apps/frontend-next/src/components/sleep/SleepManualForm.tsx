@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import {MoodValue} from "@/lib";
-import MoodPicker from "@/components/MoodPicker";
+import { MoodValue } from "@/lib";
+import MoodPicker from "@/components/shared/MoodPicker";
 
 type SleepManualFormProps = {
     onCreateSessionAction: (payload: {
@@ -21,7 +21,7 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-export default function SleepManualForm({onCreateSessionAction}: SleepManualFormProps) {
+export default function SleepManualForm({ onCreateSessionAction }: SleepManualFormProps) {
     const t = useTranslations("domainSleep");
 
     const [durationHours, setDurationHours] = useState<number>(8);
@@ -34,8 +34,8 @@ export default function SleepManualForm({onCreateSessionAction}: SleepManualForm
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
-        // future API call
 
+        setSavingManual(true);
         try {
             await onCreateSessionAction({
                 hours: durationHours,
@@ -87,12 +87,11 @@ export default function SleepManualForm({onCreateSessionAction}: SleepManualForm
                 />
             </div>
 
+            {/* DURATION */}
             <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-slate-600">
                     {t("manualForm_durationLabel")}:{" "}
-                    <span className="font-semibold">
-                        {durationHours} h
-                    </span>
+                    <span className="font-semibold">{durationHours} h</span>
                 </label>
                 <input
                     type="range"
@@ -119,10 +118,12 @@ export default function SleepManualForm({onCreateSessionAction}: SleepManualForm
                 />
             </div>
 
+            {/* ACTIONS */}
             <div className="flex gap-3">
                 <button
                     type="submit"
-                    className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white"
+                    disabled={savingManual}
+                    className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                     {t("manualForm_saveButton")}
                 </button>

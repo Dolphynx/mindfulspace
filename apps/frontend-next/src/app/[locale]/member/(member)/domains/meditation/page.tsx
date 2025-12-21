@@ -1,6 +1,6 @@
 "use client";
 
-import PageHero from "@/components/PageHero";
+import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import {
     useMeditationSessions,
@@ -15,7 +15,7 @@ import {
 import { SessionCard } from "@/components/session/SessionCard";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
 import { useState } from "react";
-import DomainSwitcher from "@/components/DomainSwitcher";
+import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 /**

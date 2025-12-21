@@ -6,7 +6,7 @@ import {
     useMeditationContents,
     type MeditationContent,
 } from "@/hooks/useMeditationContents";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { createMeditationSession } from "@/lib/api/meditation";
@@ -63,6 +63,13 @@ type StartMeditationWizardProps = {
     onCloseAction?: () => void;
 
     /**
+     * ✅ NOUVEAU (optionnel) :
+     * appelé après un enregistrement réussi de session.
+     * Sert à laisser le parent déclencher un refresh (WorldHub).
+     */
+    onSessionSavedAction?: () => void;
+
+    /**
      * Indique si l’utilisateur connecté a le droit d’accéder
      * aux contenus premium.
      *
@@ -78,21 +85,13 @@ type StartMeditationWizardProps = {
 /**
  * Wizard guidant l’utilisateur à travers une séance de méditation.
  *
- * Ce composant orchestre l’ensemble du flux :
- * - choix du type et de la durée,
- * - sélection d’un contenu adapté (avec gestion des contenus premium),
- * - saisie des humeurs avant/après,
- * - phase de pratique (audio, timer ou visuel),
- * - sauvegarde de la séance via l’API.
- *
- * Il ne gère pas directement l’authentification, mais s’appuie sur la prop
- * `canAccessPremium` pour verrouiller ou non les contenus premium.
- *
  * @param onCloseAction Callback appelé pour fermer le wizard.
+ * @param onSessionSavedAction Callback appelé après sauvegarde OK (ex: refresh overview).
  * @param canAccessPremium Indique si l’utilisateur peut lancer des contenus premium.
  */
 export default function StartMeditationWizard({
                                                   onCloseAction,
+                                                  onSessionSavedAction,
                                                   canAccessPremium,
                                               }: StartMeditationWizardProps) {
     const t = useTranslations("domainMeditation");
@@ -122,9 +121,9 @@ export default function StartMeditationWizard({
      * Durée de la séance exprimée en secondes.
      * Cette valeur est dérivée de la sélection de l’utilisateur (en minutes).
      */
-    const [durationSeconds, setDurationSeconds] = useState<
-        number | undefined
-    >(undefined);
+    const [durationSeconds, setDurationSeconds] = useState<number | undefined>(
+        undefined,
+    );
 
     /**
      * Type actuellement sélectionné, dérivé de `selectedTypeId`.
@@ -179,13 +178,6 @@ export default function StartMeditationWizard({
 
     // --- RESET GLOBAL ---
 
-    /**
-     * Réinitialise complètement l’état du wizard pour revenir
-     * au début du flux (étape TYPE).
-     *
-     * Cette fonction ne ferme pas le composant ; elle ne fait que
-     * remettre tous les états internes à zéro.
-     */
     const resetWizardState = () => {
         setStep("TYPE");
         setSelectedTypeId(undefined);
@@ -197,14 +189,6 @@ export default function StartMeditationWizard({
         setSaveError(false);
     };
 
-    /**
-     * Gère l’annulation globale :
-     * - réinitialise l’état interne,
-     * - notifie le parent via `onCloseAction` si fourni.
-     *
-     * À utiliser lorsque l’utilisateur souhaite abandonner la séance
-     * sans rien enregistrer.
-     */
     const handleCancelAll = () => {
         resetWizardState();
         onCloseAction?.();
@@ -212,11 +196,6 @@ export default function StartMeditationWizard({
 
     // --- STEP HANDLERS ---
 
-    /**
-     * Sélectionne un type de méditation et passe à l’étape de durée.
-     *
-     * @param typeId Identifiant du type de méditation choisi.
-     */
     const handleSelectType = (typeId: string) => {
         setSelectedTypeId(typeId);
         setDurationSeconds(undefined);
@@ -226,14 +205,6 @@ export default function StartMeditationWizard({
         setStep("DURATION");
     };
 
-    /**
-     * Sélectionne une durée (en minutes) et passe à l’étape de contenu.
-     *
-     * Réinitialise également le contenu et les humeurs afin d’éviter
-     * des incohérences si la durée change en cours de flux.
-     *
-     * @param minutes Durée choisie en minutes.
-     */
     const handleSelectDuration = (minutes: number) => {
         setDurationSeconds(minutes * 60);
         setSelectedContent(null);
@@ -242,11 +213,6 @@ export default function StartMeditationWizard({
         setStep("CONTENT");
     };
 
-    /**
-     * Sélectionne un contenu de méditation et passe à l’étape "humeur avant".
-     *
-     * @param content Contenu de méditation choisi dans la liste filtrée.
-     */
     const handleSelectContent = (content: WizardMeditationContent) => {
         setSelectedContent(content);
         setMoodBefore(null);
@@ -254,34 +220,15 @@ export default function StartMeditationWizard({
         setStep("MOOD_BEFORE");
     };
 
-    /**
-     * Démarre la séance de méditation : passe à l’étape PLAYING.
-     *
-     * Ne fait rien si les prérequis (type, contenu, durée) ne sont pas définis,
-     * afin d’éviter un état incohérent du wizard.
-     */
     const handleStartSession = () => {
         if (!selectedContent || !selectedTypeId || !durationSeconds) return;
         setStep("PLAYING");
     };
 
-    /**
-     * Indique la fin de la séance (via player ou bouton) :
-     * passe à l’étape "humeur après".
-     */
     const handleEndSession = () => {
         setStep("MOOD_AFTER");
     };
 
-    /**
-     * Sauvegarde la séance de méditation en appelant l’API.
-     *
-     * Les humeurs sont facultatives : si elles ne sont pas renseignées,
-     * elles ne sont pas envoyées (undefined).
-     *
-     * En cas de succès, le wizard passe à l’étape `DONE`.
-     * En cas d’erreur, un message informatif est affiché.
-     */
     const handleSaveSession = async () => {
         if (!selectedContent || !selectedTypeId || !durationSeconds) return;
 
@@ -298,6 +245,9 @@ export default function StartMeditationWizard({
                 moodAfter: moodAfter ?? undefined,
             });
 
+            // ✅ le parent peut refresh (WorldHub) ici
+            onSessionSavedAction?.();
+
             setStep("DONE");
         } catch (e) {
             console.error("Failed to save meditation session", e);
@@ -307,12 +257,6 @@ export default function StartMeditationWizard({
         }
     };
 
-    /**
-     * Ferme le wizard à la fin du flux.
-     *
-     * Cette fonction ne réinitialise pas l’état interne ; elle se contente
-     * de signaler au parent que le wizard peut être masqué.
-     */
     const handleClose = () => {
         onCloseAction?.();
     };
@@ -344,14 +288,10 @@ export default function StartMeditationWizard({
                                 className="rounded-xl border border-slate-200 px-4 py-3 text-left shadow-sm transition hover:border-indigo-400 hover:shadow-md"
                             >
                                 <div className="font-medium">
-                                    {t(
-                                        `meditationTypes.${type.slug}.name`,
-                                    )}
+                                    {t(`meditationTypes.${type.slug}.name`)}
                                 </div>
                                 <p className="text-sm text-slate-500">
-                                    {t(
-                                        `meditationTypes.${type.slug}.description`,
-                                    )}
+                                    {t(`meditationTypes.${type.slug}.description`)}
                                 </p>
                             </button>
                         ))}
@@ -394,12 +334,8 @@ export default function StartMeditationWizard({
                         {t("wizard_stepContent_title")}
                     </h2>
 
-                    {loadingContents && (
-                        <div>{t("wizard_loadingContents")}</div>
-                    )}
-                    {errorContents && (
-                        <div>{t("wizard_errorContents")}</div>
-                    )}
+                    {loadingContents && <div>{t("wizard_loadingContents")}</div>}
+                    {errorContents && <div>{t("wizard_errorContents")}</div>}
 
                     {!loadingContents && !errorContents && (
                         <>
@@ -410,10 +346,6 @@ export default function StartMeditationWizard({
                             ) : (
                                 <ul className="space-y-3">
                                     {contents.map((c) => {
-                                        /**
-                                         * Contenu premium verrouillé si l’utilisateur
-                                         * n’a pas les droits (`canAccessPremium = false`).
-                                         */
                                         const isPremiumLocked = c.isPremium && !canAccessPremium;
 
                                         return (
@@ -433,12 +365,11 @@ export default function StartMeditationWizard({
                                                     }
                                                 >
                                                     <div className="flex w-full items-center justify-between">
-                      <span className="font-medium flex items-center gap-2">
-                        {c.title}
-                      </span>
+                                                        <span className="font-medium flex items-center gap-2">
+                                                            {c.title}
+                                                        </span>
 
                                                         <div className="flex items-center gap-2">
-                                                            {/* Icône du mode */}
                                                             {c.mode === "TIMER" && (
                                                                 <img
                                                                     src="/images/meditation_mode_timer.png"
@@ -468,7 +399,6 @@ export default function StartMeditationWizard({
                                                                 />
                                                             )}
 
-                                                            {/* Icône Premium */}
                                                             {c.isPremium && (
                                                                 <img
                                                                     src="/images/session_premium.png"
@@ -502,7 +432,6 @@ export default function StartMeditationWizard({
                     </button>
                 </section>
             )}
-
 
             {/* MOOD AVANT */}
             {step === "MOOD_BEFORE" && selectedContent && (
@@ -540,21 +469,17 @@ export default function StartMeditationWizard({
             {step === "PLAYING" && selectedContent && (
                 <section className="space-y-4">
                     <h2 className="text-xl font-semibold">
-                        {t("wizard_stepPlaying_title")}{" "}
-                        {selectedContent.title}
+                        {t("wizard_stepPlaying_title")} {selectedContent.title}
                     </h2>
 
-                    {/* AUDIO */}
-                    {selectedContent.mode === "AUDIO" &&
-                        selectedContent.mediaUrl && (
-                            <WizardAudioPlayer
-                                title={selectedContent.title}
-                                mediaUrl={selectedContent.mediaUrl}
-                                onEnd={handleEndSession}
-                            />
-                        )}
+                    {selectedContent.mode === "AUDIO" && selectedContent.mediaUrl && (
+                        <WizardAudioPlayer
+                            title={selectedContent.title}
+                            mediaUrl={selectedContent.mediaUrl}
+                            onEnd={handleEndSession}
+                        />
+                    )}
 
-                    {/* TIMER */}
                     {selectedContent.mode === "TIMER" &&
                         (() => {
                             const effectiveSeconds =
@@ -565,9 +490,7 @@ export default function StartMeditationWizard({
                             if (effectiveSeconds <= 0) {
                                 return (
                                     <p className="text-sm text-slate-500">
-                                        {t(
-                                            "wizard_stepPlaying_placeholder",
-                                        )}
+                                        {t("wizard_stepPlaying_placeholder")}
                                     </p>
                                 );
                             }
@@ -581,25 +504,19 @@ export default function StartMeditationWizard({
                             );
                         })()}
 
-                    {/* VISUAL – pour l’instant seulement pour le type "breathing" */}
-                    {selectedContent.mode === "VISUAL" &&
-                        selectedType?.slug === "breathing" && (
-                            <WizardVisualBreathing
-                                title={selectedContent.title}
-                                config={
-                                    selectedContent.visualConfig ?? undefined
-                                }
-                                onEnd={handleEndSession}
-                            />
-                        )}
+                    {selectedContent.mode === "VISUAL" && selectedType?.slug === "breathing" && (
+                        <WizardVisualBreathing
+                            title={selectedContent.title}
+                            config={selectedContent.visualConfig ?? undefined}
+                            onEnd={handleEndSession}
+                        />
+                    )}
 
-                    {/* VISUAL – placeholder pour les autres types */}
-                    {selectedContent.mode === "VISUAL" &&
-                        selectedType?.slug !== "breathing" && (
-                            <p className="text-sm text-slate-500">
-                                {t("wizard_stepPlaying_placeholder")}
-                            </p>
-                        )}
+                    {selectedContent.mode === "VISUAL" && selectedType?.slug !== "breathing" && (
+                        <p className="text-sm text-slate-500">
+                            {t("wizard_stepPlaying_placeholder")}
+                        </p>
+                    )}
 
                     <div className="flex gap-3">
                         <button
@@ -647,9 +564,7 @@ export default function StartMeditationWizard({
                             disabled={saving}
                             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 disabled:opacity-60"
                         >
-                            {saving
-                                ? t("wizard_saving")
-                                : t("wizard_save")}
+                            {saving ? t("wizard_saving") : t("wizard_save")}
                         </button>
                         <button
                             type="button"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
-import MoodPicker from "@/components/MoodPicker";
+import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
 
 type ExerciceContentItem = {
