@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import type { BadgeToastItem } from "@/types/badges";
 import { useTranslations } from "@/i18n/TranslationContext";
 
@@ -76,9 +77,11 @@ export function BadgeToast({ badge, onClose }: BadgeToastProps) {
         >
             {/* Icône du badge */}
             <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
-                <img
+                <Image
                     src={`/images/badges/${badge.iconKey ?? "default"}`}
                     alt=""
+                    width={64}
+                    height={64}
                     className="h-16 w-16 object-contain"
                 />
             </div>

@@ -1,21 +1,52 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { SleepSession, SleepErrorType } from "@/hooks/useSleepSessions";
 import { getMood } from "@/lib";
 import { ChevronDown } from "lucide-react";
 
+/**
+ * Props du composant SleepHistoryCard.
+ */
 type Props = {
+    /**
+     * Liste brute des séances récupérées via l’API.
+     */
     sessions: SleepSession[];
+
+    /**
+     * Indique si le chargement est en cours.
+     */
     loading: boolean;
+
+    /**
+     * Type d’erreur éventuelle rencontrée lors du chargement.
+     */
     errorType: SleepErrorType;
 };
 
+/**
+ * Arrondit un nombre à un chiffre après la virgule.
+ *
+ * @param n Valeur à arrondir.
+ * @returns Valeur arrondie à 0,1 près.
+ */
 function round1(n: number) {
     return Math.round(n * 10) / 10;
 }
 
+/**
+ * Carte d’historique du sommeil sur 7 nuits :
+ *
+ * - Affiche un résumé global (heures totales, moyenne, qualité moyenne).
+ * - Gère les états vide / erreur / chargement.
+ * - Conserve le comportement “7 dernières nuits encodées”.
+ * - Propose un bouton pour développer / replier la liste détaillée.
+ *
+ * @param props Voir {@link Props}.
+ */
 export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
     const t = useTranslations("domainSleep");
     const [expanded, setExpanded] = useState(false);
@@ -49,7 +80,9 @@ export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
 
     const avgQuality =
         qualityVals.length > 0
-            ? Math.round(qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length)
+            ? Math.round(
+                qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length,
+            )
             : null;
 
     const avgMood = avgQuality != null ? getMood(avgQuality) : null;
@@ -133,9 +166,11 @@ export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
                                     {t("history_averageQualityLabel")}
                                 </span>
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
-                                    <img
+                                    <Image
                                         src={avgMood.emoji}
                                         alt={t(avgMood.label)}
+                                        width={24}
+                                        height={24}
                                         className="h-6 w-6"
                                     />
                                 </div>
@@ -150,7 +185,8 @@ export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
                 <ul className="mt-4 space-y-4">
                     {last7.map((s, idx) => {
                         const hours = round1(s.hours);
-                        const mood = s.quality != null ? getMood(s.quality) : null;
+                        const mood =
+                            s.quality != null ? getMood(s.quality) : null;
 
                         const isMostRecent = idx === 0;
 
@@ -182,9 +218,11 @@ export function SleepHistoryCard({ sessions, loading, errorType }: Props) {
                                             className="group"
                                         >
                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-inner transition-transform group-hover:scale-105">
-                                                <img
+                                                <Image
                                                     src={mood.emoji}
                                                     alt={t(mood.label)}
+                                                    width={24}
+                                                    height={24}
                                                     className="h-6 w-6"
                                                 />
                                             </div>

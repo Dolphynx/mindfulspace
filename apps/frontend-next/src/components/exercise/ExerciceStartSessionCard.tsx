@@ -1,24 +1,45 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import type { ExerciceContentItem } from "@/lib/api/exercice";
 import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/shared/MoodPicker";
-import {MoodValue} from "@/lib";   // ✅ use the real one
+import { MoodValue } from "@/lib"; // ✅ use the real one
 
+/**
+ * Props du composant ExerciceStartSessionCard.
+ */
 type Props = {
+    /**
+     * Liste des exercices disponibles.
+     */
     types: ExerciceContentItem[];
+
+    /**
+     * Callback de sauvegarde de la séance.
+     */
     onSave: (data: {
         exerciceContentId: string;
         repetitionCount: number;
         quality: number | null;
     }) => Promise<void>;
+
+    /**
+     * Callback appelé lors de l’annulation.
+     */
     onCancel: () => void;
 };
 
-
-
-
+/**
+ * Carte de démarrage d’une séance d’exercice.
+ *
+ * @remarks
+ * - Sélection d’un exercice.
+ * - Réglage du nombre de répétitions.
+ * - Affichage des étapes de l’exercice (avec image optionnelle).
+ * - Sélection de la qualité ressentie via un sélecteur d’humeur.
+ */
 export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
     const t = useTranslations("domainExercice");
 
@@ -39,7 +60,6 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
 
     return (
         <div className="flex flex-col gap-5">
-
             {/* Header */}
             <div>
                 <h2 className="text-lg font-semibold text-slate-800">
@@ -61,22 +81,22 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
                     onChange={(e) => setSelectedId(e.target.value)}
                     className="w-full ..."
                 >
-                    {types.map(t => (
+                    {types.map((t) => (
                         <option key={t.id} value={t.id}>
                             {t.name}
                         </option>
                     ))}
                 </select>
-
             </div>
-
 
             {/* Repetition slider */}
             {hasSelected && (
                 <div>
                     <label className="text-xs text-slate-500 block mb-1">
                         {t("manualForm_repetitionLabel")} :
-                        <span className="font-semibold ml-1">{repetitionCount}</span>
+                        <span className="font-semibold ml-1">
+                            {repetitionCount}
+                        </span>
                     </label>
 
                     <input
@@ -84,7 +104,9 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
                         min={1}
                         max={50}
                         value={repetitionCount}
-                        onChange={(e) => setRepetitionCount(Number(e.target.value))}
+                        onChange={(e) =>
+                            setRepetitionCount(Number(e.target.value))
+                        }
                         className="w-full"
                     />
                 </div>
@@ -104,9 +126,11 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
 
                     <div className="flex flex-col items-center gap-3">
                         {steps[stepIndex].imageUrl && (
-                            <img
+                            <Image
                                 src={steps[stepIndex].imageUrl}
                                 alt=""
+                                width={512}
+                                height={256}
                                 className="max-w-full max-h-64 object-contain rounded-lg shadow-sm"
                             />
                         )}
@@ -130,7 +154,14 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
                         </button>
 
                         <button
-                            onClick={() => setStepIndex(Math.min(stepIndex + 1, steps.length - 1))}
+                            onClick={() =>
+                                setStepIndex(
+                                    Math.min(
+                                        stepIndex + 1,
+                                        steps.length - 1,
+                                    ),
+                                )
+                            }
                             className="px-3 py-1.5 rounded-full bg-sky-500 text-white text-sm"
                         >
                             {t("start_nextButton")}
@@ -179,10 +210,8 @@ export function ExerciceStartSessionCard({ types, onSave, onCancel }: Props) {
                     >
                         {t("manualForm_cancelButton")}
                     </button>
-
                 </div>
             )}
-
 
             {!hasSelected && (
                 <div className="rounded-xl bg-white/80 p-4 text-center border border-dashed text-slate-500">

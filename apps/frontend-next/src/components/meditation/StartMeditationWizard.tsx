@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useMeditationTypes } from "@/hooks/useMeditationTypes";
 import {
     useMeditationContents,
@@ -63,9 +64,8 @@ type StartMeditationWizardProps = {
     onCloseAction?: () => void;
 
     /**
-     * ✅ NOUVEAU (optionnel) :
-     * appelé après un enregistrement réussi de session.
-     * Sert à laisser le parent déclencher un refresh (WorldHub).
+     * Callback appelé après un enregistrement réussi de session.
+     * Sert à laisser le parent déclencher un refresh.
      */
     onSessionSavedAction?: () => void;
 
@@ -77,7 +77,7 @@ type StartMeditationWizardProps = {
      * - `false` → les contenus premium sont affichés mais grisés et désactivés.
      *
      * La logique de calcul (rôle `premium` / `admin`, etc.) est gérée
-     * par le parent (ex. via `useAuthRequired`) et non par ce composant.
+     * par le parent et non par ce composant.
      */
     canAccessPremium: boolean;
 };
@@ -86,7 +86,7 @@ type StartMeditationWizardProps = {
  * Wizard guidant l’utilisateur à travers une séance de méditation.
  *
  * @param onCloseAction Callback appelé pour fermer le wizard.
- * @param onSessionSavedAction Callback appelé après sauvegarde OK (ex: refresh overview).
+ * @param onSessionSavedAction Callback appelé après sauvegarde (ex: refresh overview).
  * @param canAccessPremium Indique si l’utilisateur peut lancer des contenus premium.
  */
 export default function StartMeditationWizard({
@@ -98,20 +98,17 @@ export default function StartMeditationWizard({
 
     /**
      * Étape courante du wizard.
-     * Permet de contrôler la section affichée à l’écran.
      */
     const [step, setStep] = useState<Step>("TYPE");
 
     /**
-     * Liste des types de méditation disponibles (ex : respiration, scan corporel, etc.)
-     * fournie par le hook métier `useMeditationTypes`.
+     * Liste des types de méditation disponibles.
      */
     const { types, loading: loadingTypes, error: errorTypes } =
         useMeditationTypes();
 
     /**
      * Identifiant du type de méditation sélectionné.
-     * Utilisé pour filtrer les contenus et pour la persistance de la session.
      */
     const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>(
         undefined,
@@ -119,7 +116,6 @@ export default function StartMeditationWizard({
 
     /**
      * Durée de la séance exprimée en secondes.
-     * Cette valeur est dérivée de la sélection de l’utilisateur (en minutes).
      */
     const [durationSeconds, setDurationSeconds] = useState<number | undefined>(
         undefined,
@@ -127,13 +123,11 @@ export default function StartMeditationWizard({
 
     /**
      * Type actuellement sélectionné, dérivé de `selectedTypeId`.
-     * Sert notamment à distinguer certains comportements (ex. type "breathing").
      */
     const selectedType = types.find((t) => t.id === selectedTypeId);
 
     /**
      * Contenus de méditation filtrés par type et durée.
-     * Gérés par le hook métier `useMeditationContents`.
      */
     const {
         contents,
@@ -143,36 +137,32 @@ export default function StartMeditationWizard({
 
     /**
      * Contenu de méditation sélectionné par l’utilisateur.
-     * C’est ce contenu qui sera effectivement joué (audio, timer, visuel…).
      */
     const [selectedContent, setSelectedContent] =
         useState<WizardMeditationContent | null>(null);
 
     /**
-     * Humeur de l’utilisateur avant la séance, sélectionnée via `MoodPicker`.
+     * Humeur de l’utilisateur avant la séance.
      */
     const [moodBefore, setMoodBefore] = useState<MoodValue | null>(null);
 
     /**
-     * Humeur de l’utilisateur après la séance, sélectionnée via `MoodPicker`.
+     * Humeur de l’utilisateur après la séance.
      */
     const [moodAfter, setMoodAfter] = useState<MoodValue | null>(null);
 
     /**
-     * Indique si une opération de sauvegarde de la séance est en cours.
-     * Utilisé pour désactiver le bouton et afficher un état de chargement.
+     * Indique si une opération de sauvegarde est en cours.
      */
     const [saving, setSaving] = useState(false);
 
     /**
-     * Indique si une erreur s’est produite lors de la sauvegarde de la séance.
-     * Permet d’afficher un message d’erreur à l’utilisateur.
+     * Indique si une erreur s’est produite lors de la sauvegarde.
      */
     const [saveError, setSaveError] = useState(false);
 
     /**
      * Durées proposées (en minutes) pour la séance.
-     * Ces options sont converties en secondes lors de la sélection.
      */
     const DURATION_OPTIONS_MIN = [5, 10, 15, 20];
 
@@ -245,7 +235,6 @@ export default function StartMeditationWizard({
                 moodAfter: moodAfter ?? undefined,
             });
 
-            // ✅ le parent peut refresh (WorldHub) ici
             onSessionSavedAction?.();
 
             setStep("DONE");
@@ -291,7 +280,9 @@ export default function StartMeditationWizard({
                                     {t(`meditationTypes.${type.slug}.name`)}
                                 </div>
                                 <p className="text-sm text-slate-500">
-                                    {t(`meditationTypes.${type.slug}.description`)}
+                                    {t(
+                                        `meditationTypes.${type.slug}.description`,
+                                    )}
                                 </p>
                             </button>
                         ))}
@@ -334,7 +325,9 @@ export default function StartMeditationWizard({
                         {t("wizard_stepContent_title")}
                     </h2>
 
-                    {loadingContents && <div>{t("wizard_loadingContents")}</div>}
+                    {loadingContents && (
+                        <div>{t("wizard_loadingContents")}</div>
+                    )}
                     {errorContents && <div>{t("wizard_errorContents")}</div>}
 
                     {!loadingContents && !errorContents && (
@@ -346,7 +339,8 @@ export default function StartMeditationWizard({
                             ) : (
                                 <ul className="space-y-3">
                                     {contents.map((c) => {
-                                        const isPremiumLocked = c.isPremium && !canAccessPremium;
+                                        const isPremiumLocked =
+                                            c.isPremium && !canAccessPremium;
 
                                         return (
                                             <li key={c.id}>
@@ -354,8 +348,11 @@ export default function StartMeditationWizard({
                                                     type="button"
                                                     disabled={isPremiumLocked}
                                                     onClick={() => {
-                                                        if (isPremiumLocked) return;
-                                                        handleSelectContent(c as WizardMeditationContent);
+                                                        if (isPremiumLocked)
+                                                            return;
+                                                        handleSelectContent(
+                                                            c as WizardMeditationContent,
+                                                        );
                                                     }}
                                                     className={
                                                         "flex w-full flex-col items-start gap-1 rounded-xl border px-4 py-3 text-left shadow-sm transition " +
@@ -370,39 +367,53 @@ export default function StartMeditationWizard({
                                                         </span>
 
                                                         <div className="flex items-center gap-2">
-                                                            {c.mode === "TIMER" && (
-                                                                <img
-                                                                    src="/images/meditation_mode_timer.png"
-                                                                    alt="timer"
-                                                                    className="h-6 w-6 opacity-80"
-                                                                />
-                                                            )}
-                                                            {c.mode === "AUDIO" && (
-                                                                <img
-                                                                    src="/images/meditation_mode_audio.png"
-                                                                    alt="audio"
-                                                                    className="h-6 w-6 opacity-80"
-                                                                />
-                                                            )}
-                                                            {c.mode === "VISUAL" && (
-                                                                <img
-                                                                    src="/images/meditation_mode_visual.png"
-                                                                    alt="visual"
-                                                                    className="h-6 w-6 opacity-80"
-                                                                />
-                                                            )}
-                                                            {c.mode === "VIDEO" && (
-                                                                <img
-                                                                    src="/images/meditation_mode_video.png"
-                                                                    alt="video"
-                                                                    className="h-6 w-6 opacity-80"
-                                                                />
-                                                            )}
+                                                            {c.mode ===
+                                                                "TIMER" && (
+                                                                    <Image
+                                                                        src="/images/meditation_mode_timer.png"
+                                                                        alt="timer"
+                                                                        width={24}
+                                                                        height={24}
+                                                                        className="h-6 w-6 opacity-80"
+                                                                    />
+                                                                )}
+                                                            {c.mode ===
+                                                                "AUDIO" && (
+                                                                    <Image
+                                                                        src="/images/meditation_mode_audio.png"
+                                                                        alt="audio"
+                                                                        width={24}
+                                                                        height={24}
+                                                                        className="h-6 w-6 opacity-80"
+                                                                    />
+                                                                )}
+                                                            {c.mode ===
+                                                                "VISUAL" && (
+                                                                    <Image
+                                                                        src="/images/meditation_mode_visual.png"
+                                                                        alt="visual"
+                                                                        width={24}
+                                                                        height={24}
+                                                                        className="h-6 w-6 opacity-80"
+                                                                    />
+                                                                )}
+                                                            {c.mode ===
+                                                                "VIDEO" && (
+                                                                    <Image
+                                                                        src="/images/meditation_mode_video.png"
+                                                                        alt="video"
+                                                                        width={24}
+                                                                        height={24}
+                                                                        className="h-6 w-6 opacity-80"
+                                                                    />
+                                                                )}
 
                                                             {c.isPremium && (
-                                                                <img
+                                                                <Image
                                                                     src="/images/session_premium.png"
                                                                     alt="premium"
+                                                                    width={24}
+                                                                    height={24}
                                                                     className="h-6 w-6"
                                                                 />
                                                             )}
@@ -472,13 +483,14 @@ export default function StartMeditationWizard({
                         {t("wizard_stepPlaying_title")} {selectedContent.title}
                     </h2>
 
-                    {selectedContent.mode === "AUDIO" && selectedContent.mediaUrl && (
-                        <WizardAudioPlayer
-                            title={selectedContent.title}
-                            mediaUrl={selectedContent.mediaUrl}
-                            onEnd={handleEndSession}
-                        />
-                    )}
+                    {selectedContent.mode === "AUDIO" &&
+                        selectedContent.mediaUrl && (
+                            <WizardAudioPlayer
+                                title={selectedContent.title}
+                                mediaUrl={selectedContent.mediaUrl}
+                                onEnd={handleEndSession}
+                            />
+                        )}
 
                     {selectedContent.mode === "TIMER" &&
                         (() => {
@@ -504,19 +516,21 @@ export default function StartMeditationWizard({
                             );
                         })()}
 
-                    {selectedContent.mode === "VISUAL" && selectedType?.slug === "breathing" && (
-                        <WizardVisualBreathing
-                            title={selectedContent.title}
-                            config={selectedContent.visualConfig ?? undefined}
-                            onEnd={handleEndSession}
-                        />
-                    )}
+                    {selectedContent.mode === "VISUAL" &&
+                        selectedType?.slug === "breathing" && (
+                            <WizardVisualBreathing
+                                title={selectedContent.title}
+                                config={selectedContent.visualConfig ?? undefined}
+                                onEnd={handleEndSession}
+                            />
+                        )}
 
-                    {selectedContent.mode === "VISUAL" && selectedType?.slug !== "breathing" && (
-                        <p className="text-sm text-slate-500">
-                            {t("wizard_stepPlaying_placeholder")}
-                        </p>
-                    )}
+                    {selectedContent.mode === "VISUAL" &&
+                        selectedType?.slug !== "breathing" && (
+                            <p className="text-sm text-slate-500">
+                                {t("wizard_stepPlaying_placeholder")}
+                            </p>
+                        )}
 
                     <div className="flex gap-3">
                         <button

@@ -1,17 +1,41 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
-import type { ExerciceSession, ExerciceErrorType } from "@/hooks/useExerciceSessions";
+import type {
+    ExerciceSession,
+    ExerciceErrorType,
+} from "@/hooks/useExerciceSessions";
 import { getMood } from "@/lib";
 import { ChevronDown } from "lucide-react";
 
+/**
+ * Props du composant ExerciceHistoryCard.
+ */
 type Props = {
+    /**
+     * Liste brute des séances récupérées via l’API.
+     */
     sessions: ExerciceSession[];
+
+    /**
+     * Indique si le chargement est en cours.
+     */
     loading: boolean;
+
+    /**
+     * Type d’erreur éventuelle rencontrée lors du chargement.
+     */
     errorType: ExerciceErrorType;
 };
 
+/**
+ * Regroupe les séances par date et calcule des agrégats par jour.
+ *
+ * @param sessions Liste de séances provenant de l’API.
+ * @returns Liste de groupes par jour, triée par date croissante.
+ */
 function groupByDate(sessions: ExerciceSession[]) {
     const map = new Map<string, ExerciceSession[]>();
 
@@ -27,16 +51,34 @@ function groupByDate(sessions: ExerciceSession[]) {
         .map(([date, list]) => ({
             date,
             items: list,
-            totalExercises: list.reduce((sum, sess) => sum + sess.exercices.length, 0),
+            totalExercises: list.reduce(
+                (sum, sess) => sum + sess.exercices.length,
+                0,
+            ),
             totalReps: list.reduce(
                 (sum, sess) =>
-                    sum + sess.exercices.reduce((x, ex) => x + (ex.repetitionCount ?? 0), 0),
+                    sum +
+                    sess.exercices.reduce(
+                        (x, ex) => x + (ex.repetitionCount ?? 0),
+                        0,
+                    ),
                 0,
             ),
             last: list[list.length - 1],
         }));
 }
 
+/**
+ * Carte d’historique des séances d’exercice sur 7 jours :
+ *
+ * - Affiche un résumé global (séances, exercices, répétitions, qualité moyenne).
+ * - Gère les états vide / erreur / chargement.
+ * - Regroupe les données par jour.
+ * - Ne conserve que les 7 derniers jours de pratique.
+ * - Propose un bouton pour développer / replier la liste détaillée.
+ *
+ * @param props Voir {@link Props}.
+ */
 export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
     const t = useTranslations("domainExercice");
     const [expanded, setExpanded] = useState(false);
@@ -45,17 +87,25 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
         errorType === "load" ? t("errors_loadHistory") : null;
 
     const groupedAll = useMemo(() => groupByDate(sessions), [sessions]);
-    const grouped = useMemo(() => groupedAll.slice(-7), [groupedAll]); // mêmes règles que méditation
+    const grouped = useMemo(() => groupedAll.slice(-7), [groupedAll]);
 
     const sessionsForSummary = useMemo(
-        () => grouped.reduce((all, g) => all.concat(g.items), [] as ExerciceSession[]),
+        () =>
+            grouped.reduce(
+                (all, g) => all.concat(g.items),
+                [] as ExerciceSession[],
+            ),
         [grouped],
     );
 
     const totalSessionsCount = sessionsForSummary.length;
 
     const totalExercises = useMemo(
-        () => sessionsForSummary.reduce((sum, s) => sum + s.exercices.length, 0),
+        () =>
+            sessionsForSummary.reduce(
+                (sum, s) => sum + s.exercices.length,
+                0,
+            ),
         [sessionsForSummary],
     );
 
@@ -63,20 +113,29 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
         () =>
             sessionsForSummary.reduce(
                 (sum, s) =>
-                    sum + s.exercices.reduce((x, ex) => x + (ex.repetitionCount ?? 0), 0),
+                    sum +
+                    s.exercices.reduce(
+                        (x, ex) => x + (ex.repetitionCount ?? 0),
+                        0,
+                    ),
                 0,
             ),
         [sessionsForSummary],
     );
 
     const qualityVals = useMemo(
-        () => sessionsForSummary.map((s) => s.quality).filter((v): v is number => v != null),
+        () =>
+            sessionsForSummary
+                .map((s) => s.quality)
+                .filter((v): v is number => v != null),
         [sessionsForSummary],
     );
 
     const avgQuality =
         qualityVals.length > 0
-            ? Math.round(qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length)
+            ? Math.round(
+                qualityVals.reduce((a, b) => a + b, 0) / qualityVals.length,
+            )
             : null;
 
     const avgMood = avgQuality != null ? getMood(avgQuality) : null;
@@ -94,8 +153,9 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
 
                     {hasData && (
                         <p className="mt-1 text-xs text-slate-500">
-                            {totalSessionsCount} {t("history_summary_sessions")} ·{" "}
-                            {totalExercises} {t("history_summary_exercises")}
+                            {totalSessionsCount}{" "}
+                            {t("history_summary_sessions")} · {totalExercises}{" "}
+                            {t("history_summary_exercises")}
                         </p>
                     )}
                 </div>
@@ -151,7 +211,9 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
                         <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                             {t("history_totalSessionsLabel")}
                         </span>
-                        <span className="font-semibold">{totalSessionsCount}</span>
+                        <span className="font-semibold">
+                            {totalSessionsCount}
+                        </span>
                     </div>
 
                     {avgMood && (
@@ -162,9 +224,11 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
                                     {t("history_averageQualityLabel")}
                                 </span>
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
-                                    <img
+                                    <Image
                                         src={avgMood.emoji}
                                         alt={t(avgMood.label)}
+                                        width={24}
+                                        height={24}
                                         className="h-6 w-6"
                                     />
                                 </div>
@@ -200,10 +264,12 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
 
                                         <div className="flex items-center gap-2 text-xs text-slate-600">
                                             <span className="rounded-full bg-white/70 px-2 py-0.5 font-medium shadow-sm">
-                                                {g.totalReps} {t("history_totalLabel")}
+                                                {g.totalReps}{" "}
+                                                {t("history_totalLabel")}
                                             </span>
                                             <span className="text-[11px] text-slate-500">
-                                                {g.items.length} {t("history_sessionsLabel")}
+                                                {g.items.length}{" "}
+                                                {t("history_sessionsLabel")}
                                             </span>
                                         </div>
                                     </div>
@@ -212,7 +278,9 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
                                     <ul className="space-y-2">
                                         {g.items.map((sess) => {
                                             const mood =
-                                                sess.quality != null ? getMood(sess.quality) : null;
+                                                sess.quality != null
+                                                    ? getMood(sess.quality)
+                                                    : null;
 
                                             return (
                                                 <li
@@ -220,26 +288,37 @@ export function ExerciceHistoryCard({ sessions, loading, errorType }: Props) {
                                                     className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 shadow-[0_1px_4px_rgba(15,23,42,0.04)]"
                                                 >
                                                     <div className="flex flex-col gap-1">
-                                                        {sess.exercices.map((ex, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="text-sm text-slate-600 flex items-center gap-2"
-                                                            >
-                                                                <span className="text-[11px] rounded-full bg-violet-50 px-2 py-0.5 font-medium text-violet-700">
-                                                                    {ex.exerciceContentName}
-                                                                </span>
-                                                                <span className="text-slate-600">
-                                                                    {ex.repetitionCount}x
-                                                                </span>
-                                                            </div>
-                                                        ))}
+                                                        {sess.exercices.map(
+                                                            (ex, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className="text-sm text-slate-600 flex items-center gap-2"
+                                                                >
+                                                                    <span className="text-[11px] rounded-full bg-violet-50 px-2 py-0.5 font-medium text-violet-700">
+                                                                        {
+                                                                            ex.exerciceContentName
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-slate-600">
+                                                                        {
+                                                                            ex.repetitionCount
+                                                                        }
+                                                                        x
+                                                                    </span>
+                                                                </div>
+                                                            ),
+                                                        )}
                                                     </div>
 
                                                     {mood && (
                                                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
-                                                            <img
+                                                            <Image
                                                                 src={mood.emoji}
-                                                                alt={t(mood.label)}
+                                                                alt={t(
+                                                                    mood.label,
+                                                                )}
+                                                                width={24}
+                                                                height={24}
                                                                 className="h-6 w-6"
                                                             />
                                                         </div>

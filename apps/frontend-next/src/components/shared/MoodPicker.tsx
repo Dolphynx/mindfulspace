@@ -1,18 +1,69 @@
 "use client";
 
-import { MOOD_OPTIONS, MoodOption, MoodValue } from "@/lib";
+import Image from "next/image";
+
+import { MOOD_OPTIONS, type MoodOption, type MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 
+/**
+ * Props du composant MoodPicker.
+ */
 type MoodPickerProps = {
+    /**
+     * Valeur actuellement sélectionnée.
+     */
     value?: MoodValue | null;
+
+    /**
+     * Callback déclenché lors d’un changement de sélection.
+     */
     onChangeAction?: (v: MoodValue, opt: MoodOption) => void;
+
+    /**
+     * Taille visuelle des items.
+     *
+     * @default "md"
+     */
     size?: "sm" | "md";
+
+    /**
+     * Variante d’affichage.
+     *
+     * - `cards` : grille de cartes
+     * - `row` : ligne horizontale
+     *
+     * @default "cards"
+     */
     variant?: "cards" | "row";
+
+    /**
+     * Style visuel des items.
+     *
+     * - `card` : carte avec bordure et ombre
+     * - `minimal` : icône compacte
+     *
+     * @default "card"
+     */
     tone?: "card" | "minimal";
+
+    /**
+     * Désactive l’ensemble du sélecteur.
+     */
     disabled?: boolean;
+
+    /**
+     * Classes CSS supplémentaires.
+     */
     className?: string;
 };
 
+/**
+ * Sélecteur de mood basé sur une liste d’options prédéfinies.
+ *
+ * @remarks
+ * Ce composant expose une interface accessible (`listbox / option`)
+ * et supporte plusieurs variantes visuelles selon le contexte d’usage.
+ */
 export default function MoodPicker({
                                        value = null,
                                        onChangeAction,
@@ -22,19 +73,31 @@ export default function MoodPicker({
                                        disabled,
                                        className = "",
                                    }: MoodPickerProps) {
-
-    /** i18n moodPicker namespace */
+    /**
+     * Namespace i18n du composant.
+     */
     const t = useTranslations("moodPicker");
 
-    /** classes */
+    /**
+     * Classes de base pour le mode "card".
+     */
     const baseItemCard =
         "flex flex-col items-center justify-center gap-2 rounded-2xl border transition shadow-card focus:outline-none focus:ring-2 focus:ring-brandGreen";
 
+    /**
+     * Classes de base pour le mode "minimal".
+     */
     const baseItemMinimal =
         "flex flex-col items-center justify-center gap-1 rounded-full transition focus:outline-none focus:ring-2 focus:ring-brandGreen";
 
+    /**
+     * Classes de base selon le tone sélectionné.
+     */
     const baseItem = tone === "minimal" ? baseItemMinimal : baseItemCard;
 
+    /**
+     * Classes de taille selon le format et le tone.
+     */
     const sizeCls =
         size === "sm"
             ? tone === "minimal"
@@ -43,13 +106,6 @@ export default function MoodPicker({
             : tone === "minimal"
                 ? "px-2 py-2 text-base"
                 : "w-40 h-40 text-base";
-
-    const emojiSizeCls =
-        size === "sm"
-            ? tone === "minimal"
-                ? "text-2xl"
-                : "text-3xl"
-            : "text-5xl";
 
     return (
         <div
@@ -64,11 +120,17 @@ export default function MoodPicker({
             {MOOD_OPTIONS.map((opt) => {
                 const active = value === opt.value;
 
+                /**
+                 * Classes appliquées à l’état actif.
+                 */
                 const activeCls =
                     tone === "minimal"
                         ? "text-brandGreen scale-110"
                         : "bg-brandGreen/10 border-brandGreen";
 
+                /**
+                 * Classes appliquées à l’état inactif.
+                 */
                 const inactiveCls =
                     tone === "minimal"
                         ? "text-gray-500 opacity-60 hover:opacity-100"
@@ -85,18 +147,22 @@ export default function MoodPicker({
                         className={`${baseItem} ${sizeCls} ${
                             active ? activeCls : inactiveCls
                         }`}
-                        title={t(`${opt.label}`)} // i18n label
+                        title={t(opt.label)}
                     >
-                        {/* image emoji */}
-                        <img
+                        {/* Icône du mood */}
+                        <Image
                             src={opt.emoji}
-                            alt={t(`${opt.label}`)}
+                            alt={t(opt.label)}
+                            width={64}
+                            height={64}
                             aria-hidden="true"
-                            className="w-16 h-16 mx-auto"
+                            className="mx-auto"
                         />
 
-                        {/* Texte visible si souhaité */}
-                        <span className="text-brandText">{t(`${opt.label}`)}</span>
+                        {/* Libellé */}
+                        <span className="text-brandText">
+                            {t(opt.label)}
+                        </span>
                     </button>
                 );
             })}

@@ -1,31 +1,67 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
+/**
+ * Props du composant BreathingLotus.
+ */
 type BreathingLotusProps = {
-    frames: string[];      // chemins d'images
-    frameIndex: number;    // 0..frames.length-1
+    /**
+     * Liste des chemins d’images (frames) à afficher.
+     */
+    frames: string[];
+
+    /**
+     * Index courant dans `frames` (0..frames.length-1).
+     */
+    frameIndex: number;
+
+    /**
+     * Taille (largeur/hauteur) en pixels.
+     *
+     * @default 256
+     */
     size?: number;
+
+    /**
+     * Durée du fondu (cross-fade) en millisecondes.
+     *
+     * @default 400
+     */
     fadeDurationMs?: number;
 };
 
+/**
+ * Affiche une animation image-par-image d’un lotus avec transition de type cross-fade.
+ *
+ * @remarks
+ * Le composant conserve l’image précédente pour l’estomper pendant l’affichage
+ * de la nouvelle image, puis nettoie l’ancienne après la durée configurée.
+ */
 export function BreathingLotus({
                                    frames,
                                    frameIndex,
                                    size = 256,
                                    fadeDurationMs = 400,
                                }: BreathingLotusProps) {
-    // image actuellement visible
+    /**
+     * Image actuellement visible.
+     */
     const [currentSrc, setCurrentSrc] = useState(() => {
         const idx = Math.max(0, Math.min(frames.length - 1, frameIndex));
         return frames[idx];
     });
 
-    // image précédente (celle qui va s’estomper)
+    /**
+     * Image précédente (celle qui va s’estomper).
+     */
     const [prevSrc, setPrevSrc] = useState<string | null>(null);
     const [isFading, setIsFading] = useState(false);
 
-    // Quand frameIndex change, on prépare un cross-fade
+    /**
+     * Quand `frameIndex` change, prépare un cross-fade entre l’ancienne et la nouvelle frame.
+     */
     useEffect(() => {
         if (frames.length === 0) return;
 
@@ -34,17 +70,18 @@ export function BreathingLotus({
 
         setCurrentSrc((prev) => {
             if (!prev || prev === newSrc) {
-                // première image ou pas de changement
                 return newSrc;
             }
-            // on garde l’ancienne pour la faire disparaître
+
             setPrevSrc(prev);
             setIsFading(true);
             return newSrc;
         });
     }, [frameIndex, frames]);
 
-    // On nettoie l’ancienne image après le fade
+    /**
+     * Nettoie l’ancienne image après la durée de fondu.
+     */
     useEffect(() => {
         if (!isFading) return;
 
@@ -68,9 +105,11 @@ export function BreathingLotus({
             className="select-none"
         >
             {/* image actuelle */}
-            <img
+            <Image
                 src={currentSrc}
                 alt="Lotus animé"
+                width={size}
+                height={size}
                 style={{
                     width: size,
                     height: size,
@@ -82,10 +121,12 @@ export function BreathingLotus({
 
             {/* ancienne image qui fade vers 0 */}
             {prevSrc && (
-                <img
+                <Image
                     src={prevSrc}
                     alt=""
                     aria-hidden="true"
+                    width={size}
+                    height={size}
                     style={{
                         width: size,
                         height: size,

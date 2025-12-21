@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type {
     MeditationSession,
@@ -223,9 +224,11 @@ export function MeditationHistoryCard({
                                     {t("last7_averageMoodLabel")}
                                 </span>
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner">
-                                    <img
+                                    <Image
                                         src={averageMood.emoji}
                                         alt={t(averageMood.label)}
+                                        width={24}
+                                        height={24}
                                         className="h-6 w-6"
                                     />
                                 </div>
@@ -318,19 +321,17 @@ export function MeditationHistoryCard({
                                                     {mood && (
                                                         <button
                                                             type="button"
-                                                            title={t(
-                                                                mood.label,
-                                                            )}
+                                                            title={t(mood.label)}
                                                             className="group"
                                                         >
                                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-50 shadow-inner transition-transform group-hover:scale-105">
-                                                                <img
-                                                                    src={
-                                                                        mood.emoji
-                                                                    }
+                                                                <Image
+                                                                    src={mood.emoji}
                                                                     alt={t(
                                                                         mood.label,
                                                                     )}
+                                                                    width={24}
+                                                                    height={24}
                                                                     className="h-6 w-6"
                                                                 />
                                                             </div>
