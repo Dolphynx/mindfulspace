@@ -13,21 +13,6 @@ interface SoundCloudResolveResponse {
 }
 
 /**
- * Catalogue de messages d'erreur homogènes pour ce service.
- *
- * @remarks
- * Ces messages sont conçus pour être :
- * - courts et stables (faciles à tester côté front) ;
- * - cohérents entre endpoints ;
- * - explicites sur le champ concerné.
- */
-const ERRORS = {
-  required: (field: string) => `${field} est requis`,
-  dayFormat: (field: string) => `${field} doit être au format YYYY-MM-DD`,
-  dayInvalid: (field: string) => `${field} est une date invalide`,
-};
-
-/**
  * Service de gestion des séances de méditation.
  *
  * @remarks
@@ -235,7 +220,7 @@ export class MeditationSessionService {
     durationSeconds?: number,
   ) {
     if (!meditationTypeId) {
-      throw new BadRequestException(ERRORS.required("meditationTypeId"));
+      throw new BadRequestException(ERRORS.REQUIRED("meditationTypeId"));
     }
 
     const where: Prisma.MeditationContentWhereInput = {
@@ -382,7 +367,7 @@ export class MeditationSessionService {
   private parseDateOrThrow(dateStr: string, fieldName: string): Date {
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) {
-      throw new BadRequestException(ERRORS.dayInvalid(fieldName));
+      throw new BadRequestException(ERRORS.DAY_INVALID(fieldName));
     }
     return date;
   }
@@ -393,7 +378,7 @@ export class MeditationSessionService {
   private assertDayStringOrThrow(dateStr: string, fieldName: string): string {
     const isValid = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
     if (!isValid) {
-      throw new BadRequestException(ERRORS.dayFormat(fieldName));
+      throw new BadRequestException(ERRORS.DAY_FORMAT(fieldName));
     }
     return dateStr;
   }
