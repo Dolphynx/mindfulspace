@@ -2,114 +2,117 @@
 
 import {
     createContext,
-    useState,
     useCallback,
     useContext,
-    ReactNode, useEffect,
+    useEffect,
+    useRef,
+    useState,
+    type ReactNode,
 } from "react";
+
 import type { BadgeToastItem } from "@/types/badges";
 import { BadgeToast } from "./BadgeToast";
-import { LotusConfetti } from "./LotusConfetti";
+import { useConfetti } from "@/components/confetti/ConfettiProvider";
 
-/**
- * Structure de la valeur exposée par le contexte BadgeToastContext.
- * Permet à n’importe quel composant enfant d’ajouter un ou plusieurs
- * nouveaux badges à afficher sous forme de toast.
- */
 interface BadgeToastContextValue {
     /**
-     * Ajoute un ensemble de badges à la file d'affichage.
+     * Ajoute un ensemble de badges à la file d’affichage.
      *
-     * @param badges Tableau de badges à afficher séquentiellement.
+     * @remarks
+     * Les badges sont affichés séquentiellement dans l’ordre d’insertion.
+     *
+     * @param badges Tableau de badges à afficher.
      */
     pushBadges: (badges: BadgeToastItem[]) => void;
 }
 
-/**
- * Contexte React permettant à l’application de déclencher des toasts
- * d’affichage de badges, sans passer manuellement les props à travers
- * l’arborescence.
- *
- * La valeur par défaut est `undefined`, ce qui permet de détecter un usage
- * du hook `useBadgeToasts()` en dehors du provider.
- */
-const BadgeToastContext = createContext<BadgeToastContextValue | undefined>(
-    undefined,
-);
+const BadgeToastContext = createContext<BadgeToastContextValue | undefined>(undefined);
 
 /**
- * Provider global gérant l’affichage séquentiel de notifications (toasts)
- * lorsqu’un ou plusieurs badges sont remportés.
+ * Provider global d’affichage des badges gagnés sous forme de toasts.
  *
- * Fonctionnement :
- * - Maintient une file (`queue`) de badges à afficher.
- * - Le premier badge de la file est rendu dans le composant `<BadgeToast>`.
- * - Lorsque l’utilisateur ferme le toast, la fonction `pop` retire l’élément
- *   courant, révélant automatiquement le suivant.
+ * @remarks
+ * Le provider maintient une file (`queue`) de {@link BadgeToastItem}.
+ * Un seul toast est affiché à la fois : le premier élément de la file.
+ * À la fermeture d’un toast, l’élément courant est retiré et le suivant devient actif.
  *
- * Le provider doit encapsuler toute la zone de l’application où l’on souhaite
- * pouvoir déclencher des toasts via `useBadgeToasts()`.
+ * Effets visuels :
+ * - Déclenche un burst de confettis à chaque changement de badge actif.
+ * - Le rendu de l’overlay de confettis est centralisé dans {@link ConfettiProvider}.
  *
- * @param children Composants enfants faisant partie du scope du provider.
+ * @param props Propriétés du provider.
+ * @param props.children Arbre de composants pouvant pousser des badges via contexte.
+ * @returns Le provider englobant ses enfants et le toast actif.
  */
 export function BadgeToastProvider({ children }: { children: ReactNode }) {
-    /**
-     * File d’attente des badges à afficher.
-     * Le premier élément est toujours celui actuellement montré.
-     */
     const [queue, setQueue] = useState<BadgeToastItem[]>([]);
+    const { fire } = useConfetti();
 
     /**
-     * Ajoute un ou plusieurs badges à la file d'affichage.
+     * Empile des badges dans la file d’affichage.
      *
-     * Utilise `useCallback` pour éviter des recréations inutiles de la fonction,
-     * ce qui optimise les dépendances des composants enfants.
+     * @param badges Tableau de badges à ajouter.
      */
     const pushBadges = useCallback((badges: BadgeToastItem[]) => {
-        if (!badges || badges.length === 0) return;
-
+        if (!badges?.length) return;
         setQueue((prev) => [...prev, ...badges]);
     }, []);
 
     /**
-     * Retire le premier badge de la file.
-     * Appelé par le composant `<BadgeToast>` lors de la fermeture.
+     * Retire le badge en tête de file.
+     *
+     * @remarks
+     * Appelé par le composant {@link BadgeToast} lorsque l’utilisateur ferme le toast.
      */
     const pop = useCallback(() => {
         setQueue((prev) => prev.slice(1));
     }, []);
 
-    const hasActiveToast = queue.length > 0;
+    const active = queue[0] ?? null;
+
+    /**
+     * Mémoire du dernier badge actif afin de ne déclencher les confettis
+     * que lors d’un changement effectif (et non lors d’un re-render).
+     */
+    const prevActiveIdRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!active) {
+            prevActiveIdRef.current = null;
+            return;
+        }
+
+        if (prevActiveIdRef.current !== active.id) {
+            prevActiveIdRef.current = active.id;
+            fire();
+        }
+    }, [active, fire]);
 
     return (
         <BadgeToastContext.Provider value={{ pushBadges }}>
             {children}
 
-            {/* Effet confettis global dès qu’un badge est affiché */}
-            <LotusConfetti fire={hasActiveToast} />
-
-            {/* Toast du badge en tête de file */}
-            {hasActiveToast && <BadgeToast badge={queue[0]} onClose={pop} />}
+            {active && <BadgeToast badge={active} onClose={pop} />}
         </BadgeToastContext.Provider>
     );
 }
 
 /**
- * Hook permettant d’accéder à l’API du système global de toasts.
+ * Hook d’accès à l’API du système de toasts badges.
  *
- * Doit impérativement être utilisé à l’intérieur du `<BadgeToastProvider>`.
+ * @remarks
+ * Ce hook permet de pousser des badges dans la file gérée par {@link BadgeToastProvider}.
+ * Il doit être utilisé dans un composant descendant du provider.
  *
- * @throws Error Si le hook est utilisé en dehors du provider.
- * @returns La valeur du contexte, incluant la méthode `pushBadges`.
+ * @throws Error
+ * Lance une erreur si le hook est invoqué en dehors de {@link BadgeToastProvider}.
+ *
+ * @returns L’API du contexte, incluant {@link BadgeToastContextValue.pushBadges}.
  */
 export function useBadgeToasts(): BadgeToastContextValue {
     const ctx = useContext(BadgeToastContext);
-
     if (!ctx) {
-        throw new Error(
-            "useBadgeToasts must be used within a BadgeToastProvider",
-        );
+        throw new Error("useBadgeToasts must be used within a BadgeToastProvider");
     }
-
     return ctx;
 }

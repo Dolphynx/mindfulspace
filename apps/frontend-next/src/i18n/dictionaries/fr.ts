@@ -750,6 +750,10 @@ const fr = {
             meditation: "Méditation",
             exercise: "Exercice",
         },
+
+        toasts: {
+            sessionSaved: "Session enregistrée",
+        },
     },
 
     resourceDetailPage: {
