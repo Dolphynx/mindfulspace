@@ -3,35 +3,48 @@
 /**
  * @file WorldBadgesLotusOverlay.tsx
  * @description
- * Overlay World V2 : affiche les N derniers badges gagnés sous forme de lotus sur la map.
+ * Overlay World V2 affichant les derniers badges gagnés sous forme de marqueurs “lotus”
+ * positionnés sur la carte, avec un popover rendu en portal.
  *
- * ✅ Améliorations :
- * - Lotus plus petits (et responsive)
- * - Popover fermable par clic extérieur + Escape
- * - Popover fermable via event global (ex: clic sur “Démarrer”)
- *
- * Data :
- * - Charge les badges via `/badges/me?limit=7`
+ * @remarks
+ * - Les badges sont chargés depuis l’endpoint `/badges/me?limit=7`.
+ * - Le popover est rendu dans `document.body` via React Portal afin d’éviter les problèmes
+ *   de clipping (`overflow-hidden`) et de stacking contexts (cartes/containers parents).
+ * - La fermeture du popover est supportée par :
+ *   - clic/touch extérieur,
+ *   - touche Escape,
+ *   - événement global `world:close-badge-popovers` (utilisable depuis d’autres composants).
  */
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import { useTranslations } from "@/i18n/TranslationContext";
 import { apiFetch } from "@/lib/api/client";
 import { useWorldHubOptional } from "@/feature/world/hub/WorldHubProvider";
 
 import type { BadgeToastItem } from "@/types/badges";
 
+/**
+ * Nombre maximal de badges affichés sur la carte.
+ */
 const MAX_BADGES = 7;
 
 /**
- * Event global pour fermer les popovers depuis n'importe où (ex: bouton "Démarrer").
+ * Nom de l’événement global permettant de fermer tous les popovers de badges.
+ *
+ * @remarks
+ * Cet événement peut être dispatché depuis n’importe quel composant (ex. CTA “Démarrer”)
+ * afin de garantir qu’aucun popover ne reste ouvert lors d’une transition d’UI.
  */
 const CLOSE_EVENT = "world:close-badge-popovers";
 
 /**
  * Positions (en %) dans le conteneur `relative aspect-[16/9]`.
+ *
+ * @remarks
+ * Les positions sont indexées dans l’ordre d’affichage des badges.
  */
 const LOTUS_POSITIONS: Array<{ xPct: number; yPct: number }> = [
     { xPct: 20, yPct: 30 },
@@ -44,30 +57,60 @@ const LOTUS_POSITIONS: Array<{ xPct: number; yPct: number }> = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*                                UTILITAIRES                                 */
+/*                                 UTILITAIRES                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Supprime le namespace `badges.` d’une clé i18n si présent.
+ *
+ * @param key - Clé potentiellement préfixée (ex. `badges.someKey`).
+ * @returns Clé normalisée sans préfixe.
+ */
 function stripBadgesNamespace(key?: string | null): string {
     if (!key) return "";
     return key.startsWith("badges.") ? key.slice("badges.".length) : key;
 }
 
+/**
+ * Résout le titre localisé d’un badge.
+ *
+ * @param t - Fonction de traduction.
+ * @param badge - Badge à afficher.
+ * @returns Titre localisé (ou chaîne vide si clé manquante).
+ */
 function getBadgeTitle(t: (k: string) => string, badge: BadgeToastItem): string {
     const key = stripBadgesNamespace(badge.titleKey);
     return key ? t(key) : "";
 }
 
+/**
+ * Résout la description localisée d’un badge.
+ *
+ * @param t - Fonction de traduction.
+ * @param badge - Badge à afficher.
+ * @returns Description localisée (ou chaîne vide si clé manquante).
+ */
 function getBadgeDescription(t: (k: string) => string, badge: BadgeToastItem): string {
     const key = stripBadgesNamespace(badge.descriptionKey);
     return key ? t(key) : "";
 }
 
+/**
+ * Calcule la position d’un popover en se basant sur le rectangle d’ancrage du marker.
+ *
+ * @remarks
+ * - Le popover est centré idéalement par rapport au marker.
+ * - La position est contrainte horizontalement dans la fenêtre afin d’éviter le débordement.
+ * - Le calcul tient compte du scroll (via `window.scrollX/Y`).
+ *
+ * @param anchorRect - Rectangle de référence du marker (viewport).
+ * @returns Style positionnel pour le popover (top/left/width).
+ */
 function computePopoverPosition(anchorRect: DOMRect) {
     const gap = 12;
     const popoverWidth = 360;
 
     const idealLeft = anchorRect.left + anchorRect.width / 2 - popoverWidth / 2;
-
     const left = Math.max(12, Math.min(idealLeft, window.innerWidth - popoverWidth - 12));
 
     return {
@@ -78,9 +121,18 @@ function computePopoverPosition(anchorRect: DOMRect) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  POPOVER                                   */
+/*                                   POPOVER                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Popover rendu en Portal, attaché visuellement à un marker de badge.
+ *
+ * @remarks
+ * Le popover :
+ * - s’auto-positionne sur `resize` et `scroll`,
+ * - se ferme au clic extérieur / Escape / événement global,
+ * - est rendu dans `document.body` pour éviter le clipping.
+ */
 function BadgePortalPopover({
                                 badge,
                                 t,
@@ -100,8 +152,14 @@ function BadgePortalPopover({
 
     const popoverRef = useRef<HTMLDivElement | null>(null);
 
+    /**
+     * Diffère l’affichage au premier rendu client afin de garantir la disponibilité de `document`.
+     */
     useEffect(() => setMounted(true), []);
 
+    /**
+     * Met à jour la position du popover lors des changements de viewport/scroll.
+     */
     useEffect(() => {
         function update() {
             setStyle(computePopoverPosition(anchorRect));
@@ -116,7 +174,12 @@ function BadgePortalPopover({
         };
     }, [anchorRect]);
 
-    // ✅ Fermer par clic extérieur + Escape + event global
+    /**
+     * Gère les mécanismes de fermeture :
+     * - clic/touch extérieur,
+     * - touche Escape,
+     * - événement global {@link CLOSE_EVENT}.
+     */
     useEffect(() => {
         function onPointerDown(e: MouseEvent | TouchEvent) {
             const el = popoverRef.current;
@@ -175,14 +238,21 @@ function BadgePortalPopover({
                 </div>
             </div>
         </div>,
-        document.body,
+        document.body
     );
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               MARKER LOTUS                                 */
+/*                                MARKER LOTUS                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Marqueur de badge sous forme de lotus cliquable.
+ *
+ * @remarks
+ * - Rend un fond lotus (image) + une icône centrée (badge).
+ * - Le bouton expose une référence DOM utilisée pour calculer l’ancrage du popover.
+ */
 function LotusBadgeMarker({
                               badge,
                               size,
@@ -196,7 +266,6 @@ function LotusBadgeMarker({
 }) {
     const badgeSrc = `/images/badges/${badge.iconKey ?? "default"}`;
 
-    // Icône centrale légèrement plus petite
     const iconSize = Math.round(size * 0.55);
 
     return (
@@ -208,7 +277,6 @@ function LotusBadgeMarker({
             style={{ width: size, height: size }}
             aria-label="badge"
         >
-            {/* Lotus */}
             <div className="absolute inset-0 drop-shadow-[0_8px_14px_rgba(0,0,0,0.16)]">
                 <Image
                     src="/images/badges/badge-lotus-bg.png"
@@ -219,7 +287,6 @@ function LotusBadgeMarker({
                 />
             </div>
 
-            {/* Icône badge */}
             <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative" style={{ width: iconSize, height: iconSize }}>
                     <Image src={badgeSrc} alt="" fill className="object-contain drop-shadow-sm" />
@@ -230,9 +297,12 @@ function LotusBadgeMarker({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             MAPPING TYPÉ (❌ any)                           */
+/*                              MAPPING TYPÉ API                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * DTO de définition de badge tel que renvoyé par l’API.
+ */
 type ApiBadgeDefinitionDto = {
     slug: string;
     titleKey: string;
@@ -240,29 +310,41 @@ type ApiBadgeDefinitionDto = {
     iconKey: string | null;
 };
 
+/**
+ * DTO d’un badge utilisateur tel que renvoyé par l’API.
+ */
 type ApiUserBadgeDto = {
     id: string;
-    earnedAt: string; // JSON => string (date-time)
+    earnedAt: string;
     badge: ApiBadgeDefinitionDto;
 };
 
+/**
+ * Convertit un DTO `ApiUserBadgeDto` en {@link BadgeToastItem}.
+ *
+ * @param raw - DTO brut issu de l’API.
+ * @returns Élément prêt pour l’affichage (lotus + popover).
+ */
 function mapUserBadgeDtoToToastItem(raw: ApiUserBadgeDto): BadgeToastItem {
     return {
         id: raw.id,
         slug: raw.badge.slug,
         titleKey: raw.badge.titleKey,
-        // ton BadgeToastItem attend string non-null -> fallback sûr
         descriptionKey: raw.badge.descriptionKey ?? "",
         iconKey: raw.badge.iconKey,
-        // on normalise en ISO (au cas où l’API renverrait un format différent)
         earnedAt: new Date(raw.earnedAt).toISOString(),
     };
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               OVERLAY FINAL                                */
+/*                                OVERLAY FINAL                               */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Overlay affichant les derniers badges sur la map sous forme de marqueurs “lotus”.
+ *
+ * @returns Overlay de badges, ou `null` si aucun badge n’est disponible.
+ */
 export function WorldBadgesLotusOverlay() {
     const tBadges = useTranslations("badges");
 
@@ -274,11 +356,14 @@ export function WorldBadgesLotusOverlay() {
 
     const markerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+    /**
+     * Charge les badges et remet à zéro le popover courant afin d’éviter
+     * de conserver une ancre DOM obsolète.
+     */
     useEffect(() => {
         let cancelled = false;
 
         async function load() {
-            // ✅ évite un popover “accroché” à un ancien DOM rect
             setOpenId(null);
 
             const res = await apiFetch(`/badges/me?limit=${MAX_BADGES}`, {
@@ -290,7 +375,6 @@ export function WorldBadgesLotusOverlay() {
             const raw = (await res.json()) as ApiUserBadgeDto[];
 
             if (!Array.isArray(raw)) {
-                console.warn("[WorldBadgesLotusOverlay] Expected array, got:", raw);
                 return;
             }
 
@@ -313,7 +397,6 @@ export function WorldBadgesLotusOverlay() {
 
     if (badges.length === 0) return null;
 
-    // Lotus
     const markerSize = 64;
 
     return (

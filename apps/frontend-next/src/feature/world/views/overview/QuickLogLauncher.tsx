@@ -1,4 +1,3 @@
-// File: src/feature/world/views/overview/QuickLogLauncher.tsx
 "use client";
 
 import Image from "next/image";
