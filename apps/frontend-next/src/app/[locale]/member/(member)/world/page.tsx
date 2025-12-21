@@ -3,8 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
-import Island from "@/components/Island";
-import DomainTabsPanel from "@/components/DomainTabsPanel";
+import Island from "@/components/map/Island";
+import DomainTabsPanel from "@/components/map/DomainTabsPanel";
 import MapMantra from "@/components/map/MapMantra";
 
 /**

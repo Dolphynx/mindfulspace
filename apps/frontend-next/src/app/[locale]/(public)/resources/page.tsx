@@ -14,7 +14,9 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import PageHero from "@/components/PageHero";
+import Link from "next/link";
+import Image from "next/image";
+import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ResourcesList } from "@/components/resources";

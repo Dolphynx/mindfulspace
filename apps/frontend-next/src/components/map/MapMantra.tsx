@@ -25,9 +25,11 @@ type Props = {
  * - Ne déclenche pas de requête sur mobile (le composant n'y est pas rendu).
  * - Effectue un POST vers l'endpoint `ai/mantra` avec `{ locale, theme }`.
  * - Ignore silencieusement les erreurs, car le mantra est non bloquant.
+ * - Peut être masqué par l'utilisateur via une croix de fermeture (état local).
  */
 export default function MapMantra({ locale, theme }: Props) {
     const [mantra, setMantra] = useState<string | null>(null);
+    const [isDismissed, setIsDismissed] = useState(false);
 
     useEffect(() => {
         /**
@@ -54,7 +56,10 @@ export default function MapMantra({ locale, theme }: Props) {
                 if (!res.ok) return;
 
                 const data = (await res.json()) as { mantra?: string };
-                if (!cancelled) setMantra(data.mantra ?? null);
+                if (!cancelled) {
+                    setMantra(data.mantra ?? null);
+                    setIsDismissed(false); // reset lors d’un nouveau mantra / changement de locale
+                }
             } catch {
                 // Non bloquant : aucune action UI en cas d'erreur.
             }
@@ -65,24 +70,55 @@ export default function MapMantra({ locale, theme }: Props) {
         };
     }, [locale, theme]);
 
-    if (!mantra) return null;
+    if (!mantra || isDismissed) return null;
 
     return (
-        <div className="hidden md:block absolute inset-0 z-[8] pointer-events-none">
-            <div className="absolute left-1/2 top-1/2 w-[68%] max-w-lg -translate-x-1/2 -translate-y-1/2 text-center">
-                <p
+        <div className="hidden md:block absolute inset-0 z-[30] pointer-events-none">
+            {/* Box mantra (centrée, semi-transparente, légèrement plus “présente” qu’avant) */}
+            <div className="absolute left-1/2 top-[40%] w-[72%] max-w-lg -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+                <div
                     className="
-                        text-base md:text-lg
-                        font-light
-                        italic
-                        leading-relaxed
-                        tracking-wide
-                        text-white/85
-                        drop-shadow-[0_1px_6px_rgba(0,0,0,0.25)]
+                        relative
+                        rounded-3xl
+                        bg-white/35
+                        backdrop-blur-md
+                        border border-white/40
+                        shadow-lg
+                        px-6 py-5
+                        text-center
                     "
                 >
-                    « {mantra} »
-                </p>
+                    {/* Close (croix en haut à droite) */}
+                    <button
+                        type="button"
+                        onClick={() => setIsDismissed(true)}
+                        aria-label="Close mantra"
+                        className="
+                            absolute right-2.5 top-2.5
+                            rounded-xl
+                            bg-white/50 hover:bg-white/70
+                            transition
+                            px-2.5 py-1.5
+                            text-slate-700
+                            shadow
+                        "
+                    >
+                        ✕
+                    </button>
+
+                    <p
+                        className="
+                            text-base md:text-lg
+                            font-light
+                            italic
+                            leading-relaxed
+                            tracking-wide
+                            text-slate-800/90
+                        "
+                    >
+                        « {mantra} »
+                    </p>
+                </div>
             </div>
         </div>
     );

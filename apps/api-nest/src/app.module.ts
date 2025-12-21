@@ -5,16 +5,16 @@ import { AppService } from './app.service';
 import { HealthController } from './health.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { TestDataModule } from './test-data/test-data.module';
-import { PrefsModule } from "./prefs/prefs.module";
-import { TipsModule } from "./tips/tips.module";
+import { PrefsModule } from './prefs/prefs.module';
+import { TipsModule } from './tips/tips.module';
 import { AiModule } from './ai/ai.module';
 import { SleepSessionModule } from './sessions/sleep-session/sleep-session.module';
 import { MeditationSessionModule } from './sessions/meditation-session/meditation-session.module';
 import { ExerciceSessionModule } from '@mindfulspace/api/sessions/exercice-session/exercice-session.module';
 import { ResourcesModule } from './resources/resources.module';
-import { ProgramsModule} from "@mindfulspace/api/programs/program.module";
-import { BadgesModule } from "./badges/badges.module";
+import { ProgramsModule } from '@mindfulspace/api/programs/program.module';
+import { BadgesModule } from './badges/badges.module';
+import { WorldModule } from './world/world.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -27,15 +27,15 @@ import { UsersModule } from './users/users.module';
     TipsModule,
     PrismaModule,
     AuthModule,
-    TestDataModule,
-      SleepSessionModule,
-      MeditationSessionModule,
-      ExerciceSessionModule,
-      ProgramsModule,
+    SleepSessionModule,
+    MeditationSessionModule,
+    ExerciceSessionModule,
+    ProgramsModule,
     AiModule,
     ResourcesModule,
     BadgesModule,
-    UsersModule,
+    WorldModule,
+    UsersModule
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
