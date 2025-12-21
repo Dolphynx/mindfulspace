@@ -47,39 +47,14 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
 import { apiFetch } from "@/lib/api/client";
 
-type NavbarMode = "public" | "client";
-
-/**
- * Item du sous-menu (dropdown).
- */
-type NavChildItem = {
-    /** Clé unique React. */
-    key: string;
-    /** Génère l'URL en fonction de la locale. */
-    href: (locale: Locale) => string;
-    /** Clé i18n dans le namespace `navbar.*`. */
-    labelKey: string;
-};
-
-/**
- * Item principal de la navbar.
- *
- * @remarks
- * - Un item peut contenir des `children` pour devenir un dropdown.
- * - Dans ce cas, `href` reste présent : le parent est cliquable (desktop) et sert de "racine".
- */
-type NavItem = {
-    /** Clé unique React. */
-    key: string;
-    /** Génère l'URL en fonction de la locale. */
-    href: (locale: Locale) => string;
-    /** Clé i18n dans le namespace `navbar.*`. */
-    labelKey: string;
-    /** Petite icône texte (optionnel). */
-    icon?: string;
-    /** Sous-items (optionnel) → transforme l'item en dropdown. */
-    children?: NavChildItem[];
-};
+import {
+    type NavbarMode,
+    type NavItem,
+    ME_PATH,
+    COMMON_ITEMS,
+    CLIENT_ITEMS,
+    PUBLIC_ITEMS,
+} from "@/components/layout/mainNavbar.config";
 
 type MainNavbarProps = {
     /** Mode d’affichage (public vs client), généralement déterminé par le layout courant. */
@@ -120,14 +95,6 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * - si la page est publique mais l’utilisateur est connecté → afficher le menu client.
      */
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-    /**
-     * Endpoint minimal "me" pour vérifier si la session/cookies sont valides.
-     *
-     * @remarks
-     * Adapter si ton backend expose un autre endpoint (ex: `/users/me`).
-     */
-    const ME_PATH = "/auth/me";
 
     useEffect(() => {
         /**
@@ -187,7 +154,9 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         return () => {
             cancelled = true;
         };
-    }, [mode, ME_PATH]);
+        // ME_PATH est une constante importée (stable), donc pas nécessaire dans deps.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode]);
 
     /**
      * Mode effectif de rendu des items.
@@ -209,59 +178,14 @@ export function MainNavbar({ mode }: MainNavbarProps) {
     }, [mode, isAuthenticated]);
 
     /**
-     * Items communs (public + client).
-     */
-    const commonItems: NavItem[] = [
-        { key: "resources", href: (loc) => `/${loc}/resources`, labelKey: "resources" },
-        { key: "becomecoach", href: (loc) => `/${loc}/becomecoach`, labelKey: "becomecoach" },
-        { key: "contact", href: (loc) => `/${loc}/contact`, labelKey: "contact" },
-    ];
-
-    /**
-     * Items spécifiques au client (espace connecté).
-     */
-    const clientItems: NavItem[] = [
-        {
-            key: "breathing",
-            href: (loc) => `/${loc}/member/seance/respiration`,
-            labelKey: "breathing",
-            icon: "▶️",
-        },
-        {
-            key: "world",
-            href: (loc) => `/${loc}/member/world-v2`,
-            labelKey: "world",
-        },
-        /*{
-            key: "world",
-            href: (loc) => `/${loc}/member/world`,
-            labelKey: "world",
-            children: [
-                { key: "world", href: (loc) => `/${loc}/member/world`, labelKey: "world2" },
-                { key: "meditation", href: (loc) => `/${loc}/member/domains/meditation`, labelKey: "meditation" },
-                { key: "exercise", href: (loc) => `/${loc}/member/domains/exercise`, labelKey: "exercise" },
-                { key: "sleep", href: (loc) => `/${loc}/member/domains/sleep`, labelKey: "sleep" },
-                { key: "badges", href: (loc) => `/${loc}/member/badges`, labelKey: "badges" },
-            ],
-        },*/
-    ];
-
-    /**
-     * Item spécifique au public : entrée vers l’espace member.
-     */
-    const publicItems: NavItem[] = [
-        { key: "clientSpace", href: (loc) => `/${loc}/member/world-v2`, labelKey: "clientSpace" },
-    ];
-
-    /**
      * Liste finale des items selon le mode effectif.
      *
      * @remarks
      * `effectiveMode` peut être "client" même sur une page publique si l’utilisateur est connecté.
      */
     const items: NavItem[] = [
-        ...commonItems,
-        ...(effectiveMode === "client" ? clientItems : publicItems),
+        ...COMMON_ITEMS,
+        ...(effectiveMode === "client" ? CLIENT_ITEMS : PUBLIC_ITEMS),
     ];
 
     /**
@@ -278,8 +202,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
          * - la route courante commence par le href parent
          * - OU par l’un des href enfants
          */
-        const active =
-            pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
+        const active = pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
 
         const baseClass = [
             "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border transition-colors",
@@ -387,8 +310,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * @remarks
      * On se base sur le mode effectif : si connecté, le logo mène naturellement vers le “world”.
      */
-    const homeHref =
-        effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
+    const homeHref = effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">

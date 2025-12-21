@@ -26,6 +26,9 @@ import { useWorldHubOptional } from "@/feature/world/hub/WorldHubProvider";
 
 import type { BadgeToastItem } from "@/types/badges";
 
+import { useLotusOverlayLayout } from "@/components/badges/useLotusOverlayLayout";
+import { LotusOverlayView } from "@/components/badges/LotusOverlayView";
+
 /**
  * Nombre maximal de badges affichés sur la carte.
  */
@@ -39,22 +42,6 @@ const MAX_BADGES = 7;
  * afin de garantir qu’aucun popover ne reste ouvert lors d’une transition d’UI.
  */
 const CLOSE_EVENT = "world:close-badge-popovers";
-
-/**
- * Positions (en %) dans le conteneur `relative aspect-[16/9]`.
- *
- * @remarks
- * Les positions sont indexées dans l’ordre d’affichage des badges.
- */
-const LOTUS_POSITIONS: Array<{ xPct: number; yPct: number }> = [
-    { xPct: 20, yPct: 30 },
-    { xPct: 28, yPct: 60 },
-    { xPct: 36, yPct: 35 },
-    { xPct: 47, yPct: 60 },
-    { xPct: 53, yPct: 25 },
-    { xPct: 70, yPct: 50 },
-    { xPct: 80, yPct: 20 },
-];
 
 /* -------------------------------------------------------------------------- */
 /*                                 UTILITAIRES                                */
@@ -243,60 +230,6 @@ function BadgePortalPopover({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                MARKER LOTUS                                */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Marqueur de badge sous forme de lotus cliquable.
- *
- * @remarks
- * - Rend un fond lotus (image) + une icône centrée (badge).
- * - Le bouton expose une référence DOM utilisée pour calculer l’ancrage du popover.
- */
-function LotusBadgeMarker({
-                              badge,
-                              size,
-                              onClick,
-                              buttonRef,
-                          }: {
-    badge: BadgeToastItem;
-    size: number;
-    onClick: () => void;
-    buttonRef: (el: HTMLButtonElement | null) => void;
-}) {
-    const badgeSrc = `/images/badges/${badge.iconKey ?? "default"}`;
-
-    const iconSize = Math.round(size * 0.55);
-
-    return (
-        <button
-            ref={buttonRef}
-            type="button"
-            onClick={onClick}
-            className="relative transition hover:scale-[1.03] focus:outline-none"
-            style={{ width: size, height: size }}
-            aria-label="badge"
-        >
-            <div className="absolute inset-0 drop-shadow-[0_8px_14px_rgba(0,0,0,0.16)]">
-                <Image
-                    src="/images/badges/badge-lotus-bg.png"
-                    alt=""
-                    width={size}
-                    height={size}
-                    className="h-full w-full object-contain"
-                />
-            </div>
-
-            <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative" style={{ width: iconSize, height: iconSize }}>
-                    <Image src={badgeSrc} alt="" fill className="object-contain drop-shadow-sm" />
-                </div>
-            </div>
-        </button>
-    );
-}
-
-/* -------------------------------------------------------------------------- */
 /*                              MAPPING TYPÉ API                              */
 /* -------------------------------------------------------------------------- */
 
@@ -351,6 +284,8 @@ export function WorldBadgesLotusOverlay() {
     const world = useWorldHubOptional();
     const refreshKey = world?.refreshKey ?? 0;
 
+    const { getPositionForIndex, markerSizeClass } = useLotusOverlayLayout();
+
     const [badges, setBadges] = useState<BadgeToastItem[]>([]);
     const [openId, setOpenId] = useState<string | null>(null);
 
@@ -397,63 +332,32 @@ export function WorldBadgesLotusOverlay() {
 
     if (badges.length === 0) return null;
 
-    const markerSize = 64;
+    function toggleOpen(badgeId: string) {
+        setOpenId((prev) => (prev === badgeId ? null : badgeId));
+    }
+
+    function registerMarkerRef(badgeId: string, el: HTMLButtonElement | null) {
+        markerRefs.current[badgeId] = el;
+    }
 
     return (
-        <div className="absolute inset-0 z-20 pointer-events-none">
-            {badges.map((badge, i) => {
-                const pos = LOTUS_POSITIONS[i] ?? LOTUS_POSITIONS.at(-1)!;
-
-                return (
-                    <div
-                        key={badge.id}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
-                        style={{ left: `${pos.xPct}%`, top: `${pos.yPct}%` }}
-                    >
-                        <div className="sm:hidden">
-                            <LotusBadgeMarker
-                                badge={badge}
-                                size={markerSize}
-                                onClick={() => setOpenId((prev) => (prev === badge.id ? null : badge.id))}
-                                buttonRef={(el) => {
-                                    markerRefs.current[badge.id] = el;
-                                }}
-                            />
-                        </div>
-
-                        <div className="hidden sm:block lg:hidden">
-                            <LotusBadgeMarker
-                                badge={badge}
-                                size={76}
-                                onClick={() => setOpenId((prev) => (prev === badge.id ? null : badge.id))}
-                                buttonRef={(el) => {
-                                    markerRefs.current[badge.id] = el;
-                                }}
-                            />
-                        </div>
-
-                        <div className="hidden lg:block">
-                            <LotusBadgeMarker
-                                badge={badge}
-                                size={80}
-                                onClick={() => setOpenId((prev) => (prev === badge.id ? null : badge.id))}
-                                buttonRef={(el) => {
-                                    markerRefs.current[badge.id] = el;
-                                }}
-                            />
-                        </div>
-                    </div>
-                );
-            })}
-
-            {openBadge && openAnchorRect ? (
-                <BadgePortalPopover
-                    badge={openBadge}
-                    t={tBadges}
-                    anchorRect={openAnchorRect}
-                    onRequestClose={() => setOpenId(null)}
-                />
-            ) : null}
-        </div>
+        <LotusOverlayView
+            badges={badges}
+            openId={openId}
+            getPositionForIndex={getPositionForIndex}
+            markerSizeClass={markerSizeClass}
+            onToggleOpen={toggleOpen}
+            registerMarkerRef={registerMarkerRef}
+            renderPopover={() =>
+                openBadge && openAnchorRect ? (
+                    <BadgePortalPopover
+                        badge={openBadge}
+                        t={tBadges}
+                        anchorRect={openAnchorRect}
+                        onRequestClose={() => setOpenId(null)}
+                    />
+                ) : null
+            }
+        />
     );
 }
