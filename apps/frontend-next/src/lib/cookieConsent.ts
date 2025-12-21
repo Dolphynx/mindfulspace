@@ -1,5 +1,3 @@
-// apps/frontend-next/src/lib/cookieConsent.ts
-
 /**
  * Gestion centralisée du consentement cookies côté frontend.
  *

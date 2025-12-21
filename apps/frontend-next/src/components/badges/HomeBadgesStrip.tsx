@@ -1,7 +1,25 @@
 "use client";
 
+/**
+ * @file HomeBadgesStrip.tsx
+ * @description
+ * Bandeau de badges “highlighted” affichant les derniers badges gagnés.
+ *
+ * @remarks
+ * - Charge les badges via l’endpoint `/badges/me/highlighted`.
+ * - Affiche jusqu’à {@link MAX_BADGES} icônes cliquables.
+ * - Au clic : ouvre un popover descriptif.
+ * - Fermeture : clic extérieur ou touche Escape.
+ * - Peut se rendre en mode compact via la prop {@link HomeBadgesStripProps.compact}.
+ *
+ * i18n :
+ * - Les titres/descriptions des badges sont traduits via le namespace `badges`.
+ * - L’URL “Voir tous les badges” est construite avec la locale courante.
+ */
+
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTranslations } from "@/i18n/TranslationContext";
@@ -12,38 +30,70 @@ import type { BadgeToastItem } from "@/types/badges";
 import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
 import { useWorldHubOptional } from "@/feature/world/hub/WorldHubProvider";
 
+/**
+ * Nombre maximal de badges affichés.
+ */
 const MAX_BADGES = 3;
 
-function stripBadgesNamespace(key?: string | null) {
+/**
+ * Retire le préfixe de namespace i18n `badges.` d’une clé.
+ *
+ * @param key - Clé i18n potentiellement préfixée.
+ * @returns Clé i18n sans préfixe (ou chaîne vide si absente).
+ */
+function stripBadgesNamespace(key?: string | null): string {
     if (!key) return "";
     return key.startsWith("badges.") ? key.slice("badges.".length) : key;
 }
 
-function getBadgeTitle(t: (k: string) => string, badge: BadgeToastItem) {
+/**
+ * Résout le titre traduit d’un badge.
+ *
+ * @param t - Fonction de traduction.
+ * @param badge - Badge à traduire.
+ * @returns Titre localisé (ou chaîne vide).
+ */
+function getBadgeTitle(t: (k: string) => string, badge: BadgeToastItem): string {
     const key = stripBadgesNamespace(badge.titleKey);
-    if (!key) return "";
-    return t(key);
+    return key ? t(key) : "";
 }
 
-function getBadgeDescription(t: (k: string) => string, badge: BadgeToastItem) {
+/**
+ * Résout la description traduite d’un badge.
+ *
+ * @param t - Fonction de traduction.
+ * @param badge - Badge à traduire.
+ * @returns Description localisée (ou chaîne vide).
+ */
+function getBadgeDescription(t: (k: string) => string, badge: BadgeToastItem): string {
     const key = stripBadgesNamespace(badge.descriptionKey);
-    if (!key) return "";
-    return t(key);
+    return key ? t(key) : "";
 }
 
-function BadgePopover({
-                          badge,
-                          t,
-                          hrefAllBadges,
-                          align = "right",
-                      }: {
+/**
+ * Propriétés de {@link BadgePopover}.
+ */
+type BadgePopoverProps = {
+    /** Badge affiché dans le popover. */
     badge: BadgeToastItem;
+    /** Fonction de traduction (namespace `badges`). */
     t: (k: string) => string;
+    /** URL vers la page listant tous les badges. */
     hrefAllBadges: string;
+    /** Alignement horizontal du popover (droite ou gauche). */
     align?: "right" | "left";
-}) {
+};
+
+/**
+ * Popover présentant le détail d’un badge.
+ *
+ * @param props - Propriétés du popover.
+ * @returns Popover prêt à être rendu dans le flux DOM.
+ */
+function BadgePopover({ badge, t, hrefAllBadges, align = "right" }: BadgePopoverProps) {
     const title = getBadgeTitle(t, badge);
     const desc = getBadgeDescription(t, badge);
+    const iconSrc = `/images/badges/${badge.iconKey ?? "default"}`;
 
     return (
         <div
@@ -51,20 +101,22 @@ function BadgePopover({
                 "absolute z-50 mt-2 w-[300px] rounded-2xl border border-white/60 bg-white/90 shadow-lg backdrop-blur p-3",
                 align === "right" ? "right-0" : "left-0",
             ].join(" ")}
+            role="dialog"
+            aria-label={title || "Badge"}
         >
             <div className="flex gap-3 items-start">
-                <div className="h-12 w-12 rounded-2xl bg-slate-100 overflow-hidden shrink-0 shadow-sm">
-                    <img
-                        src={`/images/badges/${badge.iconKey ?? "default"}`}
+                <div className="relative h-12 w-12 rounded-2xl bg-slate-100 overflow-hidden shrink-0 shadow-sm">
+                    <Image
+                        src={iconSrc}
                         alt=""
-                        className="h-12 w-12 object-contain"
+                        fill
+                        sizes="48px"
+                        className="object-contain"
                     />
                 </div>
 
                 <div className="min-w-0">
-                    <div className="text-sm font-semibold text-slate-800 leading-snug">
-                        {title}
-                    </div>
+                    <div className="text-sm font-semibold text-slate-800 leading-snug">{title}</div>
                     <div className="mt-1 text-xs text-slate-600 leading-snug">{desc}</div>
 
                     <div className="mt-2">
@@ -81,25 +133,36 @@ function BadgePopover({
     );
 }
 
-function BadgeIconButton({
-                             badge,
-                             t,
-                             isOpen,
-                             onToggle,
-                         }: {
+/**
+ * Propriétés de {@link BadgeIconButton}.
+ */
+type BadgeIconButtonProps = {
+    /** Badge associé au bouton. */
     badge: BadgeToastItem;
+    /** Fonction de traduction (namespace `badges`). */
     t: (k: string) => string;
+    /** Indique si le popover associé est ouvert. */
     isOpen: boolean;
+    /** Toggle d’ouverture/fermeture du popover. */
     onToggle: () => void;
-}) {
+};
+
+/**
+ * Bouton icône représentant un badge.
+ *
+ * @param props - Propriétés du bouton.
+ * @returns Bouton accessible affichant l’icône du badge.
+ */
+function BadgeIconButton({ badge, t, isOpen, onToggle }: BadgeIconButtonProps) {
     const title = getBadgeTitle(t, badge);
+    const iconSrc = `/images/badges/${badge.iconKey ?? "default"}`;
 
     return (
         <button
             type="button"
             onClick={onToggle}
             className={[
-                "h-9 w-9 rounded-full overflow-hidden shadow-sm transition",
+                "relative h-9 w-9 rounded-full overflow-hidden shadow-sm transition",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2",
                 isOpen ? "ring-2 ring-slate-300" : "hover:opacity-90",
             ].join(" ")}
@@ -107,24 +170,50 @@ function BadgeIconButton({
             aria-label={title}
             title={title}
         >
-            <img
-                src={`/images/badges/${badge.iconKey ?? "default"}`}
+            <Image
+                src={iconSrc}
                 alt=""
-                className="h-9 w-9 object-contain"
+                fill
+                sizes="36px"
+                className="object-contain"
             />
         </button>
     );
 }
 
-export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
+/**
+ * Propriétés de {@link HomeBadgesStrip}.
+ */
+export type HomeBadgesStripProps = {
+    /**
+     * Active la variante compacte (panneau plus petit, aligné à droite).
+     *
+     * @defaultValue false
+     */
+    compact?: boolean;
+};
+
+/**
+ * Bandeau affichant les derniers badges “highlighted”.
+ *
+ * @param props - Propriétés du bandeau.
+ * @returns Bandeau de badges, ou `null` si aucun badge n’est disponible.
+ */
+export function HomeBadgesStrip({ compact = false }: HomeBadgesStripProps) {
     const t = useTranslations("badges");
 
-    const pathname = usePathname();
-    const raw = pathname.split("/")[1] || defaultLocale;
+    /**
+     * Locale courante résolue via les paramètres de route.
+     */
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
+
     const hrefAllBadges = `/${locale}/member/badges`;
 
-    // ✅ World refresh (optionnel)
+    /**
+     * Rafraîchissement optionnel si le WorldHubProvider est présent.
+     */
     const world = useWorldHubOptional();
     const refreshKey = world?.refreshKey ?? 0;
 
@@ -138,9 +227,7 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
         let cancelled = false;
 
         async function load() {
-            // ✅ évite popover “accroché” si la liste change
             setOpenId(null);
-
             setLoading(true);
 
             try {
@@ -156,16 +243,15 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
                     return;
                 }
 
-                const raw = await res.json();
+                const rawJson = (await res.json()) as unknown;
 
-                if (!Array.isArray(raw)) {
-                    console.warn("[HomeBadgesStrip] Expected array, got:", raw);
+                if (!Array.isArray(rawJson)) {
+                    console.warn("[HomeBadgesStrip] Expected array, got:", rawJson);
                     if (!cancelled) setBadges([]);
                     return;
                 }
 
-                const mapped = raw.map(mapApiBadgeToToastItem).slice(0, MAX_BADGES);
-
+                const mapped = rawJson.map(mapApiBadgeToToastItem).slice(0, MAX_BADGES);
                 if (!cancelled) setBadges(mapped);
             } catch (err) {
                 console.error("[HomeBadgesStrip] Loading error:", err);
@@ -179,7 +265,6 @@ export function HomeBadgesStrip({ compact = false }: { compact?: boolean }) {
         return () => {
             cancelled = true;
         };
-        // ✅ re-fetch quand bumpRefreshKey() est appelé (si WorldHubProvider est présent)
     }, [refreshKey]);
 
     useEffect(() => {

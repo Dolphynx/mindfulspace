@@ -1,11 +1,13 @@
 "use client";
 
 /**
+ * @file LanguageSwitcher.tsx
+ * @description
  * Sélecteur de langue (FR/EN) basé sur l’URL.
  *
  * @remarks
- * - Détermine la locale courante à partir du premier segment du chemin (`/fr/...`, `/en/...`).
- * - Change de langue en conservant le reste du chemin.
+ * - Résout la locale courante via les paramètres de route Next.js (`useParams`) lorsque la route est localisée.
+ * - Conserve le reste du chemin lors du changement de langue.
  * - Persiste la préférence utilisateur dans un cookie essentiel `locale`.
  *
  * @example
@@ -13,10 +15,13 @@
  * - `/` (sans locale) → locale par défaut (voir {@link defaultLocale})
  */
 
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { locales, isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
+/**
+ * Nom du cookie stockant la locale préférée.
+ */
 const LOCALE_COOKIE = "locale";
 
 /**
@@ -36,28 +41,38 @@ function setLocaleCookie(locale: Locale) {
         (process.env.NODE_ENV === "production" ? "; Secure" : "");
 }
 
+/**
+ * Composant de bascule de langue.
+ *
+ * @remarks
+ * - Utilise `useParams` pour lire la locale courante lorsqu’elle est présente dans le segment `[locale]`.
+ * - Utilise `usePathname` pour reconstruire le chemin complet en conservant le reste de la route.
+ *
+ * @returns Sélecteur de langue sous forme de boutons.
+ */
 export default function LanguageSwitcher() {
     const pathname = usePathname();
     const router = useRouter();
     const t = useTranslations("langSwitcher");
 
     /**
-     * Segments de l'URL courante.
+     * Locale courante résolue depuis les paramètres de route.
      *
      * @remarks
-     * `pathname` commence par `/`, donc `split("/")` donne typiquement :
-     * - `["", "fr", "member", "..."]`
+     * En cas de paramètre absent ou invalide, retombe sur {@link defaultLocale}.
      */
-    const segments = pathname.split("/");
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const currentLocale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     /**
-     * Locale courante résolue depuis le premier segment.
+     * Segments du chemin courant.
      *
      * @remarks
-     * En cas de segment absent/invalide, retombe sur {@link defaultLocale}.
+     * `pathname` commence par `/`, donc `split("/")` produit typiquement :
+     * `["", "fr", "member", "..."]`.
      */
-    const currentRaw = segments[1] || defaultLocale;
-    const currentLocale: Locale = isLocale(currentRaw) ? currentRaw : defaultLocale;
+    const segments = pathname.split("/");
 
     /**
      * Locales disponibles dans le switcher.
@@ -65,8 +80,7 @@ export default function LanguageSwitcher() {
      * @remarks
      * Cette liste est alignée avec la configuration i18n globale.
      */
-    //const LOCALES: Locale[] = ["fr", "en"];
-    const LOCALES: readonly Locale[] = locales;
+    const availableLocales: readonly Locale[] = locales;
 
     /**
      * Bascule de langue en conservant la route actuelle.
@@ -76,16 +90,18 @@ export default function LanguageSwitcher() {
      * @remarks
      * - Si la locale demandée est identique à la locale courante, ne fait rien.
      * - Stocke la préférence dans un cookie essentiel.
-     * - Reconstruit le chemin en remplaçant uniquement le segment de locale.
-     * - Si un jour il y a des routes sans /locale/ => le chemin sera incorrect !!!
+     * - Reconstruit le chemin en remplaçant le préfixe de locale si présent.
      */
     function handleSwitch(nextLocale: Locale) {
         if (nextLocale === currentLocale) return;
 
         setLocaleCookie(nextLocale);
 
-        const rest = segments.slice(2).join("/");
-        const newPath = "/" + nextLocale + (rest ? "/" + rest : "");
+        const seg1 = segments[1];
+        const hasLocalePrefix = typeof seg1 === "string" && isLocale(seg1);
+
+        const rest = hasLocalePrefix ? segments.slice(2).join("/") : segments.slice(1).join("/");
+        const newPath = `/${nextLocale}${rest ? `/${rest}` : ""}`;
 
         router.push(newPath);
     }
@@ -93,7 +109,7 @@ export default function LanguageSwitcher() {
     return (
         <div className="inline-flex items-center gap-2 rounded-full border border-brandBorder bg-white/70 px-3 py-1 text-xs">
             <div className="flex items-center gap-1">
-                {LOCALES.map((loc) => (
+                {availableLocales.map((loc) => (
                     <button
                         key={loc}
                         type="button"

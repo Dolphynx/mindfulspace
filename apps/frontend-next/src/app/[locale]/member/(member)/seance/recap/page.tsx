@@ -19,9 +19,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+
 
 /**
  * Page client : `/[locale]/member/seance/recap`
@@ -33,11 +34,10 @@ import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
  */
 export default function RecapPage() {
     const router = useRouter();
-    const pathname = usePathname();
 
-    // Déduction de la locale à partir de l’URL
-    const rawLocale = pathname.split("/")[1] || defaultLocale;
-    const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     // Namespace i18n pour cette page
     const t = useTranslations("sessionRecap");

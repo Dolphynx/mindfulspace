@@ -22,7 +22,7 @@
 import { useState } from "react";
 import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue, moodToPercent } from "@/lib";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
@@ -36,10 +36,9 @@ export default function HumeurPage() {
     const [value, setValue] = useState<MoodValue | null>(null);
 
     const router = useRouter();
-    const pathname = usePathname();
 
-    // Déduction de la locale depuis l’URL
-    const raw = pathname.split("/")[1] || defaultLocale;
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     // Namespace i18n

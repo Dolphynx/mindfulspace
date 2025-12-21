@@ -7,9 +7,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import {useRouter, useParams} from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from '@/i18n/TranslationContext';
+import { defaultLocale, isLocale, type Locale } from '@/i18n/config';
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
@@ -17,8 +18,10 @@ export default function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const pathname = usePathname();
-  const locale = pathname.split('/')[1] || 'en';
+
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
   // Close menu when clicking outside
   useEffect(() => {

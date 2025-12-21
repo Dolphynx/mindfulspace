@@ -40,7 +40,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
@@ -89,8 +89,9 @@ type MainNavbarProps = {
 export function MainNavbar({ mode }: MainNavbarProps) {
     const pathname = usePathname();
 
-    // Détection de locale depuis l’URL (premier segment).
-    const raw = pathname.split("/")[1] || defaultLocale;
+    // Locale résolue via les paramètres de route Next.js.
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     const t = useTranslations("navbar");
