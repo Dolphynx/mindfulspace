@@ -4,11 +4,15 @@
 
 import { apiFetch } from "@/lib/api/client";
 
-export type ProgramItem = {
+export type ProgramExerciceItem = {
     id: string;
-    title: string;
-    description: string | null;
-    days: ProgramDay[];
+    defaultRepetitionCount: number | null;
+    defaultSets: number | null;
+    exercice: {
+        id: string;
+        name: string;
+        description: string | null;
+    };
 };
 
 export type ProgramDay = {
@@ -16,21 +20,24 @@ export type ProgramDay = {
     title: string;
     order: number;
     weekday: number | null;
-    exerciceItems: ProgramExerciceItem[];
+    exercices: ProgramExerciceItem[];
 };
 
-export type ProgramExerciceItem = {
+export type ProgramItem = {
     id: string;
-    exerciceContentId: string;
-    defaultRepetitionCount: number | null;
-    defaultSets: number | null;
-
-    exerciceContent: {
-        id: string;
-        name: string;
-        description?: string | null;
-    } | null;
+    title: string;
+    description: string | null;
+    days: ProgramDay[];
 };
+
+
+export type UserProgram = {
+    id: string;
+    title: string;
+    description: string | null;
+    days: UserProgramDay[];
+};
+
 
 export type CreateProgramPayload = {
     title: string;
@@ -47,12 +54,17 @@ export type CreateProgramPayload = {
     }[];
 };
 
-// Types for the user’s copied programs
 export type UserProgramExercise = {
     id: string;
-    exerciceContentName: string;
     defaultRepetitionCount: number | null;
+    defaultSets: number | null;
+    exercice: {
+        id: string;
+        name: string;
+        description: string | null;
+    };
 };
+
 
 export type UserProgramDay = {
     id: string;
@@ -61,11 +73,6 @@ export type UserProgramDay = {
     exercices: UserProgramExercise[];
 };
 
-export type UserProgram = {
-    id: string;
-    programTitle: string;
-    days: UserProgramDay[];
-};
 
 export type ProgramSubscriptionStatus = {
     subscribed: boolean;
@@ -83,42 +90,36 @@ const API_BASE_URL =
 /*  NORMALIZERS                                                               */
 /* -------------------------------------------------------------------------- */
 
+function withLang(url: string, lang: string) {
+    const u = new URL(url);
+    u.searchParams.set("lang", lang);
+    return u.toString();
+}
+
+
 function normalizeProgram(raw: any): ProgramItem | null {
     if (!raw || typeof raw !== "object") return null;
 
     return {
-        id: String(raw.id ?? ""),
-        title: String(raw.title ?? ""),
-        description:
-            typeof raw.description === "string" ? raw.description : null,
+        id: String(raw.id),
+        title: String(raw.title),
+        description: raw.description ?? null,
         days: Array.isArray(raw.days)
             ? raw.days.map((d: any) => ({
-                id: String(d.id ?? ""),
-                title: String(d.title ?? ""),
-                order: Number(d.order ?? 0),
-                weekday: typeof d.weekday === "number" ? d.weekday : null,
-                exerciceItems: Array.isArray(d.exerciceItems)
-                    ? d.exerciceItems.map((e: any) => ({
-                        id: String(e.id ?? ""),
-                        exerciceContentId: String(e.exerciceContentId ?? ""),
-                        defaultRepetitionCount:
-                            typeof e.defaultRepetitionCount === "number"
-                                ? e.defaultRepetitionCount
-                                : null,
-                        defaultSets:
-                            typeof e.defaultSets === "number"
-                                ? e.defaultSets
-                                : null,
-                        exerciceContent: e.exerciceContent
-                            ? {
-                                id: String(e.exerciceContent.id ?? ""),
-                                name: String(e.exerciceContent.name ?? ""),
-                                description:
-                                    typeof e.exerciceContent.description === "string"
-                                        ? e.exerciceContent.description
-                                        : null,
-                            }
-                            : null,
+                id: String(d.id),
+                title: String(d.title),
+                order: Number(d.order),
+                weekday: d.weekday ?? null,
+                exercices: Array.isArray(d.exercices)
+                    ? d.exercices.map((e: any) => ({
+                        id: String(e.id),
+                        defaultRepetitionCount: e.defaultRepetitionCount ?? null,
+                        defaultSets: e.defaultSets ?? null,
+                        exercice: {
+                            id: String(e.exercice.id),
+                            name: String(e.exercice.name),
+                            description: e.exercice.description ?? null,
+                        },
                     }))
                     : [],
             }))
@@ -126,14 +127,16 @@ function normalizeProgram(raw: any): ProgramItem | null {
     };
 }
 
+
 /* -------------------------------------------------------------------------- */
 /*  API CALLS                                                                 */
 /* -------------------------------------------------------------------------- */
 
 export async function fetchPrograms(
-    baseUrl = API_BASE_URL
+    lang: string,
+    baseUrl = API_BASE_URL,
 ): Promise<ProgramItem[]> {
-    const res = await apiFetch(`${baseUrl}/programs`);
+    const res = await apiFetch(withLang(`${baseUrl}/programs`, lang));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
@@ -146,13 +149,13 @@ export async function fetchPrograms(
 
 export async function fetchProgramById(
     id: string,
-    baseUrl = API_BASE_URL
+    lang: string,
+    baseUrl = API_BASE_URL,
 ): Promise<ProgramItem | null> {
-    const res = await apiFetch(`${baseUrl}/programs/${id}`);
+    const res = await apiFetch(withLang(`${baseUrl}/programs/${id}`, lang));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const raw = await res.json();
-    return normalizeProgram(raw);
+    return normalizeProgram(await res.json());
 }
 
 export async function createProgram(
@@ -176,73 +179,56 @@ export async function createProgram(
  * body: { programId: string }
  */
 export async function subscribeToProgram(
-    programId: string,
-    baseUrl = API_BASE_URL
+    programId: string
 ): Promise<void> {
-    const res = await apiFetch(`${baseUrl}/user/programs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ programId }),
-    });
+    const res = await apiFetch(
+        `${API_BASE_URL}/programs/${programId}/subscribe`,
+        {
+            method: "POST",
+        }
+    );
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
+
 
 export async function getProgramSubscriptionStatus(
     programId: string,
-    baseUrl = API_BASE_URL
 ): Promise<ProgramSubscriptionStatus> {
-    const res = await apiFetch(`${baseUrl}/user/programs/status/${programId}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const res = await apiFetch(
+        `${API_BASE_URL}/user-programs/status/${programId}`
+    );
 
-    const data = (await res.json()) as ProgramSubscriptionStatus;
-    return data; // not just boolean
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
 }
+
 
 export async function unsubscribeFromProgram(
     userProgramId: string,
-    baseUrl = API_BASE_URL
 ): Promise<void> {
-    const res = await apiFetch(`${baseUrl}/user/programs/${userProgramId}`, {
-        method: "DELETE",
-    });
+    const res = await apiFetch(
+        `${API_BASE_URL}/user-programs/${userProgramId}`,
+        { method: "DELETE" }
+    );
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
+
 
 /**
  * GET /user/programs  (fetch all subscriptions of current user)
  */
 export async function fetchUserPrograms(
-    baseUrl = API_BASE_URL
+    lang: string,
+    baseUrl = API_BASE_URL,
 ): Promise<UserProgram[]> {
-    const res = await apiFetch(`${baseUrl}/user/programs`, {
+    const res = await apiFetch(withLang(`${baseUrl}/user-programs`, lang), {
         cache: "no-store",
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data = (await res.json()) as unknown;
-    if (!Array.isArray(data)) return [];
-
-    return data.map((raw: any): UserProgram => ({
-        id: String(raw.id ?? ""),
-        programTitle: String(raw.program?.title ?? ""), // 👈 from relation
-        days: Array.isArray(raw.days)
-            ? raw.days.map((d: any): UserProgramDay => ({
-                id: String(d.id ?? ""),
-                title: String(d.title ?? ""),
-                weekday: typeof d.weekday === "number" ? d.weekday : null,
-                exercices: Array.isArray(d.exercices)
-                    ? d.exercices.map((e: any): UserProgramExercise => ({
-                        id: String(e.id ?? ""),
-                        exerciceContentName: String(e.exerciceContent?.name ?? ""),
-                        defaultRepetitionCount:
-                            typeof e.defaultRepetitionCount === "number"
-                                ? e.defaultRepetitionCount
-                                : null,
-                    }))
-                    : [],
-            }))
-            : [],
-    }));
+    return (await res.json()) as UserProgram[];
 }
+

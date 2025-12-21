@@ -1,6 +1,27 @@
 import { IsString, IsOptional, IsArray, ValidateNested, IsInt, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
+class ProgramTranslationDto {
+  @IsString()
+  languageCode!: string; // "fr", "en"
+
+  @IsString()
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
+class ProgramDayTranslationDto {
+  @IsString()
+  languageCode!: string;
+
+  @IsString()
+  title!: string;
+}
+
+
 class ProgramExerciceItemDto {
     @IsUUID()
     exerciceContentId!: string;
@@ -15,32 +36,34 @@ class ProgramExerciceItemDto {
 }
 
 class ProgramDayDto {
-    @IsString()
-    title!: string;
+  @IsInt()
+  order!: number;
 
-    @IsInt()
-    order!: number;
+  @IsOptional()
+  @IsInt()
+  weekday?: number;
 
-    @IsOptional()
-    @IsInt()
-    weekday?: number; // 1–7
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProgramDayTranslationDto)
+  translations!: ProgramDayTranslationDto[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ProgramExerciceItemDto)
-    exercices!: ProgramExerciceItemDto[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProgramExerciceItemDto)
+  exercices!: ProgramExerciceItemDto[];
 }
+
 
 export class CreateProgramDto {
-    @IsString()
-    title!: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProgramTranslationDto)
+  translations!: ProgramTranslationDto[];
 
-    @IsOptional()
-    @IsString()
-    description?: string;
-
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ProgramDayDto)
-    days!: ProgramDayDto[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProgramDayDto)
+  days!: ProgramDayDto[];
 }
+
