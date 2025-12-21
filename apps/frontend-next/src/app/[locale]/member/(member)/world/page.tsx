@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import Island from "@/components/map/Island";
@@ -89,8 +89,8 @@ function toPctY(y: number) {
 export default function SerenityLanding() {
     const router = useRouter();
 
-    const pathname = usePathname();
-    const raw = pathname.split("/")[1] || defaultLocale;
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     const t = useTranslations("publicWorld");

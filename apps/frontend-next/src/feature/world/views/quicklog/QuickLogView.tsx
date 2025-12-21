@@ -17,7 +17,7 @@ import { useSleepSessions } from "@/hooks/useSleepSessions";
 import { QuickLogLauncher } from "../overview/QuickLogLauncher";
 
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
-import { useNotifications } from "@/hooks/useNotifications";
+// import { useNotifications } from "@/hooks/useNotifications";
 
 /**
  * Vue “Quick Log” du drawer SPA.
@@ -42,7 +42,7 @@ export function QuickLogView() {
     const tCommon = useTranslations("common");
 
     const { state, openOverview } = useWorldHub();
-    const { notifySessionSaved } = useNotifications();
+    // const { notifySessionSaved } = useNotifications();
 
     /**
      * Mécanisme de rafraîchissement facultatif du World Hub.
@@ -99,7 +99,7 @@ export function QuickLogView() {
      * La navigation est différée pour laisser le temps à l’utilisateur de percevoir le feedback.
      */
     const showSuccessAndGoOverview = () => {
-        notifySessionSaved({ celebrate: true });
+        // notifySessionSaved({ celebrate: true });
 
         navTimerRef.current = window.setTimeout(() => {
             openOverview();

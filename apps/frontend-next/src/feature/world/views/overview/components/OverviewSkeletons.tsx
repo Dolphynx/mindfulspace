@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file OverviewSkeletons.tsx
  * @description

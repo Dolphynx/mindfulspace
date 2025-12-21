@@ -1,5 +1,3 @@
-// src/app/[locale]/layout.tsx
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/globals.css";
@@ -9,6 +7,7 @@ import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { TranslationProvider } from "@/i18n/TranslationContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OfflineSyncListener } from "@/offline-sync/OfflineSyncListener";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -63,6 +62,7 @@ export default async function RootLayout({
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
         <ServiceWorkerRegister />
+        <OfflineSyncListener />
         <TranslationProvider locale={locale} dictionary={messages}>
             <AuthProvider>
                 {children}

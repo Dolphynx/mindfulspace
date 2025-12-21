@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * @file OverviewErrors.tsx
  * @description

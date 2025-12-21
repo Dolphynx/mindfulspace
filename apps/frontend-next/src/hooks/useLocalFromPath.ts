@@ -1,14 +1,11 @@
-// src/i18n/useLocaleFromPath.ts
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 
 export function useLocaleFromPath(): Locale {
-    const pathname = usePathname();
-    const segments = pathname.split("/");
-    const raw = segments[1];
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
 
-    if (raw && isLocale(raw)) return raw;
-    return defaultLocale;
+    return isLocale(raw) ? raw : defaultLocale;
 }

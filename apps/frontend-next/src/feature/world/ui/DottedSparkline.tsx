@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Contraint une valeur numérique dans un intervalle donné.
  *

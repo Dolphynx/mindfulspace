@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Chip statistique utilisée pour afficher un couple libellé / valeur.
  *

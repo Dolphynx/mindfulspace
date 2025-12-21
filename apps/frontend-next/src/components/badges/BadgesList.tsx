@@ -1,14 +1,38 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { useTranslations } from "@/i18n/TranslationContext";
 import type { Locale } from "@/i18n/config";
 import { formatEarnedAt, stripBadgesNamespace, type UiUserBadge } from "@/components";
 
+/**
+ * Props du composant BadgesList.
+ */
 type Props = {
+    /**
+     * Liste des badges utilisateur à afficher.
+     */
     badges: UiUserBadge[];
+
+    /**
+     * Indique si le chargement est en cours.
+     */
     loading: boolean;
+
+    /**
+     * Locale active, utilisée pour formater la date d’obtention.
+     */
     locale: Locale;
+
+    /**
+     * Variante d’affichage.
+     *
+     * - `page` : paddings plus confortables
+     * - `drawer` : paddings réduits pour un panneau latéral
+     *
+     * @default "page"
+     */
     variant?: "page" | "drawer";
 };
 
@@ -45,12 +69,16 @@ export function BadgesList({ badges, loading, locale, variant = "page" }: Props)
     return (
         <div className="space-y-5">
             {/* Header compact réutilisable (en drawer on le garde, c’est utile) */}
-            <div className={`rounded-3xl border border-white/40 bg-white/55 shadow-md backdrop-blur ${wrapPad}`}>
+            <div
+                className={`rounded-3xl border border-white/40 bg-white/55 shadow-md backdrop-blur ${wrapPad}`}
+            >
                 <div className="flex items-center gap-5">
                     <div className="h-16 w-16 rounded-3xl bg-white/70 border border-white/50 shadow-sm flex items-center justify-center shrink-0">
-                        <img
+                        <Image
                             src={`/images/badges/${headerBadgeIconKey}`}
                             alt=""
+                            width={64}
+                            height={64}
                             className="h-16 w-16 object-contain"
                         />
                     </div>
@@ -65,7 +93,10 @@ export function BadgesList({ badges, loading, locale, variant = "page" }: Props)
                                 ? (t?.("loading") ?? "Chargement…")
                                 : count === 0
                                     ? (t?.("noBadgesYet") ?? "Aucun badge pour le moment.")
-                                    : (t?.("badgesCount") ?? "{count} badges obtenus").replace("{count}", String(count))}
+                                    : (t?.("badgesCount") ?? "{count} badges obtenus").replace(
+                                        "{count}",
+                                        String(count),
+                                    )}
                         </div>
                     </div>
                 </div>
@@ -75,7 +106,10 @@ export function BadgesList({ badges, loading, locale, variant = "page" }: Props)
             {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="rounded-3xl border border-white/40 bg-white/45 shadow-md backdrop-blur p-4">
+                        <div
+                            key={i}
+                            className="rounded-3xl border border-white/40 bg-white/45 shadow-md backdrop-blur p-4"
+                        >
                             <div className="flex items-center gap-4">
                                 <div className="h-14 w-14 rounded-2xl bg-slate-100 animate-pulse" />
                                 <div className="flex-1">
@@ -99,9 +133,11 @@ export function BadgesList({ badges, loading, locale, variant = "page" }: Props)
                         <article key={b.id} className={cardBase}>
                             <div className="flex items-start gap-4">
                                 <div className="h-14 w-14 rounded-2xl bg-white/70 overflow-hidden shadow-sm shrink-0 flex items-center justify-center border border-white/50">
-                                    <img
+                                    <Image
                                         src={`/images/badges/${b.iconKey ?? "default"}`}
                                         alt=""
+                                        width={56}
+                                        height={56}
                                         className="h-14 w-14 object-contain"
                                     />
                                 </div>
@@ -113,8 +149,8 @@ export function BadgesList({ badges, loading, locale, variant = "page" }: Props)
                                         </div>
 
                                         <span className="shrink-0 rounded-full border border-slate-200/60 bg-white/70 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                      {b.earnedLabel}
-                    </span>
+                                            {b.earnedLabel}
+                                        </span>
                                     </div>
 
                                     {b.description ? (

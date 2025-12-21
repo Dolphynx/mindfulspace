@@ -756,6 +756,7 @@ const en: Messages = {
 
         toasts: {
             sessionSaved: "Session saved",
+            sessionSavedOffline: "Session saved offline",
         },
     },
 
