@@ -28,18 +28,11 @@ const ConfettiContext = createContext<ConfettiContextValue | undefined>(undefine
  * Provider global de gestion des confettis.
  *
  * @remarks
- * Ce provider expose une API minimale permettant de déclencher des confettis
- * depuis n’importe quel composant descendant, indépendamment des mécanismes
- * de notification (toasts, badges, etc.).
- *
  * Le composant {@link LotusConfetti} est rendu une seule fois à ce niveau,
- * garantissant :
- * - un overlay global unique,
- * - un comportement homogène dans toute l’application,
- * - l’absence de duplication des effets visuels.
+ * garantissant un overlay global unique.
  *
  * Un mécanisme de limitation temporelle (cooldown) empêche le déclenchement
- * de plusieurs bursts trop rapprochés (ex. confirmation + badge gagné),
+ * de plusieurs bursts trop rapprochés (ex. confirmation + badges “au même moment”),
  * afin de préserver la lisibilité et le confort visuel.
  *
  * @param props Propriétés du provider.
@@ -51,10 +44,7 @@ export function ConfettiProvider({ children }: { children: ReactNode }) {
     const [isFiring, setIsFiring] = useState(false);
 
     /**
-     * Référence interne utilisée pour limiter les déclenchements successifs.
-     *
-     * Elle stocke le timestamp (en millisecondes) jusqu’auquel
-     * tout nouvel appel à `fire` est ignoré.
+     * Timestamp (ms) jusqu’auquel tout nouvel appel à `fire` est ignoré.
      */
     const cooldownUntilRef = useRef<number>(0);
 
@@ -62,32 +52,20 @@ export function ConfettiProvider({ children }: { children: ReactNode }) {
      * Déclenche un burst de confettis.
      *
      * @remarks
-     * Si un burst est déjà en cours (ou si l’appel intervient dans la fenêtre
-     * de cooldown), l’appel est ignoré afin d’éviter des rafales visuelles.
+     * Si l’appel intervient pendant la fenêtre de cooldown, il est ignoré.
+     * Le composant de confettis est re-mount pour garantir un burst distinct
+     * à chaque déclenchement valide.
      *
      * @param ms Durée du burst en millisecondes.
-     * Une valeur par défaut est utilisée si non spécifiée.
      */
-    const fire = useCallback((ms: number = 1200) => {
+    const fire = useCallback((ms: number = 4000) => {
         const now = Date.now();
+        if (now < cooldownUntilRef.current) return;
 
-        // Si un burst est déjà en cours ou dans la fenêtre de cooldown,
-        // ignorer le déclenchement.
-        if (now < cooldownUntilRef.current) {
-            return;
-        }
-
-        /**
-         * Marge de sécurité ajoutée à la durée du burst.
-         *
-         * Elle permet d’absorber les appels quasi simultanés
-         * (ex. toast de confirmation + toast de badge).
-         */
+        // Marge de sécurité pour absorber des triggers quasi simultanés.
         const bufferMs = 200;
         cooldownUntilRef.current = now + ms + bufferMs;
 
-        // Forcer un re-mount du composant de confettis afin de garantir
-        // l’exécution d’un burst distinct à chaque appel valide.
         setBurstId((x) => x + 1);
         setIsFiring(true);
 
@@ -101,7 +79,6 @@ export function ConfettiProvider({ children }: { children: ReactNode }) {
     return (
         <ConfettiContext.Provider value={value}>
             {children}
-
             <LotusConfetti key={burstId} fire={isFiring} />
         </ConfettiContext.Provider>
     );
@@ -110,15 +87,8 @@ export function ConfettiProvider({ children }: { children: ReactNode }) {
 /**
  * Hook d’accès au contexte des confettis.
  *
- * @remarks
- * Permet à un composant descendant de déclencher un burst de confettis
- * via l’API exposée par {@link ConfettiProvider}.
- *
  * @throws Error
- * Lance une erreur si le hook est utilisé en dehors du provider associé,
- * afin de garantir une configuration correcte de l’arbre de composants.
- *
- * @returns L’API de déclenchement des confettis.
+ * Lance une erreur si le hook est utilisé en dehors du provider associé.
  */
 export function useConfetti(): ConfettiContextValue {
     const ctx = useContext(ConfettiContext);

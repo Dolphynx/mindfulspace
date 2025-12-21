@@ -174,7 +174,7 @@ function BadgePortalPopover({
             <div className="flex gap-3 items-start">
                 <div className="h-14 w-14 rounded-2xl bg-slate-100 overflow-hidden shrink-0 shadow-sm border border-white/60">
                     <Image
-                        src={`/images/badges/${badge.iconKey ?? "default"}`}
+                        src={`/images/badges/${badge.iconKey ?? "default.png"}`}
                         alt=""
                         width={56}
                         height={56}
@@ -240,7 +240,7 @@ function BadgeHeroButton({
             title={title}
         >
             <Image
-                src={`/images/badges/${badge.iconKey ?? "default"}`}
+                src={`/images/badges/${badge.iconKey ?? "default.png"}`}
                 alt=""
                 width={96}
                 height={96}

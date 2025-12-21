@@ -4,15 +4,12 @@ import {
     createContext,
     useCallback,
     useContext,
-    useEffect,
-    useRef,
     useState,
     type ReactNode,
 } from "react";
 
 import type { BadgeToastItem } from "@/types/badges";
 import { BadgeToast } from "./BadgeToast";
-import { useConfetti } from "@/components/confetti/ConfettiProvider";
 
 interface BadgeToastContextValue {
     /**
@@ -36,9 +33,9 @@ const BadgeToastContext = createContext<BadgeToastContextValue | undefined>(unde
  * Un seul toast est affiché à la fois : le premier élément de la file.
  * À la fermeture d’un toast, l’élément courant est retiré et le suivant devient actif.
  *
- * Effets visuels :
- * - Déclenche un burst de confettis à chaque changement de badge actif.
- * - Le rendu de l’overlay de confettis est centralisé dans {@link ConfettiProvider}.
+ * Ce provider ne déclenche volontairement aucun effet visuel global (ex. confettis).
+ * Le déclenchement de confettis est géré au niveau métier via {@link useNotifications}
+ * (ou d'autres orchestrateurs), afin d'éviter un burst par toast affiché.
  *
  * @param props Propriétés du provider.
  * @param props.children Arbre de composants pouvant pousser des badges via contexte.
@@ -46,7 +43,6 @@ const BadgeToastContext = createContext<BadgeToastContextValue | undefined>(unde
  */
 export function BadgeToastProvider({ children }: { children: ReactNode }) {
     const [queue, setQueue] = useState<BadgeToastItem[]>([]);
-    const { fire } = useConfetti();
 
     /**
      * Empile des badges dans la file d’affichage.
@@ -70,28 +66,9 @@ export function BadgeToastProvider({ children }: { children: ReactNode }) {
 
     const active = queue[0] ?? null;
 
-    /**
-     * Mémoire du dernier badge actif afin de ne déclencher les confettis
-     * que lors d’un changement effectif (et non lors d’un re-render).
-     */
-    const prevActiveIdRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        if (!active) {
-            prevActiveIdRef.current = null;
-            return;
-        }
-
-        if (prevActiveIdRef.current !== active.id) {
-            prevActiveIdRef.current = active.id;
-            fire();
-        }
-    }, [active, fire]);
-
     return (
         <BadgeToastContext.Provider value={{ pushBadges }}>
             {children}
-
             {active && <BadgeToast badge={active} onClose={pop} />}
         </BadgeToastContext.Provider>
     );

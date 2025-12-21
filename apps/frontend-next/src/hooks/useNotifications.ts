@@ -37,10 +37,15 @@ export type NotificationsApi = {
      * Les éléments bruts reçus de l’API sont normalisés via {@link mapApiBadgeToToastItem}
      * afin de produire des {@link BadgeToastItem} compatibles avec l’UI.
      *
+     * Optionnellement, un burst de confettis peut être déclenché.
+     * Le provider de confettis appliquant un cooldown, plusieurs déclenchements
+     * simultanés ne produisent qu’un seul burst “au même moment”.
+     *
      * @param apiBadges Liste brute renvoyée par l’API.
+     * @param options Options (ex. célébration).
      * @returns Les items normalisés réellement ajoutés à la file de toasts.
      */
-    notifyBadges: (apiBadges: unknown[]) => BadgeToastItem[];
+    notifyBadges: (apiBadges: unknown[], options?: { celebrate?: boolean }) => BadgeToastItem[];
 
     /**
      * Affiche une confirmation de succès “session enregistrée” via le toast générique.
@@ -74,7 +79,7 @@ export type NotificationsApi = {
 };
 
 /**
- * Hook de notifications unifiées (toasts + confettis).
+ * Hook de notifications unifiées (toasts + badges + confettis).
  *
  * @remarks
  * Ce hook fournit une façade stable pour les notifications UI.
@@ -83,8 +88,10 @@ export type NotificationsApi = {
  * - les toasts de badges via {@link BadgeToastProvider},
  * - le déclenchement des confettis via {@link ConfettiProvider}.
  *
- * L’objectif est de réduire la duplication de logique et de garantir des messages
- * cohérents (i18n) à travers l’application.
+ * Les confettis sont déclenchés depuis cette couche “métier” (et non depuis les composants UI
+ * de toasts badges), afin de garantir :
+ * - un seul burst pour des événements simultanés (cooldown global),
+ * - une cohérence de comportement quel que soit le mode d’affichage des badges.
  *
  * @returns Une API de notifications regroupant les actions disponibles.
  */
@@ -95,24 +102,23 @@ export function useNotifications(): NotificationsApi {
     const { fire } = useConfetti();
 
     return useMemo(() => {
-        /**
-         * Normalise et empile des badges à afficher dans la file de toasts badges.
-         *
-         * @param apiBadges Liste brute renvoyée par l’API.
-         * @returns Les items normalisés ajoutés à la file.
-         */
-        function notifyBadges(apiBadges: unknown[]): BadgeToastItem[] {
+        function notifyBadges(
+            apiBadges: unknown[],
+            options: { celebrate?: boolean } = {},
+        ): BadgeToastItem[] {
             if (!apiBadges?.length) return [];
+
             const items = apiBadges.map(mapApiBadgeToToastItem);
             pushBadges(items);
+
+            if (options.celebrate) {
+                // Cooldown dans ConfettiProvider => un seul burst si plusieurs triggers simultanés.
+                fire();
+            }
+
             return items;
         }
 
-        /**
-         * Affiche une confirmation de succès pour l’enregistrement d’une session.
-         *
-         * @param options Options de notification.
-         */
         function notifySessionSaved(options: NotifySessionSavedOptions = {}) {
             const { celebrate = false, autoCloseMs } = options;
 
@@ -122,14 +128,12 @@ export function useNotifications(): NotificationsApi {
                 autoCloseMs,
             });
 
-            if (celebrate) fire();
+            if (celebrate) {
+                // Cooldown dans ConfettiProvider => absorbe les triggers “au même moment”.
+                fire();
+            }
         }
 
-        /**
-         * Affiche une confirmation de succès pour l’enregistrement hors ligne d’une session.
-         *
-         * @param options Options de notification.
-         */
         function notifySessionSavedOffline(options: NotifySessionSavedOptions = {}) {
             const { celebrate = false, autoCloseMs } = options;
 
@@ -139,29 +143,25 @@ export function useNotifications(): NotificationsApi {
                 autoCloseMs,
             });
 
-            if (celebrate) fire();
+            if (celebrate) {
+                fire();
+            }
         }
 
-        /**
-         * Affiche un toast d’erreur.
-         *
-         * @param message Message à afficher.
-         * @param autoCloseMs Durée d’affichage éventuelle (ms).
-         */
         function notifyError(message: string, autoCloseMs?: number) {
             pushToast({ kind: "error", message, autoCloseMs });
         }
 
-        /**
-         * Affiche un toast d’information.
-         *
-         * @param message Message à afficher.
-         * @param autoCloseMs Durée d’affichage éventuelle (ms).
-         */
         function notifyInfo(message: string, autoCloseMs?: number) {
             pushToast({ kind: "info", message, autoCloseMs });
         }
 
-        return { notifyBadges, notifySessionSaved, notifySessionSavedOffline, notifyError, notifyInfo };
+        return {
+            notifyBadges,
+            notifySessionSaved,
+            notifySessionSavedOffline,
+            notifyError,
+            notifyInfo,
+        };
     }, [fire, pushBadges, pushToast, tWorld]);
 }
