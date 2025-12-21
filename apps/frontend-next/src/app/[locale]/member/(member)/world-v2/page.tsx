@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useId, useRef } from "react";
+
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
@@ -22,6 +24,13 @@ import { ISLAND_PATH } from "@/components/map/islandPath";
  *   un comportement de type SPA, sans navigation multi-pages.
  * - La map (SVG et path) est extraite en composants dédiés pour réduire la
  *   responsabilité de la page et améliorer la maintenabilité.
+ *
+ * Accessibilité & UX du panneau :
+ * - Le panneau est exposé comme un dialog modal (`role="dialog"`, `aria-modal="true"`).
+ * - Le focus est déplacé à l'ouverture vers le bouton de fermeture.
+ * - La navigation au clavier est confinée dans le panneau (focus trap).
+ * - La touche Escape ferme le panneau.
+ * - Le scroll du document est bloqué lorsque le panneau est ouvert.
  *
  * @returns Le composant de page Next.js rendu avec le provider WorldHub.
  */
@@ -51,6 +60,78 @@ function WorldV2Content() {
 
     const { state, openPanel, closePanel, goBack } = useWorldHub();
     const canGoBack = state.drawerStack.length > 1;
+
+    const dialogId = useId();
+    const dialogRef = useRef<HTMLDivElement | null>(null);
+    const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+
+    /**
+     * Met en place le comportement modal du panneau :
+     * - blocage du scroll du document,
+     * - focus initial sur le bouton de fermeture,
+     * - confinement du focus (Tab/Shift+Tab),
+     * - fermeture via Escape,
+     * - restauration du focus à la fermeture.
+     */
+    useEffect(() => {
+        if (!state.isPanelOpen) return;
+
+        const previousActive = document.activeElement as HTMLElement | null;
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        closeBtnRef.current?.focus();
+
+        const getFocusable = (): HTMLElement[] => {
+            const root = dialogRef.current;
+            if (!root) return [];
+
+            const nodes = root.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+            );
+
+            return Array.from(nodes).filter(
+                (el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true"
+            );
+        };
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                closePanel();
+                return;
+            }
+
+            if (e.key !== "Tab") return;
+
+            const focusables = getFocusable();
+            if (focusables.length === 0) return;
+
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+
+            if (e.shiftKey) {
+                if (document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+
+        document.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", onKeyDown);
+            document.body.style.overflow = prevOverflow;
+            previousActive?.focus?.();
+        };
+    }, [state.isPanelOpen, closePanel]);
 
     return (
         <div
@@ -115,11 +196,17 @@ function WorldV2Content() {
                             type="button"
                             onClick={() => closePanel()}
                             aria-label={t("worldPanelCloseAria")}
+                            aria-hidden="true"
                             className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"
+                            tabIndex={-1}
                         />
 
                         {/* Container du panneau */}
                         <div
+                            ref={dialogRef}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby={`world-panel-title-${dialogId}`}
                             className="
                                 relative absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                                 w-[94vw] max-w-5xl h-[88vh]
@@ -144,12 +231,16 @@ function WorldV2Content() {
                                         </button>
                                     )}
 
-                                    <div className="text-xs font-semibold tracking-widest text-slate-700">
+                                    <div
+                                        id={`world-panel-title-${dialogId}`}
+                                        className="text-xs font-semibold tracking-widest text-slate-700"
+                                    >
                                         {t("worldPanelTitle")}
                                     </div>
                                 </div>
 
                                 <button
+                                    ref={closeBtnRef}
                                     type="button"
                                     onClick={() => closePanel()}
                                     className="rounded-xl bg-white/60 hover:bg-white/80 transition px-3 py-2 text-slate-700"
