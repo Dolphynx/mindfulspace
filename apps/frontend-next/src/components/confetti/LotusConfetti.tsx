@@ -3,39 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-/**
- * Représente un pétale de confetti à animer.
- */
 type Petal = {
-    /**
-     * Identifiant unique du pétale dans la salve.
-     */
     id: number;
-
-    /**
-     * Position horizontale (en pourcentage, 0–100).
-     */
     left: number;
-
-    /**
-     * Délai avant démarrage de l’animation (en secondes).
-     */
     delay: number;
-
-    /**
-     * Durée de l’animation (en secondes).
-     */
     duration: number;
-
-    /**
-     * Largeur d’affichage du pétale (en pixels).
-     */
     size: number;
 };
 
-/**
- * Liste des images de pétales utilisées pour le rendu des confettis.
- */
 const PETAL_IMAGES: string[] = [
     "/images/lotus-confetti/petal1.png",
     "/images/lotus-confetti/petal2.png",
@@ -43,9 +18,6 @@ const PETAL_IMAGES: string[] = [
     "/images/lotus-confetti/petal4.png",
 ];
 
-/**
- * Props du composant LotusConfetti.
- */
 interface LotusConfettiProps {
     /**
      * Si true, déclenche une “salve” de confettis.
@@ -71,8 +43,11 @@ interface LotusConfettiProps {
  * Affiche une salve de pétales animés en overlay plein écran.
  *
  * @remarks
- * Le composant génère des pétales aléatoires à chaque déclenchement de `fire`,
- * puis nettoie le DOM après `totalDurationMs`.
+ * Le composant génère des pétales à chaque déclenchement de `fire`,
+ * puis reste affiché jusqu’au nettoyage interne.
+ *
+ * Important : le rendu ne dépend pas de `fire` une fois la salve générée,
+ * afin de laisser les animations aller jusqu’au bout.
  */
 export function LotusConfetti({
                                   fire,
@@ -84,32 +59,24 @@ export function LotusConfetti({
     useEffect(() => {
         if (!fire) return;
 
-        /**
-         * Génère une salve de pétales.
-         */
-        const generated: Petal[] = Array.from({ length: count }).map(
-            (_, index) => ({
-                id: index,
-                left: Math.random() * 100,
-                delay: Math.random() * 0.8,
-                duration: 2.3 + Math.random() * 1.7,
-                size: 24 + Math.random() * 18,
-            }),
-        );
+        const generated: Petal[] = Array.from({ length: count }).map((_, index) => ({
+            id: index,
+            left: Math.random() * 100,
+            delay: Math.random() * 0.8,
+            duration: 2.3 + Math.random() * 1.7,
+            size: 24 + Math.random() * 18,
+        }));
 
         setPetals(generated);
 
-        /**
-         * Nettoyage après la durée totale.
-         */
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             setPetals([]);
         }, totalDurationMs);
 
-        return () => clearTimeout(timer);
+        return () => window.clearTimeout(timer);
     }, [fire, count, totalDurationMs]);
 
-    if (!fire || petals.length === 0) return null;
+    if (petals.length === 0) return null;
 
     return (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
