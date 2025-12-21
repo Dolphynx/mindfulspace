@@ -43,7 +43,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
 import { apiFetch } from "@/lib/api/client";
 
@@ -228,6 +228,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         },
         {
             key: "world",
+            href: (loc) => `/${loc}/member/world-v2`,
+            labelKey: "world",
+        },
+        /*{
+            key: "world",
             href: (loc) => `/${loc}/member/world`,
             labelKey: "world",
             children: [
@@ -237,14 +242,14 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                 { key: "sleep", href: (loc) => `/${loc}/member/domains/sleep`, labelKey: "sleep" },
                 { key: "badges", href: (loc) => `/${loc}/member/badges`, labelKey: "badges" },
             ],
-        },
+        },*/
     ];
 
     /**
      * Item spécifique au public : entrée vers l’espace member.
      */
     const publicItems: NavItem[] = [
-        { key: "clientSpace", href: (loc) => `/${loc}/member/world`, labelKey: "clientSpace" },
+        { key: "clientSpace", href: (loc) => `/${loc}/member/world-v2`, labelKey: "clientSpace" },
     ];
 
     /**
@@ -382,7 +387,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
      * On se base sur le mode effectif : si connecté, le logo mène naturellement vers le “world”.
      */
     const homeHref =
-        effectiveMode === "client" ? `/${locale}/member/world` : `/${locale}`;
+        effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">

@@ -1,5 +1,5 @@
-import { Controller, Get } from "@nestjs/common";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Query } from "@nestjs/common";
+import { ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { BadgesService } from "./badges.service";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { HighlightedBadgeDto, UserBadgeDto } from "./dto/badges.dto";
@@ -12,27 +12,47 @@ export class BadgesController {
   /**
    * Retourne l'ensemble des badges gagnés par l'utilisateur courant.
    *
-   * @param userId Identifiant de l'utilisateur courant.
+   * @param userId - Identifiant de l'utilisateur courant.
+   * @returns Liste complète des badges gagnés, triés par date d'obtention décroissante.
    */
   @Get("me")
-  @ApiOkResponse({
-    type: UserBadgeDto,
-    isArray: true,
-    description:
-      "Liste complète des badges gagnés par l'utilisateur courant, " +
-      "triés par date d'obtention décroissante.",
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    description: "Optionnel. Nombre maximum de badges à retourner. Si absent: retourne tout.",
+    example: 7,
   })
-  async getMyBadges(@CurrentUser("id") userId: string): Promise<UserBadgeDto[]> {
-    return this.badgesService.getUserBadges(userId);
+  async getMyBadges(
+    @CurrentUser("id") userId: string,
+    @Query("limit") limit?: string,
+  ): Promise<UserBadgeDto[]> {
+    const parsed = limit ? Number.parseInt(limit, 10) : undefined;
+    return this.badgesService.getUserBadges(userId, parsed);
   }
 
   /**
    * Retourne les badges récents de l'utilisateur courant destinés
    * à être mis en avant (bandeau d'accueil, toasts, etc.).
    *
-   * @param userId Identifiant de l'utilisateur courant.
+   * Compatibilité :
+   * - Si `limit` n'est pas fourni : comportement historique => 3.
+   * - Si `limit` est fourni (ex: `?limit=7`) : renvoie jusqu'à `limit` badges.
+   *
+   * @param userId - Identifiant de l'utilisateur courant.
+   * @param limit - Nombre maximum de badges à retourner (optionnel).
+   * @returns Liste des badges mis en avant pour l'utilisateur courant.
    */
   @Get("me/highlighted")
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    type: Number,
+    description:
+      "Nombre maximum de badges à retourner. " +
+      "Optionnel : par défaut 3 pour compatibilité.",
+    example: 7,
+  })
   @ApiOkResponse({
     type: HighlightedBadgeDto,
     isArray: true,
@@ -42,7 +62,10 @@ export class BadgesController {
   })
   async getMyHighlightedBadges(
     @CurrentUser("id") userId: string,
+    @Query("limit") limit?: string,
   ): Promise<HighlightedBadgeDto[]> {
-    return this.badgesService.getHighlightedBadges(userId);
+    const parsed = limit ? Number.parseInt(limit, 10) : undefined;
+
+    return this.badgesService.getHighlightedBadges(userId, parsed);
   }
 }

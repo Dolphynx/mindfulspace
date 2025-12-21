@@ -89,7 +89,7 @@ export default function UserMenu() {
 
           <div className="py-1">
             <Link
-              href={`/${locale}/member/world`}
+              href={`/${locale}/member/world-v2`}
               className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
               onClick={() => setIsOpen(false)}
             >

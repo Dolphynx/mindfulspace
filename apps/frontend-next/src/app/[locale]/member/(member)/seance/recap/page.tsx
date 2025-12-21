@@ -91,7 +91,7 @@ export default function RecapPage() {
             <div className="flex gap-3 flex-wrap justify-center">
                 {/* 🔹 Lien vers le dashboard */}
                 <Link
-                    href={`/${locale}/member/world`}
+                    href={`/${locale}/member/world-v2`}
                     className="px-5 py-2 rounded-full bg-brandGreen text-white"
                 >
                     {t("dashboardButton")}

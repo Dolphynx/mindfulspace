@@ -34,7 +34,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      router.push(`/${locale}/member/world`);
+      router.push(`/${locale}/member/world-v2`);
     } catch (err: any) {
       setError(err.message || t('invalidCredentials'));
     } finally {
