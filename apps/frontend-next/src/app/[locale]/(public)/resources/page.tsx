@@ -12,7 +12,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 import Link from "next/link";
 import Image from "next/image";
 import PageHero from "@/components/layout/PageHero";
@@ -86,11 +87,11 @@ export default function ResourcesPage() {
     const [isPremiumUser, setIsPremiumUser] = useState(false);
 
     /**
-     * Déduction de la locale depuis l'URL.
-     * Exemple : /fr/resources → locale = "fr".
+     * Locale courante résolue via les paramètres de route.
      */
-    const pathname = usePathname();
-    const locale = pathname.split("/")[1] || "fr";
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     // Namespace i18n spécifique à cette page
     const t = useTranslations("resourcesPage");

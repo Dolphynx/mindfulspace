@@ -1,4 +1,3 @@
-// File: src/feature/world/views/overview/sections/TopSummarySection.tsx
 "use client";
 
 /**

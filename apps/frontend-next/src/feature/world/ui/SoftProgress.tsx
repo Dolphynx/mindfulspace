@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Barre de progression “soft” destinée à afficher une valeur normalisée (0..100).
  *

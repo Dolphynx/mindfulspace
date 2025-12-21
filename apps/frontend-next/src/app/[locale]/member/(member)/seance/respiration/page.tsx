@@ -10,16 +10,15 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
 export default function RespirationPage() {
     const router = useRouter();
-    const pathname = usePathname();
 
-    // Détermination de la locale à partir de /fr/member/... ou /en/member/...
-    const raw = pathname.split("/")[1] || defaultLocale;
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     const t = useTranslations("breathingSession");
