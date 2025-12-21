@@ -1,4 +1,3 @@
-// File: src/feature/world/views/startSession/StartSessionView.tsx
 "use client";
 
 import { useMemo } from "react";
@@ -15,6 +14,8 @@ import { useExerciceSessions } from "@/hooks/useExerciceSessions";
 import { useAuthRequired } from "@/hooks/useAuthRequired";
 
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
+
+import { useNotifications } from "@/hooks/useNotifications";
 
 /**
  * @file StartSessionView.tsx
@@ -52,6 +53,8 @@ export function StartSessionView() {
     const tCommon = useTranslations("common");
 
     const { state, openOverview } = useWorldHub();
+
+    const { notifySessionSaved } = useNotifications();
 
     /**
      * Mécanismes de rafraîchissement World Hub :
@@ -121,12 +124,20 @@ export function StartSessionView() {
                     <StartMeditationWizard
                         canAccessPremium={canAccessPremium}
                         onCloseAction={() => openOverview()}
-                        onSessionSavedAction={refresh}
+                        onSessionSavedAction={() => {
+                            refresh();
+                            notifySessionSaved({ celebrate: true });
+                        }}
                     />
                 ) : (
                     <ExerciceStartSection
                         types={exerciceTypes ?? []}
-                        onCreateSession={(payload) => withRefresh(() => createExerciceSession(payload))}
+                        onCreateSession={(payload) =>
+                            withRefresh(async () => {
+                                await createExerciceSession(payload);
+                                notifySessionSaved({ celebrate: true });
+                            })
+                        }
                     />
                 )}
             </div>

@@ -1,40 +1,32 @@
 import type { ReactNode } from "react";
-import {AppShell, MainNavbar} from "@/components/layout";
+import { AppShell, MainNavbar } from "@/components/layout";
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { BadgeToastProvider } from "@/components/badges/BadgeToastProvider";
-import {AppToastProvider} from "@/components/toasts/AppToastProvider";
+import { MemberProviders } from "@/app/[locale]/member/Providers";
 
 /**
- * Layout du module member (espace authentifié).
+ * Layout de l’espace authentifié (module member).
  *
- * Rôle :
- * - Envelopper toutes les pages de l'espace client avec :
- *   - la barre de navigation client (ClientNavbar),
- *   - le squelette global de l’application (AppShell).
+ * @remarks
+ * Ce layout encapsule l’ensemble des pages client protégées par authentification.
+ * Il délègue :
+ * - la protection d’accès à {@link AuthGuard},
+ * - la structure d’interface globale à {@link AppShell},
+ * - les providers transverses (toasts, confettis, etc.) à {@link MemberProviders}.
  *
- * Comportement spécifique :
- * - AppShell se charge de :
- *   • afficher GlobalNotice,
- *   • afficher / cacher le footer et la navbar en mode "séance" :
- *       - les routes contenant "seance" (p.ex. /[locale]/member/seance/respiration)
- *         n'affichent ni navbar ni footer pour favoriser la concentration.
- *   • gérer CookieBanner + CookiePreferencesModal.
+ * Le layout ne gère pas directement la locale (i18n). La locale est pilotée
+ * au niveau du layout racine et les libellés sont résolus dans les composants
+ * et pages via le système de traductions.
  *
- * i18n :
- * - Comme pour PublicLayout, ce layout ne manipule pas la locale.
- *   • la langue courante est déterminée au niveau de app/[locale]/layout.tsx,
- *   • les liens + labels sont gérés dans ClientNavbar et les pages via useTranslations.
+ * @param props Propriétés du composant.
+ * @param props.children Contenu rendu dans la zone principale de l’AppShell.
+ * @returns Le layout “member” prêt à l’affichage.
  */
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({ children }: { children: ReactNode }) {
     return (
         <AuthGuard roles={["user", "premium", "coach", "admin"]}>
-            <BadgeToastProvider>
-                <AppToastProvider>
-                    <AppShell navbar={<MainNavbar mode="client" />}>
-                        {children}
-                    </AppShell>
-                </AppToastProvider>
-            </BadgeToastProvider>
+            <MemberProviders>
+                <AppShell navbar={<MainNavbar mode="client" />}>{children}</AppShell>
+            </MemberProviders>
         </AuthGuard>
     );
 }
