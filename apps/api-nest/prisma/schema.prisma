@@ -179,6 +179,25 @@ model MeditationProgramItem {
   @@map("meditation_program_item")
 }
 
+model Language {
+  id   String @id @default(uuid())
+  code String @unique // "en", "fr"
+  name String         // "English", "Français"
+
+  ExerciceContentTranslation ExerciceContentTranslation[]
+
+  ExerciceStepTranslation ExerciceStepTranslation[]
+
+  ProgramTranslation ProgramTranslation[]
+
+  ProgramDayTranslation ProgramDayTranslation[]
+
+  UserProgramTranslation UserProgramTranslation[]
+
+  UserProgramDayTranslation UserProgramDayTranslation[]
+}
+
+
 model ExerciceSession {
   id          String   @id @default(uuid())
   quality     Int? // évaluation subjective de la séance
@@ -192,29 +211,58 @@ model ExerciceSession {
 }
 
 model ExerciceContent {
-  id          String @id @default(uuid())
-  name        String @unique
-  Description String
+  id String @id @default(uuid())
 
-  exerciceSessions        ExerciceSerie[]
-  steps                   ExerciceStep[] // all the steps for this exercise type
-  programExerciceItems ProgramExerciceItem[]
+  translations ExerciceContentTranslation[]
+  steps        ExerciceStep[]
 
-  UserProgramExerciceItem UserProgramExerciceItem[]
+  programExerciceItems     ProgramExerciceItem[]
+  userProgramExerciceItems UserProgramExerciceItem[]
+
+  ExerciceSerie ExerciceSerie[]
 }
+
+model ExerciceContentTranslation {
+  id               String @id @default(uuid())
+  exerciceContentId String
+  languageCode     String
+
+  name        String
+  description String
+
+  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
+  language        Language        @relation(fields: [languageCode], references: [code])
+
+  @@unique([exerciceContentId, languageCode])
+}
+
 
 model ExerciceStep {
-  id             String          @id @default(uuid())
+  id                String @id @default(uuid())
   exerciceContentId String
+  order             Int
+  imageUrl          String?
+
+  translations     ExerciceStepTranslation[]
   exerciceContent  ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
-  order       Int // step number: 1, 2, 3, ...
-  title       String? // optional, e.g. "Starting position"
-  description String // explanation for this step
-  imageUrl    String? // URL of the image (e.g. S3, Cloudinary, /public, etc.)
-
-  @@unique([exerciceContentId, order]) // ensures you don’t have two “step 1” for the same exercise
+  @@unique([exerciceContentId, order])
 }
+
+model ExerciceStepTranslation {
+  id             String @id @default(uuid())
+  exerciceStepId String
+  languageCode   String
+
+  title       String?
+  description String
+
+  exerciceStep ExerciceStep @relation(fields: [exerciceStepId], references: [id])
+  language     Language     @relation(fields: [languageCode], references: [code])
+
+  @@unique([exerciceStepId, languageCode])
+}
+
 
 model ExerciceSerie {
   exerciceSessionId String // FK vers la séance globale
@@ -229,28 +277,55 @@ model ExerciceSerie {
 }
 
 model Program {
-  id          String   @id @default(uuid())
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  translations ProgramTranslation[]
+  days         ProgramDay[]
+
+  userPrograms UserProgram[]
+}
+
+model ProgramTranslation {
+  id           String @id @default(uuid())
+  programId    String
+  languageCode String
+
   title       String
   description String?
-  createdAt   DateTime @default(now())
 
-  days ProgramDay[]
+  program  Program  @relation(fields: [programId], references: [id])
+  language Language @relation(fields: [languageCode], references: [code])
 
-  UserProgram UserProgram[]
+  @@unique([programId, languageCode])
 }
+
 
 model ProgramDay {
-  id               String  @id @default(uuid())
+  id        String @id @default(uuid())
   programId String
-  program   Program @relation(fields: [programId], references: [id])
+  order     Int
+  weekday   Int?
 
-  order Int // Day order inside the program (1, 2, 3...)
-  title String // e.g. "Day A – Upper Body"
-
-  weekday Int? // 1 = Monday ... 7 = Sunday, optional
-
+  translations  ProgramDayTranslation[]
   exerciceItems ProgramExerciceItem[]
+
+  program Program @relation(fields: [programId], references: [id])
 }
+
+model ProgramDayTranslation {
+  id           String @id @default(uuid())
+  programDayId String
+  languageCode String
+
+  title String
+
+  programDay ProgramDay @relation(fields: [programDayId], references: [id])
+  language   Language   @relation(fields: [languageCode], references: [code])
+
+  @@unique([programDayId, languageCode])
+}
+
 
 model ProgramExerciceItem {
   id             String @id @default(uuid())
@@ -265,42 +340,79 @@ model ProgramExerciceItem {
 }
 
 model UserProgram {
-  id          String @id @default(uuid())
-  userId      String
-  programId   String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  programId String?
+  createdAt DateTime @default(now())
 
-  // Copied structure
-  days  UserProgramDay[]
+  translations UserProgramTranslation[]
+  days         UserProgramDay[]
 
-  user      User     @relation(fields: [userId], references: [id])
-  program   Program  @relation(fields: [programId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  program Program? @relation(fields: [programId], references: [id])
 }
+
+
+model UserProgramTranslation {
+  id            String @id @default(uuid())
+  userProgramId String
+  languageCode  String
+
+  title       String
+  description String?
+
+  userProgram UserProgram @relation(fields: [userProgramId], references: [id], onDelete: Cascade)
+
+  language Language @relation(fields: [languageCode], references: [code])
+
+  @@unique([userProgramId, languageCode])
+}
+
+
 
 model UserProgramDay {
   id            String @id @default(uuid())
   userProgramId String
-  title         String
-  order         Int
-  weekday       Int?
 
-  exercices UserProgramExerciceItem[]
+  order   Int
+  weekday Int?
+
+  translations UserProgramDayTranslation[]
+  exercices    UserProgramExerciceItem[]
 
   userProgram UserProgram @relation(fields: [userProgramId], references: [id], onDelete: Cascade)
 }
 
-model UserProgramExerciceItem {
-  id                 String @id @default(uuid())
-  userProgramDayId   String
-  exerciceContentId  String
 
-  defaultRepetitionCount Int?
-  defaultSets Int?
+model UserProgramDayTranslation {
+  id               String @id @default(uuid())
+  userProgramDayId String
+  languageCode     String
+
+  title String
 
   userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
-  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
 
+  language Language @relation(fields: [languageCode], references: [code])
+
+  @@unique([userProgramDayId, languageCode])
 }
+
+
+
+model UserProgramExerciceItem {
+  id                String @id @default(uuid())
+  userProgramDayId  String
+  exerciceContentId String
+
+  defaultRepetitionCount Int?
+  defaultSets            Int?
+
+  userProgramDay UserProgramDay @relation(fields: [userProgramDayId], references: [id], onDelete: Cascade)
+
+  exerciceContent ExerciceContent @relation(fields: [exerciceContentId], references: [id])
+}
+
 
 
 model User {

@@ -13,6 +13,9 @@ import {
 } from "@/lib/api/exercice";
 import {useBadgeToasts} from "@/components/badges/BadgeToastProvider";
 import {mapApiBadgeToToastItem} from "@/lib/badges/mapApiBadge";
+import {useLocaleFromPath} from "@/hooks/useLocalFromPath";
+
+
 
 export type ExerciceErrorType = "load" | "save" | "types" | null;
 
@@ -31,13 +34,16 @@ type UseExerciceSessionsResult = {
 export function useExerciceSessions(
     baseUrl?: string,
 ): UseExerciceSessionsResult {
+
     const [sessions, setSessions] = useState<ExerciceSession[]>([]);
     const [types, setTypes] = useState<ExerciceContentItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [errorType, setErrorType] =
         useState<ExerciceErrorType>(null);
-
     const effectiveBaseUrl = baseUrl;
+    const locale = useLocaleFromPath();
+
+
 
     /** LOAD LAST 7 DAYS */
     const load = useCallback(async () => {
@@ -45,9 +51,7 @@ export function useExerciceSessions(
         setErrorType(null);
 
         try {
-            const data = await fetchLastExerciceSessions(
-                effectiveBaseUrl,
-            );
+            const data = await fetchLastExerciceSessions(locale, effectiveBaseUrl);
             setSessions(data);
         } catch (e) {
             console.error("[useExerciceSessions] load failed", e);
@@ -60,7 +64,7 @@ export function useExerciceSessions(
     /** LOAD EXERCISE CONTENTS */
     const loadTypes = useCallback(async () => {
         try {
-            const data = await fetchExerciceContents(effectiveBaseUrl);
+            const data = await fetchExerciceContents(locale, effectiveBaseUrl);
             setTypes(data);
         } catch (e) {
             console.error("[useExerciceSessions] types failed", e);

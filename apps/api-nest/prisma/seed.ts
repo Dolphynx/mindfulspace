@@ -704,121 +704,230 @@ async function main() {
     );
   }
 
-  // 2.4 Exercises
-  console.log("🌱 Seeding exercise types...");
+  console.log("🌍 Seeding languages...");
+
+  const [en, fr] = await Promise.all([
+    prisma.language.upsert({
+      where: { code: "en" },
+      update: {},
+      create: { code: "en", name: "English" },
+    }),
+    prisma.language.upsert({
+      where: { code: "fr" },
+      update: {},
+      create: { code: "fr", name: "Français" },
+    }),
+  ]);
+
+  console.log("🌱 Seeding exercise contents...");
 
   const baseExercises = [
-    { name: "Push Ups", Description: "Upper-body bodyweight press" },
-    { name: "Pull Ups", Description: "Back and biceps bodyweight pull" },
-    { name: "Squats", Description: "Lower-body compound movement" },
-    { name: "Plank", Description: "Core stabilization exercise" },
-    { name: "Burpees", Description: "Full-body conditioning move" },
-    { name: "Bench Press", Description: "Chest compound barbell lift" },
-    { name: "Deadlift", Description: "Posterior chain barbell lift" },
-    { name: "Overhead Press", Description: "Shoulder barbell press" },
+    {
+      en: { name: "Push Ups", description: "Upper-body bodyweight press" },
+      fr: { name: "Pompes", description: "Exercice au poids du corps pour le haut du corps" },
+    },
+    {
+      en: { name: "Pull Ups", description: "Back and biceps bodyweight pull" },
+      fr: { name: "Tractions", description: "Exercice de tirage pour le dos et les biceps" },
+    },
+    {
+      en: { name: "Squats", description: "Lower-body compound movement" },
+      fr: { name: "Squats", description: "Mouvement polyarticulaire du bas du corps" },
+    },
+    {
+      en: { name: "Plank", description: "Core stabilization exercise" },
+      fr: { name: "Gainage", description: "Exercice de stabilisation du tronc" },
+    },
+    {
+      en: { name: "Burpees", description: "Full-body conditioning move" },
+      fr: { name: "Burpees", description: "Exercice complet de conditionnement physique" },
+    },
+    {
+      en: { name: "Bench Press", description: "Chest compound barbell lift" },
+      fr: { name: "Développé couché", description: "Exercice polyarticulaire pour les pectoraux" },
+    },
+    {
+      en: { name: "Deadlift", description: "Posterior chain barbell lift" },
+      fr: { name: "Soulevé de terre", description: "Exercice pour la chaîne postérieure" },
+    },
+    {
+      en: { name: "Overhead Press", description: "Shoulder barbell press" },
+      fr: { name: "Développé militaire", description: "Exercice de poussée pour les épaules" },
+    },
   ];
 
+  const exerciceMap = new Map<string, string>();
+
   for (const ex of baseExercises) {
-    await prisma.exerciceContent.create({
-      data: ex,
+    const content = await prisma.exerciceContent.create({
+      data: {
+        translations: {
+          create: [
+            { languageCode: "en", ...ex.en },
+            { languageCode: "fr", ...ex.fr },
+          ],
+        },
+      },
     });
+
+    exerciceMap.set(ex.en.name, content.id);
   }
 
   console.log("✔ Base exercises seeded.");
 
-  console.log("🌞 Seeding Sun Salutation...");
+  console.log("🌞 Seeding Sun Salutation (EN + FR)...");
 
   const sunSalutation = await prisma.exerciceContent.create({
     data: {
-      name: "Sun Salutation",
-      Description: "A traditional flowing sequence of yoga postures.",
+      translations: {
+        create: [
+          {
+            languageCode: "en",
+            name: "Sun Salutation",
+            description: "A traditional flowing sequence of yoga postures.",
+          },
+          {
+            languageCode: "fr",
+            name: "Salutation au soleil",
+            description: "Une séquence fluide traditionnelle de postures de yoga.",
+          },
+        ],
+      },
     },
   });
 
   const sunSalutationSteps = [
     {
       order: 1,
-      title: "Pranamasana — Prayer Pose",
-      description:
-        "Stand at the front of your mat, palms together, grounding your breath.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step1_yg3zqf.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step1_yg3zqf.png",
+      en: {
+        title: "Pranamasana — Prayer Pose",
+        description: "Stand at the front of your mat, palms together, grounding your breath.",
+      },
+      fr: {
+        title: "Pranamasana — Posture de la prière",
+        description: "Debout en haut du tapis, mains jointes, stabilisez votre respiration.",
+      },
     },
     {
       order: 2,
-      title: "Hasta Uttanasana — Raised Arms Pose",
-      description: "Lift your arms overhead, gently arching your spine.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step2_a8nuxy.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step2_a8nuxy.png",
+      en: {
+        title: "Hasta Uttanasana — Raised Arms Pose",
+        description: "Lift your arms overhead, gently arching your spine.",
+      },
+      fr: {
+        title: "Hasta Uttanasana — Bras levés",
+        description: "Levez les bras au-dessus de la tête en arquant légèrement la colonne.",
+      },
     },
     {
       order: 3,
-      title: "Uttanasana — Standing Forward Bend",
-      description:
-        "Fold forward from the hips, bringing hands toward the floor.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step3_juamaz.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step3_juamaz.png",
+      en: {
+        title: "Uttanasana — Standing Forward Bend",
+        description: "Fold forward from the hips, bringing hands toward the floor.",
+      },
+      fr: {
+        title: "Uttanasana — Flexion avant debout",
+        description: "Inclinez-vous vers l’avant depuis les hanches, mains vers le sol.",
+      },
     },
     {
       order: 4,
-      title: "Ashwa Sanchalanasana — Low Lunge",
-      description:
-        "Step your right foot back, lowering the knee to the mat, gaze forward.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step4_pt4yqs.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step4_pt4yqs.png",
+      en: {
+        title: "Ashwa Sanchalanasana — Low Lunge",
+        description: "Step your right foot back, lowering the knee to the mat, gaze forward.",
+      },
+      fr: {
+        title: "Ashwa Sanchalanasana — Fente basse",
+        description: "Reculez le pied droit, genou au sol, regard vers l’avant.",
+      },
     },
     {
       order: 5,
-      title: "Plank Pose",
-      description: "Step back into a strong plank, engaging the core.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step5_cm0aiy.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step5_cm0aiy.png",
+      en: {
+        title: "Plank Pose",
+        description: "Step back into a strong plank, engaging the core.",
+      },
+      fr: {
+        title: "Planche",
+        description: "Reculez dans une planche solide en engageant le centre du corps.",
+      },
     },
     {
       order: 6,
-      title: "Ashtanga Namaskara — Eight-Limbed Pose",
-      description:
-        "Lower knees, chest, and chin to the mat while hips stay raised.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step6_xuj9pj.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step6_xuj9pj.png",
+      en: {
+        title: "Ashtanga Namaskara — Eight-Limbed Pose",
+        description: "Lower knees, chest, and chin to the mat while hips stay raised.",
+      },
+      fr: {
+        title: "Ashtanga Namaskara — Posture aux huit points",
+        description: "Abaissez genoux, poitrine et menton au sol, hanches levées.",
+      },
     },
     {
       order: 7,
-      title: "Bhujangasana — Cobra Pose",
-      description:
-        "Lift your chest into a gentle backbend, elbows close to your ribs.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step7_fwjut5.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step7_fwjut5.png",
+      en: {
+        title: "Bhujangasana — Cobra Pose",
+        description: "Lift your chest into a gentle backbend, elbows close to your ribs.",
+      },
+      fr: {
+        title: "Bhujangasana — Cobra",
+        description: "Soulevez la poitrine en légère extension, coudes près du corps.",
+      },
     },
     {
       order: 8,
-      title: "Adho Mukha Svanasana — Downward Dog",
-      description: "Lift hips up, forming an inverted V-shape with your body.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step8_tfmvoh.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159118/step8_tfmvoh.png",
+      en: {
+        title: "Adho Mukha Svanasana — Downward Dog",
+        description: "Lift hips up, forming an inverted V-shape with your body.",
+      },
+      fr: {
+        title: "Adho Mukha Svanasana — Chien tête en bas",
+        description: "Levez les hanches pour former un V inversé avec le corps.",
+      },
     },
     {
       order: 9,
-      title: "Ashwa Sanchalanasana — Low Lunge (other side)",
-      description: "Step your right foot forward this time, gaze ahead.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step9_mmp9ls.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step9_mmp9ls.png",
+      en: {
+        title: "Ashwa Sanchalanasana — Low Lunge (other side)",
+        description: "Step your right foot forward this time, gaze ahead.",
+      },
+      fr: {
+        title: "Ashwa Sanchalanasana — Fente basse (autre côté)",
+        description: "Avancez le pied droit cette fois, regard vers l’avant.",
+      },
     },
     {
       order: 10,
-      title: "Uttanasana — Standing Forward Bend",
-      description:
-        "Fold forward again from the hips, relaxing your neck.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step10_fcuivq.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step10_fcuivq.png",
+      en: {
+        title: "Uttanasana — Standing Forward Bend",
+        description: "Fold forward again from the hips, relaxing your neck.",
+      },
+      fr: {
+        title: "Uttanasana — Flexion avant debout",
+        description: "Repliez-vous à nouveau vers l’avant en relâchant la nuque.",
+      },
     },
     {
       order: 11,
-      title: "Hasta Uttanasana → Pranamasana",
-      description:
-        "Rise up with arms overhead, then return palms to heart center.",
-      imageUrl:
-        "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step11_gkfzr7.png",
+      imageUrl: "https://res.cloudinary.com/dnkpch0ny/image/upload/v1764159119/step11_gkfzr7.png",
+      en: {
+        title: "Hasta Uttanasana → Pranamasana",
+        description: "Rise up with arms overhead, then return palms to heart center.",
+      },
+      fr: {
+        title: "Hasta Uttanasana → Pranamasana",
+        description: "Redressez-vous bras levés puis ramenez les mains au cœur.",
+      },
     },
   ];
 
@@ -827,57 +936,75 @@ async function main() {
       data: {
         exerciceContentId: sunSalutation.id,
         order: step.order,
-        title: step.title,
-        description: step.description,
         imageUrl: step.imageUrl,
+        translations: {
+          create: [
+            { languageCode: "en", ...step.en },
+            { languageCode: "fr", ...step.fr },
+          ],
+        },
       },
     });
   }
 
-  console.log("✔ Sun Salutation seeded with 11 steps.");
-  console.log("✔ ExerciceType seeded");
+  console.log("✔ Sun Salutation seeded with 11 steps (EN + FR).");
 
-  // ---------------------------------------------------------------------------
-  // 2.x Workout Programs (demo)
-  // ---------------------------------------------------------------------------
+
   console.log("🌱 Seeding workout programs...");
 
-  // Get some exercise type IDs
-  const pushUps = await prisma.exerciceContent.findUnique({ where: { name: "Push Ups" } });
-  const squats = await prisma.exerciceContent.findUnique({ where: { name: "Squats" } });
-  const plank = await prisma.exerciceContent.findUnique({ where: { name: "Plank" } });
-  const burpees = await prisma.exerciceContent.findUnique({ where: { name: "Burpees" } });
+  const pushUpsId = exerciceMap.get("Push Ups")!;
+  const squatsId = exerciceMap.get("Squats")!;
+  const plankId = exerciceMap.get("Plank")!;
+  const burpeesId = exerciceMap.get("Burpees")!;
 
-  if (!pushUps || !squats || !plank || !burpees) {
-    throw new Error("Some required exercise types not found");
-  }
 
-  // Program #1
   await prisma.program.create({
     data: {
-      title: "Full Body Beginner",
-      description: "A simple 2-day full body routine.",
+      translations: {
+        create: [
+          {
+            languageCode: "en",
+            title: "Full Body Beginner",
+            description: "A simple 2-day full body routine.",
+          },
+          {
+            languageCode: "fr",
+            title: "Full Body Débutant",
+            description: "Routine simple sur 2 jours pour tout le corps.",
+          },
+        ],
+      },
       days: {
         create: [
           {
-            title: "Day 1 – Full Body A",
             order: 1,
             weekday: 1,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Day 1 – Full Body A" },
+                { languageCode: "fr", title: "Jour 1 – Full Body A" },
+              ],
+            },
             exerciceItems: {
               create: [
-                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 3 },
-                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 3 },
+                { exerciceContentId: pushUpsId, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceContentId: squatsId, defaultRepetitionCount: 12, defaultSets: 3 },
               ],
             },
           },
           {
-            title: "Day 2 – Full Body B",
             order: 2,
             weekday: 3,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Day 2 – Full Body B" },
+                { languageCode: "fr", title: "Jour 2 – Full Body B" },
+              ],
+            },
             exerciceItems: {
               create: [
-                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
-                { exerciceContentId: burpees.id, defaultRepetitionCount: 8, defaultSets: 2 },
+                { exerciceContentId: plankId, defaultRepetitionCount: 1, defaultSets: 3 },
+                { exerciceContentId: burpeesId, defaultRepetitionCount: 8, defaultSets: 2 },
               ],
             },
           },
@@ -886,32 +1013,131 @@ async function main() {
     },
   });
 
-  // Program #2
+  console.log("🌱 Seeding Daily Movement program (7 days)...");
+
   await prisma.program.create({
     data: {
-      title: "Upper / Lower Split",
-      description: "Classic 4-day weekly split.",
+      translations: {
+        create: [
+          {
+            languageCode: "en",
+            title: "Daily Movement",
+            description: "A balanced program with something to do every day of the week.",
+          },
+          {
+            languageCode: "fr",
+            title: "Mouvement quotidien",
+            description: "Un programme équilibré avec une activité chaque jour de la semaine.",
+          },
+        ],
+      },
       days: {
         create: [
           {
-            title: "Upper",
             order: 1,
             weekday: 1,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Monday – Upper Body" },
+                { languageCode: "fr", title: "Lundi – Haut du corps" },
+              ],
+            },
             exerciceItems: {
               create: [
-                { exerciceContentId: pushUps.id, defaultRepetitionCount: 10, defaultSets: 4 },
-                { exerciceContentId: plank.id, defaultRepetitionCount: 1, defaultSets: 3 },
+                { exerciceContentId: pushUpsId, defaultRepetitionCount: 12, defaultSets: 3 },
+                { exerciceContentId: plankId, defaultRepetitionCount: 1, defaultSets: 3 },
               ],
             },
           },
           {
-            title: "Lower",
             order: 2,
-            weekday: 3,
+            weekday: 2,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Tuesday – Lower Body" },
+                { languageCode: "fr", title: "Mardi – Bas du corps" },
+              ],
+            },
             exerciceItems: {
               create: [
-                { exerciceContentId: squats.id, defaultRepetitionCount: 12, defaultSets: 4 },
-                { exerciceContentId: burpees.id, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceContentId: squatsId, defaultRepetitionCount: 15, defaultSets: 3 },
+                { exerciceContentId: burpeesId, defaultRepetitionCount: 8, defaultSets: 2 },
+              ],
+            },
+          },
+          {
+            order: 3,
+            weekday: 3,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Wednesday – Core & Stability" },
+                { languageCode: "fr", title: "Mercredi – Gainage & stabilité" },
+              ],
+            },
+            exerciceItems: {
+              create: [
+                { exerciceContentId: plankId, defaultRepetitionCount: 1, defaultSets: 4 },
+              ],
+            },
+          },
+          {
+            order: 4,
+            weekday: 4,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Thursday – Conditioning" },
+                { languageCode: "fr", title: "Jeudi – Cardio & conditionnement" },
+              ],
+            },
+            exerciceItems: {
+              create: [
+                { exerciceContentId: burpeesId, defaultRepetitionCount: 10, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            order: 5,
+            weekday: 5,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Friday – Full Body" },
+                { languageCode: "fr", title: "Vendredi – Corps entier" },
+              ],
+            },
+            exerciceItems: {
+              create: [
+                { exerciceContentId: pushUpsId, defaultRepetitionCount: 10, defaultSets: 3 },
+                { exerciceContentId: squatsId, defaultRepetitionCount: 12, defaultSets: 3 },
+              ],
+            },
+          },
+          {
+            order: 6,
+            weekday: 6,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Saturday – Yoga Flow" },
+                { languageCode: "fr", title: "Samedi – Flow yoga" },
+              ],
+            },
+            exerciceItems: {
+              create: [
+                { exerciceContentId: sunSalutation.id, defaultRepetitionCount: 1, defaultSets: 2 },
+              ],
+            },
+          },
+          {
+            order: 7,
+            weekday: 7,
+            translations: {
+              create: [
+                { languageCode: "en", title: "Sunday – Light Movement" },
+                { languageCode: "fr", title: "Dimanche – Mouvement doux" },
+              ],
+            },
+            exerciceItems: {
+              create: [
+                { exerciceContentId: plankId, defaultRepetitionCount: 1, defaultSets: 1 },
               ],
             },
           },
@@ -920,32 +1146,28 @@ async function main() {
     },
   });
 
-  console.log("✔ Workout programs seeded.");
+  console.log("✔ Daily Movement program seeded.");
 
-  // 2.5 Sessions demo liées au user "demo@..."
-  console.log("🌱 Creating workout / sleep / meditation sessions for demo user...");
 
-  const workout = await prisma.exerciceSession.create({
+  console.log("🌱 Creating demo workout session...");
+
+  await prisma.exerciceSession.create({
     data: {
       quality: 4,
       dateSession: new Date(),
       userId: demoUser.id,
       exerciceSerie: {
         create: [
-          {
-            exerciceContent: { connect: { name: "Push Ups" } },
-            repetitionCount: 20,
-          },
-          {
-            exerciceContent: { connect: { name: "Squats" } },
-            repetitionCount: 15,
-          },
+          { exerciceContentId: pushUpsId, repetitionCount: 20 },
+          { exerciceContentId: squatsId, repetitionCount: 15 },
         ],
       },
     },
   });
 
-  console.log("✔ WorkoutSession seeded:", workout.id);
+  console.log("✔ Workout session seeded.");
+
+
 
   await prisma.sleepSession.create({
     data: {
