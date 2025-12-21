@@ -1199,6 +1199,15 @@ const fr = {
         filterByCategory: "Filtrer par catégorie",
         allCategories: "Toutes les catégories",
 
+        // Resource types
+        types: {
+            ARTICLE: "Article",
+            VIDEO: "Vidéo",
+            GUIDE: "Guide",
+            MEDITATION_PROGRAM: "Programme de méditation",
+            EXERCICE_PROGRAM: "Programme d'exercice",
+        },
+
         // Form labels
         form: {
             title: "Titre",

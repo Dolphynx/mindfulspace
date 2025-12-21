@@ -1,14 +1,12 @@
 'use client';
 
 /**
- * Admin Taxonomy Management Page
- * Allows admins to manage resource categories and tags
+ * Taxonomy Management Content Component
+ * Manages resource categories and tags (extracted for reuse)
  */
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
-import AdminDashboardShell from '@/components/admin/AdminDashboardShell';
 import {
   ResourceCategory,
   ResourceTag,
@@ -38,16 +36,12 @@ import {
 
 type Tab = 'categories' | 'tags';
 
-export default function TaxonomyManagementPage() {
-  const t = useTranslations('taxonomyManagement');
-  const router = useRouter();
-  const pathname = usePathname();
-  const locale = pathname.split('/')[1] || 'en';
+interface TaxonomyContentProps {
+  locale: string;
+}
 
-  // Redirect to unified admin page with taxonomy tab
-  useEffect(() => {
-    router.replace(`/${locale}/admin?tab=taxonomy`);
-  }, [locale, router]);
+export default function TaxonomyContent({ locale }: TaxonomyContentProps) {
+  const t = useTranslations('taxonomyManagement');
 
   const [activeTab, setActiveTab] = useState<Tab>('categories');
   const [categories, setCategories] = useState<ResourceCategory[]>([]);
@@ -518,40 +512,16 @@ export default function TaxonomyManagementPage() {
       .trim();
   };
 
-  const handleTabChange = (tab: 'dashboard' | 'resources' | 'sessions' | 'taxonomy') => {
-    if (tab === 'taxonomy') {
-      // Already on taxonomy page, do nothing
-      return;
-    }
-    // Navigate back to main admin page with the selected tab
-    if (tab === 'dashboard') {
-      router.push(`/${locale}/admin`);
-    } else {
-      router.push(`/${locale}/admin?tab=${tab}`);
-    }
-  };
-
   if (loading) {
     return (
-      <AdminDashboardShell
-        activeTab="taxonomy"
-        onTabChange={handleTabChange}
-        locale={locale}
-      >
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-brandText/60">{t('loading')}</p>
-        </div>
-      </AdminDashboardShell>
+      <div className="flex h-64 items-center justify-center">
+        <p className="text-brandText/60">{t('loading')}</p>
+      </div>
     );
   }
 
   return (
-    <AdminDashboardShell
-      activeTab="taxonomy"
-      onTabChange={handleTabChange}
-      locale={locale}
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-brandText">{t('title')}</h1>
@@ -1181,7 +1151,6 @@ export default function TaxonomyManagementPage() {
             </div>
           </div>
         )}
-      </div>
-    </AdminDashboardShell>
+    </div>
   );
 }

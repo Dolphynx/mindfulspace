@@ -17,6 +17,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import AdminDashboardShell from "@/components/admin/AdminDashboardShell";
 import { ResourcesList } from "@/components/resources";
 import { useTranslations } from "@/i18n/TranslationContext";
+import dynamic from "next/dynamic";
+import { getDashboardStatistics, DashboardStatistics } from "@/lib/api/admin";
+
+// Dynamically import the taxonomy content (without the shell wrapper)
+const TaxonomyContent = dynamic(
+    () => import("./taxonomy/TaxonomyContent"),
+    { ssr: false, loading: () => <div className="flex h-64 items-center justify-center"><p className="text-brandText/60">Loading...</p></div> }
+);
 
 type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'sessions';
 
@@ -35,6 +43,30 @@ export default function AdminPage() {
             : 'dashboard';
     });
 
+    // Dashboard statistics state
+    const [statistics, setStatistics] = useState<DashboardStatistics | null>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [statsError, setStatsError] = useState<string | null>(null);
+
+    // Fetch dashboard statistics on mount
+    useEffect(() => {
+        const fetchStatistics = async () => {
+            try {
+                setStatsLoading(true);
+                setStatsError(null);
+                const data = await getDashboardStatistics();
+                setStatistics(data);
+            } catch (error: any) {
+                console.error('Failed to fetch dashboard statistics:', error);
+                setStatsError(error.message || 'Failed to load statistics');
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchStatistics();
+    }, []);
+
     // Update URL when tab changes
     useEffect(() => {
         const currentTab = searchParams.get('tab');
@@ -46,13 +78,8 @@ export default function AdminPage() {
     }, [activeTab, locale, router, searchParams]);
 
     const handleTabChange = (tab: TabType) => {
-        if (tab === 'taxonomy') {
-            // Navigate to dedicated taxonomy page
-            router.push(`/${locale}/admin/taxonomy`);
-        } else {
-            // For other tabs, just switch the active tab (URL will update via useEffect)
-            setActiveTab(tab);
-        }
+        // For all tabs, just switch the active tab (URL will update via useEffect)
+        setActiveTab(tab);
     };
 
     return (
@@ -73,6 +100,13 @@ export default function AdminPage() {
                         </p>
                     </div>
 
+                    {/* Error Message */}
+                    {statsError && (
+                        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-600">
+                            {statsError}
+                        </div>
+                    )}
+
                     {/* Statistics Cards */}
                     <div className="grid gap-6 md:grid-cols-3">
                         <div className="rounded-xl border border-brandBorder bg-white p-6 shadow-sm">
@@ -82,7 +116,11 @@ export default function AdminPage() {
                                         Total Utilisateurs
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
-                                        1,234
+                                        {statsLoading ? (
+                                            <span className="animate-pulse">...</span>
+                                        ) : (
+                                            statistics?.users.total.toLocaleString() || '0'
+                                        )}
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-brandGreen/10 p-3">
@@ -92,7 +130,17 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             <p className="mt-4 text-sm text-brandText/60">
-                                <span className="text-green-600">+12%</span> ce mois
+                                {statsLoading ? (
+                                    <span className="animate-pulse">Chargement...</span>
+                                ) : statistics ? (
+                                    <>
+                                        <span className={statistics.users.growthPercent >= 0 ? "text-green-600" : "text-red-600"}>
+                                            {statistics.users.growthPercent >= 0 ? '+' : ''}{statistics.users.growthPercent}%
+                                        </span> {statistics.users.growthLabel}
+                                    </>
+                                ) : (
+                                    'N/A'
+                                )}
                             </p>
                         </div>
 
@@ -103,7 +151,11 @@ export default function AdminPage() {
                                         Ressources
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
-                                        89
+                                        {statsLoading ? (
+                                            <span className="animate-pulse">...</span>
+                                        ) : (
+                                            statistics?.resources.total.toLocaleString() || '0'
+                                        )}
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-blue-100 p-3">
@@ -113,7 +165,15 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             <p className="mt-4 text-sm text-brandText/60">
-                                <span className="text-green-600">+5</span> cette semaine
+                                {statsLoading ? (
+                                    <span className="animate-pulse">Chargement...</span>
+                                ) : statistics ? (
+                                    <>
+                                        <span className="text-green-600">+{statistics.resources.newThisPeriod}</span> {statistics.resources.growthLabel}
+                                    </>
+                                ) : (
+                                    'N/A'
+                                )}
                             </p>
                         </div>
 
@@ -124,7 +184,11 @@ export default function AdminPage() {
                                         Sessions
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
-                                        156
+                                        {statsLoading ? (
+                                            <span className="animate-pulse">...</span>
+                                        ) : (
+                                            statistics?.sessions.total.toLocaleString() || '0'
+                                        )}
                                     </p>
                                 </div>
                                 <div className="rounded-full bg-purple-100 p-3">
@@ -134,7 +198,15 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             <p className="mt-4 text-sm text-brandText/60">
-                                <span className="text-green-600">+8</span> aujourd'hui
+                                {statsLoading ? (
+                                    <span className="animate-pulse">Chargement...</span>
+                                ) : statistics ? (
+                                    <>
+                                        <span className="text-green-600">+{statistics.sessions.newThisPeriod}</span> {statistics.sessions.growthLabel}
+                                    </>
+                                ) : (
+                                    'N/A'
+                                )}
                             </p>
                         </div>
                     </div>
@@ -216,6 +288,11 @@ export default function AdminPage() {
                         showCreateButton={true}
                     />
                 </div>
+            )}
+
+            {/* Taxonomy Tab */}
+            {activeTab === 'taxonomy' && (
+                <TaxonomyContent locale={locale} />
             )}
 
             {/* Sessions Tab */}
