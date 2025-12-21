@@ -2,7 +2,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 
 const DB_NAME = "mindfulspace-offline";
-const DB_VERSION = 4;
+const DB_VERSION = 6;
 
 export type OfflineSleepSession = {
     id?: number;
@@ -12,6 +12,14 @@ export type OfflineSleepSession = {
     createdAt: string;
 };
 
+export type OfflineQueueItem = {
+    id?: number;
+    type: "sleep" | "exercise" | "meditation";
+    payload: unknown;
+    createdAt: number;
+};
+
+
 export async function getDB(): Promise<IDBPDatabase> {
     if (typeof window === "undefined") {
         throw new Error("IndexedDB not available on server");
@@ -19,8 +27,8 @@ export async function getDB(): Promise<IDBPDatabase> {
 
     return openDB(DB_NAME, DB_VERSION, {
         upgrade(db) {
-            if (!db.objectStoreNames.contains("sleepSessions")) {
-                db.createObjectStore("sleepSessions", {
+            if (!db.objectStoreNames.contains("offlineQueue")) {
+                db.createObjectStore("offlineQueue", {
                     keyPath: "id",
                     autoIncrement: true,
                 });

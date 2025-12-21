@@ -1,26 +1,33 @@
-import {
-    getQueuedSessions,
-    removeQueuedSession,
-} from "./sessionQueue";
+import { getQueuedActions, removeQueuedAction } from "./sessionQueue";
+import {createSleepSession, CreateSleepSessionPayload} from "@/lib/api/sleep";
 
-export async function syncPendingSessions(baseUrl: string) {
+export async function syncOfflineQueue() {
     if (!navigator.onLine) return;
 
-    const pending = await getQueuedSessions();
+    const items = await getQueuedActions();
 
-    for (const item of pending) {
+    for (const item of items) {
         try {
-            const res = await fetch(`${baseUrl}/sessions`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(item.payload),
-            });
+            switch (item.type) {
+                case "sleep":
+                    await createSleepSession(item.payload as CreateSleepSessionPayload);
+                    break;
 
-            if (!res.ok) throw new Error("Sync failed");
+                case "exercise":
+                    // await createExerciseSession(...)
+                    break;
 
-            await removeQueuedSession(item.id);
-        } catch {
-            // Stop syncing if one fails (network flapping)
+                case "meditation":
+                    // await createMeditationSession(...)
+                    break;
+
+                default:
+                    throw new Error("Unknown offline queue type");
+            }
+
+            await removeQueuedAction(item.id!);
+        } catch (e) {
+            // stop syncing on first failure
             break;
         }
     }

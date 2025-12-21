@@ -4,8 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { MoodValue } from "@/lib";
 import MoodPicker from "@/components/shared/MoodPicker";
-import {savePendingSleepSession} from "@/offline-sync/sleepSessionQueue";
-
+import {queueSleepSession} from "@/offline-sync/sleep";
 
 type SleepManualFormProps = {
     onCreateSessionAction: (payload: {
@@ -49,7 +48,7 @@ export default function SleepManualForm({ onCreateSessionAction }: SleepManualFo
         try {
             if (!navigator.onLine) {
                 console.log("📴 Offline — saving sleep session locally");
-                await savePendingSleepSession(payload);
+                await queueSleepSession(payload);
 
                 // setMessage?.("💾 Données enregistrées hors-ligne");
                 resetForm();

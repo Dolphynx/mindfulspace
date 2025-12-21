@@ -1,3 +1,4 @@
+/*
 import { getDB, type OfflineSleepSession } from "./db";
 
 export async function savePendingSleepSession(
@@ -10,3 +11,4 @@ export async function savePendingSleepSession(
         createdAt: new Date().toISOString(),
     });
 }
+*/

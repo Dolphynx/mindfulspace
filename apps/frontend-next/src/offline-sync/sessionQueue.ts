@@ -1,27 +1,24 @@
-import {getDB} from "./db";
+import {getDB, OfflineQueueItem} from "./db";
 
-export type PendingSessionPayload = {
-    value: number;
-    quality: number | null;
-    dateSession: string;
-    sessionTypeId: string;
-    expectedUnit?: string;
-};
-
-export async function queueSession(payload: PendingSessionPayload) {
+export async function queueAction(
+    type: OfflineQueueItem["type"],
+    payload: unknown,
+) {
     const db = await getDB();
-    await db.add("pendingSessions", {
+
+    await db.add("offlineQueue", {
+        type,
         payload,
         createdAt: Date.now(),
     });
 }
 
-export async function getQueuedSessions() {
+export async function getQueuedActions() {
     const db = await getDB();
-    return db.getAll("pendingSessions");
+    return db.getAll("offlineQueue");
 }
 
-export async function removeQueuedSession(id: number) {
+export async function removeQueuedAction(id: number) {
     const db = await getDB();
-    await db.delete("pendingSessions", id);
+    await db.delete("offlineQueue", id);
 }
