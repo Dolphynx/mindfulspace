@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
 import AdminDashboardShell from "@/components/admin/AdminDashboardShell";
 import { ResourcesList } from "@/components/resources";
 import { useTranslations } from "@/i18n/TranslationContext";
@@ -32,7 +32,8 @@ export default function AdminPage() {
     const pathname = usePathname();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const locale = pathname.split("/")[1] || "fr";
+    const params = useParams();
+    const locale = (params.locale as string) || "fr";
     const t = useTranslations("adminDashboard");
 
     // Initialize activeTab from URL parameter or default to dashboard

@@ -145,8 +145,8 @@ export default function TaxonomyContent({ locale }: TaxonomyContentProps) {
         );
         setSuccess(t('success.categoryUpdated'));
       } else {
-        // Create new category
-        const created = await createCategory(categoryFormData);
+        // Create new category with current locale as source
+        const created = await createCategory({ ...categoryFormData, sourceLocale: locale });
         setCategories((prev) => [...prev, created]);
         setSuccess(t('success.categoryCreated'));
       }
@@ -215,8 +215,8 @@ export default function TaxonomyContent({ locale }: TaxonomyContentProps) {
         setTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setSuccess(t('success.tagUpdated'));
       } else {
-        // Create new tag
-        const created = await createTag(tagFormData);
+        // Create new tag with current locale as source
+        const created = await createTag({ ...tagFormData, sourceLocale: locale });
         setTags((prev) => [...prev, created]);
         setSuccess(t('success.tagCreated'));
       }

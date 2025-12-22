@@ -465,6 +465,7 @@ export interface CreateCategoryData {
   name: string;
   slug: string;
   iconEmoji?: string;
+  sourceLocale?: string;
 }
 
 export interface UpdateCategoryData {
@@ -535,6 +536,7 @@ export async function deleteCategory(categoryId: string): Promise<{ message: str
 export interface CreateTagData {
   name: string;
   slug: string;
+  sourceLocale?: string;
 }
 
 export interface UpdateTagData {

@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
 import AdminDashboardShell from '@/components/admin/AdminDashboardShell';
 import {
@@ -42,7 +42,8 @@ export default function TaxonomyManagementPage() {
   const t = useTranslations('taxonomyManagement');
   const router = useRouter();
   const pathname = usePathname();
-  const locale = pathname.split('/')[1] || 'en';
+  const params = useParams();
+  const locale = (params.locale as string) || 'en';
 
   // Redirect to unified admin page with taxonomy tab
   useEffect(() => {
@@ -151,8 +152,8 @@ export default function TaxonomyManagementPage() {
         );
         setSuccess(t('success.categoryUpdated'));
       } else {
-        // Create new category
-        const created = await createCategory(categoryFormData);
+        // Create new category with current locale as source
+        const created = await createCategory({ ...categoryFormData, sourceLocale: locale });
         setCategories((prev) => [...prev, created]);
         setSuccess(t('success.categoryCreated'));
       }
@@ -221,8 +222,12 @@ export default function TaxonomyManagementPage() {
         setTags((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setSuccess(t('success.tagUpdated'));
       } else {
-        // Create new tag
-        const created = await createTag(tagFormData);
+        // Create new tag with current locale as source
+        const tagData = { ...tagFormData, sourceLocale: locale };
+        console.log('[TAXONOMY] Creating tag with data:', tagData);
+        console.log('[TAXONOMY] Current locale:', locale);
+        const created = await createTag(tagData);
+        console.log('[TAXONOMY] Created tag:', created);
         setTags((prev) => [...prev, created]);
         setSuccess(t('success.tagCreated'));
       }
