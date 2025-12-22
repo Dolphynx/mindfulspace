@@ -1,7 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
-import request from "supertest";
 import { AppModule } from "../src/app.module";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const request = require("supertest") as typeof import("supertest");
 
 /**
  * End-to-end smoke tests.
