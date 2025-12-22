@@ -325,4 +325,57 @@ describe("World V2 page (/member/world-v2)", () => {
             expect.objectContaining({ locale: defaultLocale })
         );
     });
+
+    /**
+     * Vérifie que le focus clavier est automatiquement placé
+     * sur le bouton de fermeture lorsque le panneau fullscreen est ouvert.
+     *
+     * @remarks
+     * Ce comportement est essentiel pour l’accessibilité :
+     * - le focus doit être positionné dans le dialog dès son ouverture,
+     * - l’utilisateur clavier ou lecteur d’écran peut interagir immédiatement,
+     * - cela garantit la conformité avec les bonnes pratiques ARIA pour les modals.
+     */
+    test("panel ouvert : le focus est placé sur le bouton de fermeture", () => {
+        mockUseWorldHub.mockReturnValue({
+            state: { isPanelOpen: true, drawerStack: ["root"] },
+            openPanel: jest.fn(),
+            closePanel: jest.fn(),
+            goBack: jest.fn(),
+        });
+
+        render(<WorldV2Page />);
+
+        const closeBtn = screen.getByRole("button", {
+            name: "worldPanelCloseAria",
+        });
+
+        expect(closeBtn).toHaveFocus();
+    });
+
+    /**
+     * Vérifie que la touche Escape n’a aucun effet lorsque
+     * le panneau fullscreen est fermé.
+     *
+     * @remarks
+     * Ce test prévient les régressions où une action clavier
+     * pourrait déclencher une fermeture ou un effet de bord
+     * alors qu’aucun panneau n’est actif.
+     */
+    test("panel fermé : Escape n'appelle pas closePanel()", () => {
+        const closePanel = jest.fn();
+
+        mockUseWorldHub.mockReturnValue({
+            state: { isPanelOpen: false, drawerStack: ["root"] },
+            openPanel: jest.fn(),
+            closePanel,
+            goBack: jest.fn(),
+        });
+
+        render(<WorldV2Page />);
+        fireEvent.keyDown(document, { key: "Escape" });
+
+        expect(closePanel).not.toHaveBeenCalled();
+    });
+
 });
