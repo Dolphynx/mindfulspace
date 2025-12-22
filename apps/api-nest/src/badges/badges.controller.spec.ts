@@ -1,22 +1,22 @@
 import { BadgesController } from "./badges.controller";
 
 /**
- * Unit tests for {@link BadgesController}.
+ * Tests unitaires pour {@link BadgesController}.
  *
  * @remarks
- * These tests validate controller responsibilities:
- * - parameter forwarding (userId, query.limit),
- * - correct delegation to {@link BadgesService}.
+ * Ces tests valident les responsabilités du contrôleur :
+ * - transmission correcte des paramètres (userId, query.limit),
+ * - délégation correcte vers {@link BadgesService}.
  *
- * The Nest runtime is not bootstrapped. The controller is instantiated
- * directly with mocked dependencies.
+ * Le runtime Nest n’est pas bootstrappé. Le contrôleur est instancié
+ * directement avec des dépendances mockées.
  */
 describe("BadgesController", () => {
   /**
-   * Minimal mocked shape of the BadgesService dependency.
+   * Forme minimale mockée de la dépendance BadgesService.
    *
    * @remarks
-   * Only the methods used by the controller are mocked.
+   * Seules les méthodes utilisées par le contrôleur sont mockées.
    */
   const badgesService = {
     getUserBadges: jest.fn(),
@@ -32,11 +32,11 @@ describe("BadgesController", () => {
 
   describe("getMyBadges", () => {
     /**
-     * Ensures the controller forwards userId and query.limit to the service.
+     * Vérifie que le contrôleur transmet userId et query.limit au service.
      *
      * @remarks
-     * The controller does not enforce default limits; it delegates limit handling
-     * to the service layer (clamping / default values).
+     * Le contrôleur n’impose pas de limite par défaut ; il délègue la gestion
+     * des limites à la couche service (valeurs par défaut / bornage).
      */
     it("delegates to getUserBadges with userId and limit", async () => {
       const userId = "usr_1";
@@ -49,7 +49,7 @@ describe("BadgesController", () => {
     });
 
     /**
-     * Ensures the controller forwards undefined limit when absent.
+     * Vérifie que le contrôleur transmet une limite `undefined` lorsqu’elle est absente.
      */
     it("delegates to getUserBadges with undefined limit when absent", async () => {
       const userId = "usr_1";
@@ -63,12 +63,12 @@ describe("BadgesController", () => {
 
   describe("getMyHighlightedBadges", () => {
     /**
-     * Ensures the controller forwards userId and query.limit to the service.
+     * Vérifie que le contrôleur transmet userId et query.limit au service.
      *
      * @remarks
-     * The service encapsulates compatibility behavior:
-     * - default to 3 when limit is undefined,
-     * - clamp within allowed bounds.
+     * Le service encapsule le comportement de compatibilité :
+     * - valeur par défaut à 3 lorsque limit est undefined,
+     * - bornage dans les limites autorisées.
      */
     it("delegates to getHighlightedBadges with userId and limit", async () => {
       const userId = "usr_1";
@@ -81,7 +81,7 @@ describe("BadgesController", () => {
     });
 
     /**
-     * Ensures the controller forwards undefined limit when absent.
+     * Vérifie que le contrôleur transmet une limite `undefined` lorsqu’elle est absente.
      */
     it("delegates to getHighlightedBadges with undefined limit when absent", async () => {
       const userId = "usr_1";

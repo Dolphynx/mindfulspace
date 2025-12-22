@@ -2,12 +2,12 @@ import { Prisma } from "@prisma/client";
 import { BadgesService } from "./badges.service";
 
 /**
- * Mocks the NestJS Logger to avoid polluting unit test output.
+ * Mock du Logger NestJS afin d’éviter de polluer la sortie des tests unitaires.
  *
  * @remarks
- * {@link BadgesService} uses {@link Logger.debug} to trace badge filtering.
- * Logging is not part of the tested behavior; this mock keeps the output clean
- * while preserving the module exports from `@nestjs/common`.
+ * {@link BadgesService} utilise {@link Logger.debug} pour tracer le filtrage des badges.
+ * Le logging ne fait pas partie du comportement testé ; ce mock permet de garder
+ * une sortie propre tout en conservant les exports du module `@nestjs/common`.
  */
 jest.mock("@nestjs/common", () => {
   const original = jest.requireActual("@nestjs/common");
@@ -24,22 +24,22 @@ jest.mock("@nestjs/common", () => {
 });
 
 /**
- * Unit tests for {@link BadgesService}.
+ * Tests unitaires pour {@link BadgesService}.
  *
  * @remarks
- * These tests validate service-level behavior without a real database:
- * - user badges retrieval with optional limit (and service clamping),
- * - highlighted badges filtering based on highlight duration,
- * - new badge attribution logic (including concurrency-safe behavior).
+ * Ces tests valident le comportement du service sans base de données réelle :
+ * - récupération des badges utilisateur avec limite optionnelle (et bornage côté service),
+ * - filtrage des badges mis en avant selon leur durée de mise en avant,
+ * - logique d’attribution de nouveaux badges (y compris en cas de concurrence).
  *
- * Prisma is mocked via plain objects with `jest.fn()` methods.
+ * Prisma est mocké via de simples objets contenant des méthodes `jest.fn()`.
  */
 describe("BadgesService", () => {
   /**
-   * Creates a service instance with a minimal Prisma mock.
+   * Crée une instance du service avec un mock Prisma minimal.
    *
    * @remarks
-   * Only the Prisma methods used by the service are exposed.
+   * Seules les méthodes Prisma utilisées par le service sont exposées.
    */
   function makeService() {
     const prisma = {
@@ -72,7 +72,7 @@ describe("BadgesService", () => {
 
   describe("getUserBadges", () => {
     /**
-     * Ensures that when limit is undefined, the service does not apply `take`.
+     * Vérifie que lorsque la limite est undefined, le service n’applique pas `take`.
      */
     it("does not apply `take` when limit is undefined", async () => {
       const { service, prisma } = makeService();
@@ -92,7 +92,8 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures the service clamps the limit within [1..50] and passes it to Prisma `take`.
+     * Vérifie que le service borne la limite dans l’intervalle [1..50]
+     * et la transmet à Prisma via `take`.
      */
     it("clamps limit to [1..50] and applies `take`", async () => {
       const { service, prisma } = makeService();
@@ -105,7 +106,7 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures values below the minimum are clamped to the minimum.
+     * Vérifie que les valeurs inférieures au minimum sont bornées à 1.
      */
     it("clamps limit below minimum to 1", async () => {
       const { service, prisma } = makeService();
@@ -120,10 +121,12 @@ describe("BadgesService", () => {
 
   describe("getHighlightedBadges", () => {
     /**
-     * Ensures the service defaults to 3 highlighted badges for compatibility when limit is undefined.
+     * Vérifie que le service utilise une valeur par défaut de 3 badges mis en avant
+     * lorsque la limite est undefined, pour des raisons de compatibilité.
      *
      * @remarks
-     * This preserves historical behavior while allowing an explicit `limit` in the query.
+     * Cela préserve le comportement historique tout en permettant
+     * un `limit` explicite dans la query.
      */
     it("defaults to 3 when limit is undefined", async () => {
       const { service, prisma } = makeService();
@@ -169,12 +172,12 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures expired or non-highlightable badges are filtered out.
+     * Vérifie que les badges expirés ou non éligibles à la mise en avant sont filtrés.
      *
      * @remarks
-     * A badge is visible only if:
-     * - highlightDurationHours is a positive number,
-     * - earnedAt + highlightDurationHours is strictly after "now".
+     * Un badge est visible uniquement si :
+     * - highlightDurationHours est un nombre strictement positif,
+     * - earnedAt + highlightDurationHours est strictement postérieur à “maintenant”.
      */
     it("filters out badges with no duration, non-positive duration, or expired duration", async () => {
       const { service, prisma } = makeService();
@@ -225,7 +228,7 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures explicit limit is clamped within [1..20].
+     * Vérifie que la limite explicite est bornée dans l’intervalle [1..20].
      */
     it("clamps highlighted limit to [1..20]", async () => {
       const { service, prisma } = makeService();
@@ -252,7 +255,8 @@ describe("BadgesService", () => {
 
   describe("checkForNewBadges", () => {
     /**
-     * Ensures that if no active badge definitions exist, the service returns an empty list.
+     * Vérifie que si aucune définition de badge active n’existe,
+     * le service retourne une liste vide.
      */
     it("returns [] when no active badges exist", async () => {
       const { service, prisma } = makeService();
@@ -266,7 +270,7 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures the service does not attempt to award badges already earned.
+     * Vérifie que le service n’essaie pas d’attribuer des badges déjà obtenus.
      */
     it("returns [] when all active badges are already earned", async () => {
       const { service, prisma } = makeService();
@@ -288,10 +292,12 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures a badge is awarded when the computed metric meets the threshold.
+     * Vérifie qu’un badge est attribué lorsque la valeur du métrique
+     * atteint ou dépasse le seuil.
      *
      * @remarks
-     * This test uses the "TOTAL_MEDITATION_SESSIONS" metric which maps to a Prisma count.
+     * Ce test utilise le métrique "TOTAL_MEDITATION_SESSIONS"
+     * qui correspond à un `count` Prisma.
      */
     it("awards a badge when metric value meets threshold", async () => {
       const { service, prisma } = makeService();
@@ -304,7 +310,7 @@ describe("BadgesService", () => {
         }),
       ]);
 
-      prisma.userBadge.findMany.mockResolvedValue([]); // none earned yet
+      prisma.userBadge.findMany.mockResolvedValue([]); // aucun badge encore obtenu
       prisma.meditationSession.count.mockResolvedValue(3);
 
       prisma.userBadge.create.mockResolvedValue({
@@ -337,13 +343,15 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures concurrency-safe behavior:
-     * Prisma unique constraint violations (P2002) are ignored and do not fail the process.
+     * Vérifie un comportement sûr en cas de concurrence :
+     * les violations de contrainte unique Prisma (P2002)
+     * sont ignorées et ne provoquent pas d’échec.
      *
      * @remarks
-     * The service may run concurrently (e.g., multiple requests). If two executions try to
-     * create the same userBadge, Prisma can throw a P2002 error due to the @@unique constraint.
-     * The service treats this as "already awarded" and continues without error.
+     * Le service peut être exécuté en parallèle (ex. plusieurs requêtes).
+     * Si deux exécutions tentent de créer le même userBadge,
+     * Prisma peut lever une erreur P2002 liée à la contrainte @@unique.
+     * Le service interprète cela comme “déjà attribué” et continue sans erreur.
      */
     it("ignores Prisma P2002 errors during badge creation", async () => {
       const { service, prisma } = makeService();
@@ -356,7 +364,7 @@ describe("BadgesService", () => {
         }),
       ]);
 
-      prisma.userBadge.findMany.mockResolvedValue([]); // none earned yet
+      prisma.userBadge.findMany.mockResolvedValue([]);
       prisma.meditationSession.count.mockResolvedValue(10);
 
       prisma.userBadge.create.mockRejectedValue(makePrismaP2002Error());
@@ -367,11 +375,14 @@ describe("BadgesService", () => {
     });
 
     /**
-     * Ensures metric computation is performed once per unique metric type (anti N+1 optimization).
+     * Vérifie que chaque métrique est calculé une seule fois
+     * même si plusieurs badges en attente partagent le même métrique
+     * (optimisation anti N+1).
      *
      * @remarks
-     * The service groups pending badges by `metric` and computes each metric only once,
-     * then reuses the value for all badges sharing that metric.
+     * Le service regroupe les badges en attente par `metric`
+     * et calcule chaque métrique une seule fois,
+     * puis réutilise la valeur pour tous les badges correspondants.
      */
     it("computes each metric only once even when multiple pending badges share the same metric", async () => {
       const { service, prisma } = makeService();
@@ -409,10 +420,11 @@ describe("BadgesService", () => {
 });
 
 /**
- * Factory for a minimal badgeDefinition object as used by {@link BadgesService}.
+ * Factory permettant de créer un objet badgeDefinition minimal,
+ * tel qu’utilisé par {@link BadgesService}.
  *
  * @remarks
- * The service requires: id, metric, threshold, isActive, sortOrder.
+ * Le service requiert : id, metric, threshold, isActive, sortOrder.
  */
 function makeBadgeDefinition(input: {
   id: string;
@@ -434,8 +446,10 @@ function makeBadgeDefinition(input: {
 }
 
 /**
- * Factory for a minimal userBadge record including nested badge fields,
- * shaped like the Prisma include/select used in {@link BadgesService.getHighlightedBadges}.
+ * Factory permettant de créer un enregistrement userBadge minimal
+ * incluant les champs imbriqués du badge,
+ * conforme au include/select Prisma utilisé dans
+ * {@link BadgesService.getHighlightedBadges}.
  */
 function makeUserBadge(input: {
   id: string;
@@ -463,15 +477,17 @@ function makeUserBadge(input: {
 }
 
 /**
- * Creates a Prisma-like P2002 error instance for concurrency tests.
+ * Crée une instance d’erreur Prisma de type P2002,
+ * utilisée pour les tests de concurrence.
  *
  * @remarks
- * The service checks:
- * - instance of {@link Prisma.PrismaClientKnownRequestError}
+ * Le service vérifie :
+ * - instance de {@link Prisma.PrismaClientKnownRequestError}
  * - error.code === "P2002"
  *
- * To keep this test independent from the Prisma runtime, we create an object whose
- * prototype matches PrismaClientKnownRequestError and set `code`.
+ * Afin de garder ce test indépendant du runtime Prisma,
+ * on crée un objet dont le prototype correspond à
+ * PrismaClientKnownRequestError et on définit `code`.
  */
 function makePrismaP2002Error(): Prisma.PrismaClientKnownRequestError {
   const err = Object.create(Prisma.PrismaClientKnownRequestError.prototype);

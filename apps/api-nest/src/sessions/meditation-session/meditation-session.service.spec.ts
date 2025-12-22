@@ -3,45 +3,45 @@ import { of } from "rxjs";
 import { MeditationSessionService } from "./meditation-session.service";
 
 /**
- * Mocks the NestJS Logger to silence log output during unit tests.
+ * Mock du Logger NestJS afin de supprimer les sorties de logs durant les tests unitaires.
  *
  * @remarks
- * The {@link MeditationSessionService} uses NestJS's {@link Logger} internally
- * to report warnings and errors (e.g. missing environment variables such as
- * `SOUNDCLOUD_CLIENT_ID`).
+ * Le {@link MeditationSessionService} utilise le {@link Logger} de NestJS en interne
+ * pour signaler des avertissements et erreurs (par ex. variables d’environnement manquantes
+ * comme `SOUNDCLOUD_CLIENT_ID`).
  *
- * During unit tests, this logging behavior is not part of the test objectives
- * and can pollute the test output, making failures harder to read.
+ * Lors des tests unitaires, ces logs ne font pas partie des objectifs de test
+ * et peuvent polluer la sortie, rendant les échecs plus difficiles à lire.
  *
- * This mock replaces the {@link Logger} class with a no-op implementation,
- * while preserving the rest of the `@nestjs/common` module.
+ * Ce mock remplace la classe {@link Logger} par une implémentation silencieuse (no-op),
+ * tout en conservant le reste du module `@nestjs/common`.
  */
 jest.mock("@nestjs/common", () => {
   /**
-   * Loads the real `@nestjs/common` module.
+   * Charge le module réel `@nestjs/common`.
    *
    * @remarks
-   * This ensures that all decorators, exceptions, and utilities provided by
-   * NestJS remain available and behave as expected in the test environment.
+   * Cela garantit que tous les décorateurs, exceptions et utilitaires fournis par NestJS
+   * restent disponibles et se comportent normalement dans l’environnement de test.
    */
   const original = jest.requireActual("@nestjs/common");
 
   return {
     /**
-     * Re-export all original NestJS symbols except those explicitly overridden.
+     * Réexporte tous les symboles NestJS originaux, sauf ceux explicitement surchargés.
      */
     ...original,
 
     /**
-     * Overrides the NestJS {@link Logger} with a silent implementation.
+     * Surcharge du {@link Logger} NestJS avec une implémentation silencieuse.
      *
      * @remarks
-     * Each logging method is intentionally implemented as a no-op.
-     * This preserves the Logger API surface while preventing any
-     * log output during test execution.
+     * Chaque méthode de logging est volontairement implémentée comme un no-op.
+     * Cela permet de conserver l’API du Logger tout en empêchant toute sortie de log
+     * durant l’exécution des tests.
      *
-     * The goal is not to test logging itself, but the functional
-     * behavior of the service under test.
+     * L’objectif n’est pas de tester le logging, mais le comportement fonctionnel
+     * du service testé.
      */
     Logger: class {
       warn(): void {}
@@ -53,25 +53,25 @@ jest.mock("@nestjs/common", () => {
   };
 });
 
-
 /**
- * Unit tests for {@link MeditationSessionService}.
+ * Tests unitaires pour {@link MeditationSessionService}.
  *
  * @remarks
- * These tests validate service-level behavior without any real database or HTTP calls:
- * - date format validation and request rejection,
- * - Prisma query construction (duration compatibility rules),
- * - SoundCloud resolution behavior depending on runtime configuration.
+ * Ces tests valident le comportement du service sans aucun accès réel à la base de données
+ * ni appel HTTP :
+ * - validation du format de date et rejet des requêtes invalides,
+ * - construction des requêtes Prisma (règles de compatibilité de durée),
+ * - comportement de résolution SoundCloud selon la configuration runtime.
  *
- * The PrismaService and HttpService dependencies are mocked.
+ * Les dépendances PrismaService et HttpService sont mockées.
  */
 describe("MeditationSessionService", () => {
   /**
-   * Creates a service instance with mock dependencies.
+   * Crée une instance du service avec des dépendances mockées.
    *
    * @remarks
-   * This helper provides a minimal Prisma mock containing only the methods
-   * used by the tests. It also provides a minimal HttpService mock.
+   * Ce helper fournit un mock Prisma minimal contenant uniquement les méthodes
+   * utilisées par les tests, ainsi qu’un mock minimal de HttpService.
    */
   function makeService() {
     const prisma = {
@@ -102,11 +102,14 @@ describe("MeditationSessionService", () => {
 
   describe("create", () => {
     /**
-     * Ensures the service rejects invalid day strings before touching persistence.
+     * Vérifie que le service rejette les chaînes de date invalides
+     * avant toute interaction avec la persistance.
      *
      * @remarks
-     * The method enforces a strict `YYYY-MM-DD` format (not just a parseable date).
-     * This is important to prevent ambiguous user inputs and timezone-dependent parsing.
+     * La méthode impose strictement le format `YYYY-MM-DD`
+     * (et pas simplement une date parseable).
+     * Ceci est important pour éviter des entrées utilisateur ambiguës
+     * et des problèmes liés aux fuseaux horaires.
      */
     it("throws BadRequestException when dateSession is not in YYYY-MM-DD format", async () => {
       const { service, prisma } = makeService();
@@ -123,11 +126,13 @@ describe("MeditationSessionService", () => {
     });
 
     /**
-     * Ensures the service builds startedAt/endedAt and calls Prisma create.
+     * Vérifie que le service calcule correctement startedAt / endedAt
+     * et appelle Prisma.create.
      *
      * @remarks
-     * The implementation forces the date time to a stable midday value (12:00)
-     * to avoid timezone edge cases when only a day is supplied.
+     * L’implémentation force l’heure à une valeur stable (12:00)
+     * afin d’éviter les effets de bord liés aux fuseaux horaires
+     * lorsqu’une date seule est fournie.
      */
     it("creates a session with computed startedAt and endedAt", async () => {
       const { service, prisma } = makeService();
@@ -154,12 +159,13 @@ describe("MeditationSessionService", () => {
 
   describe("getMeditationContents", () => {
     /**
-     * Ensures duration compatibility rules are added to the Prisma where clause
-     * when durationSeconds > 0.
+     * Vérifie que les règles de compatibilité de durée sont ajoutées
+     * à la clause `where` Prisma lorsque durationSeconds > 0.
      *
      * @remarks
-     * This demonstrates that filtering logic is implemented at the service layer
-     * and can be validated by inspecting the Prisma query input.
+     * Cela démontre que la logique de filtrage est implémentée
+     * au niveau du service et peut être validée en inspectant
+     * les paramètres de requête Prisma.
      */
     it("adds OR duration rules when durationSeconds > 0", async () => {
       const { service, prisma } = makeService();
@@ -209,12 +215,12 @@ describe("MeditationSessionService", () => {
     });
 
     /**
-     * Ensures that if SOUNDCLOUD_CLIENT_ID is not configured, the service does not
-     * attempt network resolution and returns mediaUrl as null.
+     * Vérifie que si SOUNDCLOUD_CLIENT_ID n’est pas configuré,
+     * le service n’effectue aucun appel réseau et retourne mediaUrl à null.
      *
      * @remarks
-     * This verifies safe behavior in environments where SoundCloud integration
-     * is intentionally disabled or not configured.
+     * Cela garantit un comportement sûr dans les environnements
+     * où l’intégration SoundCloud est désactivée ou non configurée.
      */
     it("does not call HttpService when SoundCloud client id is missing", async () => {
       const { service, prisma, http } = makeService();
@@ -245,11 +251,13 @@ describe("MeditationSessionService", () => {
     });
 
     /**
-     * Ensures that when SOUNDCLOUD_CLIENT_ID is configured, the service resolves
-     * a SoundCloud track URL into a stream URL and appends the client id.
+     * Vérifie que lorsque SOUNDCLOUD_CLIENT_ID est configuré,
+     * le service résout l’URL SoundCloud en URL de stream
+     * et y ajoute le client id.
      *
      * @remarks
-     * The HttpService is mocked with an RxJS observable to match Nest Axios behavior.
+     * HttpService est mocké avec un observable RxJS afin de reproduire
+     * le comportement de Nest Axios.
      */
     it("resolves SoundCloud stream URL when client id is set", async () => {
       process.env.SOUNDCLOUD_CLIENT_ID = "client_123";
@@ -288,7 +296,9 @@ describe("MeditationSessionService", () => {
         }),
       );
 
-      expect(result[0].mediaUrl).toBe("https://api.soundcloud.com/stream/abc?client_id=client_123");
+      expect(result[0].mediaUrl).toBe(
+        "https://api.soundcloud.com/stream/abc?client_id=client_123",
+      );
     });
   });
 });

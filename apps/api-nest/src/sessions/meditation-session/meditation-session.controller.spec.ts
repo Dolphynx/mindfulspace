@@ -3,24 +3,24 @@ import { MeditationSessionController } from "./meditation-session.controller";
 import type { CreateMeditationSessionDto } from "./dto/meditation-session.dto";
 
 /**
- * Unit tests for {@link MeditationSessionController}.
+ * Tests unitaires pour {@link MeditationSessionController}.
  *
  * @remarks
- * These tests focus on controller-specific responsibilities:
- * - input guardrails at the HTTP boundary (query validation rules),
- * - orchestration between services (MeditationSessionService + BadgesService),
- * - delegation to the appropriate service method based on query parameters.
+ * Ces tests se concentrent sur les responsabilités propres au contrôleur :
+ * - garde-fous côté frontière HTTP (règles de validation des query params),
+ * - orchestration entre services (MeditationSessionService + BadgesService),
+ * - délégation vers la bonne méthode de service selon les paramètres de requête.
  *
- * The Nest runtime is intentionally not bootstrapped here: we instantiate the controller
- * directly and provide mocked dependencies.
+ * Le runtime Nest n’est volontairement pas bootstrappé ici : on instancie le contrôleur
+ * directement et on fournit des dépendances mockées.
  */
 describe("MeditationSessionController", () => {
   /**
-   * Minimal mocked shape of the MeditationSessionService dependency.
+   * Forme minimale mockée de la dépendance MeditationSessionService.
    *
    * @remarks
-   * The controller only calls a subset of service methods. We mock those methods
-   * to assert correct delegation and to avoid any database or framework dependency.
+   * Le contrôleur n’appelle qu’un sous-ensemble des méthodes du service. On mocke ces méthodes
+   * afin de vérifier la délégation correcte et d’éviter toute dépendance à la DB ou au framework.
    */
   const meditationService = {
     create: jest.fn(),
@@ -33,11 +33,11 @@ describe("MeditationSessionController", () => {
   };
 
   /**
-   * Minimal mocked shape of the BadgesService dependency.
+   * Forme minimale mockée de la dépendance BadgesService.
    *
    * @remarks
-   * The controller uses this service after creating a meditation session, to check
-   * whether new badges have been unlocked.
+   * Le contrôleur utilise ce service après la création d’une session de méditation, afin de vérifier
+   * si de nouveaux badges ont été débloqués.
    */
   const badgesService = {
     checkForNewBadges: jest.fn(),
@@ -55,11 +55,11 @@ describe("MeditationSessionController", () => {
 
   describe("getSessionsForCurrentUser", () => {
     /**
-     * Ensures the controller enforces the rule: `from` and `to` must be provided together.
+     * Vérifie que le contrôleur applique la règle : `from` et `to` doivent être fournis ensemble.
      *
      * @remarks
-     * This is a controller-level guardrail: the service expects coherent parameters.
-     * If the client provides an incomplete range, the controller must reject early.
+     * C’est un garde-fou au niveau contrôleur : le service s’attend à des paramètres cohérents.
+     * Si le client fournit une plage incomplète, le contrôleur doit rejeter tôt.
      */
     it("throws BadRequestException when `from` is provided without `to`", () => {
       expect(() =>
@@ -73,7 +73,7 @@ describe("MeditationSessionController", () => {
     });
 
     /**
-     * Ensures the controller enforces the rule: `from` and `to` must be provided together.
+     * Vérifie que le contrôleur applique la règle : `from` et `to` doivent être fournis ensemble.
      */
     it("throws BadRequestException when `to` is provided without `from`", () => {
       expect(() =>
@@ -87,8 +87,8 @@ describe("MeditationSessionController", () => {
     });
 
     /**
-     * Ensures that when a complete date range is provided, the controller delegates
-     * to the correct service method.
+     * Vérifie que lorsqu’une plage de dates complète est fournie, le contrôleur délègue
+     * à la bonne méthode de service.
      */
     it("delegates to getSessionsBetweenDates when `from` and `to` are provided", async () => {
       meditationService.getSessionsBetweenDates.mockResolvedValue([{ date: "2025-12-01" }]);
@@ -107,8 +107,8 @@ describe("MeditationSessionController", () => {
     });
 
     /**
-     * Ensures that when no date range is provided, the controller delegates to
-     * "last N days" with the default fallback value.
+     * Vérifie que lorsque aucune plage de dates n’est fournie, le contrôleur délègue
+     * vers “les N derniers jours” avec la valeur par défaut.
      */
     it("delegates to getLastNDays with default `lastDays = 7` when no range is provided", async () => {
       meditationService.getLastNDays.mockResolvedValue([{ date: "2025-12-20" }]);
@@ -121,7 +121,7 @@ describe("MeditationSessionController", () => {
     });
 
     /**
-     * Ensures that when `lastDays` is explicitly provided, the controller passes it through.
+     * Vérifie que lorsque `lastDays` est fourni explicitement, le contrôleur le transmet tel quel.
      */
     it("delegates to getLastNDays with provided `lastDays`", async () => {
       meditationService.getLastNDays.mockResolvedValue([]);
@@ -134,10 +134,10 @@ describe("MeditationSessionController", () => {
 
   describe("createForCurrentUser", () => {
     /**
-     * Ensures session creation is orchestrated correctly:
-     * - create the session,
-     * - then check for newly unlocked badges,
-     * - return both pieces of information.
+     * Vérifie que la création de session est orchestrée correctement :
+     * - créer la session,
+     * - puis vérifier les nouveaux badges débloqués,
+     * - retourner les deux informations.
      */
     it("returns { session, newBadges } and calls both services", async () => {
       meditationService.create.mockResolvedValue({ id: "s1" });
@@ -162,11 +162,11 @@ describe("MeditationSessionController", () => {
 
   describe("getMeditationContents", () => {
     /**
-     * Ensures the controller rejects requests missing the mandatory meditationTypeId parameter.
+     * Vérifie que le contrôleur rejette les requêtes où le paramètre obligatoire `meditationTypeId` est manquant.
      *
      * @remarks
-     * The service also protects against missing meditationTypeId, but the controller
-     * performs a clear HTTP boundary check with a specific error message.
+     * Le service protège aussi contre l’absence de `meditationTypeId`, mais le contrôleur
+     * réalise un contrôle clair à la frontière HTTP avec un message d’erreur spécifique.
      */
     it("throws BadRequestException when meditationTypeId is missing", () => {
       expect(() => controller.getMeditationContents({} as any)).toThrow(BadRequestException);
@@ -174,7 +174,7 @@ describe("MeditationSessionController", () => {
     });
 
     /**
-     * Ensures the controller delegates to the service when meditationTypeId is present.
+     * Vérifie que le contrôleur délègue au service lorsque `meditationTypeId` est présent.
      */
     it("delegates to service with meditationTypeId and optional durationSeconds", async () => {
       meditationService.getMeditationContents.mockResolvedValue([{ id: "c1", mediaUrl: null }]);
