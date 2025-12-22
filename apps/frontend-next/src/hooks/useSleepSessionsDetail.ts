@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSleepSessionsDetail, type SleepSession } from "@/lib/api/sleep";
 import type { SleepErrorType } from "@/hooks/useSleepSessions";
-import {getSleepHistory, saveSleepHistory} from "@/offline-sync/sleep-history";
+import {getSleepHistory, saveSleepHistory} from "@/offline-sync/sleepHistory";
 
 export function useSleepSessionsDetail(lastDays: number = 30) {
     const [sessions, setSessions] = useState<SleepSession[]>([]);
