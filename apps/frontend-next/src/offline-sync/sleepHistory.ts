@@ -33,9 +33,17 @@ export async function getSleepHistory(lastDays: number): Promise<SleepSession[]>
     return all
         .filter((s) => new Date(s.date) >= cutoff)
         .map((s) => ({
-            id: s.date,          // stable synthetic id
+            id: s.date,
             date: s.date,
             hours: s.hours,
             quality: s.quality,
         }));
 }
+
+export async function upsertSleepHistoryItem(
+    item: OfflineSleepHistoryItem,
+) {
+    const db = await getDB();
+    await db.put(STORE, item);
+}
+
