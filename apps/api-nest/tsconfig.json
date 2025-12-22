@@ -1,19 +1,141 @@
 {
+  /**
+   * Extends the shared base TypeScript configuration of the monorepo.
+   *
+   * @remarks
+   * This allows common compiler options (strictness, paths, defaults)
+   * to be centralized, while keeping project-specific overrides here.
+   */
   "extends": "../../tsconfig.base.json",
+
   "compilerOptions": {
+    /**
+     * Uses the Node.js "NodeNext" module system.
+     *
+     * @remarks
+     * This enables compatibility with ES Modules in Node.js,
+     * while still allowing CommonJS interop where needed.
+     */
     "module": "nodenext",
+
+    /**
+     * Resolves modules according to Node.js ESM resolution rules.
+     *
+     * @remarks
+     * Required when using "module": "nodenext" to ensure consistency
+     * between runtime and TypeScript resolution behavior.
+     */
     "moduleResolution": "nodenext",
+
+    /**
+     * Generates `.d.ts` declaration files.
+     *
+     * @remarks
+     * Useful for tooling, IDE support, and potential reuse of
+     * compiled artifacts across the monorepo.
+     */
     "declaration": true,
+
+    /**
+     * Removes comments from the emitted JavaScript output.
+     *
+     * @remarks
+     * Reduces bundle size and avoids leaking internal comments
+     * into production builds.
+     */
     "removeComments": true,
+
+    /**
+     * Emits decorator metadata required by NestJS.
+     *
+     * @remarks
+     * This is necessary for dependency injection and runtime
+     * reflection used by the NestJS framework.
+     */
     "emitDecoratorMetadata": true,
+
+    /**
+     * Enables experimental decorator support.
+     *
+     * @remarks
+     * Required for using decorators such as @Controller, @Injectable,
+     * and other NestJS annotations.
+     */
     "experimentalDecorators": true,
+
+    /**
+     * Allows default imports from modules without a default export.
+     *
+     * @remarks
+     * Improves compatibility with CommonJS modules and simplifies imports.
+     */
     "allowSyntheticDefaultImports": true,
+
+    /**
+     * Targets modern ECMAScript output.
+     *
+     * @remarks
+     * ES2022 is supported by current Node.js LTS versions and allows
+     * the use of recent language features without transpilation overhead.
+     */
     "target": "ES2022",
+
+    /**
+     * Generates source maps for the compiled output.
+     *
+     * @remarks
+     * Facilitates debugging by mapping runtime JavaScript back
+     * to the original TypeScript sources.
+     */
     "sourceMap": true,
+
+    /**
+     * Specifies the output directory for compiled files.
+     */
     "outDir": "./dist",
+
+    /**
+     * Enables importing JSON files as modules.
+     *
+     * @remarks
+     * Useful for configuration or static data files.
+     */
     "resolveJsonModule": true,
-    "esModuleInterop": true
+
+    /**
+     * Enables interoperability between CommonJS and ES Modules.
+     *
+     * @remarks
+     * Ensures compatibility with third-party libraries that
+     * still rely on CommonJS exports.
+     */
+    "esModuleInterop": true,
+
+    /**
+     * Enforces isolated compilation of each file.
+     *
+     * @remarks
+     * This setting is required by ts-jest when using hybrid module
+     * systems such as NodeNext. It ensures that each file can be
+     * transpiled independently without relying on cross-file analysis.
+     *
+     * It improves compatibility with test tooling and aligns the
+     * TypeScript configuration with the test environment.
+     */
+    "isolatedModules": true
   },
+
+  /**
+   * Includes all TypeScript source files of the application.
+   */
   "include": ["src/**/*.ts"],
+
+  /**
+   * Excludes build outputs, dependencies, and test files.
+   *
+   * @remarks
+   * Test files (`*.spec.ts`) are handled separately by Jest and
+   * should not be part of the production TypeScript build.
+   */
   "exclude": ["node_modules", "test", "dist", "**/*.spec.ts"]
 }
