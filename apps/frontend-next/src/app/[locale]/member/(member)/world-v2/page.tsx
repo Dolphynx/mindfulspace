@@ -168,6 +168,7 @@ function WorldV2Content() {
 
                                         <button
                                             type="button"
+                                            data-testid="world-start-cta"
                                             onClick={() => openPanel()}
                                             className="
                                                 mt-4 w-full rounded-2xl bg-white/80 hover:bg-white transition
