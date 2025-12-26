@@ -36,6 +36,7 @@ export function middleware(req: NextRequest) {
         pathname.startsWith("/_next") ||
         pathname.startsWith("/api") ||
         pathname === "/favicon.ico" ||
+        pathname.startsWith("/docs") || // pour servir la doc sans locale
         pathname.match(/\.(.*)$/)
     ) {
         return NextResponse.next();
