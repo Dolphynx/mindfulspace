@@ -1,5 +1,3 @@
-"use client";
-
 import { DottedSparkline } from "@/feature/world/ui/DottedSparkline";
 import { StatChip } from "@/feature/world/ui/StatChip";
 import { SoftProgress } from "@/feature/world/ui/SoftProgress";

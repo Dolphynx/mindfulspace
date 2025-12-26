@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
@@ -13,8 +13,8 @@ type ErrorPageProps = {
 };
 
 export default function GlobalErrorPage({ error, reset }: ErrorPageProps) {
-    const pathname = usePathname();
-    const raw = pathname.split("/")[1] || defaultLocale;
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
     const locale: Locale = isLocale(raw) ? raw : defaultLocale;
 
     const t = useTranslations("errorPage");

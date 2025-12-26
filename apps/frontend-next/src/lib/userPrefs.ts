@@ -1,5 +1,3 @@
-// apps/frontend-next/lib/userPrefs.ts
-
 /**
  * Type UserPrefs
  *

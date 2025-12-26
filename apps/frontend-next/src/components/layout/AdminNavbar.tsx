@@ -17,12 +17,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import {useParams} from "next/navigation";
 import { useTranslations } from "@/i18n/TranslationContext";
+import {defaultLocale, isLocale, type Locale} from "@/i18n/config";
 
 export function AdminNavbar() {
-    const pathname = usePathname();
-    const locale = pathname.split("/")[1] || "fr";
+
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const locale: Locale = isLocale(raw) ? raw : defaultLocale;
     const t = useTranslations("navbarAdmin");
 
     return (

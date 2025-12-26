@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type Petal = {
     id: number;
@@ -22,16 +23,32 @@ interface LotusConfettiProps {
      * Si true, déclenche une “salve” de confettis.
      */
     fire: boolean;
+
     /**
      * Nombre de pétales par salve.
+     *
+     * @default 40
      */
     count?: number;
+
     /**
      * Durée totale avant nettoyage (doit recouvrir la durée max d’animation).
+     *
+     * @default 4000
      */
     totalDurationMs?: number;
 }
 
+/**
+ * Affiche une salve de pétales animés en overlay plein écran.
+ *
+ * @remarks
+ * Le composant génère des pétales à chaque déclenchement de `fire`,
+ * puis reste affiché jusqu’au nettoyage interne.
+ *
+ * Important : le rendu ne dépend pas de `fire` une fois la salve générée,
+ * afin de laisser les animations aller jusqu’au bout.
+ */
 export function LotusConfetti({
                                   fire,
                                   count = 40,
@@ -42,40 +59,39 @@ export function LotusConfetti({
     useEffect(() => {
         if (!fire) return;
 
-        // Génère une salve de pétales
-        const generated: Petal[] = Array.from({ length: count }).map(
-            (_, index) => ({
-                id: index,
-                left: Math.random() * 100, // position horizontale (0–100%)
-                delay: Math.random() * 0.8, // léger décalage
-                duration: 2.3 + Math.random() * 1.7, // durée de chute
-                size: 24 + Math.random() * 18, // taille en px
-            }),
-        );
+        const generated: Petal[] = Array.from({ length: count }).map((_, index) => ({
+            id: index,
+            left: Math.random() * 100,
+            delay: Math.random() * 0.8,
+            duration: 2.3 + Math.random() * 1.7,
+            size: 24 + Math.random() * 18,
+        }));
 
         setPetals(generated);
 
-        // Nettoyage après la durée totale
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             setPetals([]);
         }, totalDurationMs);
 
-        return () => clearTimeout(timer);
+        return () => window.clearTimeout(timer);
     }, [fire, count, totalDurationMs]);
 
-    if (!fire || petals.length === 0) return null;
+    if (petals.length === 0) return null;
 
     return (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
             {petals.map((p) => (
-                <img
+                <Image
                     key={p.id}
                     src={PETAL_IMAGES[p.id % PETAL_IMAGES.length]}
+                    alt=""
                     aria-hidden="true"
                     className="absolute animate-lotus-fall"
+                    width={p.size}
+                    height={p.size}
                     style={{
                         left: `${p.left}%`,
-                        top: "-10%", // départ légèrement hors écran
+                        top: "-10%",
                         width: p.size,
                         height: "auto",
                         animationDelay: `${p.delay}s`,

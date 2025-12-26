@@ -13,9 +13,10 @@
  */
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FooterCookiesLink } from "@/components/layout/";
 import { useTranslations } from "@/i18n/TranslationContext";
+import { defaultLocale, isLocale, type Locale } from "@/i18n/config";
 
 /**
  * Propriétés du composant Footer.
@@ -40,8 +41,9 @@ type FooterProps = {
  * - Le parent reste responsable de l'état d'ouverture du modal.
  */
 export default function Footer({ onOpenPreferencesAction }: FooterProps) {
-    const pathname = usePathname();
-    const locale = pathname.split("/")[1] || "fr";
+    const params = useParams<{ locale?: string }>();
+    const raw = params.locale ?? defaultLocale;
+    const locale: Locale = isLocale(raw) ? raw : defaultLocale;
     const t = useTranslations("footer");
 
     return (

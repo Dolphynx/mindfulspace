@@ -1,4 +1,3 @@
-// File: src/feature/world/views/overview/StartSessionLauncher.tsx
 "use client";
 
 import Image from "next/image";

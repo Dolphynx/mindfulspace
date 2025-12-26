@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { BadgesService } from "./badges.service";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { HighlightedBadgeDto, UserBadgeDto } from "./dto/badges.dto";
+import { BadgesLimitQueryDto } from "./dto/badges.query.dto";
 
 @ApiTags("badges")
 @Controller("badges")
@@ -13,6 +14,7 @@ export class BadgesController {
    * Retourne l'ensemble des badges gagnés par l'utilisateur courant.
    *
    * @param userId - Identifiant de l'utilisateur courant.
+   * @param query - Paramètres de query (limit optionnel).
    * @returns Liste complète des badges gagnés, triés par date d'obtention décroissante.
    */
   @Get("me")
@@ -20,15 +22,15 @@ export class BadgesController {
     name: "limit",
     required: false,
     type: Number,
-    description: "Optionnel. Nombre maximum de badges à retourner. Si absent: retourne tout.",
+    description:
+      "Optionnel. Nombre maximum de badges à retourner. Si absent: retourne tout.",
     example: 7,
   })
   async getMyBadges(
     @CurrentUser("id") userId: string,
-    @Query("limit") limit?: string,
+    @Query() query: BadgesLimitQueryDto,
   ): Promise<UserBadgeDto[]> {
-    const parsed = limit ? Number.parseInt(limit, 10) : undefined;
-    return this.badgesService.getUserBadges(userId, parsed);
+    return this.badgesService.getUserBadges(userId, query.limit);
   }
 
   /**
@@ -40,7 +42,7 @@ export class BadgesController {
    * - Si `limit` est fourni (ex: `?limit=7`) : renvoie jusqu'à `limit` badges.
    *
    * @param userId - Identifiant de l'utilisateur courant.
-   * @param limit - Nombre maximum de badges à retourner (optionnel).
+   * @param query - Paramètres de query (limit optionnel).
    * @returns Liste des badges mis en avant pour l'utilisateur courant.
    */
   @Get("me/highlighted")
@@ -62,10 +64,8 @@ export class BadgesController {
   })
   async getMyHighlightedBadges(
     @CurrentUser("id") userId: string,
-    @Query("limit") limit?: string,
+    @Query() query: BadgesLimitQueryDto,
   ): Promise<HighlightedBadgeDto[]> {
-    const parsed = limit ? Number.parseInt(limit, 10) : undefined;
-
-    return this.badgesService.getHighlightedBadges(userId, parsed);
+    return this.badgesService.getHighlightedBadges(userId, query.limit);
   }
 }
