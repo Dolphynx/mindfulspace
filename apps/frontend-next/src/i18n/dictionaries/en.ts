@@ -230,8 +230,86 @@ const en: Messages = {
 
         ctaTitle: "Ready to begin your journey?",
         ctaSubtitle:
-            "Join the certified MindfulSpace coaches and make a real difference in people's lives.",
+            "Join the certified MindfulSpace coaches and make a real difference in people's lives. Create an account or sign in to access your profile, where you can submit a request to become a coach at any time.",
         ctaButtonPrimary: "Sign up now",
+        ctaButtonSecondary: "Learn more",
+    },
+
+    premiumPage: {
+        heroTitle: "Go Premium",
+        heroSubtitle: "Unlock exclusive content, advanced programs, and a richer experience with MindfulSpace Premium.",
+
+        whyTitle: "Why go Premium?",
+        why1Title: "Access premium resources",
+        why1Text: "In-depth articles, videos, and guides to take your well-being further every day.",
+        why2Title: "Exclusive programs & sessions",
+        why2Text: "Premium guided sessions and structured programs to progress faster and more calmly.",
+        why3Title: "Get notified about new content",
+        why3Text: "Receive alerts whenever new premium content is released (programs, meditations, resources).",
+        why4Title: "Boost your progress",
+        why4Text: "Advanced tools and journeys to build lasting habits and keep your motivation high.",
+
+        programTitle: "What Premium unlocks",
+        programSubtitle: "An enhanced experience designed to support you further, for longer.",
+
+        program1Title: "Premium library",
+        program1Duration: "Unlimited access",
+        program1Item1: "Exclusive resources (articles, videos, guides)",
+        program1Item2: "More practical, deeper content",
+        program1Item3: "Favorites & quick access",
+
+        program2Title: "Premium programs",
+        program2Duration: "New journeys released regularly",
+        program2Item1: "Structured programs (stress, sleep, focus, etc.)",
+        program2Item2: "Step-by-step progression",
+        program2Item3: "Goals and recommendations",
+
+        program3Title: "Premium sessions",
+        program3Duration: "New sessions every month",
+        program3Item1: "Premium guided meditations",
+        program3Item2: "Themed sessions (anxiety, energy, gratitude…)",
+        program3Item3: "Flexible durations to fit your schedule",
+
+        program4Title: "Notifications & tracking",
+        program4Duration: "Always up to date",
+        program4Item1: "Notifications for new premium content",
+        program4Item2: "Personalized reminders (based on your goals)",
+        program4Item3: "Enhanced history and progress",
+
+        pricingTitle: "Choose your plan",
+
+        pricing1Title: "Monthly",
+        pricing1Price: "$9.99/month",
+        pricing1F1: "Access to premium resources",
+        pricing1F2: "Premium sessions",
+        pricing1F3: "New content notifications",
+        pricing1F4: "Cancel anytime",
+        pricing1F5: "Multi-device access",
+
+        pricing2Title: "Yearly",
+        pricing2Price: "$79.99/year",
+        pricing2F1: "Everything included in Monthly",
+        pricing2F2: "Best value for a full year",
+        pricing2F3: "Full access to premium programs",
+        pricing2F4: "Early access to new releases",
+        pricing2F5: "Personalized reminders",
+        pricing2F6: "Priority support",
+
+        pricing3Title: "Family",
+        pricing3Price: "$119.99/year",
+        pricing3F1: "Everything included in Yearly",
+        pricing3F2: "Up to 5 accounts",
+        pricing3F3: "Premium programs for the whole family",
+        pricing3F4: "Per-profile preferences",
+        pricing3F5: "Multi-device access",
+        pricing3F6: "Priority support",
+
+        pricingButton: "Get started",
+
+        ctaTitle: "Go Premium in just a few steps",
+        ctaSubtitle:
+            "Create an account or sign in to access your profile, where you can activate the Premium subscription anytime.",
+        ctaButtonPrimary: "Activate Premium",
         ctaButtonSecondary: "Learn more",
     },
 
@@ -1002,6 +1080,8 @@ const en: Messages = {
         resetPasswordComplete: "Password Reset Complete",
         resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
         resetPasswordFailed: "Password reset failed",
+
+        goToProfile: "Go to my profile",
     },
 
     badges: {

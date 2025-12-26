@@ -227,10 +227,89 @@ const fr = {
 
         ctaTitle: "Prêt à commencer votre parcours ?",
         ctaSubtitle:
-            "Rejoignez les coachs certifiés MindfulSpace et faites une réelle différence dans la vie des autres.",
+            "Rejoignez les coachs certifiés MindfulSpace et faites une réelle différence dans la vie des autres. Créez un compte ou connectez-vous pour accéder à votre profil, où vous pourrez introduire une demande pour devenir coach à tout moment.",
         ctaButtonPrimary: "S’inscrire maintenant",
         ctaButtonSecondary: "En savoir plus",
     },
+
+    premiumPage: {
+        heroTitle: "Passer Premium",
+        heroSubtitle: "Débloquez des contenus exclusifs, des programmes avancés et un suivi plus riche avec MindfulSpace Premium.",
+
+        whyTitle: "Pourquoi devenir Premium ?",
+        why1Title: "Accéder aux ressources premium",
+        why1Text: "Articles, vidéos et guides approfondis pour aller plus loin dans votre bien-être au quotidien.",
+        why2Title: "Programmes & sessions exclusifs",
+        why2Text: "Séances guidées premium et programmes structurés pour progresser plus vite et plus sereinement.",
+        why3Title: "Être notifié des nouveautés",
+        why3Text: "Recevez des alertes dès qu’un nouveau contenu premium est disponible (programmes, méditations, ressources).",
+        why4Title: "Accélérer vos progrès",
+        why4Text: "Des outils et parcours avancés pour construire des habitudes durables et garder votre motivation.",
+
+        programTitle: "Tout ce que Premium débloque",
+        programSubtitle: "Une expérience enrichie, conçue pour vous accompagner plus loin, plus longtemps.",
+
+        program1Title: "Bibliothèque premium",
+        program1Duration: "Accès illimité",
+        program1Item1: "Ressources exclusives (articles, vidéos, guides)",
+        program1Item2: "Contenus plus approfondis et pratiques",
+        program1Item3: "Favoris & accès rapide",
+
+        program2Title: "Programmes premium",
+        program2Duration: "Nouveaux parcours régulièrement",
+        program2Item1: "Programmes structurés (stress, sommeil, concentration, etc.)",
+        program2Item2: "Progression étape par étape",
+        program2Item3: "Objectifs et recommandations",
+
+        program3Title: "Sessions premium",
+        program3Duration: "Nouveautés chaque mois",
+        program3Item1: "Méditations guidées premium",
+        program3Item2: "Séances thématiques (anxiété, énergie, gratitude…)",
+        program3Item3: "Durées variées pour s’adapter à votre emploi du temps",
+
+        program4Title: "Notifications & suivi",
+        program4Duration: "Toujours à jour",
+        program4Item1: "Notifications de nouveaux contenus premium",
+        program4Item2: "Rappels personnalisés (selon vos objectifs)",
+        program4Item3: "Historique et progression améliorés",
+
+        pricingTitle: "Choisissez votre formule",
+
+        pricing1Title: "Mensuel",
+        pricing1Price: "9,99€/mois",
+        pricing1F1: "Accès aux ressources premium",
+        pricing1F2: "Sessions premium",
+        pricing1F3: "Notifications des nouveautés",
+        pricing1F4: "Annulation à tout moment",
+        pricing1F5: "Accès multi-appareils",
+
+        pricing2Title: "Annuel",
+        pricing2Price: "79,99€/an",
+        pricing2F1: "Tout ce qui est inclus dans Mensuel",
+        pricing2F2: "Meilleur prix sur l’année",
+        pricing2F3: "Accès complet aux programmes premium",
+        pricing2F4: "Priorité sur les nouveautés",
+        pricing2F5: "Rappels personnalisés",
+        pricing2F6: "Support prioritaire",
+
+        pricing3Title: "Famille",
+        pricing3Price: "119,99€/an",
+        pricing3F1: "Tout ce qui est inclus dans Annuel",
+        pricing3F2: "Jusqu’à 5 comptes",
+        pricing3F3: "Programmes premium pour toute la famille",
+        pricing3F4: "Préférences par profil",
+        pricing3F5: "Accès multi-appareils",
+        pricing3F6: "Support prioritaire",
+
+        pricingButton: "Commencer",
+
+        ctaTitle: "Passer Premium en quelques étapes",
+        ctaSubtitle:
+            "Créez un compte ou connectez-vous pour accéder à votre profil, où vous pourrez activer l’abonnement Premium à tout moment.",
+        ctaButtonPrimary: "Activer Premium",
+        ctaButtonSecondary: "En savoir plus"
+    },
+
 
     resourcesPage: {
         heroTitle: "Ressources",
@@ -1000,6 +1079,8 @@ const fr = {
         resetPasswordComplete: "Réinitialisation terminée",
         resetPasswordSuccess: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
         resetPasswordFailed: "Échec de la réinitialisation du mot de passe",
+
+        goToProfile: "Aller à mon profil",
     },
 
     badges: {
