@@ -10,6 +10,8 @@ import {
 } from "@/lib/api/sleep";
 import { useBadgeToasts } from "@/components/badges/BadgeToastProvider";
 import { mapApiBadgeToToastItem } from "@/lib/badges/mapApiBadge";
+import {getSleepHistory, saveSleepHistory} from "@/offline-sync/sleepHistory";
+import { queueSleepSession } from "@/offline-sync/sleep";
 
 export type SleepErrorType = "load" | "save" | "offline" | null;
 
@@ -38,9 +40,18 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
         try {
             const data = await fetchLastSleepSessions(effectiveBaseUrl);
             setSessions(data);
+            await saveSleepHistory(data);
         } catch (e) {
-            console.error("[useSleepSessions] load failed", e);
-            setErrorType("load");
+            console.warn("[useSleepSessions] API failed, trying cache");
+
+            try {
+                const cached = await getSleepHistory(30);
+                setSessions(cached);
+                setErrorType("offline");
+            } catch (cacheError) {
+                console.error("[useSleepSessions] cache load failed", cacheError);
+                setErrorType("load");
+            }
         } finally {
             setLoading(false);
         }
@@ -62,6 +73,12 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
         async (payload: CreateSleepSessionPayload) => {
             setErrorType(null);
 
+            if (!navigator.onLine) {
+                await queueSleepSession(payload);
+                await load();
+                return;
+            }
+
             try {
                 const { newBadges }: CreateSleepSessionResponse =
                     await createSleepSession(payload, effectiveBaseUrl);
@@ -79,6 +96,7 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
         },
         [effectiveBaseUrl, load, pushBadges],
     );
+
 
     return {
         sessions,
