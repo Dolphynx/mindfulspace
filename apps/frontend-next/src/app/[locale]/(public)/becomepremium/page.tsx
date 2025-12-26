@@ -1,12 +1,11 @@
 /**
- * Page Formation – Devenir Coach Bien-Être
- * ----------------------------------------
+ * Page Premium – Devenir Premium
+ * ------------------------------
  * Version adaptée pour i18n.
  *
  * Particularités i18n :
- * - Tous les textes utilisateur proviennent du dictionnaire `formationPage`.
+ * - Tous les textes utilisateur proviennent du dictionnaire `premiumPage`.
  * - La locale est extraite via les paramètres dynamiques Next.js 15 (params asynchrone).
- * - La structure et les commentaires d’origine sont préservés.
  */
 
 import PageHero from "@/components/layout/PageHero";
@@ -15,9 +14,9 @@ import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import AuthButtons from "@/components/auth/AuthButtons";
 import Link from "next/link";
 
-export default async function FormationPage({
-                                                params,
-                                            }: {
+export default async function PremiumPage({
+                                              params,
+                                          }: {
     params: Promise<{ locale: string }>;
 }) {
     // Récupération de la locale
@@ -26,119 +25,69 @@ export default async function FormationPage({
 
     // Chargement du dictionnaire
     const dict = await getDictionary(locale);
-    const t = dict.formationPage;
+    const t = dict.premiumPage;
 
     return (
         <div className="text-brandText flex flex-col">
-
             {/* HERO */}
-            <PageHero
-                title={t.heroTitle}
-                subtitle={t.heroSubtitle}
-            />
+            <PageHero title={t.heroTitle} subtitle={t.heroSubtitle} />
 
-            {/* SECTION : Pourquoi devenir coach ? */}
+            {/* SECTION : Pourquoi devenir Premium ? */}
             <section className="mx-auto max-w-6xl w-full px-4 py-8">
-                <h2 className="text-3xl font-semibold text-center mb-10">
-                    {t.whyTitle}
-                </h2>
+                <h2 className="text-3xl font-semibold text-center mb-10">{t.whyTitle}</h2>
 
                 <div className="grid md:grid-cols-4 gap-6">
-                    <CardWhy
-                        icon="👥"
-                        title={t.why1Title}
-                        text={t.why1Text}
-                    />
-                    <CardWhy
-                        icon="📈"
-                        title={t.why2Title}
-                        text={t.why2Text}
-                    />
-                    <CardWhy
-                        icon="💚"
-                        title={t.why3Title}
-                        text={t.why3Text}
-                    />
-                    <CardWhy
-                        icon="🏅"
-                        title={t.why4Title}
-                        text={t.why4Text}
-                    />
+                    <CardWhy icon="🔓" title={t.why1Title} text={t.why1Text} />
+                    <CardWhy icon="🧘" title={t.why2Title} text={t.why2Text} />
+                    <CardWhy icon="🔔" title={t.why3Title} text={t.why3Text} />
+                    <CardWhy icon="⚡" title={t.why4Title} text={t.why4Text} />
                 </div>
             </section>
 
-            {/* SECTION : Programme complet */}
+            {/* SECTION : Ce que vous débloquez */}
             <section className="bg-white/50 py-8 px-4">
                 <div className="mx-auto max-w-6xl">
-                    <h2 className="text-3xl font-semibold text-center mb-6">
-                        {t.programTitle}
-                    </h2>
-                    <p className="text-center text-brandText-soft mb-12">
-                        {t.programSubtitle}
-                    </p>
+                    <h2 className="text-3xl font-semibold text-center mb-6">{t.programTitle}</h2>
+                    <p className="text-center text-brandText-soft mb-12">{t.programSubtitle}</p>
 
                     <div className="grid md:grid-cols-2 gap-8">
                         <CardProgram
                             number="1"
                             title={t.program1Title}
                             duration={t.program1Duration}
-                            items={[
-                                t.program1Item1,
-                                t.program1Item2,
-                                t.program1Item3,
-                            ]}
+                            items={[t.program1Item1, t.program1Item2, t.program1Item3]}
                         />
                         <CardProgram
                             number="2"
                             title={t.program2Title}
                             duration={t.program2Duration}
-                            items={[
-                                t.program2Item1,
-                                t.program2Item2,
-                                t.program2Item3,
-                            ]}
+                            items={[t.program2Item1, t.program2Item2, t.program2Item3]}
                         />
                         <CardProgram
                             number="3"
                             title={t.program3Title}
                             duration={t.program3Duration}
-                            items={[
-                                t.program3Item1,
-                                t.program3Item2,
-                                t.program3Item3,
-                            ]}
+                            items={[t.program3Item1, t.program3Item2, t.program3Item3]}
                         />
                         <CardProgram
                             number="4"
                             title={t.program4Title}
                             duration={t.program4Duration}
-                            items={[
-                                t.program4Item1,
-                                t.program4Item2,
-                                t.program4Item3,
-                            ]}
+                            items={[t.program4Item1, t.program4Item2, t.program4Item3]}
                         />
                     </div>
                 </div>
             </section>
 
-            {/* SECTION : Tarification */}
+            {/* SECTION : Tarification
             <section className="mx-auto max-w-6xl w-full px-4 py-8">
-                <h2 className="text-3xl font-semibold text-center mb-10">
-                    {t.pricingTitle}
-                </h2>
+                <h2 className="text-3xl font-semibold text-center mb-10">{t.pricingTitle}</h2>
 
                 <div className="grid md:grid-cols-3 gap-8">
                     <PricingCard
                         title={t.pricing1Title}
                         price={t.pricing1Price}
-                        features={[
-                            t.pricing1F1,
-                            t.pricing1F2,
-                            t.pricing1F3,
-                            t.pricing1F4,
-                            t.pricing1F5,
-                        ]}
+                        features={[t.pricing1F1, t.pricing1F2, t.pricing1F3, t.pricing1F4, t.pricing1F5]}
                         button={t.pricingButton}
                     />
 
@@ -146,42 +95,25 @@ export default async function FormationPage({
                         highlight
                         title={t.pricing2Title}
                         price={t.pricing2Price}
-                        features={[
-                            t.pricing2F1,
-                            t.pricing2F2,
-                            t.pricing2F3,
-                            t.pricing2F4,
-                            t.pricing2F5,
-                            t.pricing2F6,
-                        ]}
+                        features={[t.pricing2F1, t.pricing2F2, t.pricing2F3, t.pricing2F4, t.pricing2F5, t.pricing2F6]}
                         button={t.pricingButton}
                     />
 
                     <PricingCard
                         title={t.pricing3Title}
                         price={t.pricing3Price}
-                        features={[
-                            t.pricing3F1,
-                            t.pricing3F2,
-                            t.pricing3F3,
-                            t.pricing3F4,
-                            t.pricing3F5,
-                            t.pricing3F6,
-                        ]}
+                        features={[t.pricing3F1, t.pricing3F2, t.pricing3F3, t.pricing3F4, t.pricing3F5, t.pricing3F6]}
                         button={t.pricingButton}
                     />
                 </div>
             </section>
+            */}
 
             {/* CTA FINAL */}
             <section className="bg-brandGreen-light py-16 px-4">
                 <div className="mx-auto max-w-3xl text-center">
-                    <h2 className="text-3xl font-semibold mb-4">
-                        {t.ctaTitle}
-                    </h2>
-                    <p className="text-brandText-soft mb-8">
-                        {t.ctaSubtitle}
-                    </p>
+                    <h2 className="text-3xl font-semibold mb-4">{t.ctaTitle}</h2>
+                    <p className="text-brandText-soft mb-8">{t.ctaSubtitle}</p>
 
                     <div className="flex justify-center gap-4">
                         <AuthButtons variant="inpage" />
@@ -251,9 +183,7 @@ function PricingCard({ title, price, features, button, highlight }: PricingCardP
             }
         >
             {highlight && (
-                <p className="text-center text-sm text-brandGreen font-semibold mb-2">
-                    Recommandé
-                </p>
+                <p className="text-center text-sm text-brandGreen font-semibold mb-2">Recommandé</p>
             )}
             <h3 className="text-xl font-semibold mb-1">{title}</h3>
             <p className="text-3xl font-bold mb-4">{price}</p>
@@ -265,9 +195,9 @@ function PricingCard({ title, price, features, button, highlight }: PricingCardP
                     </li>
                 ))}
             </ul>
-            {/* <button className="w-full border border-brandBorder py-2 rounded-lg font-medium hover:bg-white/60 transition">
+            <button className="w-full border border-brandBorder py-2 rounded-lg font-medium hover:bg-white/60 transition">
                 {button}
-            </button> */}
+            </button>
         </div>
     );
 }
