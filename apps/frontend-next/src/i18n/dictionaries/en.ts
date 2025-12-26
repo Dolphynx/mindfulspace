@@ -349,6 +349,8 @@ const en: Messages = {
         skipAll: "Skip all",
 
         nextStep: "Next step",
+
+        skip: "Skip"
     },
 
     sessionRecap: {

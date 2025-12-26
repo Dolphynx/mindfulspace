@@ -35,7 +35,7 @@ export default function AuthCallbackPage() {
         // Small delay to ensure state is updated
         setTimeout(() => {
           console.log('Redirecting to world...');
-          router.push(`/${locale}/member/world-v2`);
+          router.push(`/${locale}/member/seance/respiration`);
         }, 500);
       } else {
         // OAuth failed

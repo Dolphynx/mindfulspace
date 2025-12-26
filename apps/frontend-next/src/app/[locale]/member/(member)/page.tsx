@@ -20,19 +20,19 @@ export default async function Entry({
                                     }: {
     params: Promise<{ locale: string }>;
 }) {
-    // 1️⃣ Récupérer et sécuriser la locale depuis l’URL
+    // Récupérer et sécuriser la locale depuis l’URL
     const { locale: rawLocale } = await params;
     const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
 
-    // 2️⃣ Récupère les préférences utilisateur depuis l’API Nest
+    // Récupère les préférences utilisateur depuis l’API Nest
     const prefs = await getUserPrefs();
 
-    // 3️⃣ Redirection conditionnelle, en tenant compte de la locale et du segment /member
+    // Redirection conditionnelle, en tenant compte de la locale et du segment /member
     if (prefs.launchBreathingOnStart) {
         redirect(`/${locale}/member/seance/respiration`);
     }
 
-    redirect(`/${locale}/member/dashboard`);
+    redirect(`/${locale}/member/world-v2`);
 
     // Jamais exécuté : redirect() interrompt le rendu SSR
     return null;

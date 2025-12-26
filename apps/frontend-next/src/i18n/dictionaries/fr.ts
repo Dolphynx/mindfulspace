@@ -346,6 +346,8 @@ const fr = {
         skipAll: "Skip all",
 
         nextStep: "Étape suivante",
+
+        skip: "Passer"
     },
 
     sessionRecap: {

@@ -85,20 +85,23 @@ export default async function PublicHome({
                             </p>
                         </div>
 
-                        <div className="mt-6 space-y-3">
+                        <div className="mt-6 space-y-12">
                             <Link
-                                href={`/${locale}/member`}
+                                href={`/${locale}/auth/login`}
                                 className="inline-flex w-full items-center justify-center rounded-xl border border-brandGreen bg-brandGreen px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brandGreen/90"
                             >
                                 {t.loginButton}
                             </Link>
 
+                            {/* Seance de respiration
+                               Todo: publique ?? -> non, si on enregistre à la fin !
                             <Link
                                 href={`/${locale}/member/seance/respiration`}
                                 className="inline-flex w-full items-center justify-center rounded-xl border border-brandBorder bg-white px-4 py-2.5 text-sm font-semibold text-brandText transition hover:bg-white/80"
                             >
                                 {t.startBreathing}
                             </Link>
+                            */}
 
                             <p className="pt-1 text-xs text-brandText/70">
                                 {t.disclaimer}
