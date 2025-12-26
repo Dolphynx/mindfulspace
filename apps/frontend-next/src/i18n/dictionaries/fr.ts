@@ -63,13 +63,23 @@ const fr = {
     },
 
     adminDashboard: {
+        title: "Panneau administrateur",
         tabs: {
             dashboard: "Tableau de bord",
             resources: "Ressources",
             taxonomy: "Taxonomie",
-            sessions: "Sessions",
+            profile: "Mon profil",
         },
         backToApp: "Retour à l'app",
+        welcome: "Bienvenue dans le panneau d'administration MindfulSpace",
+        stats: {
+            totalUsers: "Total Utilisateurs",
+            resources: "Ressources",
+            sessions: "Sessions",
+        },
+        errors: {
+            loadStatsFailed: "Échec du chargement des statistiques",
+        },
     },
 
     /*
@@ -988,6 +998,7 @@ const fr = {
         // Menu utilisateur
         myWorld: "Mon monde",
         profileSettings: "Paramètres du profil",
+        adminPanel: "Panneau administrateur",
         signOut: "Se déconnecter",
 
         // Vérification d'email
@@ -1093,12 +1104,11 @@ const fr = {
         accountDeletedSuccess: "Votre compte a été supprimé",
 
         // Subscription & Roles
-        subscriptionTitle: "Abonnement et rôles",
-        currentRoleLabel: "Rôle actuel",
-        roleUser: "Utilisateur",
-        rolePremium: "Premium",
-        roleCoach: "Coach",
-        roleAdmin: "Administrateur",
+        subscriptionTitle: "Abonnement",
+        currentSubscriptionLabel: "Abonnement actuel",
+        subscriptionStandard: "Standard",
+        subscriptionPremium: "Premium",
+        subscriptionCoach: "Coach",
         upgradeToPremiumButton: "Passer à Premium",
         upgradeToPremiumDescription: "Accédez à des fonctionnalités exclusives et du contenu premium",
         premiumFeatures: "Fonctionnalités Premium",
@@ -1455,6 +1465,9 @@ const fr = {
             tagCreated: "Tag créé avec succès",
             tagUpdated: "Tag mis à jour avec succès",
             tagDeleted: "Tag supprimé avec succès",
+            translationSaved: "Traduction enregistrée avec succès",
+            translationDeleted: "Traduction supprimée avec succès",
+            translationRegenerated: "Traduction régénérée avec succès",
         },
 
         // Error messages
@@ -1471,6 +1484,12 @@ const fr = {
             requiredField: "Ce champ est requis",
             minLength: "Trop court (minimum {{min}} caractères)",
             maxLength: "Trop long (maximum {{max}} caractères)",
+            translationLoadFailed: "Échec du chargement des traductions",
+            translationGenerateFailed: "Échec de la génération de la traduction",
+            translationSaveFailed: "Échec de l'enregistrement de la traduction",
+            translationDeleteFailed: "Échec de la suppression de la traduction",
+            translationRegenerateFailed: "Échec de la régénération de la traduction",
+            translateTextFailed: "Échec de la traduction du texte",
         },
     }
 

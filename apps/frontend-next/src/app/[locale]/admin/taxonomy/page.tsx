@@ -286,7 +286,7 @@ export default function TaxonomyManagementPage() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to translate text');
+      throw new Error(t('errors.translateTextFailed'));
     }
 
     const data = await response.json();
@@ -331,7 +331,7 @@ export default function TaxonomyManagementPage() {
         setTranslationFormData({ name: translatedName });
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load translations');
+      setError(err.message || t('errors.translationLoadFailed'));
       setTranslationFormData({ name: '' });
     }
   };
@@ -372,7 +372,7 @@ export default function TaxonomyManagementPage() {
         setTranslationFormData({ name: translatedName });
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load translations');
+      setError(err.message || t('errors.translationLoadFailed'));
       setTranslationFormData({ name: '' });
     }
   };
@@ -403,7 +403,7 @@ export default function TaxonomyManagementPage() {
         );
         setTranslationFormData({ name: translatedName });
       } catch (err: any) {
-        setError(err.message || 'Failed to generate translation');
+        setError(err.message || t('errors.translationGenerateFailed'));
         setTranslationFormData({ name: '' });
       }
     }
@@ -432,7 +432,7 @@ export default function TaxonomyManagementPage() {
         const categoriesData = await getCategories();
         setCategories(categoriesData);
 
-        setSuccess('Translation saved successfully');
+        setSuccess(t('success.translationSaved'));
       } else if (translatingTag) {
         const updated = await upsertTagTranslation(
           translatingTag.id,
@@ -450,10 +450,10 @@ export default function TaxonomyManagementPage() {
         const tagsData = await getTags();
         setTags(tagsData);
 
-        setSuccess('Translation saved successfully');
+        setSuccess(t('success.translationSaved'));
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to save translation');
+      setError(err.message || t('errors.translationSaveFailed'));
     } finally {
       setTranslationSubmitting(false);
     }
@@ -471,15 +471,15 @@ export default function TaxonomyManagementPage() {
         await deleteCategoryTranslation(translatingCategory.id, activeTranslationLocale);
         setCategoryTranslations(prev => prev.filter(t => t.locale !== activeTranslationLocale));
         setTranslationFormData({ name: '' });
-        setSuccess('Translation deleted successfully');
+        setSuccess(t('success.translationDeleted'));
       } else if (translatingTag) {
         await deleteTagTranslation(translatingTag.id, activeTranslationLocale);
         setTagTranslations(prev => prev.filter(t => t.locale !== activeTranslationLocale));
         setTranslationFormData({ name: '' });
-        setSuccess('Translation deleted successfully');
+        setSuccess(t('success.translationDeleted'));
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to delete translation');
+      setError(err.message || t('errors.translationDeleteFailed'));
     } finally {
       setTranslationSubmitting(false);
     }
@@ -504,9 +504,9 @@ export default function TaxonomyManagementPage() {
         activeTranslationLocale
       );
       setTranslationFormData({ name: translatedName });
-      setSuccess('Translation regenerated successfully');
+      setSuccess(t('success.translationRegenerated'));
     } catch (err: any) {
-      setError(err.message || 'Failed to regenerate translation');
+      setError(err.message || t('errors.translationRegenerateFailed'));
       setTranslationFormData({ name: '' });
     }
   };

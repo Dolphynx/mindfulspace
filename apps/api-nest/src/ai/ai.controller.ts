@@ -183,7 +183,7 @@ export class AiController {
    * This endpoint is used by the resource creation wizard to translate
    * resource content fields (title, summary, content) to target locales.
    *
-   * @param body - Contains text, sourceLocale, and targetLocale
+   * @param body - Contains text, sourceLocale, targetLocale, and optional contentType
    * @returns Translated text
    */
   @Post('translate-text')
@@ -192,7 +192,8 @@ export class AiController {
     summary: 'Translate text using AI',
     description:
       'Translates text from source language to target language using AI. ' +
-      'Preserves formatting and maintains tone.',
+      'Preserves formatting and maintains tone. Supports both short taxonomy labels ' +
+      'and long resource content.',
   })
   @ApiBody({
     schema: {
@@ -212,6 +213,12 @@ export class AiController {
           type: 'string',
           description: 'Target language code (e.g., "en", "fr")',
           example: 'en',
+        },
+        contentType: {
+          type: 'string',
+          description: 'Type of content being translated (title, summary, content, or taxonomy)',
+          example: 'content',
+          enum: ['title', 'summary', 'content', 'taxonomy'],
         },
       },
       required: ['text', 'sourceLocale', 'targetLocale'],
@@ -242,13 +249,32 @@ export class AiController {
       text: string;
       sourceLocale: string;
       targetLocale: string;
+      contentType?: 'title' | 'summary' | 'content' | 'taxonomy';
     },
   ): Promise<{ translatedText: string }> {
-    const translatedText = await this.aiService.translateText(
-      body.text,
-      body.sourceLocale,
-      body.targetLocale,
-    );
+    let translatedText: string;
+
+    // If contentType is taxonomy or not specified for short text, use taxonomy translation
+    if (body.contentType === 'taxonomy' || (!body.contentType && body.text.length < 50)) {
+      translatedText = await this.aiService.translateText(
+        body.text,
+        body.sourceLocale,
+        body.targetLocale,
+      );
+    } else {
+      // For resource content (title, summary, content), use resource-specific translation
+      const type = body.contentType === 'title' || body.contentType === 'summary'
+        ? body.contentType
+        : 'content';
+
+      translatedText = await this.aiService.translateResourceContent(
+        body.text,
+        body.sourceLocale,
+        body.targetLocale,
+        type,
+      );
+    }
+
     return { translatedText };
   }
 }

@@ -15,10 +15,11 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       clientSecret: configService.get<string>('GITHUB_CLIENT_SECRET') || '',
       callbackURL: configService.get<string>('GITHUB_CALLBACK_URL') || 'http://localhost:3001/auth/github/callback',
       scope: ['user:email'],
+      passReqToCallback: true,
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any): Promise<any> {
+  async validate(req: any, accessToken: string, refreshToken: string, profile: any): Promise<any> {
     const { id, emails, displayName, username } = profile;
     const email = emails?.[0]?.value;
 

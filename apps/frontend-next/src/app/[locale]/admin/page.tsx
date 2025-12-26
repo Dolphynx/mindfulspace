@@ -26,7 +26,13 @@ const TaxonomyContent = dynamic(
     { ssr: false, loading: () => <div className="flex h-64 items-center justify-center"><p className="text-brandText/60">Loading...</p></div> }
 );
 
-type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'sessions';
+// Dynamically import the profile content
+const ProfileContent = dynamic(
+    () => import("@/components/profile/ProfileContent"),
+    { ssr: false, loading: () => <div className="flex h-64 items-center justify-center"><p className="text-brandText/60">Loading...</p></div> }
+);
+
+type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'profile';
 
 export default function AdminPage() {
     const pathname = usePathname();
@@ -39,7 +45,7 @@ export default function AdminPage() {
     // Initialize activeTab from URL parameter or default to dashboard
     const [activeTab, setActiveTab] = useState<TabType>(() => {
         const tabParam = searchParams.get('tab') as TabType;
-        return tabParam && ['dashboard', 'resources', 'sessions'].includes(tabParam)
+        return tabParam && ['dashboard', 'resources', 'taxonomy', 'profile'].includes(tabParam)
             ? tabParam
             : 'dashboard';
     });
@@ -59,7 +65,7 @@ export default function AdminPage() {
                 setStatistics(data);
             } catch (error: any) {
                 console.error('Failed to fetch dashboard statistics:', error);
-                setStatsError(error.message || 'Failed to load statistics');
+                setStatsError(error.message || t('errors.loadStatsFailed'));
             } finally {
                 setStatsLoading(false);
             }
@@ -97,7 +103,7 @@ export default function AdminPage() {
                             {t('tabs.dashboard')}
                         </h1>
                         <p className="mt-2 text-brandText/70">
-                            Bienvenue dans le panneau d'administration MindfulSpace
+                            {t('welcome')}
                         </p>
                     </div>
 
@@ -114,7 +120,7 @@ export default function AdminPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-brandText/70">
-                                        Total Utilisateurs
+                                        {t('stats.totalUsers')}
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
                                         {statsLoading ? (
@@ -149,7 +155,7 @@ export default function AdminPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-brandText/70">
-                                        Ressources
+                                        {t('stats.resources')}
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
                                         {statsLoading ? (
@@ -182,7 +188,7 @@ export default function AdminPage() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-brandText/70">
-                                        Sessions
+                                        {t('stats.sessions')}
                                     </p>
                                     <p className="mt-2 text-3xl font-bold text-brandText">
                                         {statsLoading ? (
@@ -209,63 +215,6 @@ export default function AdminPage() {
                                     'N/A'
                                 )}
                             </p>
-                        </div>
-                    </div>
-
-                    {/* Recent Activity */}
-                    <div className="rounded-xl border border-brandBorder bg-white p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-brandText mb-4">
-                            Activité récente
-                        </h2>
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4 border-b border-brandBorder pb-4">
-                                <div className="rounded-full bg-brandGreen/10 p-2">
-                                    <svg className="h-5 w-5 text-brandGreen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-brandText">
-                                        Nouvelle ressource créée
-                                    </p>
-                                    <p className="text-xs text-brandText/60">
-                                        "Guide de méditation pour débutants" par Coach Julie
-                                    </p>
-                                </div>
-                                <p className="text-xs text-brandText/60">Il y a 2h</p>
-                            </div>
-                            <div className="flex items-center gap-4 border-b border-brandBorder pb-4">
-                                <div className="rounded-full bg-blue-100 p-2">
-                                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-brandText">
-                                        Nouvel utilisateur inscrit
-                                    </p>
-                                    <p className="text-xs text-brandText/60">
-                                        sophie.martin@example.com
-                                    </p>
-                                </div>
-                                <p className="text-xs text-brandText/60">Il y a 5h</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="rounded-full bg-purple-100 p-2">
-                                    <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-brandText">
-                                        Session de méditation complétée
-                                    </p>
-                                    <p className="text-xs text-brandText/60">
-                                        "Pleine conscience - 15 min" par 23 utilisateurs
-                                    </p>
-                                </div>
-                                <p className="text-xs text-brandText/60">Il y a 1j</p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,31 +245,12 @@ export default function AdminPage() {
                 <TaxonomyContent locale={locale} />
             )}
 
-            {/* Sessions Tab */}
-            {activeTab === 'sessions' && (
-                <div className="space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-brandText">
-                            {t('tabs.sessions')}
-                        </h1>
-                        <p className="mt-2 text-brandText/70">
-                            Gérer les sessions de méditation
-                        </p>
-                    </div>
-
-                    {/* Placeholder for future session management */}
-                    <div className="rounded-xl border border-brandBorder bg-white p-12 text-center shadow-sm">
-                        <svg className="mx-auto h-12 w-12 text-brandText/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                        <h3 className="mt-4 text-lg font-medium text-brandText">
-                            Gestion des sessions
-                        </h3>
-                        <p className="mt-2 text-sm text-brandText/60">
-                            Cette section sera implémentée prochainement
-                        </p>
-                    </div>
-                </div>
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+                <ProfileContent
+                    showHeader={false}
+                    containerClassName="space-y-6"
+                />
             )}
         </AdminDashboardShell>
     );

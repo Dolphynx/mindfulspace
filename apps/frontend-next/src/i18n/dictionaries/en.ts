@@ -65,13 +65,23 @@ const en: Messages = {
     },
 
     adminDashboard: {
+        title: "Admin Panel",
         tabs: {
             dashboard: "Dashboard",
             resources: "Resources",
             taxonomy: "Taxonomy",
-            sessions: "Sessions",
+            profile: "My Profile",
         },
         backToApp: "Back to App",
+        welcome: "Welcome to the MindfulSpace administration panel",
+        stats: {
+            totalUsers: "Total Users",
+            resources: "Resources",
+            sessions: "Sessions",
+        },
+        errors: {
+            loadStatsFailed: "Failed to load statistics",
+        },
     },
 
     /*
@@ -990,6 +1000,7 @@ const en: Messages = {
         // User menu
         myWorld: "My World",
         profileSettings: "Profile Settings",
+        adminPanel: "Admin Panel",
         signOut: "Sign Out",
 
         // Email verification
@@ -1095,12 +1106,11 @@ const en: Messages = {
         accountDeletedSuccess: "Your account has been deleted",
 
         // Subscription & Roles
-        subscriptionTitle: "Subscription & Roles",
-        currentRoleLabel: "Current Role",
-        roleUser: "User",
-        rolePremium: "Premium",
-        roleCoach: "Coach",
-        roleAdmin: "Administrator",
+        subscriptionTitle: "Subscription",
+        currentSubscriptionLabel: "Current Subscription",
+        subscriptionStandard: "Standard",
+        subscriptionPremium: "Premium",
+        subscriptionCoach: "Coach",
         upgradeToPremiumButton: "Upgrade to Premium",
         upgradeToPremiumDescription: "Access exclusive features and premium content",
         premiumFeatures: "Premium Features",
@@ -1457,6 +1467,9 @@ const en: Messages = {
             tagCreated: "Tag created successfully",
             tagUpdated: "Tag updated successfully",
             tagDeleted: "Tag deleted successfully",
+            translationSaved: "Translation saved successfully",
+            translationDeleted: "Translation deleted successfully",
+            translationRegenerated: "Translation regenerated successfully",
         },
 
         // Error messages
@@ -1473,6 +1486,12 @@ const en: Messages = {
             requiredField: "This field is required",
             minLength: "Too short (minimum {{min}} characters)",
             maxLength: "Too long (maximum {{max}} characters)",
+            translationLoadFailed: "Failed to load translations",
+            translationGenerateFailed: "Failed to generate translation",
+            translationSaveFailed: "Failed to save translation",
+            translationDeleteFailed: "Failed to delete translation",
+            translationRegenerateFailed: "Failed to regenerate translation",
+            translateTextFailed: "Failed to translate text",
         },
     }
 

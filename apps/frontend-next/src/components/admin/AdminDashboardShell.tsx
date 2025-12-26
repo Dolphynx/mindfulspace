@@ -15,12 +15,13 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
-import { LayoutDashboard, BookOpen, Activity, ArrowLeft, Tags } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Activity, ArrowLeft, Tags, User } from 'lucide-react';
+import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 
 interface AdminDashboardShellProps {
   children: ReactNode;
-  activeTab: 'dashboard' | 'resources' | 'sessions' | 'taxonomy';
-  onTabChange: (tab: 'dashboard' | 'resources' | 'sessions' | 'taxonomy') => void;
+  activeTab: 'dashboard' | 'resources' | 'taxonomy' | 'profile';
+  onTabChange: (tab: 'dashboard' | 'resources' | 'taxonomy' | 'profile') => void;
   locale: string;
 }
 
@@ -51,9 +52,9 @@ export default function AdminDashboardShell({
       icon: Tags,
     },
     {
-      id: 'sessions' as const,
-      label: t('tabs.sessions'),
-      icon: Activity,
+      id: 'profile' as const,
+      label: t('tabs.profile'),
+      icon: User,
     },
   ];
 
@@ -64,8 +65,13 @@ export default function AdminDashboardShell({
         <div className="flex h-full flex-col">
           {/* Logo/Header */}
           <div className="border-b border-brandBorder px-6 py-5">
-            <h1 className="text-xl font-bold text-brandText">Admin Panel</h1>
-            <p className="text-xs text-brandText/60">MindfulSpace</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h1 className="text-xl font-bold text-brandText">{t('title')}</h1>
+                <p className="text-xs text-brandText/60">MindfulSpace</p>
+              </div>
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* Navigation Menu */}
@@ -101,7 +107,7 @@ export default function AdminDashboardShell({
           {/* Footer - Back to App */}
           <div className="border-t border-brandBorder p-3">
             <Link
-              href={`/${currentLocale}/member/world`}
+              href={`/${currentLocale}/member/world-v2`}
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brandText/70 transition-all hover:bg-brandSurface hover:text-brandText"
             >
               <ArrowLeft className="h-5 w-5 text-brandText/50 transition-colors group-hover:text-brandText" />

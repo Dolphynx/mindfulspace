@@ -103,7 +103,7 @@ export default function UserMenu() {
                 className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
                 onClick={() => setIsOpen(false)}
               >
-                ⚙️ Admin Panel
+                ⚙️ {t('adminPanel')}
               </Link>
             )}
           </div>

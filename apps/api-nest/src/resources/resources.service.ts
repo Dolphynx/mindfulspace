@@ -316,10 +316,18 @@ export class ResourcesService {
       }
     }
 
-    // Generate slug from title (English)
-    // If source is not English, we'll use the title as-is for now
-    // TODO: In Phase 3, translate to English first if source is not English
-    const slug = await this.generateUniqueSlug(title);
+    // Generate slug from title (always in English for consistent routing)
+    // If source is not English, translate title to English first
+    let titleForSlug = title;
+    if (sourceLocale !== 'en') {
+      titleForSlug = await this.aiService.translateResourceContent(
+        title,
+        sourceLocale,
+        'en',
+        'title',
+      );
+    }
+    const slug = await this.generateUniqueSlug(titleForSlug);
 
     // Create resource with source translation
     return this.prisma.resource.create({
@@ -706,22 +714,25 @@ export class ResourcesService {
     // Translate to each target locale
     const translations = await Promise.all(
       targetLocales.map(async (targetLocale) => {
-        // Translate title, summary, and content
+        // Translate title, summary, and content using resource-specific translation
         const [translatedTitle, translatedSummary, translatedContent] = await Promise.all([
-          this.aiService.translateText(
+          this.aiService.translateResourceContent(
             sourceTranslation.title,
             resource.sourceLocale,
             targetLocale,
+            'title',
           ),
-          this.aiService.translateText(
+          this.aiService.translateResourceContent(
             sourceTranslation.summary,
             resource.sourceLocale,
             targetLocale,
+            'summary',
           ),
-          this.aiService.translateText(
+          this.aiService.translateResourceContent(
             sourceTranslation.content,
             resource.sourceLocale,
             targetLocale,
+            'content',
           ),
         ]);
 

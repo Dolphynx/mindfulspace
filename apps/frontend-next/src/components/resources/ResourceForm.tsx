@@ -217,6 +217,7 @@ export default function ResourceForm({
           text: sourceData.title,
           sourceLocale,
           targetLocale,
+          contentType: 'title',
         }),
       }).then((res) => {
         if (!res.ok) throw new Error('Failed to translate title');
@@ -230,6 +231,7 @@ export default function ResourceForm({
           text: sourceData.summary,
           sourceLocale,
           targetLocale,
+          contentType: 'summary',
         }),
       }).then((res) => {
         if (!res.ok) throw new Error('Failed to translate summary');
@@ -243,6 +245,7 @@ export default function ResourceForm({
           text: sourceData.content,
           sourceLocale,
           targetLocale,
+          contentType: 'content',
         }),
       }).then((res) => {
         if (!res.ok) throw new Error('Failed to translate content');
