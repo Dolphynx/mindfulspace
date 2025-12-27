@@ -31,11 +31,16 @@
 // - Il se contente de réexporter des groupes de composants.
 // - Il facilite et uniformise tous les imports dans l'app.
 // ============================================================
+export * from "./admin";
 export * from "./badges";
+export * from "./confetti";
 export * from "./exercise";
 export * from "./layout";
 export * from "./map";
 export * from "./meditation";
+export * from "./notifications";
+export * from "./profile";
+export * from "./resources";
 export * from "./session";
 export * from "./shared";
 export * from "./sleep";

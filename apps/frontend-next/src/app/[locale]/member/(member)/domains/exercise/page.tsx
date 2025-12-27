@@ -1,15 +1,15 @@
 "use client";
 
 import { useTranslations } from "@/i18n/TranslationContext";
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
-import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
-import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
+import { ExerciseHistoryCard } from "@/components/exercise/ExerciseHistoryCard";
+import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 import { SessionDashboardLayout } from "@/components/session/SessionDashboardLayout";
 import { SessionCard } from "@/components/session/SessionCard";
-import {ExerciceStartSection} from "@/components/exercise/ExerciceStartSection";
+import {ExerciseStartSection} from "@/components/exercise/ExerciseStartSection";
 import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import {WorkoutProgramsStartCard} from "@/components/exercise/ProgramStartCard";
-import {TodayExercices} from "@/components/exercise/ExerciceDayPlan";
+import {TodayExercises} from "@/components/exercise/ExerciseDayPlan";
 import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
 
 /**
@@ -25,8 +25,8 @@ function getErrorMessage(
     return null;
 }
 
-export default function ExercicePage() {
-    const t = useTranslations("domainExercice");
+export default function ExercisePage() {
+    const t = useTranslations("domainExercise");
 
     const {
         sessions,
@@ -34,7 +34,7 @@ export default function ExercicePage() {
         loading,
         errorType,
         createSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     const globalErrorMessage = getErrorMessage(t, errorType);
 
@@ -53,10 +53,10 @@ export default function ExercicePage() {
                 leftTop={
                     <>
                         <SessionCard>
-                            <TodayExercices/>
+                            <TodayExercises/>
                         </SessionCard>
                         <SessionCard>
-                            <ExerciceStartSection
+                            <ExerciseStartSection
                                 types={types}
                                 onCreateSession={createSession}
                             />
@@ -68,7 +68,7 @@ export default function ExercicePage() {
                 leftBottom={
                     <>
                         <SessionCard>
-                            <ExerciceManualForm
+                            <ExerciseManualForm
                                 types={types}
                                 onCreateSessionAction={createSession}/>
                         </SessionCard>
@@ -81,7 +81,7 @@ export default function ExercicePage() {
 
 
                 rightColumn={
-                    <ExerciceHistoryCard
+                    <ExerciseHistoryCard
                         sessions={sessions}
                         loading={loading}
                         errorType={errorType}

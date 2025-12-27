@@ -8,10 +8,10 @@ import { HomeBadgesStrip } from "@/components/badges/HomeBadgesStrip";
 
 import SleepManualForm from "@/components/sleep/SleepManualForm";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
-import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
+import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 
 import { useMeditationSessions } from "@/hooks/useMeditationSessions";
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
 import { useSleepSessions } from "@/hooks/useSleepSessions";
 
 import type { MoodValue } from "@/lib";
@@ -93,7 +93,7 @@ export default function DomainTabsPanel() {
         loading: exerciceLoading,
         errorType: exerciceErrorType,
         createSession: createExerciceSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     const { loading: sleepLoading, errorType: sleepErrorType, createSession: createSleepSession } =
         useSleepSessions();
@@ -247,7 +247,7 @@ export default function DomainTabsPanel() {
                             )}
 
                             {active === "exercise" && (
-                                <ExerciceManualForm
+                                <ExerciseManualForm
                                     types={exerciceTypes ?? []}
                                     onCreateSessionAction={onCreateExerciceSessionAction}
                                     defaultOpen
@@ -293,7 +293,7 @@ export default function DomainTabsPanel() {
                             )}
 
                             {active === "exercise" && (
-                                <ExerciceManualForm
+                                <ExerciseManualForm
                                     types={exerciceTypes ?? []}
                                     onCreateSessionAction={onCreateExerciceSessionAction}
                                     defaultOpen

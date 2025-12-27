@@ -6,7 +6,7 @@
  * Section “Aujourd’hui” de l’overview du World Hub.
  *
  * Cette section regroupe :
- * - le plan du jour (exercices) via {@link TodayExercices},
+ * - le plan du jour (exercices) via {@link TodayExercises},
  * - des actions transverses sous forme de tuiles via {@link ActionTile},
  * - un CTA d’accès rapide au Quick Log placé dans l’en-tête de la carte.
  *
@@ -16,7 +16,7 @@
  *   (Évite TS71007 : fonctions non sérialisables en props.)
  */
 
-import { TodayExercices } from "@/components/exercise/ExerciceDayPlan";
+import { TodayExercises } from "@/components/exercise/ExerciseDayPlan";
 import { CardShell } from "@/feature/world/views/shared/CardShell";
 import { ActionTile } from "@/feature/world/ui/ActionTile";
 import { useTranslations } from "@/i18n/TranslationContext";
@@ -50,7 +50,7 @@ export function TodaySection() {
                         {t("overview.todayExercisesTitle")}
                     </div>
                     <div className="mt-3">
-                        <TodayExercices />
+                        <TodayExercises />
                     </div>
                 </div>
 

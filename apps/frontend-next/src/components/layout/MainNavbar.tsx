@@ -175,7 +175,12 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         );
     };
 
-    const homeHref = effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
+    /**
+     * Dans cette version le logo redirige toujours vers la home page.
+     * La version commentée prévoyait : home page quand non connecté / world quand connecté
+     */
+    //const homeHref = effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
+    const homeHref = `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">
