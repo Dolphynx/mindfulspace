@@ -40,7 +40,9 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
         try {
             const data = await fetchLastSleepSessions(effectiveBaseUrl);
             setSessions(data);
-            await saveSleepHistory(data);
+            if(navigator.onLine) {
+                await saveSleepHistory(data);
+            }
         } catch (e) {
             console.warn("[useSleepSessions] API failed, trying cache");
 
