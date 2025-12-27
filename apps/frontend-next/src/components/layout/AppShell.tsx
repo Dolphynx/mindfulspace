@@ -14,6 +14,7 @@ import {
     analyticsAllowed,
     personalizationAllowed,
 } from "@/lib/cookieConsent";
+import OfflineNotice from "./OfflineNotice";
 
 /**
  * Props du composant {@link AppShell}.
@@ -130,6 +131,7 @@ export default function AppShell({ navbar, children }: AppShellProps) {
                     style={topBarStyle}
                     className="sticky top-0 z-[100]">
                     <GlobalNotice />
+                    <OfflineNotice />
                     {navbar}
                 </div>
             )}
@@ -139,7 +141,10 @@ export default function AppShell({ navbar, children }: AppShellProps) {
             {/* ------------------------------------------------------------------ */}
             <div className="min-h-screen flex flex-col bg-brandBg text-brandText border-t border-brandBorder">
                 {/* En séance : pas de navbar/footer ; on peut afficher la notice seule */}
-                {isSession && <GlobalNotice />}
+                {isSession && <>
+                    <GlobalNotice />
+                    <OfflineNotice />
+                    </>}
 
                 <main className="flex-1 min-h-0">{children}</main>
 
