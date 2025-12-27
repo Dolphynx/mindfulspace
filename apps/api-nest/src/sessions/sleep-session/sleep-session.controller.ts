@@ -17,7 +17,7 @@ export class SleepSessionController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateSleepSessionDto,
   ) {
-    console.log(dto)
+    //console.log(dto)
     const session = await this.sleepService.create(userId, dto);
     const newBadges = await this.badgesService.checkForNewBadges(userId);
 

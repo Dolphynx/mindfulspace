@@ -10,6 +10,30 @@ import { MeditationAudioResolverService } from "./audio/meditation-audio-resolve
 import { ExternalAudioProvider } from "./audio/external-audio-provider";
 
 /**
+ * Format minimal renvoyé pour une session de méditation dans les historiques.
+ */
+type MeditationHistoryItem = {
+  date: string | null;
+  durationSeconds: number;
+  moodAfter: number | null;
+  meditationTypeId: string;
+};
+
+/**
+ * Format renvoyé au client pour un contenu de méditation.
+ */
+export type MeditationContentDto = {
+  id: string;
+  title: string;
+  description: string | null;
+  mode: string;
+  durationSeconds: number;
+  meditationTypeId: string;
+  isPremium: boolean;
+  mediaUrl: string | null;
+};
+
+/**
  * Service de gestion des séances de méditation.
  *
  * @remarks
@@ -34,7 +58,7 @@ export class MeditationSessionService {
    *
    * @param userId Identifiant de l’utilisateur.
    * @param dto Données de création.
-   * @returns La séance créée.
+   * @returns La séance créée (modèle Prisma).
    */
   async create(userId: string, dto: CreateMeditationSessionDto) {
     this.assertDayStringOrThrow(dto.dateSession, "dateSession");
@@ -70,7 +94,7 @@ export class MeditationSessionService {
    * @param days Nombre de jours.
    * @returns Un tableau minimal par séance.
    */
-  async getLastNDays(userId: string, days: number) {
+  async getLastNDays(userId: string, days: number): Promise<MeditationHistoryItem[]> {
     const now = new Date();
     const from = new Date(now);
     from.setDate(now.getDate() - days);
@@ -86,8 +110,11 @@ export class MeditationSessionService {
 
   /**
    * Compat : délègue vers {@link getLastNDays} avec 7 jours.
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Un tableau minimal par séance.
    */
-  async getLast7Days(userId: string) {
+  async getLast7Days(userId: string): Promise<MeditationHistoryItem[]> {
     return this.getLastNDays(userId, 7);
   }
 
@@ -101,7 +128,7 @@ export class MeditationSessionService {
   async getSessionsBetweenDates(
     userId: string,
     options: { from?: string; to?: string },
-  ) {
+  ): Promise<MeditationHistoryItem[]> {
     const { from, to } = options;
 
     const where: Prisma.MeditationSessionWhereInput = { userId };
@@ -143,7 +170,7 @@ export class MeditationSessionService {
    * @param userId Identifiant de l’utilisateur.
    * @returns Un tableau minimal par séance.
    */
-  async getAllForUser(userId: string) {
+  async getAllForUser(userId: string): Promise<MeditationHistoryItem[]> {
     const sessions = await this.prisma.meditationSession.findMany({
       where: { userId },
       orderBy: { startedAt: "asc" },
@@ -154,6 +181,9 @@ export class MeditationSessionService {
 
   /**
    * Compat : délègue vers {@link getDailySummary} sans date (veille).
+   *
+   * @param userId Identifiant de l’utilisateur.
+   * @returns Résumé du jour précédent.
    */
   async getYesterdaySummary(userId: string) {
     return this.getDailySummary(userId);
@@ -166,7 +196,10 @@ export class MeditationSessionService {
    * @param date Date cible `YYYY-MM-DD` (optionnelle).
    * @returns `{ durationSeconds, moodAfter }`.
    */
-  async getDailySummary(userId: string, date?: string) {
+  async getDailySummary(userId: string, date?: string): Promise<{
+    durationSeconds: number;
+    moodAfter: number | null;
+  }> {
     const { dayStart, dayEnd } = this.getDayBounds(date);
 
     const sessions = await this.prisma.meditationSession.findMany({
@@ -182,6 +215,8 @@ export class MeditationSessionService {
 
   /**
    * Retourne toutes les séances (admin/back-office).
+   *
+   * @returns Liste complète des séances avec leurs relations.
    */
   async findAll() {
     return this.prisma.meditationSession.findMany({
@@ -192,6 +227,8 @@ export class MeditationSessionService {
 
   /**
    * Retourne les types de méditation actifs.
+   *
+   * @returns Liste triée des types actifs.
    */
   async getMeditationTypes(): Promise<MeditationTypeDto[]> {
     const types = await this.prisma.meditationType.findMany({
@@ -207,15 +244,22 @@ export class MeditationSessionService {
    *
    * @remarks
    * La valeur `mediaUrl` renvoyée au client correspond à l’URL finale consommable :
-   * - si un lien direct (`mediaUrl`) est renseigné en DB, il est utilisé ;
+   * - si un lien direct (`mediaUrl`) est renseigné en base de données, il est utilisé ;
    * - sinon, si `externalAudioProvider/externalAudioRef` sont renseignés, l’URL est résolue
    *   via {@link MeditationAudioResolverService}.
+   *
+   * Contrat important (optimisation + tests unitaires) :
+   * - si `mediaUrl` est déjà présent, le resolver n’est pas appelé ;
+   * - si `mediaUrl` est absent et que `provider/ref` sont absents, le resolver n’est pas appelé.
    *
    * @param meditationTypeId Identifiant de type.
    * @param durationSeconds Durée cible (optionnelle).
    * @returns Contenus compatibles.
    */
-  async getMeditationContents(meditationTypeId: string, durationSeconds?: number) {
+  async getMeditationContents(
+    meditationTypeId: string,
+    durationSeconds?: number,
+  ): Promise<MeditationContentDto[]> {
     if (!meditationTypeId) {
       throw new BadRequestException(ERRORS.REQUIRED("meditationTypeId"));
     }
@@ -251,7 +295,7 @@ export class MeditationSessionService {
         mediaUrl: true,
 
         /**
-         * Champs multi-provider (à ajouter dans Prisma).
+         * Champs multi-provider (présents dans Prisma).
          */
         externalAudioProvider: true,
         externalAudioRef: true,
@@ -259,11 +303,54 @@ export class MeditationSessionService {
     });
 
     const resolved = await Promise.all(
-      items.map(async (c) => {
+      items.map(async (c): Promise<MeditationContentDto> => {
+        const directUrl = (c.mediaUrl ?? "").trim();
+
+        /**
+         * Si un lien direct est déjà disponible, il est renvoyé tel quel
+         * et aucun mécanisme de résolution externe n’est déclenché.
+         */
+        if (directUrl.length > 0) {
+          return {
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            mode: c.mode,
+            durationSeconds: c.defaultDurationSeconds ?? 0,
+            meditationTypeId: c.defaultMeditationTypeId,
+            isPremium: c.isPremium,
+            mediaUrl: c.mediaUrl,
+          };
+        }
+
+        const provider =
+          (c.externalAudioProvider as ExternalAudioProvider | null) ?? null;
+        const ref = (c.externalAudioRef ?? "").trim();
+
+        /**
+         * Si aucune information externe n’est fournie, on conserve `null`
+         * et on n’appelle pas le resolver.
+         */
+        if (!provider || ref.length === 0) {
+          return {
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            mode: c.mode,
+            durationSeconds: c.defaultDurationSeconds ?? 0,
+            meditationTypeId: c.defaultMeditationTypeId,
+            isPremium: c.isPremium,
+            mediaUrl: null,
+          };
+        }
+
+        /**
+         * Résolution de l’URL finale uniquement lorsque nécessaire.
+         */
         const mediaUrl = await this.audioResolver.resolveFromContent({
-          mediaUrl: c.mediaUrl,
-          externalAudioProvider: (c.externalAudioProvider as ExternalAudioProvider | null) ?? null,
-          externalAudioRef: c.externalAudioRef,
+          mediaUrl: null,
+          externalAudioProvider: provider,
+          externalAudioRef: ref,
         });
 
         return {
@@ -271,7 +358,7 @@ export class MeditationSessionService {
           title: c.title,
           description: c.description,
           mode: c.mode,
-          durationSeconds: c.defaultDurationSeconds,
+          durationSeconds: c.defaultDurationSeconds ?? 0,
           meditationTypeId: c.defaultMeditationTypeId,
           isPremium: c.isPremium,
           mediaUrl,
@@ -284,13 +371,16 @@ export class MeditationSessionService {
 
   /**
    * Transforme une session Prisma vers un item d’historique minimal.
+   *
+   * @param s Session partielle.
+   * @returns Item d’historique.
    */
   private readonly toHistoryItem = (s: {
     startedAt: Date | null;
     durationSeconds: number;
     moodAfter: number | null;
     meditationTypeId: string;
-  }) => ({
+  }): MeditationHistoryItem => ({
     date: s.startedAt ? s.startedAt.toISOString().split("T")[0] : null,
     durationSeconds: s.durationSeconds,
     moodAfter: s.moodAfter,
@@ -299,6 +389,9 @@ export class MeditationSessionService {
 
   /**
    * Calcule les bornes [start, end) d’un jour (date fournie ou veille).
+   *
+   * @param date Date `YYYY-MM-DD` optionnelle.
+   * @returns Bornes du jour ciblé.
    */
   private getDayBounds(date?: string): { dayStart: Date; dayEnd: Date } {
     if (date) {
@@ -326,6 +419,10 @@ export class MeditationSessionService {
 
   /**
    * Parse une date via `Date` et lève une 400 si invalide.
+   *
+   * @param dateStr Date en chaîne.
+   * @param fieldName Nom du champ pour la construction du message d’erreur.
+   * @returns Date parsée.
    */
   private parseDateOrThrow(dateStr: string, fieldName: string): Date {
     const date = new Date(dateStr);
@@ -337,6 +434,10 @@ export class MeditationSessionService {
 
   /**
    * Valide une date "jour" strictement au format `YYYY-MM-DD`.
+   *
+   * @param dateStr Date en chaîne.
+   * @param fieldName Nom du champ pour la construction du message d’erreur.
+   * @returns La chaîne validée.
    */
   private assertDayStringOrThrow(dateStr: string, fieldName: string): string {
     const isValid = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
