@@ -102,6 +102,26 @@ export default function UserMenu() {
                         )}
                     </div>
 
+          <div className="py-1">
+            <Link
+              href={`/${locale}/member/profile`}
+              className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
+              onClick={() => setIsOpen(false)}
+            >
+              {t('profileSettings')}
+            </Link>
+
+            {/* Admin Panel Link */}
+            {user.roles.includes('admin') && (
+              <Link
+                href={`/${locale}/admin`}
+                className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
+                onClick={() => setIsOpen(false)}
+              >
+                ⚙️ {t('adminPanel')}
+              </Link>
+            )}
+          </div>
                     <div className="py-1">
                         <Link
                             href={`/${locale}/member/world-v2`}

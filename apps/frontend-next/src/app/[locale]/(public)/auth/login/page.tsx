@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from '@/i18n/TranslationContext';
@@ -19,6 +19,7 @@ import OAuthButtons from '@/components/auth/OAuthButtons';
 export default function LoginPage() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split('/')[1] || 'en';
   const { login } = useAuth();
   const t = useTranslations('auth');
@@ -33,8 +34,45 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
-      router.push(`/${locale}/member/seance/respiration`);
+      const userData = await login({ email, password });
+      const userRoles = userData?.user?.roles || [];
+
+      // Helper function to check if user can access a path
+      const canAccessPath = (path: string): boolean => {
+        // Admin routes require admin role
+        if (path.includes('/admin')) return userRoles.includes('admin');
+
+        // Coach routes require coach or admin role
+        if (path.includes('/coach')) return userRoles.includes('coach') || userRoles.includes('admin');
+
+        // Resource creation/editing requires coach or admin role
+        if (path.includes('/resources/new') || (path.includes('/resources/') && path.includes('/edit'))) {
+          return userRoles.includes('coach') || userRoles.includes('admin');
+        }
+
+        // All other routes (/member/*, /resources/*, etc.) are accessible to authenticated users
+        return true;
+      };
+
+      // Determine destination
+      let destination: string;
+
+      // Admin users always go to admin panel
+      if (userRoles.includes('admin')) {
+        destination = `/${locale}/admin`;
+      } else {
+        const redirectTo = searchParams.get('redirectTo');
+
+        // Check if user can access the redirect destination
+        if (redirectTo && canAccessPath(redirectTo)) {
+          destination = redirectTo;
+        } else {
+          // Fall back to world-v2 if no valid redirectTo
+          destination = `/${locale}/member/world-v2`;
+        }
+      }
+
+      router.push(destination);
     } catch (err: any) {
       setError(err.message || t('invalidCredentials'));
     } finally {

@@ -43,14 +43,23 @@ export function CoachNavbar() {
                     />
                 </Link>
 
-                {/* Bloc d’actions (vide pour l’instant) */}
-                <nav className="flex items-center gap-4 text-sm text-brandText">
-                    {/* Exemple futur :
-                    <Link href={`/${locale}/coach/dashboard`}>{t("dashboard")}</Link>
-                    */}
-                    <span className="text-brandText/50 italic">
-                        {t("emptyPlaceholder")}
-                    </span>
+                {/* Coach navigation */}
+                <nav className="flex items-center gap-6 text-sm text-brandText">
+                    <Link
+                        href={`/${locale}/coach/resources`}
+                        className="hover:text-brandPrimary transition-colors"
+                    >
+                        {t("resources")}
+                    </Link>
+                    <Link
+                        href={`/${locale}/member/world`}
+                        className="flex items-center gap-1 hover:text-brandPrimary transition-colors border-l border-brandBorder pl-6"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        {t("backToApp")}
+                    </Link>
                 </nav>
             </div>
         </header>

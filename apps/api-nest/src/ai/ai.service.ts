@@ -89,6 +89,9 @@ export class AiService {
   private async callGroq(
     userPrompt: string,
     maxTokens = 150,
+    systemPrompt?: string,
+    temperature = 0.7,
+    skipMantraSplit = false,
   ): Promise<string> {
     this.ensureApiKey();
 
@@ -98,7 +101,7 @@ export class AiService {
         messages: [
           {
             role: 'system',
-            content:
+            content: systemPrompt ||
               'You are a kind, calm and positive meditation coach. ' +
               'Always follow the user instructions carefully and answer only with the requested content.',
           },
@@ -108,7 +111,7 @@ export class AiService {
           },
         ],
         max_tokens: maxTokens,
-        temperature: 0.7,
+        temperature,
       });
 
       const message = completion.choices[0]?.message?.content;
@@ -118,6 +121,10 @@ export class AiService {
         throw new InternalServerErrorException("Réponse vide de l'IA.");
       }
 
+      // Only split for mantra generation (legacy behavior)
+      if (skipMantraSplit) {
+        return message.trim();
+      }
       return message.split("C'est un mantra")[0].trim();
     } catch (error) {
       if (error instanceof Error) {
@@ -264,5 +271,148 @@ Constraints:
       this.logger.error(err);
       throw new InternalServerErrorException("Erreur dans la réponse de l'IA.");
     }
+  }
+
+  /**
+   * Translates a short taxonomy label (category or tag name) from one language to another.
+   *
+   * @param text - The category or tag name to translate
+   * @param sourceLocale - Source language code (e.g., "fr", "en")
+   * @param targetLocale - Target language code (e.g., "en", "fr")
+   * @returns Translated label (short, 1-3 words)
+   */
+  async translateText(
+    text: string,
+    sourceLocale: string,
+    targetLocale: string,
+  ): Promise<string> {
+    const sourceLang = this.normalizeLocale(sourceLocale);
+    const targetLang = this.normalizeLocale(targetLocale);
+
+    if (!text.trim()) {
+      throw new InternalServerErrorException('Text is required for translation.');
+    }
+
+    if (sourceLang === targetLang) {
+      // No translation needed - same language
+      return text;
+    }
+
+    const systemPrompt = `You are a professional translator specializing in wellness and mindfulness content. Output ONLY the translated text with no preamble, no explanation, and no meta-commentary.`;
+
+    const prompt = `Translate this wellness resource category/tag name from ${sourceLang} to ${targetLang}.
+
+IMPORTANT:
+- This is a category or tag name for a mindfulness/wellness application.
+- Translate the NAME/LABEL only, do not define or explain the word.
+- Keep it short and concise (1-3 words maximum).
+- If it's already a proper noun or brand name, keep it unchanged.
+- Output ONLY the translated name, nothing else.
+
+Text to translate: ${text}`;
+
+    // Use temperature 0.3 for more consistent/literal translations
+    // Skip mantra split (5th parameter = true) - translations need full response
+    const raw = await this.callGroq(prompt, 100, systemPrompt, 0.3, true);
+
+    // Remove common preamble patterns that Groq might add
+    let cleaned = this.sanitizeText(raw);
+
+    // Remove lines that start with "Here is the translation" or similar meta-commentary
+    const preamblePatterns = [
+      /^Here is the translation[^\n]*\n+/i,
+      /^Translation[^\n]*:\n+/i,
+      /^The translated text[^\n]*:\n+/i,
+      /^Translated to \w+[^\n]*:\n+/i,
+      /^From \w+ to \w+[^\n]*:\n+/i,
+    ];
+
+    for (const pattern of preamblePatterns) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+
+    return cleaned.trim();
+  }
+
+  /**
+   * Translates resource content (title, summary, or full content) from one language to another.
+   * This method is designed for longer, richer content that requires full context preservation.
+   *
+   * @param text - The resource content to translate
+   * @param sourceLocale - Source language code (e.g., "fr", "en")
+   * @param targetLocale - Target language code (e.g., "en", "fr")
+   * @param contentType - Type of content (title, summary, or content) for better translation hints
+   * @returns Translated content preserving formatting and meaning
+   */
+  async translateResourceContent(
+    text: string,
+    sourceLocale: string,
+    targetLocale: string,
+    contentType: 'title' | 'summary' | 'content' = 'content',
+  ): Promise<string> {
+    const sourceLang = this.normalizeLocale(sourceLocale);
+    const targetLang = this.normalizeLocale(targetLocale);
+
+    if (!text.trim()) {
+      throw new InternalServerErrorException('Text is required for translation.');
+    }
+
+    if (sourceLang === targetLang) {
+      // No translation needed - same language
+      return text;
+    }
+
+    const systemPrompt = `You are a professional translator. Your ONLY task is to translate the provided text accurately from one language to another. Never write new content, never add explanations, never generate additional text. Output ONLY the direct translation.`;
+
+    let contentTypeInstructions = '';
+    if (contentType === 'title') {
+      contentTypeInstructions = `
+7. This is a title - keep it short and impactful while translating accurately.`;
+    } else if (contentType === 'summary') {
+      contentTypeInstructions = `
+7. This is a summary - translate it completely without expanding or reducing it.`;
+    } else {
+      contentTypeInstructions = `
+7. This is article content - translate every paragraph, sentence, and word completely.
+8. Preserve formatting: paragraphs, line breaks, lists, and structure.`;
+    }
+
+    const prompt = `You are translating a ${contentType} from ${sourceLang} to ${targetLang}.
+
+INSTRUCTIONS:
+1. Translate EVERY WORD of the text below from ${sourceLang} to ${targetLang}.
+2. DO NOT write new content - only translate what is provided.
+3. DO NOT add explanations, definitions, introductions, or conclusions.
+4. DO NOT summarize or paraphrase - translate word-for-word.
+5. Preserve ALL content exactly as written - do not omit anything.${contentTypeInstructions}
+6. Output ONLY the direct translation, nothing else.
+
+Text to translate from ${sourceLang} to ${targetLang}:
+"""
+${text}
+"""`;
+
+    // Use high token limit for resource content (can be long articles)
+    // Use temperature 0.1 for deterministic, literal translations (avoid hallucinations)
+    // Skip mantra split to get full response
+    const raw = await this.callGroq(prompt, 8000, systemPrompt, 0.1, true);
+
+    // Remove common preamble patterns
+    let cleaned = this.sanitizeText(raw);
+
+    const preamblePatterns = [
+      /^Here is the translation[^\n]*\n+/i,
+      /^Translation[^\n]*:\n+/i,
+      /^The translated text[^\n]*:\n+/i,
+      /^Translated to \w+[^\n]*:\n+/i,
+      /^From \w+ to \w+[^\n]*:\n+/i,
+      /^Translated[^\n]*:\n+/i,
+    ];
+
+    for (const pattern of preamblePatterns) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+
+    return cleaned.trim();
   }
 }

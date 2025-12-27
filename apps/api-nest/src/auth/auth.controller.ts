@@ -8,6 +8,7 @@ import {
   Req,
   UseGuards,
   Get,
+  Query,
   ValidationPipe,
   BadRequestException,
 } from '@nestjs/common';
@@ -177,7 +178,12 @@ export class AuthController {
   @Public()
   @Get('google')
   @UseGuards(GoogleOAuthGuard)
-  async googleAuth() {
+  async googleAuth(@Query('redirectTo') redirectTo?: string, @Req() req?: any) {
+    // Store redirectTo in session/state if provided
+    if (redirectTo && req) {
+      const state = Buffer.from(JSON.stringify({ redirectTo })).toString('base64');
+      req.query.state = state;
+    }
     // Initiates the Google OAuth flow
   }
 
@@ -188,7 +194,11 @@ export class AuthController {
   @Public()
   @Get('google/callback')
   @UseGuards(GoogleOAuthGuard)
-  async googleAuthCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async googleAuthCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Query('state') state?: string,
+  ) {
     const user = req.user as any;
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
@@ -225,9 +235,23 @@ export class AuthController {
     // Set cookies
     this.setAuthCookies(res, accessToken, refreshToken);
 
-    // Redirect to frontend with success
+    // Redirect to frontend with success, preserving redirectTo if present
     const frontendUrl = this.authService['configService'].get('FRONTEND_URL') || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?success=true&redirect=world`);
+    let redirectUrl = `${frontendUrl}/auth/callback?success=true`;
+
+    // Parse state to extract redirectTo if present
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        if (stateData.redirectTo) {
+          redirectUrl += `&redirectTo=${encodeURIComponent(stateData.redirectTo)}`;
+        }
+      } catch (err) {
+        // If state parsing fails, just continue without redirectTo
+      }
+    }
+
+    res.redirect(redirectUrl);
   }
 
   /**
@@ -237,7 +261,12 @@ export class AuthController {
   @Public()
   @Get('github')
   @UseGuards(GithubOAuthGuard)
-  async githubAuth() {
+  async githubAuth(@Query('redirectTo') redirectTo?: string, @Req() req?: any) {
+    // Store redirectTo in session/state if provided
+    if (redirectTo && req) {
+      const state = Buffer.from(JSON.stringify({ redirectTo })).toString('base64');
+      req.query.state = state;
+    }
     // Initiates the GitHub OAuth flow
   }
 
@@ -248,7 +277,11 @@ export class AuthController {
   @Public()
   @Get('github/callback')
   @UseGuards(GithubOAuthGuard)
-  async githubAuthCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async githubAuthCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Query('state') state?: string,
+  ) {
     const user = req.user as any;
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
@@ -285,9 +318,23 @@ export class AuthController {
     // Set cookies
     this.setAuthCookies(res, accessToken, refreshToken);
 
-    // Redirect to frontend with success
+    // Redirect to frontend with success, preserving redirectTo if present
     const frontendUrl = this.authService['configService'].get('FRONTEND_URL') || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?success=true&redirect=world`);
+    let redirectUrl = `${frontendUrl}/auth/callback?success=true`;
+
+    // Parse state to extract redirectTo if present
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+        if (stateData.redirectTo) {
+          redirectUrl += `&redirectTo=${encodeURIComponent(stateData.redirectTo)}`;
+        }
+      } catch (err) {
+        // If state parsing fails, just continue without redirectTo
+      }
+    }
+
+    res.redirect(redirectUrl);
   }
 
   /**

@@ -11,9 +11,13 @@ import { AiController } from './ai.controller';
  *
  * Ce module est ensuite importé dans AppModule pour être pris en compte
  * dans l'application Nest globale.
+ *
+ * AiService est exporté pour permettre son utilisation dans d'autres modules
+ * (par exemple, ResourcesModule pour la traduction automatique).
  */
 @Module({
   controllers: [AiController],
   providers: [AiService],
+  exports: [AiService],
 })
 export class AiModule {}

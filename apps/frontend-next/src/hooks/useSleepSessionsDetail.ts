@@ -16,7 +16,9 @@ export function useSleepSessionsDetail(lastDays: number = 30) {
         try {
             const data = await fetchSleepSessionsDetail({ lastDays });
             setSessions(data);
-            await saveSleepHistory(data); // cache
+            if(navigator.onLine) {
+                await saveSleepHistory(data);
+            }
         } catch (e) {
             try {
                 const cached = await getSleepHistory(lastDays);
