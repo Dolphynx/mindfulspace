@@ -3,21 +3,32 @@
  * ------------
  * Service applicatif pour la gestion des préférences utilisateur MindfulSpace.
  *
- * Rôle :
- * - Charger des préférences depuis un fichier JSON statique.
- * - Fournir une API simple pour lire / modifier ces préférences en mémoire.
+ * @remarks
+ * Ce service a été introduit lors d’une phase de prototypage afin de
+ * simuler des préférences utilisateur et tester certains parcours
+ * fonctionnels (ex. lancement automatique d’une séance de respiration).
  *
- * Remarque :
- * - Dans cette version, les préférences sont stockées en mémoire (et initialisées
- *   depuis `user-prefs.json`). Il n’y a pas encore de persistance en BDD.
+ * La fonctionnalité associée a ensuite été abandonnée, mais le service
+ * est conservé afin de :
+ * - documenter les choix explorés durant le développement,
+ * - maintenir une cohérence avec l’API exposée,
+ * - servir de base si un système de préférences persistées
+ *   (BDD) est réintroduit ultérieurement.
+ *
+ * Dans cette version, les préférences sont stockées en mémoire et
+ * initialisées depuis un fichier JSON statique (`user-prefs.json`).
+ * Il n’y a volontairement pas de persistance en base de données.
  */
 
 import { Injectable } from "@nestjs/common";
-import prefsData from "../data/user-prefs.json"; // import statique
+import prefsData from "../data/user-prefs.json"; // import statique (phase de prototypage)
 
 /**
  * Représentation TypeScript du fichier de préférences.
- * - Facilite l’auto-complétion et la sécurité de type.
+ *
+ * @remarks
+ * Type utilisé pour sécuriser les accès aux données simulées
+ * et faciliter une éventuelle évolution du modèle de préférences.
  */
 type PrefsFile = {
   launchBreathingOnStart: boolean;
@@ -27,13 +38,20 @@ type PrefsFile = {
 export class PrefsService {
   /**
    * État courant des préférences en mémoire.
+   *
+   * @remarks
+   * État non persisté, volontairement simple, utilisé dans le cadre
+   * de tests fonctionnels et de démonstration.
    */
   private prefs: PrefsFile;
 
   /**
-   * Constructeur :
-   * - Initialise les préférences à partir du fichier JSON.
-   * - Assure une valeur par défaut si la clé n’est pas définie ou mal typée.
+   * Constructeur
+   *
+   * @remarks
+   * Initialise les préférences à partir du fichier JSON statique.
+   * Des valeurs par défaut sont appliquées afin de garantir un état
+   * cohérent, même si le fichier évolue ou est partiellement défini.
    */
   constructor() {
     const data = (prefsData as Partial<PrefsFile>) ?? {};
@@ -48,7 +66,7 @@ export class PrefsService {
   /**
    * Retourne l’état actuel des préférences.
    *
-   * @returns {PrefsFile} l’objet complet des préférences.
+   * @returns L’objet complet des préférences utilisateur simulées.
    */
   getPrefs(): PrefsFile {
     return this.prefs;
@@ -57,8 +75,12 @@ export class PrefsService {
   /**
    * Met à jour la préférence `launchBreathingOnStart` et renvoie le nouvel état.
    *
-   * @param value - Nouvelle valeur booléenne (true/false).
-   * @returns {PrefsFile} l’objet de préférences après mise à jour.
+   * @remarks
+   * Cette méthode faisait partie du scénario de test initial permettant
+   * de modifier dynamiquement une préférence durant la phase de prototypage.
+   *
+   * @param value - Nouvelle valeur booléenne.
+   * @returns L’objet de préférences après mise à jour.
    */
   toggleLaunchBreathing(value: boolean): PrefsFile {
     this.prefs = { ...this.prefs, launchBreathingOnStart: !!value };
