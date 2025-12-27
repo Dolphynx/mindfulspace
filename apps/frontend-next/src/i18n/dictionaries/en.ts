@@ -74,6 +74,7 @@ const en: Messages = {
             subscriptions: "Subscription Requests",
         },
         backToApp: "Back to App",
+        logout: "Log Out",
         welcome: "Welcome to the MindfulSpace administration panel",
         stats: {
             totalUsers: "Total Users",

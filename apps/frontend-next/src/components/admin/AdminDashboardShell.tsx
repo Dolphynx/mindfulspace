@@ -13,10 +13,11 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
-import { LayoutDashboard, BookOpen, Activity, ArrowLeft, Tags, User, FileText } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Activity, ArrowLeft, Tags, User, FileText, LogOut } from 'lucide-react';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminDashboardShellProps {
   children: ReactNode;
@@ -33,7 +34,14 @@ export default function AdminDashboardShell({
 }: AdminDashboardShellProps) {
   const t = useTranslations('adminDashboard');
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
   const currentLocale = locale || pathname.split('/')[1] || 'en';
+
+  const handleLogout = async () => {
+    await logout();
+    router.push(`/${currentLocale}/auth/login`);
+  };
 
   const adminMenuItems = [
     {
@@ -147,8 +155,8 @@ export default function AdminDashboardShell({
             </div>
           </nav>
 
-          {/* Footer - Back to App */}
-          <div className="border-t border-brandBorder p-3">
+          {/* Footer - Back to App & Logout */}
+          <div className="border-t border-brandBorder p-3 space-y-1">
             <Link
               href={`/${currentLocale}/member/world-v2`}
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brandText/70 transition-all hover:bg-brandSurface hover:text-brandText"
@@ -156,6 +164,13 @@ export default function AdminDashboardShell({
               <ArrowLeft className="h-5 w-5 text-brandText/50 transition-colors group-hover:text-brandText" />
               <span>{t('backToApp')}</span>
             </Link>
+            <button
+              onClick={handleLogout}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brandText/70 transition-all hover:bg-red-50 hover:text-red-600"
+            >
+              <LogOut className="h-5 w-5 text-brandText/50 transition-colors group-hover:text-red-600" />
+              <span>{t('logout')}</span>
+            </button>
           </div>
         </div>
       </aside>

@@ -72,6 +72,7 @@ const fr = {
             subscriptions: "Demandes d'abonnement",
         },
         backToApp: "Retour à l'app",
+        logout: "Déconnexion",
         welcome: "Bienvenue dans le panneau d'administration MindfulSpace",
         stats: {
             totalUsers: "Total Utilisateurs",
