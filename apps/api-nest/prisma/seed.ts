@@ -4,6 +4,7 @@ import {
   MeditationSessionSource,
   MeditationMode,
   MeditationVisualType,
+  ExternalAudioProvider,
   BadgeDomain,
   BadgeMetricType,
 } from "@prisma/client";
@@ -489,7 +490,8 @@ async function main() {
     sortOrder: number;
     isPremium: boolean;
     mediaUrl?: string | null;
-    soundcloudUrl?: string | null;
+    externalAudioProvider?: ExternalAudioProvider | null;
+    externalAudioRef?: string | null;
   };
 
   const meditationContentsData: MeditationContentSeed[] = [
@@ -666,7 +668,8 @@ async function main() {
         isActive: true,
         isPremium: content.isPremium,
         mediaUrl: content.mediaUrl ?? null,
-        soundcloudUrl: content.soundcloudUrl ?? null,
+        externalAudioProvider: content.externalAudioProvider ?? null,
+        externalAudioRef: content.externalAudioRef ?? null,
       },
     });
     meditationContents.push(created);
