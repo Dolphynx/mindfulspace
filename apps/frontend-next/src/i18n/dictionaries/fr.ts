@@ -62,6 +62,32 @@ const fr = {
         backToApp: "Retour à l'app",
     },
 
+    notificationsBell: {
+        ariaLabel: "Notifications",
+        title: "Notifications",
+        markAllRead: "Tout marquer comme lu",
+        empty: "Aucune notification.",
+        detailsInProfile: "Détails dans votre profil",
+        goToProfile: "Aller au profil",
+        close: "Fermer",
+
+        target: {
+            premium: "Premium",
+            coach: "Coach",
+        },
+
+        decision: {
+            approved: "approuvé",
+            rejected: "refusé",
+            updated: "mis à jour",
+        },
+
+        format: {
+            line: "{target}{tier} : {decision}",
+            tier: " ({tier})",
+        },
+    },
+
     adminDashboard: {
         title: "Panneau administrateur",
         tabs: {

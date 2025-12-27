@@ -64,6 +64,32 @@ const en: Messages = {
         backToApp: "Back to app",
     },
 
+    notificationsBell: {
+        ariaLabel: "Notifications",
+        title: "Notifications",
+        markAllRead: "Mark all as read",
+        empty: "No notifications.",
+        detailsInProfile: "Details in your profile",
+        goToProfile: "Go to profile",
+        close: "Close",
+
+        target: {
+            premium: "Premium",
+            coach: "Coach",
+        },
+
+        decision: {
+            approved: "approved",
+            rejected: "rejected",
+            updated: "updated",
+        },
+
+        format: {
+            line: "{target}{tier}: {decision}",
+            tier: " ({tier})",
+        },
+    },
+
     adminDashboard: {
         title: "Admin Panel",
         tabs: {
