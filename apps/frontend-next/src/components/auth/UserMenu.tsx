@@ -8,6 +8,7 @@
  * @remarks
  * - Le bouton trigger est volontairement "avatar only" (pas de nom) pour rester compact en navbar.
  * - Le menu se ferme au clic extérieur et après navigation.
+ * - Les liens affichés dépendent des rôles (ex: admin).
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -64,6 +65,9 @@ export default function UserMenu() {
             .slice(0, 2)
         : user.email[0]?.toUpperCase() ?? "U";
 
+    const roles = user.roles ?? [];
+    const isAdmin = roles.includes("admin");
+
     return (
         <div className="relative" ref={menuRef}>
             <button
@@ -88,9 +92,9 @@ export default function UserMenu() {
                         <p className="text-sm font-medium text-brandText">{user.displayName}</p>
                         <p className="text-xs text-brandText/70">{user.email}</p>
 
-                        {user.roles && user.roles.length > 0 && (
+                        {roles.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
-                                {user.roles.map((role) => (
+                                {roles.map((role) => (
                                     <span
                                         key={role}
                                         className="rounded-full bg-brandGreen/10 px-2 py-0.5 text-xs text-brandGreen"
@@ -102,36 +106,9 @@ export default function UserMenu() {
                         )}
                     </div>
 
-          <div className="py-1">
-            <Link
-              href={`/${locale}/member/profile`}
-              className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
-              onClick={() => setIsOpen(false)}
-            >
-              {t('profileSettings')}
-            </Link>
-
-            {/* Admin Panel Link */}
-            {user.roles.includes('admin') && (
-              <Link
-                href={`/${locale}/admin`}
-                className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
-                onClick={() => setIsOpen(false)}
-              >
-                ⚙️ {t('adminPanel')}
-              </Link>
-            )}
-          </div>
+                    {/* Menu items */}
                     <div className="py-1">
-                        <Link
-                            href={`/${locale}/member/world-v2`}
-                            className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
-                            onClick={() => setIsOpen(false)}
-                            role="menuitem"
-                        >
-                            {t("myWorld")}
-                        </Link>
-
+                        {/* Profil (unique) */}
                         <Link
                             href={`/${locale}/member/profile`}
                             className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
@@ -140,6 +117,18 @@ export default function UserMenu() {
                         >
                             {t("profileSettings")}
                         </Link>
+
+                        {/* Admin panel (only admin) */}
+                        {isAdmin && (
+                            <Link
+                                href={`/${locale}/admin`}
+                                className="block px-4 py-2 text-sm text-brandText transition hover:bg-brandSurface"
+                                onClick={() => setIsOpen(false)}
+                                role="menuitem"
+                            >
+                                ⚙️ {t("adminPanel")}
+                            </Link>
+                        )}
                     </div>
 
                     <div className="border-t border-brandBorder py-1">
