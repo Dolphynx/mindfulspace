@@ -542,6 +542,21 @@ async function main() {
 
     // ---------- MINDFULNESS ----------
     {
+      title: "Méditation Audius – Présence guidée",
+      description:
+        "Méditation guidée issue d’Audius pour cultiver la présence et l’attention.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 600,
+      sortOrder: 25,
+      isPremium: false,
+      externalAudioProvider: ExternalAudioProvider.AUDIUS,
+      externalAudioRef: "108194",
+    },
+
+    {
       title: "Pleine conscience 5 minutes (timer)",
       description:
         "Quelques minutes pour revenir aux sensations et à la respiration.",
