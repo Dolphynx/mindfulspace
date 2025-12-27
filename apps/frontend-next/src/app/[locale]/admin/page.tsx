@@ -32,7 +32,13 @@ const ProfileContent = dynamic(
     { ssr: false, loading: () => <div className="flex h-64 items-center justify-center"><p className="text-brandText/60">Loading...</p></div> }
 );
 
-type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'profile';
+// Dynamically import the subscription requests content
+const SubscriptionRequestsContent = dynamic(
+    () => import("@/components/admin/SubscriptionRequestsContent"),
+    { ssr: false, loading: () => <div className="flex h-64 items-center justify-center"><p className="text-brandText/60">Loading...</p></div> }
+);
+
+type TabType = 'dashboard' | 'resources' | 'taxonomy' | 'profile' | 'subscriptions';
 
 export default function AdminPage() {
     const pathname = usePathname();
@@ -45,7 +51,7 @@ export default function AdminPage() {
     // Initialize activeTab from URL parameter or default to dashboard
     const [activeTab, setActiveTab] = useState<TabType>(() => {
         const tabParam = searchParams.get('tab') as TabType;
-        return tabParam && ['dashboard', 'resources', 'taxonomy', 'profile'].includes(tabParam)
+        return tabParam && ['dashboard', 'resources', 'taxonomy', 'profile', 'subscriptions'].includes(tabParam)
             ? tabParam
             : 'dashboard';
     });
@@ -251,6 +257,11 @@ export default function AdminPage() {
                     showHeader={false}
                     containerClassName="space-y-6"
                 />
+            )}
+
+            {/* Subscription Requests Tab */}
+            {activeTab === 'subscriptions' && (
+                <SubscriptionRequestsContent />
             )}
         </AdminDashboardShell>
     );

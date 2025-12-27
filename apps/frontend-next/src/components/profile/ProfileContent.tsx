@@ -15,6 +15,16 @@ import {
   deleteAccount,
   type UserProfile,
 } from "@/lib/api/users";
+import UpgradeRequestModal from "@/components/subscription/UpgradeRequestModal";
+import {
+  SubscriptionRequestType,
+  SubscriptionRequest,
+  SubscriptionRequestStatus,
+  CoachTier,
+  getMySubscriptionRequests,
+  cancelSubscriptionRequest,
+} from "@/lib/api/subscription-requests";
+import { ChevronDown, ChevronUp, Clock, CheckCircle, XCircle, Ban } from "lucide-react";
 
 interface ProfileContentProps {
   /** Optional: Show page header (title + subtitle). Default: true */
@@ -56,9 +66,65 @@ export default function ProfileContent({
   // Success messages
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Upgrade modal state
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeType, setUpgradeType] = useState<SubscriptionRequestType | null>(null);
+
+  // Subscription requests state
+  const [subscriptionRequests, setSubscriptionRequests] = useState<SubscriptionRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestsExpanded, setRequestsExpanded] = useState(false);
+  const [cancellingRequestId, setCancellingRequestId] = useState<string | null>(null);
+
   useEffect(() => {
     loadProfile();
   }, []);
+
+  const handleOpenUpgradeModal = (type: SubscriptionRequestType) => {
+    setUpgradeType(type);
+    setUpgradeModalOpen(true);
+  };
+
+  const handleUpgradeSuccess = () => {
+    setSuccessMessage(t("requestSubmittedSuccess"));
+    loadProfile(); // Refresh profile to show updated data
+    loadSubscriptionRequests(); // Refresh requests list
+  };
+
+  const loadSubscriptionRequests = async () => {
+    try {
+      setRequestsLoading(true);
+      const data = await getMySubscriptionRequests();
+      setSubscriptionRequests(data);
+    } catch (err) {
+      console.error("Failed to load subscription requests:", err);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    if (!confirm(t("cancelRequestConfirm"))) return;
+
+    try {
+      setCancellingRequestId(requestId);
+      await cancelSubscriptionRequest(requestId);
+      setSuccessMessage(t("requestCancelledSuccess"));
+      await loadSubscriptionRequests();
+      await loadProfile();
+    } catch (err: any) {
+      setError(err.message || t("errorCancellingRequest"));
+    } finally {
+      setCancellingRequestId(null);
+    }
+  };
+
+  const toggleRequestsExpanded = () => {
+    if (!requestsExpanded && subscriptionRequests.length === 0) {
+      loadSubscriptionRequests();
+    }
+    setRequestsExpanded(!requestsExpanded);
+  };
 
   const loadProfile = async () => {
     try {
@@ -207,6 +273,36 @@ export default function ProfileContent({
       standard: "bg-gray-100 text-gray-800 border-gray-200",
     };
     return colors[subscription as keyof typeof colors] || colors.standard;
+  };
+
+  const getRequestStatusIcon = (status: SubscriptionRequestStatus) => {
+    switch (status) {
+      case SubscriptionRequestStatus.PENDING:
+        return <Clock className="h-5 w-5 text-blue-600" />;
+      case SubscriptionRequestStatus.APPROVED:
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case SubscriptionRequestStatus.REJECTED:
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      case SubscriptionRequestStatus.CANCELLED:
+        return <Ban className="h-5 w-5 text-gray-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getRequestStatusBadgeColor = (status: SubscriptionRequestStatus) => {
+    switch (status) {
+      case SubscriptionRequestStatus.PENDING:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case SubscriptionRequestStatus.APPROVED:
+        return "bg-green-100 text-green-800 border-green-200";
+      case SubscriptionRequestStatus.REJECTED:
+        return "bg-red-100 text-red-800 border-red-200";
+      case SubscriptionRequestStatus.CANCELLED:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
   };
 
   if (loading) {
@@ -531,7 +627,7 @@ export default function ProfileContent({
           <section className="bg-white rounded-xl border border-brandBorder p-6">
             <h2 className="text-xl font-semibold text-brandText mb-4">{t("subscriptionTitle")}</h2>
 
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-sm font-medium text-brandText mb-2">
                 {t("currentSubscriptionLabel")}
               </label>
@@ -546,8 +642,9 @@ export default function ProfileContent({
               </div>
             </div>
 
+            {/* Upgrade to Premium - for standard users only */}
             {getSubscriptionType() === "standard" && (
-              <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+              <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50 mb-4">
                 <h3 className="font-medium text-yellow-900 mb-2">{t("upgradeToPremiumButton")}</h3>
                 <p className="text-sm text-yellow-800 mb-3">{t("upgradeToPremiumDescription")}</p>
                 <ul className="text-sm text-yellow-800 mb-4 space-y-1">
@@ -556,14 +653,179 @@ export default function ProfileContent({
                   <li>• {t("premiumFeature3")}</li>
                   <li>• {t("premiumFeature4")}</li>
                 </ul>
-                <button className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                <button
+                  onClick={() => handleOpenUpgradeModal(SubscriptionRequestType.PREMIUM)}
+                  className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+                >
                   {t("upgradeToPremiumButton")}
+                </button>
+              </div>
+            )}
+
+            {/* Become Coach - for standard and premium users */}
+            {(getSubscriptionType() === "standard" || getSubscriptionType() === "premium") && (
+              <div className="p-4 border border-purple-200 rounded-lg bg-purple-50">
+                <h3 className="font-medium text-purple-900 mb-2">{t("upgradeToCoachButton")}</h3>
+                <p className="text-sm text-purple-800 mb-3">{t("upgradeToCoachDescription")}</p>
+                <ul className="text-sm text-purple-800 mb-4 space-y-1">
+                  <li>• {t("coachFeature1")}</li>
+                  <li>• {t("coachFeature2")}</li>
+                  <li>• {t("coachFeature3")}</li>
+                  <li>• {t("coachFeature4")}</li>
+                </ul>
+                <button
+                  onClick={() => handleOpenUpgradeModal(SubscriptionRequestType.COACH)}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  {t("upgradeToCoachButton")}
                 </button>
               </div>
             )}
           </section>
         )}
+
+        {/* My Subscription Requests Section */}
+        {!profile.roles.includes("admin") && (
+          <section className="bg-white rounded-xl border border-brandBorder mt-6">
+            <button
+              onClick={toggleRequestsExpanded}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-brandSurface/50 transition rounded-xl"
+            >
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-brandText">{t("myRequestsTitle")}</h2>
+                {subscriptionRequests.filter((r) => r.status === SubscriptionRequestStatus.PENDING).length > 0 && (
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    {subscriptionRequests.filter((r) => r.status === SubscriptionRequestStatus.PENDING).length} {t("pendingRequests")}
+                  </span>
+                )}
+              </div>
+              {requestsExpanded ? (
+                <ChevronUp className="h-5 w-5 text-brandText/60" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-brandText/60" />
+              )}
+            </button>
+
+            {requestsExpanded && (
+              <div className="px-6 pb-6 space-y-4">
+                {requestsLoading ? (
+                  <div className="py-8 text-center text-brandText/60">
+                    {t("loadingRequests")}
+                  </div>
+                ) : subscriptionRequests.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-brandText/60">{t("noRequestsYet")}</p>
+                    <p className="text-sm text-brandText/50 mt-2">{t("noRequestsHint")}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {subscriptionRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="border border-brandBorder rounded-lg p-4 hover:bg-brandSurface/30 transition"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-3">
+                            {/* Header: Type and Status */}
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <span
+                                className={`px-3 py-1 text-sm font-medium rounded-full ${
+                                  request.requestType === SubscriptionRequestType.PREMIUM
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-purple-100 text-purple-800"
+                                }`}
+                              >
+                                {request.requestType === SubscriptionRequestType.PREMIUM
+                                  ? t("requestTypePremium")
+                                  : t("requestTypeCoach")}
+                              </span>
+                              {request.coachTier && (
+                                <span className="text-sm text-brandText/70">
+                                  {t("tierLabel")}: {request.coachTier}
+                                </span>
+                              )}
+                              <div className="flex items-center gap-2">
+                                {getRequestStatusIcon(request.status)}
+                                <span
+                                  className={`px-3 py-1 text-sm font-medium rounded-full border ${getRequestStatusBadgeColor(
+                                    request.status
+                                  )}`}
+                                >
+                                  {t(`requestStatus${request.status}` as any)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Submission Date */}
+                            <div className="text-sm text-brandText/60">
+                              {t("submittedOn")}: {formatDate(request.createdAt)}
+                            </div>
+
+                            {/* Motivation (if exists) */}
+                            {request.motivation && (
+                              <div className="text-sm">
+                                <span className="font-medium text-brandText">{t("motivation")}:</span>
+                                <p className="text-brandText/80 mt-1 line-clamp-2">{request.motivation}</p>
+                              </div>
+                            )}
+
+                            {/* Admin Decision (if reviewed) */}
+                            {request.reviewedBy && request.reviewedAt && (
+                              <div className="bg-brandSurface rounded-lg p-3 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-brandText">
+                                    {request.status === SubscriptionRequestStatus.APPROVED
+                                      ? t("approvedBy")
+                                      : t("rejectedBy")}
+                                    :
+                                  </span>
+                                  <span className="text-sm text-brandText/70">
+                                    {request.reviewedByUser?.displayName || t("adminUser")}
+                                  </span>
+                                  <span className="text-sm text-brandText/50">
+                                    {t("on")} {formatDate(request.reviewedAt)}
+                                  </span>
+                                </div>
+                                {request.adminNotes && (
+                                  <div className="text-sm">
+                                    <span className="font-medium text-brandText">{t("adminNotes")}:</span>
+                                    <p className="text-brandText/80 mt-1">{request.adminNotes}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          {request.status === SubscriptionRequestStatus.PENDING && (
+                            <button
+                              onClick={() => handleCancelRequest(request.id)}
+                              disabled={cancellingRequestId === request.id}
+                              className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            >
+                              {cancellingRequestId === request.id ? t("cancelling") : t("cancelRequest")}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </div>
+
+      {/* Upgrade Request Modal */}
+      {upgradeType && (
+        <UpgradeRequestModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          requestType={upgradeType}
+          onSuccess={handleUpgradeSuccess}
+        />
+      )}
     </div>
   );
 }

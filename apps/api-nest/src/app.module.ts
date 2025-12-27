@@ -17,6 +17,7 @@ import { BadgesModule } from './badges/badges.module';
 import { WorldModule } from './world/world.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
+import { SubscriptionRequestsModule } from './subscription-requests/subscription-requests.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { AdminModule } from './admin/admin.module';
     BadgesModule,
     WorldModule,
     UsersModule,
-    AdminModule
+    AdminModule,
+    SubscriptionRequestsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

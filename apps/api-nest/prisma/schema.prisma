@@ -438,6 +438,10 @@ model User {
   // Content authorship
   authoredResources Resource[] // Resources created by this user
 
+  // Subscription requests
+  subscriptionRequests        SubscriptionRequest[] @relation("UserSubscriptionRequests")
+  reviewedSubscriptionRequests SubscriptionRequest[] @relation("ReviewedSubscriptionRequests")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt // mis à jour automatiquement à chaque write
 
@@ -771,8 +775,65 @@ model UserBadge {
   user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   badge BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
-  // Un user ne peut gagner un même badge qu’une seule fois
+  // Un user ne peut gagner un même badge qu'une seule fois
   @@unique([userId, badgeId])
   @@index([userId])
   @@index([badgeId])
+}
+
+// ============================================================
+// SUBSCRIPTION REQUESTS
+// ============================================================
+
+enum SubscriptionRequestType {
+  PREMIUM // Request to become premium user
+  COACH   // Request to become coach
+}
+
+enum SubscriptionRequestStatus {
+  PENDING   // Initial state, awaiting review
+  APPROVED  // Admin approved the request
+  REJECTED  // Admin rejected the request
+  CANCELLED // User cancelled their own request
+}
+
+enum CoachTier {
+  STARTER      // Coach Starter tier
+  PROFESSIONAL // Coach Professional tier (recommended)
+  PREMIUM      // Coach Premium tier
+}
+
+model SubscriptionRequest {
+  id String @id @default(cuid())
+
+  // User who submitted the request
+  userId String
+  user   User   @relation("UserSubscriptionRequests", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Request details
+  requestType SubscriptionRequestType
+  status      SubscriptionRequestStatus @default(PENDING)
+  coachTier   CoachTier? // Only for COACH requests
+
+  // User-provided information
+  motivation String? @db.Text // Why they want this upgrade
+  experience String? @db.Text // Relevant experience (for coach)
+
+  // Admin decision tracking
+  reviewedBy     String? // Admin user ID who reviewed
+  reviewedByUser User?   @relation("ReviewedSubscriptionRequests", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewedAt     DateTime? // When the review happened
+  adminNotes     String?   @db.Text // Admin's internal notes
+
+  // Notification system support
+  isRead Boolean @default(false) // Has user read the decision?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([requestType])
+  @@index([isRead])
+  @@map("subscription_request")
 }

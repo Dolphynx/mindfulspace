@@ -71,6 +71,7 @@ const en: Messages = {
             resources: "Resources",
             taxonomy: "Taxonomy",
             profile: "My Profile",
+            subscriptions: "Subscription Requests",
         },
         backToApp: "Back to App",
         welcome: "Welcome to the MindfulSpace administration panel",
@@ -81,6 +82,58 @@ const en: Messages = {
         },
         errors: {
             loadStatsFailed: "Failed to load statistics",
+        },
+        subscriptionRequests: {
+            title: "Subscription Requests",
+            subtitle: "Manage Premium and Coach upgrade requests",
+            pending: "pending",
+            loading: "Loading...",
+            noRequests: "No requests found",
+            unknownUser: "Unknown user",
+            unknownAdmin: "Unknown admin",
+            viewDetails: "View details",
+
+            // Filters
+            filters: {
+                all: "All",
+                pending: "Pending",
+                approved: "Approved",
+                rejected: "Rejected",
+                cancelled: "Cancelled",
+            },
+
+            // Table headers
+            table: {
+                user: "User",
+                type: "Type",
+                tier: "Tier",
+                date: "Date",
+                status: "Status",
+                actions: "Actions",
+            },
+
+            // Review modal
+            reviewTitle: "Review Request",
+            userInfo: "User Information",
+            name: "Name",
+            email: "Email",
+            requestDetails: "Request Details",
+            requestType: "Request Type",
+            tier: "Tier",
+            submittedOn: "Submitted on",
+            currentStatus: "Current Status",
+            motivation: "Motivation",
+            experience: "Experience and Qualifications",
+            previousReview: "Previous Review",
+            reviewedBy: "Reviewed by",
+            reviewedOn: "Reviewed on",
+            adminNotes: "Admin Notes",
+            adminNotesPlaceholder: "Add notes about this decision (optional)...",
+            close: "Close",
+            approve: "Approve",
+            reject: "Reject",
+            processing: "Processing...",
+            errorReviewing: "Error reviewing request",
         },
     },
 
@@ -1192,12 +1245,19 @@ const en: Messages = {
         subscriptionPremium: "Premium",
         subscriptionCoach: "Coach",
         upgradeToPremiumButton: "Upgrade to Premium",
-        upgradeToPremiumDescription: "Access exclusive features and premium content",
-        premiumFeatures: "Premium Features",
-        premiumFeature1: "Advanced meditation programs",
-        premiumFeature2: "Personalized workout plans",
-        premiumFeature3: "Detailed sleep analytics",
-        premiumFeature4: "Priority support",
+        upgradeToPremiumDescription: "Unlock exclusive content, advanced programs and richer tracking",
+        premiumFeature1: "Access premium resources",
+        premiumFeature2: "Exclusive programs & sessions",
+        premiumFeature3: "Get notified of new content",
+        premiumFeature4: "Accelerate your progress",
+
+        // Coach upgrade section
+        upgradeToCoachButton: "Become a Coach",
+        upgradeToCoachDescription: "Transform lives — and yours — through our certified program",
+        coachFeature1: "Build a community",
+        coachFeature2: "Develop your practice",
+        coachFeature3: "Make a difference",
+        coachFeature4: "Gain recognition",
 
         // Errors
         errorLoadingProfile: "Error loading profile",
@@ -1206,6 +1266,70 @@ const en: Messages = {
         errorRevokingSession: "Error revoking session",
         errorUnlinkingAccount: "Error unlinking account",
         errorDeletingAccount: "Error deleting account",
+
+        // Subscription request success
+        requestSubmittedSuccess: "Your request has been successfully submitted!",
+        requestCancelledSuccess: "Request cancelled successfully",
+        errorCancellingRequest: "Error cancelling request",
+
+        // My Requests Section
+        myRequestsTitle: "My Subscription Requests",
+        pendingRequests: "pending",
+        loadingRequests: "Loading requests...",
+        noRequestsYet: "No requests yet",
+        noRequestsHint: "Use the buttons above to submit an upgrade request",
+        requestTypePremium: "Premium",
+        requestTypeCoach: "Coach",
+        tierLabel: "Tier",
+        submittedOn: "Submitted on",
+        motivation: "Motivation",
+        approvedBy: "Approved by",
+        rejectedBy: "Rejected by",
+        on: "on",
+        adminUser: "Administrator",
+        adminNotes: "Admin Notes",
+        cancelRequest: "Cancel",
+        cancelling: "Cancelling...",
+        cancelRequestConfirm: "Are you sure you want to cancel this request?",
+
+        // Request statuses
+        requestStatusPENDING: "Pending",
+        requestStatusAPPROVED: "Approved",
+        requestStatusREJECTED: "Rejected",
+        requestStatusCANCELLED: "Cancelled",
+    },
+
+    subscriptionRequests: {
+        // Premium request
+        requestPremiumTitle: "Become Premium Member",
+        premiumFormIntro: "Fill out this form to request Premium access. An administrator will review your request shortly.",
+
+        // Coach request
+        requestCoachTitle: "Become a Coach",
+        coachFormIntro: "Fill out this form to request coach status. Your experience and qualifications will be reviewed by our team.",
+        selectTierLabel: "Choose your plan",
+        recommended: "Recommended",
+
+        // Form fields
+        motivationLabel: "Motivation",
+        motivationPlaceholder: "Why do you want this upgrade?",
+        experienceLabel: "Experience and qualifications",
+        experiencePlaceholder: "Describe your relevant experience in coaching, wellness, meditation, etc.",
+        optional: "optional",
+
+        // Actions
+        cancel: "Cancel",
+        back: "Back",
+        continueToForm: "Continue to Form",
+        submitRequest: "Submit Request",
+        submitting: "Submitting...",
+
+        // Success
+        successTitle: "Request Sent!",
+        successMessage: "An administrator will review your request shortly. You will be notified of the decision.",
+
+        // Errors
+        errorSubmitting: "Error submitting request",
     },
 
     badges: {

@@ -69,6 +69,7 @@ const fr = {
             resources: "Ressources",
             taxonomy: "Taxonomie",
             profile: "Mon profil",
+            subscriptions: "Demandes d'abonnement",
         },
         backToApp: "Retour à l'app",
         welcome: "Bienvenue dans le panneau d'administration MindfulSpace",
@@ -79,6 +80,58 @@ const fr = {
         },
         errors: {
             loadStatsFailed: "Échec du chargement des statistiques",
+        },
+        subscriptionRequests: {
+            title: "Demandes d'abonnement",
+            subtitle: "Gérer les demandes d'upgrade Premium et Coach",
+            pending: "en attente",
+            loading: "Chargement...",
+            noRequests: "Aucune demande trouvée",
+            unknownUser: "Utilisateur inconnu",
+            unknownAdmin: "Administrateur inconnu",
+            viewDetails: "Voir les détails",
+
+            // Filters
+            filters: {
+                all: "Toutes",
+                pending: "En attente",
+                approved: "Approuvées",
+                rejected: "Rejetées",
+                cancelled: "Annulées",
+            },
+
+            // Table headers
+            table: {
+                user: "Utilisateur",
+                type: "Type",
+                tier: "Formule",
+                date: "Date",
+                status: "Statut",
+                actions: "Actions",
+            },
+
+            // Review modal
+            reviewTitle: "Examiner la demande",
+            userInfo: "Informations utilisateur",
+            name: "Nom",
+            email: "Email",
+            requestDetails: "Détails de la demande",
+            requestType: "Type de demande",
+            tier: "Formule",
+            submittedOn: "Soumise le",
+            currentStatus: "Statut actuel",
+            motivation: "Motivation",
+            experience: "Expérience et qualifications",
+            previousReview: "Examen précédent",
+            reviewedBy: "Examinée par",
+            reviewedOn: "Examinée le",
+            adminNotes: "Notes administrateur",
+            adminNotesPlaceholder: "Ajoutez des notes sur cette décision (optionnel)...",
+            close: "Fermer",
+            approve: "Approuver",
+            reject: "Rejeter",
+            processing: "Traitement...",
+            errorReviewing: "Erreur lors de l'examen de la demande",
         },
     },
 
@@ -1191,12 +1244,19 @@ const fr = {
         subscriptionPremium: "Premium",
         subscriptionCoach: "Coach",
         upgradeToPremiumButton: "Passer à Premium",
-        upgradeToPremiumDescription: "Accédez à des fonctionnalités exclusives et du contenu premium",
-        premiumFeatures: "Fonctionnalités Premium",
-        premiumFeature1: "Programmes de méditation avancés",
-        premiumFeature2: "Plans d'entraînement personnalisés",
-        premiumFeature3: "Analyses détaillées du sommeil",
-        premiumFeature4: "Support prioritaire",
+        upgradeToPremiumDescription: "Débloquez des contenus exclusifs, des programmes avancés et un suivi plus riche",
+        premiumFeature1: "Accéder aux ressources premium",
+        premiumFeature2: "Programmes & sessions exclusifs",
+        premiumFeature3: "Être notifié des nouveautés",
+        premiumFeature4: "Accélérer vos progrès",
+
+        // Coach upgrade section
+        upgradeToCoachButton: "Devenir Coach",
+        upgradeToCoachDescription: "Transformez des vies et la vôtre grâce à notre programme certifié",
+        coachFeature1: "Construire une communauté",
+        coachFeature2: "Développer sa pratique",
+        coachFeature3: "Faire une différence",
+        coachFeature4: "Gagner en reconnaissance",
 
         // Errors
         errorLoadingProfile: "Erreur lors du chargement du profil",
@@ -1205,6 +1265,70 @@ const fr = {
         errorRevokingSession: "Erreur lors de la révocation de la session",
         errorUnlinkingAccount: "Erreur lors de la déconnexion du compte",
         errorDeletingAccount: "Erreur lors de la suppression du compte",
+
+        // Subscription request success
+        requestSubmittedSuccess: "Votre demande a été soumise avec succès !",
+        requestCancelledSuccess: "Demande annulée avec succès",
+        errorCancellingRequest: "Erreur lors de l'annulation de la demande",
+
+        // My Requests Section
+        myRequestsTitle: "Mes demandes d'abonnement",
+        pendingRequests: "en attente",
+        loadingRequests: "Chargement des demandes...",
+        noRequestsYet: "Aucune demande pour le moment",
+        noRequestsHint: "Utilisez les boutons ci-dessus pour soumettre une demande d'upgrade",
+        requestTypePremium: "Premium",
+        requestTypeCoach: "Coach",
+        tierLabel: "Formule",
+        submittedOn: "Soumise le",
+        motivation: "Motivation",
+        approvedBy: "Approuvée par",
+        rejectedBy: "Rejetée par",
+        on: "le",
+        adminUser: "Administrateur",
+        adminNotes: "Notes de l'administrateur",
+        cancelRequest: "Annuler",
+        cancelling: "Annulation...",
+        cancelRequestConfirm: "Êtes-vous sûr de vouloir annuler cette demande ?",
+
+        // Request statuses
+        requestStatusPENDING: "En attente",
+        requestStatusAPPROVED: "Approuvée",
+        requestStatusREJECTED: "Rejetée",
+        requestStatusCANCELLED: "Annulée",
+    },
+
+    subscriptionRequests: {
+        // Premium request
+        requestPremiumTitle: "Devenir Membre Premium",
+        premiumFormIntro: "Remplissez ce formulaire pour demander l'accès Premium. Un administrateur examinera votre demande prochainement.",
+
+        // Coach request
+        requestCoachTitle: "Devenir Coach",
+        coachFormIntro: "Remplissez ce formulaire pour demander le statut de coach. Votre expérience et vos qualifications seront examinées par notre équipe.",
+        selectTierLabel: "Choisissez votre formule",
+        recommended: "Recommandé",
+
+        // Form fields
+        motivationLabel: "Motivation",
+        motivationPlaceholder: "Pourquoi souhaitez-vous cette mise à niveau ?",
+        experienceLabel: "Expérience et qualifications",
+        experiencePlaceholder: "Décrivez votre expérience pertinente en coaching, bien-être, méditation, etc.",
+        optional: "optionnel",
+
+        // Actions
+        cancel: "Annuler",
+        back: "Retour",
+        continueToForm: "Continuer vers le formulaire",
+        submitRequest: "Soumettre la demande",
+        submitting: "Envoi en cours...",
+
+        // Success
+        successTitle: "Demande envoyée !",
+        successMessage: "Un administrateur examinera votre demande prochainement. Vous serez notifié de la décision.",
+
+        // Errors
+        errorSubmitting: "Erreur lors de l'envoi de la demande",
     },
 
     badges: {

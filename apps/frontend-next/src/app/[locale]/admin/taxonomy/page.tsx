@@ -523,7 +523,7 @@ export default function TaxonomyManagementPage() {
       .trim();
   };
 
-  const handleTabChange = (tab: 'dashboard' | 'resources' | 'taxonomy' | 'profile') => {
+  const handleTabChange = (tab: 'dashboard' | 'resources' | 'taxonomy' | 'profile' | 'subscriptions') => {
     if (tab === 'taxonomy') {
       // Already on taxonomy page, do nothing
       return;
