@@ -1,6 +1,5 @@
 import {
   PrismaClient,
-  ResourceType,
   MeditationSessionSource,
   MeditationMode,
   MeditationVisualType,
@@ -21,6 +20,7 @@ async function main() {
 
   // D'abord les sessions et séries qui dépendent des users / types / contenus
   await prisma.exerciceSerie.deleteMany();      // dépend de ExerciceSession + ExerciceContent
+  await prisma.exerciceStepTranslation?.deleteMany().catch(() => {}); // delete translations first
   await prisma.exerciceStep.deleteMany();       // dépend de ExerciceContent
   await prisma.exerciceSession.deleteMany();    // dépend de User
   await prisma.sleepSession.deleteMany();       // dépend de User
@@ -31,9 +31,11 @@ async function main() {
   await prisma.userProgramDay.deleteMany();
   await prisma.userProgram.deleteMany();
 
-  // Programmes d'exercices (gabarits)
+  // Programmes d'exercices (gabarits) - delete translations first
   await prisma.programExerciceItem.deleteMany();
+  await prisma.programDayTranslation?.deleteMany().catch(() => {});
   await prisma.programDay.deleteMany();
+  await prisma.programTranslation?.deleteMany().catch(() => {});
   await prisma.program.deleteMany();
 
   // Programmes & contenus de méditation (si présents)
@@ -43,13 +45,17 @@ async function main() {
   await prisma.meditationContent?.deleteMany().catch(() => {});
   await prisma.meditationType?.deleteMany().catch(() => {});
 
-  // Types d'exercices (moderne : ExerciceContent)
+  // Types d'exercices (moderne : ExerciceContent) - delete translations first
+  await prisma.exerciceContentTranslation?.deleteMany().catch(() => {});
   await prisma.exerciceContent.deleteMany();
 
-  // Resources (full reset)
+  // Resources (full reset - delete translations first due to cascade)
   await prisma.resourceTagOnResource?.deleteMany().catch(() => {});
+  await prisma.resourceTranslation?.deleteMany().catch(() => {});
   await prisma.resource.deleteMany();
+  await prisma.resourceTagTranslation?.deleteMany().catch(() => {});
   await prisma.resourceTag.deleteMany();
+  await prisma.resourceCategoryTranslation?.deleteMany().catch(() => {});
   await prisma.resourceCategory.deleteMany();
 
   // Badges (d'abord les UserBadge, puis le catalogue)
@@ -1231,48 +1237,115 @@ async function main() {
   // 2.6 Resources
   console.log("🌱 Seeding resource categories, tags & resources...");
 
+  // Create categories with translations
   const articleCat = await prisma.resourceCategory.create({
-    data: { name: "Articles", slug: "articles", iconEmoji: "📄" },
+    data: {
+      slug: "articles",
+      iconEmoji: "📄",
+      sourceLocale: "en",
+      translations: {
+        create: [
+          { locale: "en", name: "Articles" },
+          { locale: "fr", name: "Articles" },
+        ],
+      },
+    },
   });
 
   const guideCat = await prisma.resourceCategory.create({
-    data: { name: "Guides", slug: "guides", iconEmoji: "📘" },
+    data: {
+      slug: "guides",
+      iconEmoji: "📘",
+      sourceLocale: "en",
+      translations: {
+        create: [
+          { locale: "en", name: "Guides" },
+          { locale: "fr", name: "Guides" },
+        ],
+      },
+    },
   });
 
+  // Create tags with translations
   const meditationTag = await prisma.resourceTag.create({
-    data: { name: "Meditation", slug: "meditation" },
+    data: {
+      slug: "meditation",
+      sourceLocale: "en",
+      translations: {
+        create: [
+          { locale: "en", name: "Meditation" },
+          { locale: "fr", name: "Méditation" },
+        ],
+      },
+    },
   });
 
   const mentalHealthTag = await prisma.resourceTag.create({
-    data: { name: "Mental health", slug: "mental-health" },
+    data: {
+      slug: "mental-health",
+      sourceLocale: "en",
+      translations: {
+        create: [
+          { locale: "en", name: "Mental health" },
+          { locale: "fr", name: "Santé mentale" },
+        ],
+      },
+    },
   });
 
   const wellnessTag = await prisma.resourceTag.create({
-    data: { name: "Wellness", slug: "wellness" },
+    data: {
+      slug: "wellness",
+      sourceLocale: "en",
+      translations: {
+        create: [
+          { locale: "en", name: "Wellness" },
+          { locale: "fr", name: "Bien-être" },
+        ],
+      },
+    },
   });
 
   const createArticle = (data: {
     slug: string;
-    title: string;
-    summary: string;
-    content: string;
+    titleEn: string;
+    titleFr: string;
+    summaryEn: string;
+    summaryFr: string;
+    contentEn: string;
+    contentFr: string;
     isPremium?: boolean;
     isFeatured?: boolean;
     readTimeMin?: number;
     tags: string[];
+    sourceLocale?: string;
   }) =>
     prisma.resource.create({
       data: {
-        title: data.title,
         slug: data.slug,
-        summary: data.summary,
-        content: data.content,
-        type: ResourceType.ARTICLE,
         isPremium: data.isPremium ?? false,
         isFeatured: data.isFeatured ?? false,
         readTimeMin: data.readTimeMin ?? 5,
+        sourceLocale: data.sourceLocale ?? "en",
         authorName: "Dr. Sarah Johnson",
+        authorId: demoUserAdmin.id, // Assign admin as author
         categoryId: articleCat.id,
+        translations: {
+          create: [
+            {
+              locale: "en",
+              title: data.titleEn,
+              summary: data.summaryEn,
+              content: data.contentEn,
+            },
+            {
+              locale: "fr",
+              title: data.titleFr,
+              summary: data.summaryFr,
+              content: data.contentFr,
+            },
+          ],
+        },
         tags: {
           create: data.tags.map((slug) => ({
             tag: { connect: { slug } },
@@ -1283,37 +1356,61 @@ async function main() {
 
   await createArticle({
     slug: "10-science-backed-benefits-of-meditation",
-    title: "10 bienfaits de la méditation prouvés par la science",
-    summary:
-      "Un tour d’horizon des effets de la méditation sur le stress, le sommeil et la concentration.",
-    content: "…",
+    titleEn: "10 Science-Backed Benefits of Meditation",
+    titleFr: "10 bienfaits de la méditation prouvés par la science",
+    summaryEn:
+      "An overview of meditation's effects on stress, sleep, and concentration backed by scientific research.",
+    summaryFr:
+      "Un tour d'horizon des effets de la méditation sur le stress, le sommeil et la concentration.",
+    contentEn: "Scientific studies have shown that regular meditation practice can significantly improve mental and physical health. From reducing stress hormones to enhancing focus and promoting better sleep quality, the benefits are well-documented...",
+    contentFr: "Des études scientifiques ont montré que la pratique régulière de la méditation peut considérablement améliorer la santé mentale et physique. De la réduction des hormones de stress à l'amélioration de la concentration en passant par une meilleure qualité de sommeil, les bienfaits sont bien documentés...",
     isFeatured: true,
     readTimeMin: 8,
     tags: ["meditation", "mental-health", "wellness"],
+    sourceLocale: "en",
   });
 
   await createArticle({
     slug: "how-to-build-an-evening-routine",
-    title: "Construire une routine du soir qui apaise le mental",
-    summary:
+    titleEn: "Building an Evening Routine That Calms the Mind",
+    titleFr: "Construire une routine du soir qui apaise le mental",
+    summaryEn:
+      "A four-step method to gently disconnect at the end of the day.",
+    summaryFr:
       "Une méthode en quatre étapes pour déconnecter doucement en fin de journée.",
-    content: "…",
+    contentEn: "Creating a consistent evening routine helps signal to your body and mind that it's time to wind down. Start by setting a regular bedtime, dimming the lights, and avoiding screens at least an hour before sleep...",
+    contentFr: "Créer une routine du soir cohérente aide à signaler à votre corps et votre esprit qu'il est temps de ralentir. Commencez par établir une heure de coucher régulière, tamisez les lumières et évitez les écrans au moins une heure avant de dormir...",
     readTimeMin: 6,
     tags: ["wellness", "mental-health"],
+    sourceLocale: "en",
   });
 
   await prisma.resource.create({
     data: {
-      title: "Guide de démarrage MindfulSpace",
       slug: "mindfulspace-starter-guide",
-      summary: "Comprendre en 5 minutes comment utiliser MindfulSpace...",
-      content: "…",
-      type: ResourceType.GUIDE,
       isFeatured: true,
       isPremium: true,
       readTimeMin: 5,
+      sourceLocale: "fr",
       authorName: "Équipe MindfulSpace",
+      authorId: demoUserAdmin.id,
       categoryId: guideCat.id,
+      translations: {
+        create: [
+          {
+            locale: "en",
+            title: "MindfulSpace Starter Guide",
+            summary: "Understand how to use MindfulSpace in 5 minutes...",
+            content: "Welcome to MindfulSpace! This guide will help you get started with meditation, exercise tracking, and wellness resources. Begin by exploring the meditation library, track your daily habits, and discover educational content...",
+          },
+          {
+            locale: "fr",
+            title: "Guide de démarrage MindfulSpace",
+            summary: "Comprendre en 5 minutes comment utiliser MindfulSpace...",
+            content: "Bienvenue sur MindfulSpace ! Ce guide vous aidera à démarrer avec la méditation, le suivi d'exercices et les ressources de bien-être. Commencez par explorer la bibliothèque de méditations, suivez vos habitudes quotidiennes et découvrez du contenu éducatif...",
+          },
+        ],
+      },
       tags: {
         create: [{ tag: { connect: { slug: "wellness" } } }],
       },

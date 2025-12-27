@@ -7,15 +7,15 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, getCurrentUser, login as apiLogin, logout as apiLogout, register as apiRegister, LoginData, RegisterData } from '@/lib/api/auth';
+import { User, getCurrentUser, login as apiLogin, logout as apiLogout, register as apiRegister, LoginData, RegisterData, AuthResponse } from '@/lib/api/auth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: LoginData) => Promise<void>;
+  login: (data: LoginData) => Promise<AuthResponse>;
   register: (data: RegisterData) => Promise<{ message: string; userId: string }>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | undefined>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (data: LoginData) => {
     const response = await apiLogin(data);
     setUser(response.user);
+    return response;
   }, []);
 
   const register = useCallback(async (data: RegisterData) => {
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      return currentUser;
     } catch (error) {
       setUser(null);
     }

@@ -6,6 +6,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding resources...");
 
+  // Get or create admin user for resource authorship
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@mindfulspace.app' },
+    update: {},
+    create: {
+      email: 'admin@mindfulspace.app',
+      displayName: 'Demo Admin',
+      emailVerified: true,
+      isActive: true,
+    },
+  });
+
   // --- catégories ---
   const articleCat = await prisma.resourceCategory.upsert({
     where: { slug: "articles" },
@@ -70,6 +82,7 @@ async function main() {
         isFeatured: data.isFeatured ?? false,
         readTimeMin: data.readTimeMin ?? 5,
         authorName: "Dr. Sarah Johnson",
+        authorId: adminUser.id, // Assign admin as author
         categoryId: articleCat.id,
         tags: {
           create: data.tags.map((slug) => ({
@@ -112,12 +125,13 @@ async function main() {
       summary:
         "Comprendre en 5 minutes comment utiliser MindfulSpace pour suivre votre bien-être.",
       content:
-        "Dans ce guide, nous expliquons comment enregistrer vos séances, lire les statistiques principales du tableau de bord et accéder aux resources essentielles. C’est le point de départ recommandé pour les nouveaux utilisateurs.",
+        "Dans ce guide, nous expliquons comment enregistrer vos séances, lire les statistiques principales du tableau de bord et accéder aux resources essentielles. C'est le point de départ recommandé pour les nouveaux utilisateurs.",
       type: ResourceType.GUIDE,
       isPremium: false,
       isFeatured: true,
       readTimeMin: 5,
       authorName: "Équipe MindfulSpace",
+      authorId: adminUser.id, // Assign admin as author
       categoryId: guideCat.id,
       tags: {
         create: [

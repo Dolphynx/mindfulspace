@@ -53,10 +53,89 @@ const en: Messages = {
 
     navbarCoach: {
         emptyPlaceholder: "Coach menu",
+        resources: "My resources",
+        backToApp: "Back to app",
     },
 
     navbarAdmin: {
         emptyPlaceholder: "Admin menu",
+        resources: "Resource management",
+        sessions: "Meditation sessions",
+        backToApp: "Back to app",
+    },
+
+    adminDashboard: {
+        title: "Admin Panel",
+        tabs: {
+            dashboard: "Dashboard",
+            resources: "Resources",
+            taxonomy: "Taxonomy",
+            profile: "My Profile",
+            subscriptions: "Subscription Requests",
+        },
+        backToApp: "Back to App",
+        logout: "Log Out",
+        welcome: "Welcome to the MindfulSpace administration panel",
+        stats: {
+            totalUsers: "Total Users",
+            resources: "Resources",
+            sessions: "Sessions",
+        },
+        errors: {
+            loadStatsFailed: "Failed to load statistics",
+        },
+        subscriptionRequests: {
+            title: "Subscription Requests",
+            subtitle: "Manage Premium and Coach upgrade requests",
+            pending: "pending",
+            loading: "Loading...",
+            noRequests: "No requests found",
+            unknownUser: "Unknown user",
+            unknownAdmin: "Unknown admin",
+            viewDetails: "View details",
+
+            // Filters
+            filters: {
+                all: "All",
+                pending: "Pending",
+                approved: "Approved",
+                rejected: "Rejected",
+                cancelled: "Cancelled",
+            },
+
+            // Table headers
+            table: {
+                user: "User",
+                type: "Type",
+                tier: "Tier",
+                date: "Date",
+                status: "Status",
+                actions: "Actions",
+            },
+
+            // Review modal
+            reviewTitle: "Review Request",
+            userInfo: "User Information",
+            name: "Name",
+            email: "Email",
+            requestDetails: "Request Details",
+            requestType: "Request Type",
+            tier: "Tier",
+            submittedOn: "Submitted on",
+            currentStatus: "Current Status",
+            motivation: "Motivation",
+            experience: "Experience and Qualifications",
+            previousReview: "Previous Review",
+            reviewedBy: "Reviewed by",
+            reviewedOn: "Reviewed on",
+            adminNotes: "Admin Notes",
+            adminNotesPlaceholder: "Add notes about this decision (optional)...",
+            close: "Close",
+            approve: "Approve",
+            reject: "Reject",
+            processing: "Processing...",
+            errorReviewing: "Error reviewing request",
+        },
     },
 
     /*
@@ -127,7 +206,7 @@ const en: Messages = {
 
         section3Title: "3. Your consent",
         section3Text:
-            "On your first visit, a banner allows you to accept or refuse non-essential cookies. You can modify your choice at any time via the “Cookie preferences” link at the bottom of the page.",
+            "On your first visit, a banner allows you to accept or refuse non-essential cookies. You can modify your choice at any time via the \"Cookie preferences\" link at the bottom of the page.",
 
         section4Title: "4. Personal data",
         section4Text:
@@ -230,8 +309,86 @@ const en: Messages = {
 
         ctaTitle: "Ready to begin your journey?",
         ctaSubtitle:
-            "Join the certified MindfulSpace coaches and make a real difference in people's lives.",
+            "Join the certified MindfulSpace coaches and make a real difference in people's lives. Create an account or sign in to access your profile, where you can submit a request to become a coach at any time.",
         ctaButtonPrimary: "Sign up now",
+        ctaButtonSecondary: "Learn more",
+    },
+
+    premiumPage: {
+        heroTitle: "Go Premium",
+        heroSubtitle: "Unlock exclusive content, advanced programs, and a richer experience with MindfulSpace Premium.",
+
+        whyTitle: "Why go Premium?",
+        why1Title: "Access premium resources",
+        why1Text: "In-depth articles, videos, and guides to take your well-being further every day.",
+        why2Title: "Exclusive programs & sessions",
+        why2Text: "Premium guided sessions and structured programs to progress faster and more calmly.",
+        why3Title: "Get notified about new content",
+        why3Text: "Receive alerts whenever new premium content is released (programs, meditations, resources).",
+        why4Title: "Boost your progress",
+        why4Text: "Advanced tools and journeys to build lasting habits and keep your motivation high.",
+
+        programTitle: "What Premium unlocks",
+        programSubtitle: "An enhanced experience designed to support you further, for longer.",
+
+        program1Title: "Premium library",
+        program1Duration: "Unlimited access",
+        program1Item1: "Exclusive resources (articles, videos, guides)",
+        program1Item2: "More practical, deeper content",
+        program1Item3: "Favorites & quick access",
+
+        program2Title: "Premium programs",
+        program2Duration: "New journeys released regularly",
+        program2Item1: "Structured programs (stress, sleep, focus, etc.)",
+        program2Item2: "Step-by-step progression",
+        program2Item3: "Goals and recommendations",
+
+        program3Title: "Premium sessions",
+        program3Duration: "New sessions every month",
+        program3Item1: "Premium guided meditations",
+        program3Item2: "Themed sessions (anxiety, energy, gratitude…)",
+        program3Item3: "Flexible durations to fit your schedule",
+
+        program4Title: "Notifications & tracking",
+        program4Duration: "Always up to date",
+        program4Item1: "Notifications for new premium content",
+        program4Item2: "Personalized reminders (based on your goals)",
+        program4Item3: "Enhanced history and progress",
+
+        pricingTitle: "Choose your plan",
+
+        pricing1Title: "Monthly",
+        pricing1Price: "$9.99/month",
+        pricing1F1: "Access to premium resources",
+        pricing1F2: "Premium sessions",
+        pricing1F3: "New content notifications",
+        pricing1F4: "Cancel anytime",
+        pricing1F5: "Multi-device access",
+
+        pricing2Title: "Yearly",
+        pricing2Price: "$79.99/year",
+        pricing2F1: "Everything included in Monthly",
+        pricing2F2: "Best value for a full year",
+        pricing2F3: "Full access to premium programs",
+        pricing2F4: "Early access to new releases",
+        pricing2F5: "Personalized reminders",
+        pricing2F6: "Priority support",
+
+        pricing3Title: "Family",
+        pricing3Price: "$119.99/year",
+        pricing3F1: "Everything included in Yearly",
+        pricing3F2: "Up to 5 accounts",
+        pricing3F3: "Premium programs for the whole family",
+        pricing3F4: "Per-profile preferences",
+        pricing3F5: "Multi-device access",
+        pricing3F6: "Priority support",
+
+        pricingButton: "Get started",
+
+        ctaTitle: "Go Premium in just a few steps",
+        ctaSubtitle:
+            "Create an account or sign in to access your profile, where you can activate the Premium subscription anytime.",
+        ctaButtonPrimary: "Activate Premium",
         ctaButtonSecondary: "Learn more",
     },
 
@@ -253,6 +410,8 @@ const en: Messages = {
         lockedPremiumResource: "Premium resource reserved for premium members",
         lockedPremiumTooltip: "Become a premium member to access this content",
         readTimeSuffix: "min",
+        manageMyResources: "Manage my resources",
+        viewAllResources: "View all resources",
     },
 
     breathingSession: {
@@ -773,10 +932,17 @@ const en: Messages = {
         notFoundText: "This resource does not exist or is no longer available.",
         readTimeSuffix: "min read",
         premiumBadge: "Premium",
+        featuredBadge: "Featured",
         noContent: "The content of this resource is not yet available.",
         forbiddenTitle: "Access restricted",
         forbiddenText: "This resource is reserved for premium members. Please sign in with a premium account to access it.",
-        backToListCTA: "Back to resources list"
+        backToListCTA: "Back to resources list",
+        authorLabel: "By",
+        publishedLabel: "Published on",
+        updatedLabel: "Updated on",
+        externalLinkTitle: "Related content",
+        externalLinkDescription: "An external link is associated with this resource to explore the topic further",
+        openExternalLink: "View link"
     },
 
     notFoundPage: {
@@ -829,6 +995,7 @@ const en: Messages = {
 
     langSwitcher: {
         label: "Language",
+        switchTo: "Switch to",
     },
 
     globalNotice: {
@@ -864,7 +1031,7 @@ const en: Messages = {
             "We use essential cookies to make the site work. With your consent, we also use cookies to analyse usage and personalise your experience.",
         acceptAll: "OK for me",
         choose: "Let me choose",
-        hint: "You can change your choices at any time in “Cookies”.",
+        hint: "You can change your choices at any time in \"Cookies\".",
     },
 
     cookieModal: {
@@ -970,6 +1137,7 @@ const en: Messages = {
         // User menu
         myWorld: "My World",
         profileSettings: "Profile Settings",
+        adminPanel: "Admin Panel",
         signOut: "Sign Out",
 
         // Email verification
@@ -1007,6 +1175,167 @@ const en: Messages = {
         resetPasswordComplete: "Password Reset Complete",
         resetPasswordSuccess: "Your password has been successfully reset. You can now sign in with your new password.",
         resetPasswordFailed: "Password reset failed",
+
+        goToProfile: "Go to my profile",
+    },
+
+    profile: {
+        // Page title
+        pageTitle: "Profile Settings",
+        pageSubtitle: "Manage your personal information and security settings",
+
+        // Account Information Section
+        accountInfoTitle: "Account Information",
+        displayNameLabel: "Display Name",
+        displayNamePlaceholder: "Your name",
+        emailLabel: "Email Address",
+        emailVerifiedBadge: "Verified",
+        emailNotVerifiedBadge: "Not Verified",
+        accountCreatedLabel: "Account Created",
+        accountStatusLabel: "Account Status",
+        accountStatusActive: "Active",
+        accountStatusSuspended: "Suspended",
+        updateProfileButton: "Update Profile",
+        profileUpdatedSuccess: "Profile updated successfully",
+
+        // Security Settings Section
+        securityTitle: "Security",
+        changePasswordTitle: "Change Password",
+        currentPasswordLabel: "Current Password",
+        newPasswordLabel: "New Password",
+        changePasswordButton: "Change Password",
+        passwordChangedSuccess: "Password changed successfully",
+        noPasswordSet: "OAuth-only account - no password set",
+
+        // Connected Accounts
+        connectedAccountsTitle: "Connected Accounts",
+        connectedSince: "Connected since",
+        unlinkButton: "Unlink",
+        noConnectedAccounts: "No OAuth accounts connected",
+        unlinkConfirm: "Are you sure you want to unlink this account?",
+        unlinkSuccess: "Account unlinked successfully",
+        unlinkError: "Cannot unlink the only authentication method",
+
+        // Active Sessions
+        activeSessionsTitle: "Active Sessions",
+        currentSessionBadge: "Current Session",
+        deviceLabel: "Device",
+        ipAddressLabel: "IP Address",
+        lastActiveLabel: "Last Active",
+        revokeSessionButton: "Revoke",
+        revokeAllOtherButton: "Revoke All Other Sessions",
+        noActiveSessions: "No active sessions",
+        revokeSessionConfirm: "Are you sure you want to revoke this session?",
+        revokeAllConfirm: "Are you sure you want to revoke all other sessions?",
+        sessionRevokedSuccess: "Session revoked successfully",
+        allSessionsRevokedSuccess: "All other sessions have been revoked",
+
+        // Data Privacy
+        dataPrivacyTitle: "Data Privacy",
+        exportDataButton: "Download My Data",
+        exportDataDescription: "Download all your personal data in JSON format (GDPR)",
+        exportDataSuccess: "Your data has been downloaded",
+        deleteAccountButton: "Delete My Account",
+        deleteAccountDescription: "Permanently delete your account and all your data",
+        deleteAccountWarning: "This action is irreversible. All your data will be permanently deleted.",
+        deleteAccountConfirm: "Are you sure you want to delete your account?",
+        deleteAccountPasswordLabel: "Enter your password to confirm",
+        deleteAccountConfirmButton: "Yes, Delete My Account",
+        deleteAccountCancelButton: "Cancel",
+        accountDeletedSuccess: "Your account has been deleted",
+
+        // Subscription & Roles
+        subscriptionTitle: "Subscription",
+        currentSubscriptionLabel: "Current Subscription",
+        subscriptionStandard: "Standard",
+        subscriptionPremium: "Premium",
+        subscriptionCoach: "Coach",
+        upgradeToPremiumButton: "Upgrade to Premium",
+        upgradeToPremiumDescription: "Unlock exclusive content, advanced programs and richer tracking",
+        premiumFeature1: "Access premium resources",
+        premiumFeature2: "Exclusive programs & sessions",
+        premiumFeature3: "Get notified of new content",
+        premiumFeature4: "Accelerate your progress",
+
+        // Coach upgrade section
+        upgradeToCoachButton: "Become a Coach",
+        upgradeToCoachDescription: "Transform lives — and yours — through our certified program",
+        coachFeature1: "Build a community",
+        coachFeature2: "Develop your practice",
+        coachFeature3: "Make a difference",
+        coachFeature4: "Gain recognition",
+
+        // Errors
+        errorLoadingProfile: "Error loading profile",
+        errorUpdatingProfile: "Error updating profile",
+        errorChangingPassword: "Error changing password",
+        errorRevokingSession: "Error revoking session",
+        errorUnlinkingAccount: "Error unlinking account",
+        errorDeletingAccount: "Error deleting account",
+
+        // Subscription request success
+        requestSubmittedSuccess: "Your request has been successfully submitted!",
+        requestCancelledSuccess: "Request cancelled successfully",
+        errorCancellingRequest: "Error cancelling request",
+
+        // My Requests Section
+        myRequestsTitle: "My Subscription Requests",
+        pendingRequests: "pending",
+        loadingRequests: "Loading requests...",
+        noRequestsYet: "No requests yet",
+        noRequestsHint: "Use the buttons above to submit an upgrade request",
+        requestTypePremium: "Premium",
+        requestTypeCoach: "Coach",
+        tierLabel: "Tier",
+        submittedOn: "Submitted on",
+        motivation: "Motivation",
+        approvedBy: "Approved by",
+        rejectedBy: "Rejected by",
+        on: "on",
+        adminUser: "Administrator",
+        adminNotes: "Admin Notes",
+        cancelRequest: "Cancel",
+        cancelling: "Cancelling...",
+        cancelRequestConfirm: "Are you sure you want to cancel this request?",
+
+        // Request statuses
+        requestStatusPENDING: "Pending",
+        requestStatusAPPROVED: "Approved",
+        requestStatusREJECTED: "Rejected",
+        requestStatusCANCELLED: "Cancelled",
+    },
+
+    subscriptionRequests: {
+        // Premium request
+        requestPremiumTitle: "Become Premium Member",
+        premiumFormIntro: "Fill out this form to request Premium access. An administrator will review your request shortly.",
+
+        // Coach request
+        requestCoachTitle: "Become a Coach",
+        coachFormIntro: "Fill out this form to request coach status. Your experience and qualifications will be reviewed by our team.",
+        selectTierLabel: "Choose your plan",
+        recommended: "Recommended",
+
+        // Form fields
+        motivationLabel: "Motivation",
+        motivationPlaceholder: "Why do you want this upgrade?",
+        experienceLabel: "Experience and qualifications",
+        experiencePlaceholder: "Describe your relevant experience in coaching, wellness, meditation, etc.",
+        optional: "optional",
+
+        // Actions
+        cancel: "Cancel",
+        back: "Back",
+        continueToForm: "Continue to Form",
+        submitRequest: "Submit Request",
+        submitting: "Submitting...",
+
+        // Success
+        successTitle: "Request Sent!",
+        successMessage: "An administrator will review your request shortly. You will be notified of the decision.",
+
+        // Errors
+        errorSubmitting: "Error submitting request",
     },
 
     badges: {
@@ -1033,7 +1362,7 @@ const en: Messages = {
             },
             five: {
                 title: "5 meditation sessions completed",
-                description: "You’ve completed 5 sessions. Keep going!",
+                description: "You've completed 5 sessions. Keep going!",
             },
             streak3: {
                 title: "3-day meditation streak",
@@ -1071,6 +1400,310 @@ const en: Messages = {
             description: "Well done for this new step !",
         },
     },
+
+    /*
+     * Resources Management
+     */
+    resourcesManagement: {
+        title: "Resources Management",
+        loading: "Loading...",
+        myResources: "My Resources",
+        allResources: "All Resources",
+        createResource: "Create Resource",
+        createResourceDescription: "Create a new resource with automatic translation support",
+        editResource: "Edit Resource",
+        deleteResource: "Delete Resource",
+
+        // List view
+        noResources: "No resources",
+        noResourcesDescription: "You haven't created any resources yet.",
+        searchPlaceholder: "Search resources...",
+        filterByCategory: "Filter by category",
+        allCategories: "All categories",
+
+        // Resource types
+        types: {
+            ARTICLE: "Article",
+            VIDEO: "Video",
+            GUIDE: "Guide",
+            MEDITATION_PROGRAM: "Meditation Program",
+            EXERCICE_PROGRAM: "Exercise Program",
+        },
+
+        // Form labels
+        form: {
+            title: "Title",
+            titlePlaceholder: "Resource title",
+            titleHelper: "The title will appear in the resources list",
+
+            slug: "Slug (URL)",
+            slugPlaceholder: "resource-title",
+            slugHelper: "URL-friendly identifier (lowercase letters, numbers, and hyphens only)",
+            generateSlug: "Generate automatically",
+
+            summary: "Summary",
+            summaryPlaceholder: "Short description of the resource",
+            summaryHelper: "Appears in resource cards (max 500 characters)",
+
+            content: "Content",
+            contentPlaceholder: "Full content of the resource (Markdown supported)",
+            contentHelper: "The full content of your resource",
+
+            type: "Resource Type",
+            typeHelper: "Choose the content type",
+
+            category: "Category",
+            categoryHelper: "Main category of the resource",
+            selectCategory: "Select a category",
+
+            tags: "Tags",
+            tagsHelper: "Select relevant tags (optional)",
+            selectTags: "Select tags",
+
+            isPremium: "Premium content",
+            isPremiumHelper: "Reserve for premium users",
+
+            isFeatured: "Featured",
+            isFeaturedHelper: "Display on the homepage (admin only)",
+
+            authorName: "Author Name",
+            authorNamePlaceholder: "Dr. Sarah Johnson",
+            authorNameHelper: "Name displayed as author (optional)",
+
+            readTimeMin: "Reading time (min)",
+            readTimeMinPlaceholder: "8",
+            readTimeMinHelper: "Estimated reading time in minutes",
+            calculateReadTime: "Calculate automatically",
+
+            externalUrl: "External URL",
+            externalUrlPlaceholder: "https://youtu.be/...",
+            externalUrlHelper: "Link to a YouTube video or external article (optional)",
+
+            meditationProgram: "Meditation Program",
+            meditationProgramHelper: "Link to an existing meditation program (optional)",
+            selectProgram: "Select a program",
+
+            sourceLocale: {
+                label: "Source Language",
+                helper: "Language in which you're writing the content",
+            },
+
+            metadataSection: "Resource Metadata",
+            readOnly: "Read-only",
+        },
+
+        // Wizard
+        wizard: {
+            translating: {
+                title: "Translating...",
+                description: "Our AI is translating your resource into other languages. This may take a few seconds.",
+            },
+            review: {
+                instructions: "Review and modify the automatically generated translations. You can adjust any field before saving.",
+                sourceLanguage: "Source Language",
+                translation: "Translation",
+            },
+        },
+
+        // Actions
+        actions: {
+            save: "Save",
+            cancel: "Cancel",
+            edit: "Edit",
+            delete: "Delete",
+            create: "Create",
+            back: "Back",
+            viewPublic: "View public version",
+            translateAndReview: "Translate & Review",
+            translating: "Translating...",
+            saving: "Saving...",
+            saveAll: "Save All",
+        },
+
+        // Success messages
+        success: {
+            created: "Resource created successfully",
+            updated: "Resource updated successfully",
+            deleted: "Resource deleted successfully",
+        },
+
+        // Error messages
+        errors: {
+            loadFailed: "Error loading resources",
+            createFailed: "Error creating resource",
+            updateFailed: "Error updating resource",
+            deleteFailed: "Error deleting resource",
+            notFound: "Resource not found",
+            unauthorized: "You don't have permission to edit this resource",
+            slugExists: "This slug is already in use",
+            invalidSlug: "Slug must contain only lowercase letters, numbers, and hyphens",
+            requiredField: "This field is required",
+            minLength: "Too short",
+            maxLength: "Too long",
+            invalidUrl: "Invalid URL",
+            translationFailed: "Automatic translation failed",
+        },
+
+        // Delete confirmation
+        deleteConfirm: {
+            title: "Delete resource?",
+            message: "Are you sure you want to delete this resource? This action is irreversible.",
+            warningLinked: "Warning: This resource is linked to a meditation program. Only administrators can delete it.",
+            confirm: "Yes, delete",
+            cancel: "No, cancel",
+        },
+
+        // Resource card
+        card: {
+            premium: "Premium",
+            featured: "Featured",
+            readTime: "{{minutes}} min read",
+            author: "By {{author}}",
+            createdAt: "Created on {{date}}",
+            updatedAt: "Updated on {{date}}",
+            views: "{{count}} view",
+            views_plural: "{{count}} views",
+        },
+
+        // Filters
+        filters: {
+            all: "All",
+            premium: "Premium only",
+            free: "Free only",
+            featured: "Featured",
+            myResources: "My resources",
+        },
+
+        // Stats
+        stats: {
+            total: "Total",
+            premium: "Premium",
+            free: "Free",
+            featured: "Featured",
+        },
+    },
+
+    taxonomyManagement: {
+        title: "Taxonomy Management",
+        subtitle: "Manage categories and tags to organize your resources",
+
+        // Tabs
+        tabs: {
+            categories: "Categories",
+            tags: "Tags",
+        },
+
+        // Categories section
+        categories: {
+            title: "Resource Categories",
+            description: "Categories organize your resources into broad themes (Sleep, Stress, etc.)",
+            createNew: "New Category",
+            editCategory: "Edit Category",
+            deleteCategory: "Delete Category",
+            noCategories: "No categories",
+            noCategoriesDescription: "Start by creating your first category",
+            resourceCount: "{{count}} resource",
+            resourceCount_plural: "{{count}} resources",
+
+            form: {
+                name: "Category Name",
+                namePlaceholder: "E.g.: Sleep, Stress, Meditation",
+                nameHelper: "Name displayed to users",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "sleep",
+                slugHelper: "Unique identifier for URLs (lowercase letters, numbers and hyphens only)",
+
+                iconEmoji: "Icon (emoji)",
+                iconEmojiPlaceholder: "😴",
+                iconEmojiHelper: "Emoji displayed in the interface (optional)",
+            },
+
+            deleteConfirm: {
+                title: "Delete category?",
+                message: "Are you sure you want to delete this category?",
+                warningHasResources: "Cannot delete: {{count}} resource is using this category. Reassign or delete these resources first.",
+                warningHasResources_plural: "Cannot delete: {{count}} resources are using this category. Reassign or delete these resources first.",
+                confirm: "Yes, delete",
+                cancel: "Cancel",
+            },
+        },
+
+        // Tags section
+        tags: {
+            title: "Resource Tags",
+            description: "Tags allow finer content labeling (stress, sleep, relaxation, etc.)",
+            createNew: "New Tag",
+            editTag: "Edit Tag",
+            deleteTag: "Delete Tag",
+            noTags: "No tags",
+            noTagsDescription: "Start by creating your first tag",
+            resourceCount: "{{count}} resource",
+            resourceCount_plural: "{{count}} resources",
+
+            form: {
+                name: "Tag Name",
+                namePlaceholder: "E.g.: stress, sleep, relaxation",
+                nameHelper: "Name displayed to users",
+
+                slug: "Slug (URL)",
+                slugPlaceholder: "stress",
+                slugHelper: "Unique identifier for URLs (lowercase letters, numbers and hyphens only)",
+            },
+
+            deleteConfirm: {
+                title: "Delete tag?",
+                message: "Are you sure you want to delete this tag? It will be removed from all resources that use it.",
+                confirm: "Yes, delete",
+                cancel: "Cancel",
+            },
+        },
+
+        // Actions
+        actions: {
+            create: "Create",
+            save: "Save",
+            cancel: "Cancel",
+            edit: "Edit",
+            delete: "Delete",
+            close: "Close",
+        },
+
+        // Success messages
+        success: {
+            categoryCreated: "Category created successfully",
+            categoryUpdated: "Category updated successfully",
+            categoryDeleted: "Category deleted successfully",
+            tagCreated: "Tag created successfully",
+            tagUpdated: "Tag updated successfully",
+            tagDeleted: "Tag deleted successfully",
+            translationSaved: "Translation saved successfully",
+            translationDeleted: "Translation deleted successfully",
+            translationRegenerated: "Translation regenerated successfully",
+        },
+
+        // Error messages
+        errors: {
+            categoryCreateFailed: "Error creating category",
+            categoryUpdateFailed: "Error updating category",
+            categoryDeleteFailed: "Error deleting category",
+            tagCreateFailed: "Error creating tag",
+            tagUpdateFailed: "Error updating tag",
+            tagDeleteFailed: "Error deleting tag",
+            loadFailed: "Error loading",
+            slugExists: "This slug is already in use",
+            invalidSlug: "Slug must only contain lowercase letters, numbers and hyphens",
+            requiredField: "This field is required",
+            minLength: "Too short (minimum {{min}} characters)",
+            maxLength: "Too long (maximum {{max}} characters)",
+            translationLoadFailed: "Failed to load translations",
+            translationGenerateFailed: "Failed to generate translation",
+            translationSaveFailed: "Failed to save translation",
+            translationDeleteFailed: "Failed to delete translation",
+            translationRegenerateFailed: "Failed to regenerate translation",
+            translateTextFailed: "Failed to translate text",
+        },
+    }
 
 
 };

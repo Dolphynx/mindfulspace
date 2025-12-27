@@ -15,6 +15,9 @@ import { ResourcesModule } from './resources/resources.module';
 import { ProgramsModule } from '@mindfulspace/api/programs/program.module';
 import { BadgesModule } from './badges/badges.module';
 import { WorldModule } from './world/world.module';
+import { UsersModule } from './users/users.module';
+import { AdminModule } from './admin/admin.module';
+import { SubscriptionRequestsModule } from './subscription-requests/subscription-requests.module';
 
 @Module({
   imports: [
@@ -33,7 +36,10 @@ import { WorldModule } from './world/world.module';
     AiModule,
     ResourcesModule,
     BadgesModule,
-    WorldModule
+    WorldModule,
+    UsersModule,
+    AdminModule,
+    SubscriptionRequestsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
