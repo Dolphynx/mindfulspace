@@ -2,17 +2,14 @@
  * Page d’entrée de l’espace member : /[locale]/member
  *
  * Comportement :
- * - Lit la locale à partir du segment dynamique [locale]
- * - Récupère les préférences utilisateur via `getUserPrefs()`
- * - Redirige vers la bonne page en incluant la locale :
- *     • /[locale]/member/seance/respiration si launchBreathingOnStart === true
- *     • /[locale]/member/dashboard sinon
+ * - Lit la locale depuis le segment dynamique [locale]
+ * - Redirige systématiquement vers :
+ *   /[locale]/member/world-v2
  *
- * Aucun UI n’est rendu : cette page est purement une route de décision.
+ * Aucun UI n’est rendu : cette page est une route de redirection pure.
  */
 
 import { redirect } from "next/navigation";
-import { getUserPrefs } from "@/lib";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 
 export default async function Entry({
@@ -20,20 +17,8 @@ export default async function Entry({
                                     }: {
     params: Promise<{ locale: string }>;
 }) {
-    // Récupérer et sécuriser la locale depuis l’URL
     const { locale: rawLocale } = await params;
     const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale;
 
-    // Récupère les préférences utilisateur depuis l’API Nest
-    const prefs = await getUserPrefs();
-
-    // Redirection conditionnelle, en tenant compte de la locale et du segment /member
-    if (prefs.launchBreathingOnStart) {
-        redirect(`/${locale}/member/seance/respiration`);
-    }
-
     redirect(`/${locale}/member/world-v2`);
-
-    // Jamais exécuté : redirect() interrompt le rendu SSR
-    return null;
 }
