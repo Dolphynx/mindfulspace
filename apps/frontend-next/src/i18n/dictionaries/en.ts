@@ -168,30 +168,43 @@ const en: Messages = {
      * Pages
      */
     publicHome: {
-        heroTitle: "Welcome to MindfulSpace",
-        heroSubtitle:
-            "Track your wellbeing habits, meditate, and breathe mindfully.",
+        heroTitle: "MindfulSpace",
+        heroSubtitle: "Take care of your mental well-being, one step at a time",
 
-        welcomeTitle: "Take a moment for yourself",
-        welcomeParagraph1:
-            "MindfulSpace is a safe place to follow your wellbeing habits, take a step back on your days, and build a calmer and more balanced routine.",
-        welcomeParagraph2:
-            "Guided breathing, mood tracking, wellbeing goals… it's not about being perfect, but about regularly coming back to what makes you feel good.",
+        welcomeTitle: "Welcome to MindfulSpace",
+        welcomeParagraph1: "MindfulSpace supports you daily to cultivate calm, balance, and mindfulness.",
+        welcomeParagraph2: "Explore resources, track your habits, and progress at your own pace.",
 
-        discoverTitle: "Discover MindfulSpace:",
-        discoverResources: "Explore the resources (articles & videos)",
-        discoverCoachs: "Learn more about the role of the coaches",
-        discoverContact: "Contact the MindfulSpace team",
+        discoverTitle: "Discover",
+        discoverResources: "Well-being resources",
+        discoverCoachs: "Our coaches",
+        discoverContact: "Contact us",
 
-        ctaTitle: "Ready to take action?",
-        ctaDescription:
-            "Log in to your space to follow your mood, breathe step by step, and keep track of your progress.",
+        ctaTitle: "Your personal space",
+        ctaDescription: "Sign in to access your world, track your sessions, and view your progress.",
 
-        loginButton: "Log in to your account",
-        startBreathing: "Start a breathing session",
+        loginButton: "Sign in",
+        accessWorldButton: "Access my world",
+        disclaimer: "Some features require an account.",
 
-        disclaimer:
-            "Don't have an account yet? The client area is part of the MindfulSpace school project and is not intended for real medical use.",
+        mindfulTitle: "Why MindfulSpace?",
+        mindfulPoint1: "Guided breathing and meditation exercises",
+        mindfulPoint2: "Simple and visual well-being tracking",
+        mindfulPoint3: "A personal space designed for serenity",
+
+        registerButton: "Sign up",
+
+        featureMeditationTitle: "Guided meditations",
+        featureMeditationText: "Access structured sessions (various durations and themes) to refocus, release pressure, and build a routine.",
+        featureMeditationLink: "Explore resources",
+
+        featureTrackingTitle: "Track your progress",
+        featureTrackingText: "See your habits and sessions over time to understand what truly supports your day-to-day well-being.",
+        featureTrackingNote: "Tracking data is available after signing in.",
+
+        featureResourcesTitle: "Resources and guidance",
+        featureResourcesText: "Articles and curated content to better understand stress, mindfulness, and practical well-being routines.",
+        featureResourcesLink: "Contact us",
     },
 
     contactPage: {
@@ -547,7 +560,7 @@ const en: Messages = {
 
     },
 
-    domainExercice: {
+    domainExercise: {
         title: "Exercise",
         subtitle: "Track and log your exercise sessions.",
 
@@ -811,7 +824,7 @@ const en: Messages = {
     publicWorld: {
         worldAlt: "MindfulSpace world map",
         sleepAlt: "Sleep",
-        exerciceAlt: "Exercise",
+        exerciseAlt: "Exercise",
         meditationAlt: "Meditation",
         encodeSessionTitle: "Log a session",
         quickLogTitle: "Quick log",
