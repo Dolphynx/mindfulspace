@@ -834,6 +834,12 @@ const fr = {
             "Ceci est une application de projet scolaire. Toutes les données, contenus et fonctionnalités sont fictifs.",
     },
 
+    offlineNotice: {
+        message:
+            "Mode hors ligne — affichage des données enregistrées",
+
+    },
+
     moodPicker: {
         ariaLabel: "Sélection de l'humeur",
         closed: "Difficile",

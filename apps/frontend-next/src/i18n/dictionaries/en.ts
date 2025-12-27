@@ -836,6 +836,11 @@ const en: Messages = {
             "This is a student project application. All data, content and features are fictional.",
     },
 
+    offlineNotice: {
+        message:
+            "Offline mode - displaying cached data.",
+    },
+
     moodPicker: {
         ariaLabel: "Mood selection",
         closed: "Difficult",
