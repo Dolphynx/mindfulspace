@@ -8,9 +8,9 @@ import { useWorldHub } from "../../hub/WorldHubProvider";
 import { StartSessionLauncher } from "../overview/StartSessionLauncher";
 
 import StartMeditationWizard from "@/components/meditation/StartMeditationWizard";
-import { ExerciceStartSection } from "@/components/exercise/ExerciceStartSection";
+import { ExerciseStartSection } from "@/components/exercise/ExerciseStartSection";
 
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
 import { useAuthRequired } from "@/hooks/useAuthRequired";
 
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
@@ -26,7 +26,7 @@ import { useNotifications } from "@/hooks/useNotifications";
  * - Sélection du domaine (méditation / exercice) via {@link StartSessionLauncher}.
  * - Délégation au composant métier correspondant :
  *   - `StartMeditationWizard` pour la méditation,
- *   - `ExerciceStartSection` pour l’exercice.
+ *   - `ExerciseStartSection` pour l’exercice.
  * - Centralisation du rafraîchissement World Hub (bumpRefreshKey) après enregistrement.
  * - Contrôle d’accès premium (même logique que la page “/domains/meditation”).
  *
@@ -79,7 +79,7 @@ export function StartSessionView() {
         loading: exLoading,
         errorType: exErrorType,
         createSession: createExerciceSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     /**
      * Contrôle d’accès premium pour la méditation.
@@ -130,7 +130,7 @@ export function StartSessionView() {
                         }}
                     />
                 ) : (
-                    <ExerciceStartSection
+                    <ExerciseStartSection
                         types={exerciceTypes ?? []}
                         onCreateSession={(payload) =>
                             withRefresh(async () => {

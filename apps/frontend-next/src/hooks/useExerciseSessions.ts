@@ -1,0 +1,119 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import {
+    fetchLastExerciceSessions,
+    fetchExerciceContents,
+    createExerciceSession,
+    type ExerciceSession,
+    type ExerciceContentItem,
+    type CreateExerciceSessionPayload,
+    type CreateExerciceSessionResponse,
+} from "@/lib/api/exercise";
+import {useBadgeToasts} from "@/components/badges/BadgeToastProvider";
+import {mapApiBadgeToToastItem} from "@/lib/badges/mapApiBadge";
+import {useLocaleFromPath} from "@/hooks/useLocalFromPath";
+
+
+
+export type ExerciceErrorType = "load" | "save" | "types" | null;
+
+type CreateSessionInput = CreateExerciceSessionPayload;
+
+type UseExerciceSessionsResult = {
+    sessions: ExerciceSession[];
+    types: ExerciceContentItem[];
+    loading: boolean;
+    errorType: ExerciceErrorType;
+    reload: () => Promise<void>;
+    reloadTypes: () => Promise<void>;
+    createSession: (payload: CreateSessionInput) => Promise<void>;
+};
+
+export function useExerciseSessions(
+    baseUrl?: string,
+): UseExerciceSessionsResult {
+
+    const [sessions, setSessions] = useState<ExerciceSession[]>([]);
+    const [types, setTypes] = useState<ExerciceContentItem[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [errorType, setErrorType] =
+        useState<ExerciceErrorType>(null);
+    const effectiveBaseUrl = baseUrl;
+    const locale = useLocaleFromPath();
+
+
+
+    /** LOAD LAST 7 DAYS */
+    const load = useCallback(async () => {
+        setLoading(true);
+        setErrorType(null);
+
+        try {
+            const data = await fetchLastExerciceSessions(locale, effectiveBaseUrl);
+            setSessions(data);
+        } catch (e) {
+            console.error("[useExerciseSessions] load failed", e);
+            setErrorType("load");
+        } finally {
+            setLoading(false);
+        }
+    }, [effectiveBaseUrl]);
+
+    /** LOAD EXERCISE CONTENTS */
+    const loadTypes = useCallback(async () => {
+        try {
+            const data = await fetchExerciceContents(locale, effectiveBaseUrl);
+            setTypes(data);
+        } catch (e) {
+            console.error("[useExerciseSessions] types failed", e);
+            setErrorType("types");
+        }
+    }, [effectiveBaseUrl]);
+
+    /** INITIAL LOAD */
+    useEffect(() => {
+        void load();
+        void loadTypes();
+    }, [load, loadTypes]);
+
+    /** CREATE EXERCISE SESSION */
+    const { pushBadges } = useBadgeToasts();
+
+    const createSession = useCallback(
+        async (payload: CreateSessionInput) => {
+            setErrorType(null);
+            try {
+                const { newBadges }: CreateExerciceSessionResponse =
+                    await createExerciceSession(payload, effectiveBaseUrl);
+
+                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                    pushBadges(newBadges.map(mapApiBadgeToToastItem));
+                }
+
+                await load(); // refresh list
+            } catch (e) {
+                console.error("[useExerciseSessions] save failed", e);
+                setErrorType("save");
+                throw e;
+            }
+        },
+        [effectiveBaseUrl, load, pushBadges],
+    );
+
+    return {
+        sessions,
+        types,
+        loading,
+        errorType,
+        reload: load,
+        reloadTypes: loadTypes,
+        createSession,
+    };
+}
+
+export type {
+    ExerciceSession,
+    ExerciceContentItem,
+} from "@/lib/api/exercise";

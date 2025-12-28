@@ -26,6 +26,11 @@ enum MeditationVisualType {
   CIRCLE_PULSE // cercle qui pulse au rythme de la respiration
 }
 
+enum ExternalAudioProvider {
+  AUDIUS
+  SOUNDCLOUD
+}
+
 // Données de test pour un graphique sur la home
 model TestData {
   id          String   @id @default(uuid())
@@ -111,8 +116,10 @@ model MeditationContent {
   maxDurationSeconds     Int? // durée maximale sensée pour ce contenu
 
   // Media unique (audio OU vidéo), optionnel si TIMER/VISUAL
-  mediaUrl      String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
-  soundcloudUrl String? //
+  mediaUrl String? // ex: "/audio/respiration.mp3" ou "https://youtu.be/..."
+  // Source audio externe (optionnelle). Remplace progressivement soundcloudUrl.
+  externalAudioProvider ExternalAudioProvider?
+  externalAudioRef      String?
 
   isActive  Boolean @default(true) // pour masquer un contenu sans le supprimer
   isPremium Boolean @default(false) // restreint aux utilisateurs premium

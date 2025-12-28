@@ -62,6 +62,32 @@ const fr = {
         backToApp: "Retour à l'app",
     },
 
+    notificationsBell: {
+        ariaLabel: "Notifications",
+        title: "Notifications",
+        markAllRead: "Tout marquer comme lu",
+        empty: "Aucune notification.",
+        detailsInProfile: "Détails dans votre profil",
+        goToProfile: "Aller au profil",
+        close: "Fermer",
+
+        target: {
+            premium: "Premium",
+            coach: "Coach",
+        },
+
+        decision: {
+            approved: "approuvé",
+            rejected: "refusé",
+            updated: "mis à jour",
+        },
+
+        format: {
+            line: "{target}{tier} : {decision}",
+            tier: " ({tier})",
+        },
+    },
+
     adminDashboard: {
         title: "Panneau administrateur",
         tabs: {
@@ -140,29 +166,43 @@ const fr = {
      * Pages
      */
     publicHome: {
-        heroTitle: "Bienvenue sur MindfulSpace",
-        heroSubtitle: "Suivez vos habitudes de bien-être, méditez, respirez.",
+        heroTitle: "MindfulSpace",
+        heroSubtitle: "Prenez soin de votre bien-être mental, un pas à la fois",
 
-        welcomeTitle: "Prends un moment pour toi",
-        welcomeParagraph1:
-            "MindfulSpace est un espace pour suivre tes habitudes de bien-être, prendre du recul sur tes journées et installer une routine plus sereine.",
-        welcomeParagraph2:
-            "Respiration guidée, suivi de l'humeur, objectifs bien-être… l'idée n'est pas d'être parfait, mais de revenir régulièrement vers ce qui te fait du bien.",
+        welcomeTitle: "Bienvenue sur MindfulSpace",
+        welcomeParagraph1: "MindfulSpace vous accompagne dans votre quotidien pour cultiver calme, équilibre et pleine conscience.",
+        welcomeParagraph2: "Explorez des ressources, suivez vos habitudes et progressez à votre rythme.",
 
-        discoverTitle: "Découvrir MindfulSpace :",
-        discoverResources: "Explorer les ressources (articles & vidéos)",
-        discoverCoachs: "En savoir plus sur le rôle des coachs",
-        discoverContact: "Contacter l'équipe MindfulSpace",
+        discoverTitle: "Découvrir",
+        discoverResources: "Ressources bien-être",
+        discoverCoachs: "Nos coachs",
+        discoverContact: "Nous contacter",
 
-        ctaTitle: "Prêt·e à passer à l'action ?",
-        ctaDescription:
-            "Connecte-toi à ton espace pour suivre ton humeur, respirer guidé·e pas à pas et garder une trace de tes progrès.",
+        ctaTitle: "Votre espace personnel",
+        ctaDescription: "Connectez-vous pour accéder à votre monde, suivre vos séances et visualiser votre progression.",
 
-        loginButton: "Connectez-vous à votre compte",
-        startBreathing: "Commencer une séance de respiration",
+        loginButton: "Se connecter",
+        accessWorldButton: "Accéder à mon monde",
+        disclaimer: "L’accès à certaines fonctionnalités nécessite un compte.",
 
-        disclaimer:
-            "Pas encore de compte ? L'espace client fait partie du projet scolaire MindfulSpace et n'est pas destiné à un usage médical réel.",
+        mindfulTitle: "Pourquoi MindfulSpace ?",
+        mindfulPoint1: "Des exercices de respiration et de méditation guidée",
+        mindfulPoint2: "Un suivi simple et visuel de votre bien-être",
+        mindfulPoint3: "Un espace personnel pensé pour la sérénité",
+
+        registerButton: "S’inscrire",
+
+        featureMeditationTitle: "Méditations guidées",
+        featureMeditationText: "Accédez à des séances structurées (durées et thèmes variés) pour vous recentrer, relâcher la pression et construire une routine.",
+        featureMeditationLink: "Explorer les ressources",
+
+        featureTrackingTitle: "Suivi de votre progression",
+        featureTrackingText: "Visualisez vos habitudes et vos séances dans le temps afin d’identifier ce qui vous aide réellement au quotidien.",
+        featureTrackingNote: "Les données de suivi sont disponibles après connexion.",
+
+        featureResourcesTitle: "Ressources et accompagnement",
+        featureResourcesText: "Articles, contenus et points de repère pour mieux comprendre le stress, la pleine conscience et les pratiques de bien-être.",
+        featureResourcesLink: "Nous contacter",
     },
 
     contactPage: {
@@ -427,6 +467,8 @@ const fr = {
         skipAll: "Skip all",
 
         nextStep: "Étape suivante",
+
+        skip: "Passer"
     },
 
     sessionRecap: {
@@ -515,7 +557,7 @@ const fr = {
         },
     },
 
-    domainExercice: {
+    domainExercise: {
         title: "Exercice",
         subtitle: "Suivez et enregistrez vos séances d'exercice.",
 
@@ -781,7 +823,7 @@ const fr = {
     publicWorld: {
         worldAlt: "Carte interactive MindfulSpace",
         sleepAlt: "Sommeil",
-        exerciceAlt: "Exercice",
+        exerciseAlt: "Exercice",
         meditationAlt: "Méditation",
         encodeSessionTitle: "Encoder une session",
         quickLogTitle: "Quick log",

@@ -64,12 +64,12 @@ export const COMMON_ITEMS: NavItem[] = [
  * Items spécifiques au client (espace connecté).
  */
 export const CLIENT_ITEMS: NavItem[] = [
-    {
+    /*{
         key: "breathing",
         href: (loc) => `/${loc}/member/seance/respiration`,
         labelKey: "breathing",
-        icon: "▶️",
-    },
+        icon: "▶︎",
+    },*/
     {
         key: "world",
         href: (loc) => `/${loc}/member/world-v2`,

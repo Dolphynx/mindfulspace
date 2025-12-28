@@ -9,10 +9,10 @@ import { useWorldHub } from "../../hub/WorldHubProvider";
 
 import SleepManualForm from "@/components/sleep/SleepManualForm";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
-import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
+import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 
 import { useMeditationSessions } from "@/hooks/useMeditationSessions";
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
 import { useSleepSessions } from "@/hooks/useSleepSessions";
 import { QuickLogLauncher } from "../overview/QuickLogLauncher";
 
@@ -91,7 +91,7 @@ export function QuickLogView() {
         loading: exerciceLoading,
         errorType: exerciceErrorType,
         createSession: createExerciceSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     const {
         loading: sleepLoading,
@@ -170,7 +170,7 @@ export function QuickLogView() {
                 )}
 
                 {active === "exercise" && (
-                    <ExerciceManualForm
+                    <ExerciseManualForm
                         types={exerciceTypes ?? []}
                         onCreateSessionAction={onCreateExerciceSessionAction}
                         defaultOpen
