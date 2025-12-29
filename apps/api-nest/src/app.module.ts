@@ -10,11 +10,14 @@ import { TipsModule } from './tips/tips.module';
 import { AiModule } from './ai/ai.module';
 import { SleepSessionModule } from './sessions/sleep-session/sleep-session.module';
 import { MeditationSessionModule } from './sessions/meditation-session/meditation-session.module';
-import { ExerciceSessionModule } from '@mindfulspace/api/sessions/exercice-session/exercice-session.module';
+import { ExerciseSessionModule } from '@mindfulspace/api/sessions/exercise-session/exercise-session.module';
 import { ResourcesModule } from './resources/resources.module';
 import { ProgramsModule } from '@mindfulspace/api/programs/program.module';
 import { BadgesModule } from './badges/badges.module';
 import { WorldModule } from './world/world.module';
+import { UsersModule } from './users/users.module';
+import { AdminModule } from './admin/admin.module';
+import { SubscriptionRequestsModule } from './subscription-requests/subscription-requests.module';
 
 @Module({
   imports: [
@@ -28,12 +31,15 @@ import { WorldModule } from './world/world.module';
     AuthModule,
     SleepSessionModule,
     MeditationSessionModule,
-    ExerciceSessionModule,
+    ExerciseSessionModule,
     ProgramsModule,
     AiModule,
     ResourcesModule,
     BadgesModule,
-    WorldModule
+    WorldModule,
+    UsersModule,
+    AdminModule,
+    SubscriptionRequestsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

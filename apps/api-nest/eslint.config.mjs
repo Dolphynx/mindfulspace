@@ -11,6 +11,8 @@ export default [
       // on ignore aussi tout le dossier test ici (il sera géré par le bloc tests)
       'test/**/*.ts',
       'src/**/*.spec.ts',
+      'public/docs/**',
+      'public/**/assets/**'
     ],
   },
 

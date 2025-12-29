@@ -5,8 +5,7 @@ import { MeditationSessionService } from "./meditation-session.service";
  * Mock du Logger NestJS afin de supprimer les sorties de logs durant les tests unitaires.
  *
  * @remarks
- * Le resolver SoundCloud utilise le {@link Logger}. Les logs ne font pas partie
- * des objectifs de test.
+ * Les logs ne font pas partie des objectifs de test.
  */
 jest.mock("@nestjs/common", () => {
   const original = jest.requireActual("@nestjs/common");
@@ -30,7 +29,7 @@ jest.mock("@nestjs/common", () => {
  * de données ni intégration externe :
  * - validation du format de date,
  * - construction des requêtes Prisma (règles de compatibilité de durée),
- * - intégration SoundCloud via un resolver mocké.
+ * - résolution audio via un resolver mocké.
  */
 describe("MeditationSessionService", () => {
   /**
@@ -50,16 +49,13 @@ describe("MeditationSessionService", () => {
       },
     };
 
-    const soundCloudResolver = {
-      resolveStreamUrl: jest.fn(),
+    const audioResolver = {
+      resolveFromContent: jest.fn(),
     };
 
-    const service = new MeditationSessionService(
-      prisma as any,
-      soundCloudResolver as any,
-    );
+    const service = new MeditationSessionService(prisma as any, audioResolver as any);
 
-    return { service, prisma, soundCloudResolver };
+    return { service, prisma, audioResolver };
   }
 
   beforeEach(() => {
@@ -100,14 +96,12 @@ describe("MeditationSessionService", () => {
 
       expect(arg.data.startedAt).toBeInstanceOf(Date);
       expect(arg.data.endedAt).toBeInstanceOf(Date);
-      expect(arg.data.endedAt.getTime()).toBe(
-        arg.data.startedAt.getTime() + 300 * 1000,
-      );
+      expect(arg.data.endedAt.getTime()).toBe(arg.data.startedAt.getTime() + 300 * 1000);
     });
   });
 
   describe("getMeditationContents", () => {
-    it("adds OR duration rules when durationSeconds > 0", async () => {
+    it("builds Prisma OR duration rules when durationSeconds > 0", async () => {
       const { service, prisma } = makeService();
 
       prisma.meditationContent.findMany.mockResolvedValue([
@@ -120,7 +114,8 @@ describe("MeditationSessionService", () => {
           defaultMeditationTypeId: "t1",
           isPremium: false,
           mediaUrl: "https://example.com/file.mp3",
-          soundcloudUrl: null,
+          externalAudioProvider: null,
+          externalAudioRef: null,
         },
       ]);
 
@@ -154,8 +149,26 @@ describe("MeditationSessionService", () => {
       );
     });
 
-    it("does not call resolver when mediaUrl is already set", async () => {
-      const { service, prisma, soundCloudResolver } = makeService();
+    it("selects external audio fields from Prisma (no legacy soundcloudUrl)", async () => {
+      const { service, prisma } = makeService();
+
+      prisma.meditationContent.findMany.mockResolvedValue([]);
+
+      await service.getMeditationContents("t1", 300);
+
+      const arg = prisma.meditationContent.findMany.mock.calls[0][0];
+      expect(arg.select).toEqual(
+        expect.objectContaining({
+          mediaUrl: true,
+          externalAudioProvider: true,
+          externalAudioRef: true,
+        }),
+      );
+      expect(arg.select).not.toHaveProperty("soundcloudUrl");
+    });
+
+    it("does not call audio resolver when mediaUrl is already set", async () => {
+      const { service, prisma, audioResolver } = makeService();
 
       prisma.meditationContent.findMany.mockResolvedValue([
         {
@@ -167,65 +180,69 @@ describe("MeditationSessionService", () => {
           defaultMeditationTypeId: "t1",
           isPremium: false,
           mediaUrl: "https://example.com/file.mp3",
-          soundcloudUrl: "https://soundcloud.com/artist/track",
+          externalAudioProvider: "SOUNDCLOUD",
+          externalAudioRef: "anything",
         },
       ]);
 
       const result = await service.getMeditationContents("t1", 300);
 
-      expect(soundCloudResolver.resolveStreamUrl).not.toHaveBeenCalled();
+      expect(audioResolver.resolveFromContent).not.toHaveBeenCalled();
       expect(result[0].mediaUrl).toBe("https://example.com/file.mp3");
     });
 
-    it("resolves SoundCloud when mediaUrl is missing and soundcloudUrl is set", async () => {
-      const { service, prisma, soundCloudResolver } = makeService();
+    it("calls audio resolver when mediaUrl is missing and provider/ref are set", async () => {
+      const { service, prisma, audioResolver } = makeService();
 
       prisma.meditationContent.findMany.mockResolvedValue([
         {
           id: "c1",
-          title: "SoundCloud content",
+          title: "External content",
           description: null,
           mode: "AUDIO",
           defaultDurationSeconds: 300,
           defaultMeditationTypeId: "t1",
           isPremium: false,
           mediaUrl: null,
-          soundcloudUrl: "https://soundcloud.com/artist/track",
+          externalAudioProvider: "AUDIUS",
+          externalAudioRef: "track_123",
         },
       ]);
 
-      soundCloudResolver.resolveStreamUrl.mockResolvedValue(
-        "https://api.soundcloud.com/stream/abc?client_id=client_123",
+      audioResolver.resolveFromContent.mockResolvedValue(
+        "https://example.com/resolved-stream.mp3",
       );
 
       const result = await service.getMeditationContents("t1", 300);
 
-      expect(soundCloudResolver.resolveStreamUrl).toHaveBeenCalledWith(
-        "https://soundcloud.com/artist/track",
-      );
-      expect(result[0].mediaUrl).toBe(
-        "https://api.soundcloud.com/stream/abc?client_id=client_123",
-      );
+      expect(audioResolver.resolveFromContent).toHaveBeenCalledWith({
+        mediaUrl: null,
+        externalAudioProvider: "AUDIUS",
+        externalAudioRef: "track_123",
+      });
+
+      expect(result[0].mediaUrl).toBe("https://example.com/resolved-stream.mp3");
     });
 
     it("returns mediaUrl as null when resolver returns null", async () => {
-      const { service, prisma, soundCloudResolver } = makeService();
+      const { service, prisma, audioResolver } = makeService();
 
       prisma.meditationContent.findMany.mockResolvedValue([
         {
           id: "c1",
-          title: "SoundCloud content",
+          title: "External content",
           description: null,
           mode: "AUDIO",
           defaultDurationSeconds: 300,
           defaultMeditationTypeId: "t1",
           isPremium: false,
           mediaUrl: null,
-          soundcloudUrl: "https://soundcloud.com/artist/track",
+          externalAudioProvider: "AUDIUS",
+          externalAudioRef: "track_123",
         },
       ]);
 
-      soundCloudResolver.resolveStreamUrl.mockResolvedValue(null);
+      audioResolver.resolveFromContent.mockResolvedValue(null);
 
       const result = await service.getMeditationContents("t1", 300);
 
@@ -235,6 +252,30 @@ describe("MeditationSessionService", () => {
           mediaUrl: null,
         }),
       ]);
+    });
+
+    it("does not call audio resolver when mediaUrl is missing but provider/ref are missing", async () => {
+      const { service, prisma, audioResolver } = makeService();
+
+      prisma.meditationContent.findMany.mockResolvedValue([
+        {
+          id: "c1",
+          title: "No media and no provider",
+          description: null,
+          mode: "AUDIO",
+          defaultDurationSeconds: 300,
+          defaultMeditationTypeId: "t1",
+          isPremium: false,
+          mediaUrl: null,
+          externalAudioProvider: null,
+          externalAudioRef: null,
+        },
+      ]);
+
+      const result = await service.getMeditationContents("t1", 300);
+
+      expect(audioResolver.resolveFromContent).not.toHaveBeenCalled();
+      expect(result[0].mediaUrl).toBeNull();
     });
   });
 });

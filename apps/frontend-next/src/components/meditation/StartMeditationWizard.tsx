@@ -6,6 +6,7 @@ import { useMeditationContents } from "@/hooks/useMeditationContents";
 import { MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
 import { createMeditationSession } from "@/lib/api/meditation";
+import { formatLocalYYYYMMDD } from "@/lib/date";
 
 import type { Step, WizardMeditationContent } from "./startMeditationWizard.config";
 
@@ -114,7 +115,7 @@ export default function StartMeditationWizard({
                 meditationTypeId: selectedTypeId,
                 meditationContentId: selectedContent.id,
                 durationSeconds,
-                dateSession: new Date().toISOString(),
+                dateSession: formatLocalYYYYMMDD(),
                 moodBefore: moodBefore ?? undefined,
                 moodAfter: moodAfter ?? undefined,
             });

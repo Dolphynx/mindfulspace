@@ -322,6 +322,7 @@ deploy:staging:
     # ----------------------------------------------------------
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    - echo "AUDIUS_API_KEY=$AUDIUS_API_KEY" >> api.env
     # Variables email / OAuth
     - echo "SENDGRID_API_KEY=$SENDGRID_API_KEY" >> api.env
     - echo "EMAIL_FROM=$EMAIL_FROM" >> api.env
@@ -448,6 +449,7 @@ deploy:prod:
     # ----------------------------------------------------------
     - echo "DATABASE_URL=$URL" > api.env
     - echo "GROQ_API_KEY=$GROQ_API_KEY" >> api.env
+    - echo "AUDIUS_API_KEY=$AUDIUS_API_KEY" >> api.env
     # Variables email / OAuth
     - echo "SENDGRID_API_KEY=$SENDGRID_API_KEY" >> api.env
     - echo "EMAIL_FROM=$EMAIL_FROM" >> api.env

@@ -12,6 +12,8 @@
 import PageHero from "@/components/layout/PageHero";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
+import AuthButtons from "@/components/auth/AuthButtons";
+import Link from "next/link";
 
 export default async function FormationPage({
                                                 params,
@@ -182,12 +184,7 @@ export default async function FormationPage({
                     </p>
 
                     <div className="flex justify-center gap-4">
-                        <button className="bg-brandGreen text-white px-6 py-3 rounded-lg font-medium shadow hover:opacity-90 transition">
-                            🎓 {t.ctaButtonPrimary}
-                        </button>
-                        <button className="border border-brandBorder px-6 py-3 rounded-lg font-medium hover:bg-white/60 transition">
-                            {t.ctaButtonSecondary}
-                        </button>
+                        <AuthButtons variant="inpage" />
                     </div>
                 </div>
             </section>
@@ -268,9 +265,9 @@ function PricingCard({ title, price, features, button, highlight }: PricingCardP
                     </li>
                 ))}
             </ul>
-            <button className="w-full border border-brandBorder py-2 rounded-lg font-medium hover:bg-white/60 transition">
+            {/* <button className="w-full border border-brandBorder py-2 rounded-lg font-medium hover:bg-white/60 transition">
                 {button}
-            </button>
+            </button> */}
         </div>
     );
 }

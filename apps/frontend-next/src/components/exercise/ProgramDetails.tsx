@@ -13,7 +13,7 @@ export function ProgramDetails({
     program: ProgramItem;
     onBack: () => void;
 }) {
-    const t = useTranslations("domainExercice");
+    const t = useTranslations("domainExercise");
 
     const {
         subscribeToProgram,
