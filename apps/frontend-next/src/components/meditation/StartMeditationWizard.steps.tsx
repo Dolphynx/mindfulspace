@@ -176,6 +176,7 @@ export function StepMood({
                              secondaryLabel,
                              onSecondary,
                              saving,
+                             primaryDisabled,
                          }: {
     t: TFn;
     titleKey: string;
@@ -186,6 +187,7 @@ export function StepMood({
     secondaryLabel: string;
     onSecondary: () => void;
     saving?: boolean;
+    primaryDisabled?: boolean;
 }) {
     return (
         <section className="space-y-4">
@@ -203,7 +205,7 @@ export function StepMood({
                 <button
                     type="button"
                     onClick={onPrimary}
-                    disabled={Boolean(saving)}
+                    disabled={Boolean(saving) || Boolean(primaryDisabled)}
                     className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 disabled:opacity-60"
                 >
                     {primaryLabel}

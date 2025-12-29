@@ -129,9 +129,9 @@ export function ExerciseStartSessionCard({ types, onSave, onCancel }: Props) {
                             <Image
                                 src={steps[stepIndex].imageUrl}
                                 alt=""
-                                width={512}
-                                height={256}
-                                className="max-w-full max-h-64 object-contain rounded-lg shadow-sm"
+                                width={320}
+                                height={180}
+                                className="max-w-full max-h-24 object-contain rounded-lg shadow-sm"
                             />
                         )}
 
