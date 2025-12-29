@@ -50,8 +50,9 @@ export default function UserMenu() {
     }, [isOpen]);
 
     const handleLogout = async () => {
+        // Quitte la route protégée avant le logout pour éviter une redirection auth
+        router.replace(`/${locale}`);
         await logout();
-        router.push(`/${locale}`);
     };
 
     if (!user) return null;
