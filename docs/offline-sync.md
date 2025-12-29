@@ -102,4 +102,7 @@
 - Aujourd’hui, la sync est uniquement implémentée pour le type `"sleep"` .
 - Il n’y a pas encore de stratégie avancée de retry (backoff, logs persistant, résolution de conflit entre données locales et données serveur) ni d’UI utilisateur dédiée pour gérer les erreurs de sync.
 
+> Le service worker applique une stratégie network‑first avec mise en cache des réponses : si le réseau répond une fois (même avec des données partielles ou anciennes), ces réponses peuvent ensuite être servies depuis le cache. 
+Sur mobile, cela peut faire que les fetch reçoivent des données en cache (stale) au lieu de déclencher une vraie erreur réseau, ce qui empêche la logique offline basée sur IndexedDB et la queue de sync de prendre le relais correctement.
+
 ***
