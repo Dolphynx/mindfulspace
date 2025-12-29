@@ -174,4 +174,107 @@ export class AiController {
   ): Promise<ObjectivesResponseDto> {
     return this.aiService.generateObjectives(body.theme ?? '', body.locale);
   }
+
+  /**
+   * POST /ai/translate-text
+   * -----------------------
+   * Translates text from one language to another using AI.
+   *
+   * This endpoint is used by the resource creation wizard to translate
+   * resource content fields (title, summary, content) to target locales.
+   *
+   * @param body - Contains text, sourceLocale, targetLocale, and optional contentType
+   * @returns Translated text
+   */
+  @Post('translate-text')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Translate text using AI',
+    description:
+      'Translates text from source language to target language using AI. ' +
+      'Preserves formatting and maintains tone. Supports both short taxonomy labels ' +
+      'and long resource content.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'The text to translate',
+          example: 'Méditation guidée pour débutants',
+        },
+        sourceLocale: {
+          type: 'string',
+          description: 'Source language code (e.g., "fr", "en")',
+          example: 'fr',
+        },
+        targetLocale: {
+          type: 'string',
+          description: 'Target language code (e.g., "en", "fr")',
+          example: 'en',
+        },
+        contentType: {
+          type: 'string',
+          description: 'Type of content being translated (title, summary, content, or taxonomy)',
+          example: 'content',
+          enum: ['title', 'summary', 'content', 'taxonomy'],
+        },
+      },
+      required: ['text', 'sourceLocale', 'targetLocale'],
+    },
+  })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        translatedText: {
+          type: 'string',
+          description: 'The translated text',
+          example: 'Guided meditation for beginners',
+        },
+      },
+    },
+    description: 'Text translated successfully.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request (missing required fields).',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Error calling AI provider or configuration missing.',
+  })
+  async translateText(
+    @Body()
+    body: {
+      text: string;
+      sourceLocale: string;
+      targetLocale: string;
+      contentType?: 'title' | 'summary' | 'content' | 'taxonomy';
+    },
+  ): Promise<{ translatedText: string }> {
+    let translatedText: string;
+
+    // If contentType is taxonomy or not specified for short text, use taxonomy translation
+    if (body.contentType === 'taxonomy' || (!body.contentType && body.text.length < 50)) {
+      translatedText = await this.aiService.translateText(
+        body.text,
+        body.sourceLocale,
+        body.targetLocale,
+      );
+    } else {
+      // For resource content (title, summary, content), use resource-specific translation
+      const type = body.contentType === 'title' || body.contentType === 'summary'
+        ? body.contentType
+        : 'content';
+
+      translatedText = await this.aiService.translateResourceContent(
+        body.text,
+        body.sourceLocale,
+        body.targetLocale,
+        type,
+      );
+    }
+
+    return { translatedText };
+  }
 }

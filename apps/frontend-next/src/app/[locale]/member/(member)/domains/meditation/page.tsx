@@ -1,6 +1,5 @@
 "use client";
 
-import PageHero from "@/components/layout/PageHero";
 import { useTranslations } from "@/i18n/TranslationContext";
 import {
     useMeditationSessions,
@@ -17,6 +16,7 @@ import MeditationManualForm from "@/components/meditation/MeditationManualForm";
 import { useState } from "react";
 import DomainSwitcher from "@/components/shared/DomainSwitcher";
 import OceanWavesBackground from "@/components/layout/OceanWavesBackground";
+import { useNotifications } from "@/hooks/useNotifications";
 
 /**
  * Génère un message d’erreur global en fonction du type d’échec métier.
@@ -73,6 +73,8 @@ export default function MeditationPage() {
 
     // Utilisateur connecté (+ rôles)
     const { user } = useAuthRequired();
+
+    const { notifySessionSaved } = useNotifications();
 
     /**
      * Détermine si l’utilisateur peut accéder aux contenus premium.
@@ -149,10 +151,12 @@ export default function MeditationPage() {
                                 {isStartWizardOpen && (
                                     <div className="rounded-2xl bg-white/80 p-4 shadow-sm">
                                         <StartMeditationWizard
-                                            onCloseAction={() =>
-                                                setIsStartWizardOpen(false)
-                                            }
+                                            onCloseAction={() => setIsStartWizardOpen(false)}
                                             canAccessPremium={canAccessPremium}
+                                            onCreateSessionAction={async (payload) => {
+                                                await createSession(payload);
+                                                notifySessionSaved({ celebrate: true });
+                                            }}
                                         />
                                     </div>
                                 )}

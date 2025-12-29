@@ -5,19 +5,29 @@
 
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from '@/i18n/TranslationContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function OAuthButtons() {
+  const searchParams = useSearchParams();
   const t = useTranslations('auth');
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    const redirectTo = searchParams.get('redirectTo');
+    const url = redirectTo
+      ? `${API_URL}/auth/google?redirectTo=${encodeURIComponent(redirectTo)}`
+      : `${API_URL}/auth/google`;
+    window.location.href = url;
   };
 
   const handleGithubLogin = () => {
-    window.location.href = `${API_URL}/auth/github`;
+    const redirectTo = searchParams.get('redirectTo');
+    const url = redirectTo
+      ? `${API_URL}/auth/github?redirectTo=${encodeURIComponent(redirectTo)}`
+      : `${API_URL}/auth/github`;
+    window.location.href = url;
   };
 
   return (

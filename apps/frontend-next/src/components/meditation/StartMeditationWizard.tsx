@@ -5,7 +5,7 @@ import { useMeditationTypes } from "@/hooks/useMeditationTypes";
 import { useMeditationContents } from "@/hooks/useMeditationContents";
 import { MoodValue } from "@/lib";
 import { useTranslations } from "@/i18n/TranslationContext";
-import { createMeditationSession } from "@/lib/api/meditation";
+import { formatLocalYYYYMMDD } from "@/lib/date";
 
 import type { Step, WizardMeditationContent } from "./startMeditationWizard.config";
 
@@ -20,13 +20,26 @@ import {
 
 type StartMeditationWizardProps = {
     onCloseAction?: () => void;
-    onSessionSavedAction?: () => void;
+
+    /**
+     * Action appelée lors de l’enregistrement effectif d’une session.
+     * La logique métier (API + notifications + refresh) est gérée par le parent.
+     */
+    onCreateSessionAction: (payload: {
+        meditationTypeId: string;
+        meditationContentId: string;
+        durationSeconds: number;
+        dateSession: string;
+        moodBefore?: number;
+        moodAfter?: number;
+    }) => Promise<void>;
+
     canAccessPremium: boolean;
 };
 
 export default function StartMeditationWizard({
                                                   onCloseAction,
-                                                  onSessionSavedAction,
+                                                  onCreateSessionAction,
                                                   canAccessPremium,
                                               }: StartMeditationWizardProps) {
     const t = useTranslations("domainMeditation");
@@ -87,9 +100,10 @@ export default function StartMeditationWizard({
         setStep("CONTENT");
     };
 
+    const DEFAULT_MOOD = 3 as MoodValue;
     const handleSelectContent = (content: WizardMeditationContent) => {
         setSelectedContent(content);
-        setMoodBefore(null);
+        setMoodBefore((prev) => prev ?? DEFAULT_MOOD);
         setMoodAfter(null);
         setStep("MOOD_BEFORE");
     };
@@ -100,6 +114,7 @@ export default function StartMeditationWizard({
     };
 
     const handleEndSession = () => {
+        setMoodAfter((prev) => prev ?? DEFAULT_MOOD);
         setStep("MOOD_AFTER");
     };
 
@@ -110,16 +125,15 @@ export default function StartMeditationWizard({
             setSaving(true);
             setSaveError(false);
 
-            await createMeditationSession({
+            await onCreateSessionAction({
                 meditationTypeId: selectedTypeId,
                 meditationContentId: selectedContent.id,
                 durationSeconds,
-                dateSession: new Date().toISOString(),
+                dateSession: formatLocalYYYYMMDD(),
                 moodBefore: moodBefore ?? undefined,
                 moodAfter: moodAfter ?? undefined,
             });
 
-            onSessionSavedAction?.();
             setStep("DONE");
         } catch (e) {
             console.error("Failed to save meditation session", e);
@@ -166,6 +180,7 @@ export default function StartMeditationWizard({
                     titleKey="wizard_stepMoodBefore_title"
                     value={moodBefore}
                     onChange={setMoodBefore}
+                    primaryDisabled={!moodBefore}
                     secondaryLabel={t("wizard_backToContent")}
                     onSecondary={() => setStep("CONTENT")}
                     primaryLabel={t("wizard_startSession")}
@@ -191,6 +206,7 @@ export default function StartMeditationWizard({
                         titleKey="wizard_stepMoodAfter_title"
                         value={moodAfter}
                         onChange={setMoodAfter}
+                        primaryDisabled={!moodAfter}
                         secondaryLabel={t("wizard_cancel")}
                         onSecondary={handleCancelAll}
                         primaryLabel={saving ? t("wizard_saving") : t("wizard_save")}

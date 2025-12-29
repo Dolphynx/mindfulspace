@@ -54,6 +54,16 @@ const nextConfig: NextConfig = {
         root: path.resolve(__dirname, "../../"),
     },
 
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+                pathname: '/**',
+            },
+        ],
+    },
+
     /**
      * Optionnel: optimisation pour le tracing des dépendances
      * (utile quand output=standalone est actif sur Linux/Docker)

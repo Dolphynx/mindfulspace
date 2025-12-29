@@ -8,14 +8,16 @@ import { useWorldHub } from "../../hub/WorldHubProvider";
 import { StartSessionLauncher } from "../overview/StartSessionLauncher";
 
 import StartMeditationWizard from "@/components/meditation/StartMeditationWizard";
-import { ExerciceStartSection } from "@/components/exercise/ExerciceStartSection";
+import { ExerciseStartSection } from "@/components/exercise/ExerciseStartSection";
 
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
 import { useAuthRequired } from "@/hooks/useAuthRequired";
 
 import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldRefresh";
 
 import { useNotifications } from "@/hooks/useNotifications";
+
+import { createMeditationSession } from "@/lib/api/meditation";
 
 /**
  * @file StartSessionView.tsx
@@ -26,7 +28,7 @@ import { useNotifications } from "@/hooks/useNotifications";
  * - Sélection du domaine (méditation / exercice) via {@link StartSessionLauncher}.
  * - Délégation au composant métier correspondant :
  *   - `StartMeditationWizard` pour la méditation,
- *   - `ExerciceStartSection` pour l’exercice.
+ *   - `ExerciseStartSection` pour l’exercice.
  * - Centralisation du rafraîchissement World Hub (bumpRefreshKey) après enregistrement.
  * - Contrôle d’accès premium (même logique que la page “/domains/meditation”).
  *
@@ -54,7 +56,7 @@ export function StartSessionView() {
 
     const { state, openOverview } = useWorldHub();
 
-    const { notifySessionSaved } = useNotifications();
+    const { notifySessionSaved, notifyBadges } = useNotifications();
 
     /**
      * Mécanismes de rafraîchissement World Hub :
@@ -79,7 +81,7 @@ export function StartSessionView() {
         loading: exLoading,
         errorType: exErrorType,
         createSession: createExerciceSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     /**
      * Contrôle d’accès premium pour la méditation.
@@ -124,13 +126,20 @@ export function StartSessionView() {
                     <StartMeditationWizard
                         canAccessPremium={canAccessPremium}
                         onCloseAction={() => openOverview()}
-                        onSessionSavedAction={() => {
-                            refresh();
-                            notifySessionSaved({ celebrate: true });
-                        }}
+                        onCreateSessionAction={(payload) =>
+                            withRefresh(async () => {
+                                const { newBadges } = await createMeditationSession(payload);
+                                // toast “session enregistrée” + confettis (une seule fois)
+                                notifySessionSaved({ celebrate: true });
+                                // toasts badges (tous affichés)
+                                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                                    notifyBadges(newBadges);
+                                }
+                            })
+                        }
                     />
                 ) : (
-                    <ExerciceStartSection
+                    <ExerciseStartSection
                         types={exerciceTypes ?? []}
                         onCreateSession={(payload) =>
                             withRefresh(async () => {

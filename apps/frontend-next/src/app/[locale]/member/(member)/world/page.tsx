@@ -169,7 +169,7 @@ export default function SerenityLanding() {
                                 >
                                     <Island
                                         type="exercise"
-                                        label={t("exerciceAlt")}
+                                        label={t("exerciseAlt")}
                                         iconSrc="/images/icone_exercise.png"
                                         onClick={() => handleIslandClick("exercise")}
                                         size="xs"
