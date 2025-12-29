@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
+import { formatLocalYYYYMMDD } from "@/lib/date";
 
 /**
  * Version minimale d’un type de méditation,
@@ -61,7 +62,7 @@ type MeditationManualFormProps = {
     compact?: boolean;
 };
 
-function dateInputToNoonIso(dateStr: string): string {
+/*function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
     date.setFullYear(y);
@@ -69,15 +70,15 @@ function dateInputToNoonIso(dateStr: string): string {
     date.setDate(d);
     date.setHours(12, 0, 0, 0);
     return date.toISOString();
-}
+}*/
 
-function buildTodayDateInput(): string {
+/*function buildTodayDateInput(): string {
     const now = new Date();
     const y = now.getFullYear();
     const m = `${now.getMonth() + 1}`.padStart(2, "0");
     const d = `${now.getDate()}`.padStart(2, "0");
     return `${y}-${m}-${d}`;
-}
+}*/
 
 export default function MeditationManualForm({
                                                  types,
@@ -88,9 +89,7 @@ export default function MeditationManualForm({
     const t = useTranslations("domainMeditation");
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
-    const [dateInput, setDateInput] = useState<string>(() =>
-        buildTodayDateInput(),
-    );
+    const [dateInput, setDateInput] = useState<string>(() => formatLocalYYYYMMDD());
     const [manualDuration, setManualDuration] = useState<number>(10);
     const [manualQuality, setManualQuality] = useState<MoodValue | null>(
         3 as MoodValue,
@@ -109,7 +108,7 @@ export default function MeditationManualForm({
     }, [defaultOpen]);
 
     function resetForm() {
-        setDateInput(buildTodayDateInput());
+        setDateInput(formatLocalYYYYMMDD());
         setManualDuration(10);
         setManualQuality(3 as MoodValue);
         setSelectedTypeId(null);
@@ -125,7 +124,7 @@ export default function MeditationManualForm({
             await onCreateSessionAction({
                 durationSeconds: manualDuration * 60,
                 moodAfter: manualQuality ?? undefined,
-                dateSession: dateInputToNoonIso(dateInput),
+                dateSession: dateInput,
                 meditationTypeId: selectedTypeId,
             });
 

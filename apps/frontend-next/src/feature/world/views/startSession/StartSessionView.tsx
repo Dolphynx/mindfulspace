@@ -17,6 +17,8 @@ import { useOptionalWorldRefresh } from "@/feature/world/hooks/useOptionalWorldR
 
 import { useNotifications } from "@/hooks/useNotifications";
 
+import { createMeditationSession } from "@/lib/api/meditation";
+
 /**
  * @file StartSessionView.tsx
  * @description
@@ -54,7 +56,7 @@ export function StartSessionView() {
 
     const { state, openOverview } = useWorldHub();
 
-    const { notifySessionSaved } = useNotifications();
+    const { notifySessionSaved, notifyBadges } = useNotifications();
 
     /**
      * Mécanismes de rafraîchissement World Hub :
@@ -124,10 +126,19 @@ export function StartSessionView() {
                     <StartMeditationWizard
                         canAccessPremium={canAccessPremium}
                         onCloseAction={() => openOverview()}
-                        onSessionSavedAction={() => {
-                            refresh();
-                            notifySessionSaved({ celebrate: true });
-                        }}
+                        onCreateSessionAction={(payload) =>
+                            withRefresh(async () => {
+                                const { newBadges } = await createMeditationSession(payload);
+
+                                // 1) toast “session enregistrée” + confettis (une seule fois)
+                                notifySessionSaved({ celebrate: true });
+
+                                // 2) toasts badges (tous affichés)
+                                if (Array.isArray(newBadges) && newBadges.length > 0) {
+                                    notifyBadges(newBadges);
+                                }
+                            })
+                        }
                     />
                 ) : (
                     <ExerciseStartSection

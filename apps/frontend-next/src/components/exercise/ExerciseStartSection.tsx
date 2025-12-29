@@ -17,7 +17,7 @@ type Props = {
 export function ExerciseStartSection({ types, onCreateSession }: Props) {
     const t = useTranslations("domainExercise");
 
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
 
     return (
         <div className="flex flex-col gap-4">

@@ -58,7 +58,7 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
                     role="status"
                     aria-live="polite"
                     className="
-            fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+            fixed top-24 left-1/2 -translate-x-1/2 z-[1000]
             rounded-2xl bg-white shadow-xl p-4 border border-slate-200
             flex items-center gap-3 animate-fade-in-up
           "
