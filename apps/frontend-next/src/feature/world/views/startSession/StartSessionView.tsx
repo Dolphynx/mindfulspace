@@ -129,11 +129,9 @@ export function StartSessionView() {
                         onCreateSessionAction={(payload) =>
                             withRefresh(async () => {
                                 const { newBadges } = await createMeditationSession(payload);
-
-                                // 1) toast “session enregistrée” + confettis (une seule fois)
+                                // toast “session enregistrée” + confettis (une seule fois)
                                 notifySessionSaved({ celebrate: true });
-
-                                // 2) toasts badges (tous affichés)
+                                // toasts badges (tous affichés)
                                 if (Array.isArray(newBadges) && newBadges.length > 0) {
                                     notifyBadges(newBadges);
                                 }
