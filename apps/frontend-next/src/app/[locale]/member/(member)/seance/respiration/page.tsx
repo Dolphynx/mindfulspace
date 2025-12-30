@@ -140,7 +140,6 @@ export default function BreathingUnifiedPage() {
 
     const tRecap = useTranslations("sessionRecap");
     const tBreathing = useTranslations("breathingSession");
-    const tTip = useTranslations("tipSession");
 
     const { fire } = useConfetti();
     const { pushToast } = useAppToasts();
@@ -443,17 +442,6 @@ export default function BreathingUnifiedPage() {
             setSaving(false);
         }
     }
-
-    /**
-     * Score dérivé de l'humeur finale (convention UI).
-     *
-     * @remarks
-     * Non affiché dans cette page, conservé si une réintégration ultérieure est souhaitée.
-     */
-    const scoreAfter = useMemo<number>(
-        () => (moodAfter ? Number(moodAfter) * 20 : 0),
-        [moodAfter],
-    );
 
     /**
      * Classe Tailwind pour le bouton principal.
