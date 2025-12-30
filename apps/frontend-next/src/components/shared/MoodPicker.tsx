@@ -160,7 +160,7 @@ export default function MoodPicker({
                         />
 
                         {/* Libellé */}
-                        <span className="text-brandText">
+                        <span className="text-brandText hidden sm:block">
                             {t(opt.label)}
                         </span>
                     </button>

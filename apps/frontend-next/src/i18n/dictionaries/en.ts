@@ -470,7 +470,9 @@ const en: Messages = {
 
         nextStep: "Next step",
 
-        skip: "Skip"
+        skip: "Skip",
+
+        and_now: "And now ?"
     },
 
     sessionRecap: {
@@ -583,7 +585,7 @@ const en: Messages = {
         manualForm_typePlaceholder: "Choose an exercise",
         manualForm_repetitionsLabel: "Repetitions",
         manualForm_qualityLabel: "Quality / perceived effort",
-        manualForm_saveButton: "Save session",
+        manualForm_saveButton: "Save",
         manualForm_savingButton: "Saving…",
         manualForm_cancelButton: "Cancel",
         manualForm_repetitionLabel: "Repetitions number",
@@ -730,7 +732,7 @@ const en: Messages = {
         manualForm_durationLabel: "Duration",
         manualForm_minutesSuffix: "minutes",
         manualForm_qualityLabel: "Perceived quality",
-        manualForm_saveButton: "Save session",
+        manualForm_saveButton: "Save",
         manualForm_savingButton: "Saving…",
         manualForm_typeLabel: "Meditation type",
         manualForm_button: "Encode a meditation",

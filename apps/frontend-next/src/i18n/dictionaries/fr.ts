@@ -468,7 +468,9 @@ const fr = {
 
         nextStep: "Étape suivante",
 
-        skip: "Passer"
+        skip: "Passer",
+
+        and_now: "Et maintenant ?"
     },
 
     sessionRecap: {
@@ -580,7 +582,7 @@ const fr = {
         manualForm_typePlaceholder: "Choisis un exercice",
         manualForm_repetitionsLabel: "Nombre de répétitions",
         manualForm_qualityLabel: "Qualité / effort ressenti",
-        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_saveButton: "Enregistrer",
         manualForm_savingButton: "Enregistrement…",
         manualForm_cancelButton: "Annuler",
         manualForm_repetitionLabel: "Nombre de séries",
@@ -728,7 +730,7 @@ const fr = {
         manualForm_durationLabel: "Durée",
         manualForm_minutesSuffix: "minutes",
         manualForm_qualityLabel: "Qualité perçue",
-        manualForm_saveButton: "Enregistrer la séance",
+        manualForm_saveButton: "Enregistrer",
         manualForm_savingButton: "Enregistrement…",
         manualForm_typeLabel: "Type de méditation",
         manualForm_button: "Encoder une méditation",

@@ -63,8 +63,17 @@ export default function StartMeditationWizard({
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState(false);
 
-    // --- RESET GLOBAL ---
+    const CancelButton = ({ onClick }: { onClick: () => void }) => (
+        <button
+            type="button"
+            onClick={onClick}
+            className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+        >
+            {t("manualForm_cancelButton")}
+        </button>
+    );
 
+    // --- RESET GLOBAL ---
     const resetWizardState = () => {
         setStep("TYPE");
         setSelectedTypeId(undefined);
@@ -151,27 +160,36 @@ export default function StartMeditationWizard({
     return (
         <div className="flex flex-col gap-6">
             {step === "TYPE" && (
-                <StepType t={t} types={types} onSelectType={handleSelectType} />
+                <div className="space-y-4">
+                    <StepType t={t} types={types} onSelectType={handleSelectType} />
+                    <CancelButton onClick={handleCancelAll} />
+                </div>
             )}
 
             {step === "DURATION" && (
-                <StepDuration
-                    t={t}
-                    onSelectDurationMin={handleSelectDuration}
-                    onBackToType={() => setStep("TYPE")}
-                />
+                <div className="space-y-4">
+                    <StepDuration
+                        t={t}
+                        onSelectDurationMin={handleSelectDuration}
+                        onBackToType={() => setStep("TYPE")}
+                    />
+                    <CancelButton onClick={handleCancelAll} />
+                </div>
             )}
 
             {step === "CONTENT" && (
-                <StepContent
-                    t={t}
-                    contents={contents as WizardMeditationContent[]}
-                    loading={loadingContents}
-                    error={Boolean(errorContents)}
-                    canAccessPremium={canAccessPremium}
-                    onSelectContent={handleSelectContent}
-                    onBackToDuration={() => setStep("DURATION")}
-                />
+                <div className="space-y-4">
+                    <StepContent
+                        t={t}
+                        contents={contents as WizardMeditationContent[]}
+                        loading={loadingContents}
+                        error={Boolean(errorContents)}
+                        canAccessPremium={canAccessPremium}
+                        onSelectContent={handleSelectContent}
+                        onBackToDuration={() => setStep("DURATION")}
+                    />
+                    <CancelButton onClick={handleCancelAll} />
+                </div>
             )}
 
             {step === "MOOD_BEFORE" && selectedContent && (
