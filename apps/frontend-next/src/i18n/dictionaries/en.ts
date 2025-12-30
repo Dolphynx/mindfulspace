@@ -1041,7 +1041,7 @@ const en: Messages = {
 
     globalNotice: {
         message:
-            "This is a student project application. All data, content and features are fictional.",
+            "This is a student project application.",
     },
 
     offlineNotice: {
