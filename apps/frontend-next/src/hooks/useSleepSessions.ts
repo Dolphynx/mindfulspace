@@ -37,28 +37,15 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
         setLoading(true);
         setErrorType(null);
 
-        // Offline : on lit la source de vérité offline (IndexedDB)
-        if (!navigator.onLine) {
-            try {
-                const cached = await getSleepHistory(30);
-                setSessions(cached);
-                setErrorType("offline");
-            } catch (cacheError) {
-                console.error("[useSleepSessions] cache load failed", cacheError);
-                setErrorType("load");
-            } finally {
-                setLoading(false);
-            }
-            return;
-        }
-
-        // Online : API + persist cache
         try {
             const data = await fetchLastSleepSessions(effectiveBaseUrl);
             setSessions(data);
-            await saveSleepHistory(data);
+            if(navigator.onLine) {
+                await saveSleepHistory(data);
+            }
         } catch (e) {
             console.warn("[useSleepSessions] API failed, trying cache");
+
             try {
                 const cached = await getSleepHistory(30);
                 setSessions(cached);
@@ -71,7 +58,6 @@ export function useSleepSessions(baseUrl?: string): UseSleepSessionsResult {
             setLoading(false);
         }
     }, [effectiveBaseUrl]);
-
 
     /**
      * Initial load
