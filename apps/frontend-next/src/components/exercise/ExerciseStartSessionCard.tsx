@@ -191,7 +191,7 @@ export function ExerciseStartSessionCard({ types, onSave, onCancel }: Props) {
             {hasSelected && (
                 <div className="flex items-center gap-3 mt-3">
                     <button
-                        className="flex-1 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"
+                        className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white"
                         onClick={() =>
                             onSave({
                                 exerciceContentId: selectedId,
@@ -206,7 +206,7 @@ export function ExerciseStartSessionCard({ types, onSave, onCancel }: Props) {
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="text-sm text-slate-600 underline underline-offset-2"
+                        className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
                     >
                         {t("manualForm_cancelButton")}
                     </button>

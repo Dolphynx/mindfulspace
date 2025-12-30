@@ -12,9 +12,10 @@ type Props = {
     types: ExerciceContentItem[];
     // Important: peut renvoyer un objet (session/newBadges), pas forcément void
     onCreateSession: (payload: CreateExerciceSessionPayload) => Promise<unknown>;
+    onCloseAction?: () => void;
 };
 
-export function ExerciseStartSection({ types, onCreateSession }: Props) {
+export function ExerciseStartSection({ types, onCreateSession, onCloseAction }: Props) {
     const t = useTranslations("domainExercise");
 
     const [open, setOpen] = useState(true);
@@ -61,7 +62,9 @@ export function ExerciseStartSection({ types, onCreateSession }: Props) {
 
                                 setOpen(false); // CLOSE after finishing
                             }}
-                            onCancel={() => setOpen(false)} // CLOSE when cancelling
+                            onCancel={() => {
+                                onCloseAction?.();
+                            }}
                         />
                     </div>
                 )}

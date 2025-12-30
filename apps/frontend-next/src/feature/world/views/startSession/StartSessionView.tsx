@@ -141,6 +141,7 @@ export function StartSessionView() {
                 ) : (
                     <ExerciseStartSection
                         types={exerciceTypes ?? []}
+                        onCloseAction={openOverview}
                         onCreateSession={(payload) =>
                             withRefresh(async () => {
                                 await createExerciceSession(payload);
