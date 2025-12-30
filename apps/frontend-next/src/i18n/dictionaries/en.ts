@@ -470,7 +470,9 @@ const en: Messages = {
 
         nextStep: "Next step",
 
-        skip: "Skip"
+        skip: "Skip",
+
+        and_now: "And now ?"
     },
 
     sessionRecap: {

@@ -481,7 +481,7 @@ export default function BreathingUnifiedPage() {
 
             {step === "MOOD_BEFORE" && (
                 <>
-                    <h1 className="text-3xl">{tBreathing("title")}</h1>
+                    <h1 className="text-xl md:text-3xl">{tBreathing("title")}</h1>
 
                     <MoodPicker value={moodBefore} onChangeAction={setMoodBefore} />
 
@@ -498,7 +498,7 @@ export default function BreathingUnifiedPage() {
 
             {step === "BREATHING" && (
                 <>
-                    <h1 className="text-4xl md:text-5xl text-brandText">
+                    <h1 className="text-xl md:text-4xl lg:text-5xl text-brandText">
                         {tBreathing("title")}
                     </h1>
 
@@ -529,7 +529,9 @@ export default function BreathingUnifiedPage() {
 
             {step === "MOOD_AFTER" && (
                 <>
-                    <h1 className="text-3xl">Et maintenant ?</h1>
+                    <h1 className="text-xl md:text-3xl">
+                        {tBreathing("and_now")}
+                    </h1>
 
                     <MoodPicker value={moodAfter} onChangeAction={setMoodAfter} />
 
@@ -546,7 +548,9 @@ export default function BreathingUnifiedPage() {
 
             {step === "RECAP" && (
                 <>
-                    <h1 className="text-4xl">{tRecap("title")}</h1>
+                    <h1 className="text-xl md:text-3xl">
+                        {tRecap("title")}
+                    </h1>
 
                     {mantra && (
                         <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-8 max-w-2xl text-xl italic text-brandText-soft">

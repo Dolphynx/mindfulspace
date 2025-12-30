@@ -468,7 +468,9 @@ const fr = {
 
         nextStep: "Étape suivante",
 
-        skip: "Passer"
+        skip: "Passer",
+
+        and_now: "Et maintenant ?"
     },
 
     sessionRecap: {
