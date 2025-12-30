@@ -144,19 +144,24 @@ function WorldV2Content() {
                 {/* MAP SCENE */}
                 <div className="relative mx-auto w-[92%] max-w-7xl pt-12 sm:pt-6 pb-10">
                     <div className="mx-auto w-full max-w-5xl">
+                        {/* MAP + OVERLAYS */}
                         <div className="relative aspect-[16/9] w-full">
                             {/* Base visuelle (SVG) */}
                             <IslandMapLayers islandPath={ISLAND_PATH} />
 
                             {/* Mantra IA (overlay) */}
-                            <MapMantra locale={locale} />
+                            <div className="absolute inset-0 z-10">
+                                <MapMantra locale={locale} />
+                            </div>
 
                             {/* Badges récents en lotus (overlay) */}
-                            <WorldBadgesLotusOverlay />
+                            <div className="absolute inset-0 z-20">
+                                <WorldBadgesLotusOverlay />
+                            </div>
 
-                            {/* CTA d'entrée : visible uniquement lorsque le panneau est fermé */}
+                            {/* CTA DESKTOP+ : overlay uniquement (ne perturbe pas mobile) */}
                             {!state.isPanelOpen && (
-                                <div className="absolute inset-0 z-20 flex items-end justify-center pb-6 pointer-events-none">
+                                <div className="absolute inset-0 z-30 hidden sm:flex items-end justify-center pb-6 pointer-events-none">
                                     <div className="pointer-events-auto rounded-3xl bg-white/55 backdrop-blur border border-white/40 shadow-lg px-6 py-4">
                                         <div className="text-sm font-semibold text-slate-800 text-center">
                                             {t("worldStartTitle")}
@@ -186,6 +191,33 @@ function WorldV2Content() {
                                 <div className="absolute left-[50%] top-[58%] h-[42%] w-[70%] -translate-x-1/2 rounded-[50%] bg-white/30 blur-2xl" />
                             </div>
                         </div>
+
+                        {/* CTA MOBILE : en flow sous la map (donc aucun conflit de z-index) */}
+                        {!state.isPanelOpen && (
+                            <div className="mt-4 flex justify-center sm:hidden">
+                                <div className="w-full max-w-md rounded-3xl bg-white/55 backdrop-blur border border-white/40 shadow-lg px-6 py-4">
+                                    <div className="text-sm font-semibold text-slate-800 text-center">
+                                        {t("worldStartTitle")}
+                                    </div>
+
+                                    <div className="mt-1 text-xs text-slate-600 text-center">
+                                        {t("worldStartSubtitle")}
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        data-testid="world-start-cta"
+                                        onClick={() => openPanel()}
+                                        className="
+                                            mt-4 w-full rounded-2xl bg-white/80 hover:bg-white transition
+                                            px-5 py-3 text-sm font-semibold text-slate-800 shadow
+                                        "
+                                    >
+                                        {t("worldStartCta")}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

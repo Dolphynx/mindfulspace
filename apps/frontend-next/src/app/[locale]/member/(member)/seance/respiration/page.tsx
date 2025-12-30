@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import MoodPicker from "@/components/shared/MoodPicker";
@@ -140,7 +140,6 @@ export default function BreathingUnifiedPage() {
 
     const tRecap = useTranslations("sessionRecap");
     const tBreathing = useTranslations("breathingSession");
-    const tTip = useTranslations("tipSession");
 
     const { fire } = useConfetti();
     const { pushToast } = useAppToasts();
@@ -445,17 +444,6 @@ export default function BreathingUnifiedPage() {
     }
 
     /**
-     * Score dérivé de l'humeur finale (convention UI).
-     *
-     * @remarks
-     * Non affiché dans cette page, conservé si une réintégration ultérieure est souhaitée.
-     */
-    const scoreAfter = useMemo<number>(
-        () => (moodAfter ? Number(moodAfter) * 20 : 0),
-        [moodAfter],
-    );
-
-    /**
      * Classe Tailwind pour le bouton principal.
      */
     const primaryBtn =
@@ -481,7 +469,7 @@ export default function BreathingUnifiedPage() {
 
             {step === "MOOD_BEFORE" && (
                 <>
-                    <h1 className="text-3xl">{tBreathing("title")}</h1>
+                    <h1 className="text-xl md:text-3xl">{tBreathing("title")}</h1>
 
                     <MoodPicker value={moodBefore} onChangeAction={setMoodBefore} />
 
@@ -498,7 +486,7 @@ export default function BreathingUnifiedPage() {
 
             {step === "BREATHING" && (
                 <>
-                    <h1 className="text-4xl md:text-5xl text-brandText">
+                    <h1 className="text-xl md:text-4xl lg:text-5xl text-brandText">
                         {tBreathing("title")}
                     </h1>
 
@@ -529,7 +517,9 @@ export default function BreathingUnifiedPage() {
 
             {step === "MOOD_AFTER" && (
                 <>
-                    <h1 className="text-3xl">Et maintenant ?</h1>
+                    <h1 className="text-xl md:text-3xl">
+                        {tBreathing("and_now")}
+                    </h1>
 
                     <MoodPicker value={moodAfter} onChangeAction={setMoodAfter} />
 
@@ -546,7 +536,9 @@ export default function BreathingUnifiedPage() {
 
             {step === "RECAP" && (
                 <>
-                    <h1 className="text-4xl">{tRecap("title")}</h1>
+                    <h1 className="text-xl md:text-3xl">
+                        {tRecap("title")}
+                    </h1>
 
                     {mantra && (
                         <div className="bg-white border border-brandBorder rounded-2xl shadow-card px-6 py-8 max-w-2xl text-xl italic text-brandText-soft">

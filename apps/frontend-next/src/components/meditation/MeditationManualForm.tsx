@@ -60,6 +60,8 @@ type MeditationManualFormProps = {
      * @default false
      */
     compact?: boolean;
+
+    onCloseAction?: () => void;
 };
 
 /*function dateInputToNoonIso(dateStr: string): string {
@@ -83,6 +85,7 @@ type MeditationManualFormProps = {
 export default function MeditationManualForm({
                                                  types,
                                                  onCreateSessionAction,
+                                                 onCloseAction,
                                                  defaultOpen = false,
                                                  compact = false,
                                              }: MeditationManualFormProps) {
@@ -134,6 +137,11 @@ export default function MeditationManualForm({
         } finally {
             setSavingManual(false);
         }
+    }
+
+    function handleCancel() {
+        resetForm();
+        onCloseAction?.();
     }
 
     return (
@@ -244,25 +252,20 @@ export default function MeditationManualForm({
                         <button
                             type="submit"
                             disabled={savingManual || !selectedTypeId}
-                            className="rounded-full bg-teal-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+                            className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
-                            {savingManual
-                                ? t("manualForm_savingButton")
-                                : t("manualForm_saveButton")}
+                            {t("manualForm_saveButton")}
                         </button>
 
-                        {!compact && (
+
                             <button
                                 type="button"
-                                onClick={() => {
-                                    resetForm();
-                                    setIsOpen(false);
-                                }}
-                                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                                onClick={handleCancel}
+                                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
                             >
                                 {t("manualForm_cancelButton")}
                             </button>
-                        )}
+
                     </div>
                 </form>
             </div>
