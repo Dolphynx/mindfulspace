@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+
 import { useTranslations } from "@/i18n/TranslationContext";
 import { isLocale, defaultLocale, type Locale } from "@/i18n/config";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import AuthButtons from "@/components/auth/AuthButtons";
-import NotificationsBell from "@/components/notifications/NotificationsBell"; // Import de NotificationsBell
+import NotificationsBell from "@/components/notifications/NotificationsBell";
 import { apiFetch } from "@/lib/api/client";
 
 import {
@@ -55,17 +56,12 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                 }
 
                 const url = `${baseUrl}${ME_PATH}`;
-
                 const res = await apiFetch(url, { cache: "no-store" });
 
                 if (cancelled) return;
 
-                if (res.ok) {
-                    setIsAuthenticated(true);
-                } else {
-                    setIsAuthenticated(false);
-                }
-            } catch (e) {
+                setIsAuthenticated(res.ok);
+            } catch {
                 if (!cancelled) {
                     setIsAuthenticated(false);
                 }
@@ -92,7 +88,8 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         const href = item.href(locale);
         const childHrefs = item.children?.map((c) => c.href(locale)) ?? [];
 
-        const active = pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
+        const active =
+            pathname.startsWith(href) || childHrefs.some((h) => pathname.startsWith(h));
 
         const baseClass = [
             "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border transition-colors",
@@ -100,7 +97,7 @@ export function MainNavbar({ mode }: MainNavbarProps) {
             "lg:w-auto lg:justify-center",
             active
                 ? "text-brandText border-transparent bg-transparent underline underline-offset-4"
-                : "text-brandText border-transparent hover:bg-white/60 hover:border-brandBorder"
+                : "text-brandText border-transparent hover:bg-white/60 hover:border-brandBorder",
         ].join(" ");
 
         if (!item.children?.length) {
@@ -175,17 +172,12 @@ export function MainNavbar({ mode }: MainNavbarProps) {
         );
     };
 
-    /**
-     * Dans cette version le logo redirige toujours vers la home page.
-     * La version commentée prévoyait : home page quand non connecté / world quand connecté
-     */
-    //const homeHref = effectiveMode === "client" ? `/${locale}/member/world-v2` : `/${locale}`;
     const homeHref = `/${locale}`;
 
     return (
         <header className="w-full bg-brandSurface border-b border-brandBorder">
-            <div className="mx-auto max-w-7xl px-4 py-3">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mx-auto max-w-7xl px-4 py-2 lg:py-3">
+                <div className="flex flex-col gap-1 lg:gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center justify-between">
                         <Link href={homeHref} className="flex items-center gap-2">
                             <Image
@@ -198,20 +190,27 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                             />
                         </Link>
 
-                        <button
-                            type="button"
-                            className="inline-flex items-center justify-center rounded-md border border-brandBorder px-2 py-1 text-sm text-brandText hover:bg-white/70 lg:hidden"
-                            onClick={() => setIsOpen(!isOpen)}
-                            aria-expanded={isOpen}
-                            aria-label={t("mobileToggle")}
-                        >
-                            <span className="sr-only">{t("mobileToggle")}</span>
-                            <span className="flex flex-col gap-1">
-                                <span className="block h-0.5 w-5 bg-brandText" />
-                                <span className="block h-0.5 w-5 bg-brandText" />
-                                <span className="block h-0.5 w-5 bg-brandText" />
-                            </span>
-                        </button>
+                        {/* Zone actions mobile: cloche + burger sur la même ligne */}
+                        <div className="flex items-center gap-2 lg:hidden">
+                            {isAuthenticated && <NotificationsBell />}
+
+                            <button
+                                type="button"
+                                className="inline-flex items-center justify-center rounded-md border border-brandBorder px-2 py-1 text-sm text-brandText hover:bg-white/70"
+                                onClick={() => setIsOpen(!isOpen)}
+                                aria-expanded={isOpen}
+                                aria-label={t("mobileToggle")}
+                            >
+                                <span className="sr-only">{t("mobileToggle")}</span>
+                                <span className="flex flex-col gap-1">
+                  <span className="block h-0.5 w-5 bg-brandText" />
+                  <span className="block h-0.5 w-5 bg-brandText" />
+                  <span className="block h-0.5 w-5 bg-brandText" />
+                </span>
+                            </button>
+                        </div>
+
+                        {/* Burger caché en desktop (déjà géré via lg:hidden sur le wrapper) */}
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -219,7 +218,11 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                             className={[
                                 "mt-1 flex flex-col gap-2",
                                 isOpen ? "flex" : "hidden",
-                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end",
+
+                                /* Important: en mobile, la nav prend toute la largeur (une vraie ligne), évite les collisions */
+                                "w-full",
+
+                                "lg:mt-0 lg:flex lg:flex-row lg:items-center lg:gap-4 lg:justify-end lg:w-auto",
                             ].join(" ")}
                         >
                             {items.map((item) => (
@@ -228,20 +231,18 @@ export function MainNavbar({ mode }: MainNavbarProps) {
                             <LanguageSwitcher />
                         </nav>
 
-                        {/* Notifications Bell aligné à droite */}
+                        {/* Cloche desktop: à droite, sans affecter le mobile */}
                         {isAuthenticated && (
-                            <div className="ml-auto">
+                            <div className="ml-auto hidden lg:block">
                                 <NotificationsBell />
                             </div>
                         )}
 
-                        {/* AuthButtons */}
                         <div className="hidden lg:block">
                             <AuthButtons />
                         </div>
                     </div>
 
-                    {/* Mobile auth buttons */}
                     <div className={[isOpen ? "flex" : "hidden", "lg:hidden mt-2"].join(" ")}>
                         <AuthButtons />
                     </div>

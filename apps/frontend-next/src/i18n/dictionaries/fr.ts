@@ -1041,7 +1041,7 @@ const fr = {
 
     globalNotice: {
         message:
-            "Ceci est une application de projet scolaire. Toutes les données, contenus et fonctionnalités sont fictifs.",
+            "Ceci est une application de projet scolaire.",
     },
 
     offlineNotice: {
