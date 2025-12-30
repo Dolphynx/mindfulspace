@@ -32,6 +32,8 @@ type ExerciceManualFormProps = {
      * @default false
      */
     compact?: boolean;
+
+    onCloseAction?: () => void;
 };
 
 function buildTodayDateInput(): string {
@@ -55,6 +57,7 @@ function dateInputToNoonIso(dateStr: string): string {
 export default function ExerciseManualForm({
                                                types,
                                                onCreateSessionAction,
+                                               onCloseAction,
                                                defaultOpen = false,
                                                compact = false,
                                            }: ExerciceManualFormProps) {
@@ -102,6 +105,11 @@ export default function ExerciseManualForm({
             setSavingManual(false);
         }
     }
+    function handleCancel() {
+        resetForm();
+        onCloseAction?.();
+    }
+
 
     return (
         <div className="flex flex-col gap-4">
@@ -206,21 +214,18 @@ export default function ExerciseManualForm({
                             disabled={savingManual || !selectedContentId}
                             className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
-                            {savingManual ? t("manualForm_savingButton") : t("manualForm_saveButton")}
+                            {t("manualForm_saveButton")}
                         </button>
 
-                        {!compact && (
+
                             <button
                                 type="button"
-                                onClick={() => {
-                                    resetForm();
-                                    setIsOpen(false);
-                                }}
-                                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                                onClick={handleCancel}
+                                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
                             >
                                 {t("manualForm_cancelButton")}
                             </button>
-                        )}
+
                     </div>
                 </form>
             </div>

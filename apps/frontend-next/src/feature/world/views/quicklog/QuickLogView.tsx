@@ -157,13 +157,17 @@ export function QuickLogView() {
 
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
                 {active === "sleep" && (
-                    <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
+                    <SleepManualForm
+                        onCreateSessionAction={onCreateSleepSessionAction}
+                        onCloseAction={openOverview}
+                    />
                 )}
 
                 {active === "meditation" && (
                     <MeditationManualForm
                         types={meditationTypes ?? []}
                         onCreateSessionAction={onCreateMeditationSessionAction}
+                        onCloseAction={openOverview}
                         defaultOpen
                         compact
                     />
@@ -173,6 +177,7 @@ export function QuickLogView() {
                     <ExerciseManualForm
                         types={exerciceTypes ?? []}
                         onCreateSessionAction={onCreateExerciceSessionAction}
+                        onCloseAction={openOverview}
                         defaultOpen
                         compact
                     />
