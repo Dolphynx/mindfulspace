@@ -5,7 +5,7 @@
 
 // Nom du cache utilisé. Quand tu changes ce nom (ex: v2 → v3),
 // le navigateur considère que c'est une "nouvelle version" du SW.
-const CACHE_NAME = "mindfulspace-v2";
+const CACHE_NAME = "mindfulspace-v1";
 
 // Liste des ressources que l’on veut ABSOLUMENT rendre disponibles hors-ligne.
 // C’est le “shell minimal” de l’application.
@@ -76,64 +76,47 @@ self.addEventListener("activate", (event) => {
 // 3. Si ça échoue → on cherche la ressource dans le cache.
 // 4. Si c’est une page HTML (navigation), on renvoie "/" par défaut.
 // ------------------------------------------------------------
-/// <reference lib="webworker" />
-
 self.addEventListener("fetch", (event) => {
     const request = event.request;
 
-    // On ignore :
-    // - les requêtes non-GET (POST, PUT, etc.)
-    // - les URLs internes du navigateur (extensions, devtools, etc.)
-    if (
-        request.method !== "GET" ||
-        request.url.startsWith("chrome-extension")
-    ) {
-        return;
-    }
-
-    const url = new URL(request.url);
-
-    // IMPORTANT :
-    // Ne PAS intercepter les requêtes cross-origin (ex: API https://api.xxx).
-    // Le Service Worker doit uniquement gérer les ressources du "shell" de l’app
-    // (HTML, JS, CSS, images), pas les données dynamiques.
-    if (url.origin !== self.location.origin) {
+    // On ignore les requêtes non-GET (POST, PUT, etc.)
+    // et certaines URLs internes du navigateur.
+    if (request.method !== "GET" || request.url.startsWith("chrome-extension")) {
         return;
     }
 
     event.respondWith(
-        // 1) On tente d'abord le réseau (network-first)
+        // 1. On tente d'abord d'aller sur Internet
         fetch(request)
             .then((response) => {
-                // Si la réponse n’est pas valide, on la renvoie telle quelle
-                if (!response || response.status !== 200) {
-                    return response;
-                }
-
-                // La réponse doit être clonée avant d’être mise en cache,
-                // car une réponse ne peut être lue qu’une seule fois.
+                // La réponse doit être clonée avant d'être mise en cache,
+                // car une réponse ne peut être lue qu'une seule fois.
                 const responseClone = response.clone();
 
-                // 2) On met en cache uniquement les ressources du shell
+                // 2. On stocke la version réseau dans le cache pour la prochaine fois.
                 caches.open(CACHE_NAME).then((cache) => {
                     cache.put(request, responseClone);
                 });
 
+                // On renvoie ce que la requête réseau a retourné.
                 return response;
             })
+
+            // 3 & 4. Si le réseau échoue → fallback vers le cache
             .catch(async () => {
-                // 3) Si le réseau échoue, on tente un fallback cache
+                // On cherche dans le cache une version existante de la ressource
                 const cached = await caches.match(request);
                 if (cached) return cached;
 
-                // 4) Si c’est une navigation HTML, on affiche la page offline
+                // Si la requête est une navigation (HTML),
+                // et que même là le cache n’a rien, on renvoie "/offline" par défaut.
+                // Cela permet à l'app de rester "navigable" hors-ligne.
                 if (request.mode === "navigate") {
                     return caches.match("/offline");
                 }
 
-                // Sinon, on laisse échouer silencieusement
+                // Sinon → undefined (la requête échoue mais silencieusement)
                 return undefined;
             })
     );
 });
-
