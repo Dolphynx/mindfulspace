@@ -62,6 +62,72 @@ const fr = {
         backToApp: "Retour à l'app",
     },
 
+    legalNoticePage: {
+        title: "Mentions légales",
+
+        intro:
+            "La présente page a pour objectif de fournir les informations légales relatives au projet MindfulSpace, développé dans un cadre strictement académique.",
+
+        section1Title: "Éditeur du site",
+        section1Text:
+            "MindfulSpace est un projet pédagogique réalisé dans le cadre d’un cursus académique. Il ne constitue ni un service commercial, ni une entreprise réelle.",
+
+        section2Title: "Hébergement",
+        section2Text:
+            "Malgré le contexte pédagogique, l’application est hébergée sur une infrastructure technique professionnelle. Nous attachons une importance à la disponibilité et la performance mais celles-ci ne peuvent être garanties dans ce contexte pédagogique, l'infrastructure serveur n'étant pas un point crucial de l'évaluation.",
+
+        section3Title: "Responsabilité",
+        section3Text:
+            "Les informations présentées sur ce site sont fournies à titre éducatif. Les auteurs ne sauraient être tenus responsables d’un usage impropre des contenus.",
+
+        section4Title: "Propriété intellectuelle",
+        section4Text:
+            "L’ensemble des contenus (textes, interfaces, code source) est destiné à un usage pédagogique. Toute reproduction ou réutilisation hors de ce cadre est interdite.",
+
+        section5Title: "Données personnelles",
+        section5Text:
+            "Les données éventuellement manipulées dans l’application le sont exclusivement à des fins de démonstration. Aucune donnée réelle à caractère personnel n’est exploitée.",
+
+        section6Title: "Contact",
+        section6Text:
+            "Pour toute question relative au projet ou à son fonctionnement, vous pouvez contacter l’équipe pédagogique à l’adresse suivante :",
+    },
+
+    privacyPolicyPage: {
+        title: "Politique de confidentialité",
+
+        intro:
+            "La présente politique de confidentialité a pour objectif d’informer les utilisateurs de la manière dont les données sont traitées au sein du projet MindfulSpace, développé dans un cadre strictement académique.",
+
+        section1Title: "Champ d’application",
+        section1Text:
+            "Cette politique s’applique à l’ensemble des fonctionnalités de l’application MindfulSpace et concerne uniquement les données manipulées dans le cadre de démonstrations, de tests ou d’exercices pédagogiques.",
+
+        section2Title: "Données collectées",
+        section2Text:
+            "Les données susceptibles d’être manipulées dans l’application sont limitées. Elles peuvent inclure des informations de compte (adresse e-mail, préférences utilisateur) ainsi que des données liées aux activités de bien-être telles que les sessions de méditation ou le suivi d’habitudes.",
+
+        section3Title: "Finalité du traitement",
+        section3Text:
+            "Les données sont utilisées exclusivement à des fins pédagogiques, techniques et de démonstration. Elles servent à illustrer le fonctionnement d’une application web complète et ne font l’objet d’aucune exploitation commerciale.",
+
+        section4Title: "Durée de conservation",
+        section4Text:
+            "Les données sont conservées uniquement pendant la durée nécessaire aux activités pédagogiques et aux phases de test. Elles peuvent être supprimées, réinitialisées ou modifiées à tout moment sans préavis.",
+
+        section5Title: "Partage des données",
+        section5Text:
+            "Aucune donnée n’est vendue, cédée ou partagée avec des tiers à des fins commerciales. Les éventuelles intégrations techniques utilisées dans l’application servent uniquement à simuler des fonctionnalités.",
+
+        section6Title: "Droits des utilisateurs",
+        section6Text:
+            "Dans le cadre du projet, les utilisateurs peuvent demander l’accès, la modification ou la suppression des données associées à leur compte, dans la mesure où celles-ci existent à des fins de démonstration.",
+
+        section7Title: "Contact",
+        section7Text:
+            "Pour toute question relative à la gestion des données ou au fonctionnement de l’application, vous pouvez contacter l’équipe en charge du projet à l’adresse suivante :",
+    },
+
     notificationsBell: {
         ariaLabel: "Notifications",
         title: "Notifications",
@@ -1031,9 +1097,11 @@ const fr = {
      * Components
      */
     footer: {
-        deployMessage: "Déployé avec ❤️ et sérénité grâce à CI/CD GitLab 🌿",
+        deployMessage: "Déployé avec ❤️ et sérénité",
         cookiesLink: "Cookies",
         cookiePolicy: "Politique de cookies",
+        legalNotice: "Mentions légales",
+        privacyPolicy: "Confidentialité",
     },
 
     langSwitcher: {
