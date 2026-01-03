@@ -1,27 +1,28 @@
-# C1 – Contexte MindfulSpace
+# C1 – Contexte du système MindfulSpace
+
+Ce diagramme présente le **contexte global** de MindfulSpace et ses interactions
+avec les utilisateurs et systèmes externes.
 
 ```mermaid
 flowchart LR
-%% Contexte global MindfulSpace
 
-subgraph internet [Utilisateurs & navigateurs]
-  userAnon[Utilisateur anonyme]
-  userAuth[Utilisateur authentifié]
+subgraph Users["Utilisateurs"]
+  anon[Visiteur non authentifié]
+  auth[Utilisateur authentifié]
 end
 
-subgraph mindfulSpace [Système MindfulSpace]
-  appWeb[Application Web PWA\nNext.js]
-  apiSrv[API REST\nNestJS]
+subgraph System["MindfulSpace"]
+  front[Application Web PWA\nNext.js]
+  api[API REST\nNestJS]
 end
 
-subgraph externals [Systèmes externes]
-  mailSrv[SMTP]
-  analyticsSrv[Analytics]
+subgraph External["Systèmes externes"]
+  mail[Service SMTP]
 end
 
-userAnon -->|Pages publiques| appWeb
-userAuth -->|Fonctionnalités connectées| appWeb
-appWeb <--> apiSrv
-apiSrv --> mailSrv
-appWeb -.-> analyticsSrv
+anon -->|Consultation pages publiques| front
+auth -->|Fonctionnalités bien-être| front
+
+front -->|HTTPS / JSON| api
+api -->|Emails transactionnels| mail
 ```
