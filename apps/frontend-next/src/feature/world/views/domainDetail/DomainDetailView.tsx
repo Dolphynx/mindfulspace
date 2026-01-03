@@ -76,14 +76,14 @@ export function DomainDetailView(props: DomainDetailViewProps) {
     return (
         <div className="space-y-4">
             <header className="flex items-center gap-3">
-                <button
+                {/*<button
                     type="button"
                     onClick={() => goBack()}
                     className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm hover:bg-slate-50"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     {t("domainDetail.back")}
-                </button>
+                </button>*/}
 
                 <div className="min-w-0">
                     <h1 className="truncate text-lg font-semibold text-slate-800">{title}</h1>

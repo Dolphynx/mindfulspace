@@ -908,6 +908,7 @@ const en: Messages = {
         worldPanelBackAria: "Go back",
         worldPanelHomeAria: "Back to overview",
         startSessionTitle: "Start a session",
+        back: "Back"
     },
 
     world: {

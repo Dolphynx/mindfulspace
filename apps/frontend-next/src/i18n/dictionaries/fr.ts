@@ -907,6 +907,7 @@ const fr = {
         worldPanelBackAria: "Revenir en arrière",
         worldPanelHomeAria: "Revenir à l’aperçu",
         startSessionTitle: "Démarrer une séance",
+        back: "Retour"
     },
 
     world: {

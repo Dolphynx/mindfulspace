@@ -14,6 +14,7 @@ import MapMantra from "@/components/map/MapMantra";
 import { WorldBadgesLotusOverlay } from "@/components/badges/WorldBadgesLotusOverlay";
 import { IslandMapLayers } from "@/components/map/IslandMapLayers";
 import { ISLAND_PATH } from "@/components/map/islandPath";
+import {ArrowLeft} from "lucide-react";
 
 /**
  * Page "My World" (V2) : scène de carte interactive + panneau fullscreen (drawer/overlay).
@@ -257,10 +258,15 @@ function WorldV2Content() {
                                         <button
                                             type="button"
                                             onClick={() => goBack()}
-                                            className="rounded-xl bg-white/60 hover:bg-white/80 transition px-3 py-2 text-slate-700 text-sm"
+                                            className="
+                                                        inline-flex items-center gap-2
+                                                        rounded-xl bg-white/60 hover:bg-white/80
+                                                        transition px-3 py-2 text-slate-700 text-sm
+                                                    "
                                             aria-label={t("worldPanelBackAria")}
                                         >
-                                            ←
+                                            <ArrowLeft className="h-4 w-4" />
+                                            {t("back")}
                                         </button>
                                     )}
 
