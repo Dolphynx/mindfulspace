@@ -62,6 +62,20 @@ export default function Footer({ onOpenPreferencesAction }: FooterProps) {
                     >
                         {t("cookiePolicy")}
                     </Link>
+
+                    <Link
+                        href={`/${locale}/legal-notice`}
+                        className="hover:text-brandText transition-colors"
+                    >
+                        {t("legalNotice")}
+                    </Link>
+
+                    <Link
+                        href={`/${locale}/privacy-policy`}
+                        className="hover:text-brandText transition-colors"
+                    >
+                        {t("privacyPolicy")}
+                    </Link>
                 </div>
             </div>
         </footer>
