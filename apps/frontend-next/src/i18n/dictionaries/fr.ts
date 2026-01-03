@@ -902,7 +902,7 @@ const fr = {
         worldStartTitle: "Mon monde",
         worldStartSubtitle: "Un aperçu, puis démarre quand tu veux.",
         worldStartCta: "Démarrer",
-        worldPanelTitle: "MY WORLD",
+        worldPanelTitle: "MON MONDE",
         worldPanelCloseAria: "Fermer le panneau",
         worldPanelBackAria: "Revenir en arrière",
         worldPanelHomeAria: "Revenir à l’aperçu",
