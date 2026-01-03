@@ -64,6 +64,72 @@ const en: Messages = {
         backToApp: "Back to app",
     },
 
+    legalNoticePage: {
+        title: "Mentions légales",
+
+        intro:
+            "La présente page a pour objectif de fournir les informations légales relatives au projet MindfulSpace, développé dans un cadre strictement académique.",
+
+        section1Title: "Éditeur du site",
+        section1Text:
+            "MindfulSpace est un projet pédagogique réalisé dans le cadre d’un cursus académique. Il ne constitue ni un service commercial, ni une entreprise réelle.",
+
+        section2Title: "Hébergement",
+        section2Text:
+            "Despite its educational context, the application is hosted on a professional technical infrastructure. We place importance on availability and performance; however, these cannot be guaranteed in this educational setting, as the server infrastructure is not a critical aspect of the evaluation.",
+
+        section3Title: "Responsabilité",
+        section3Text:
+            "Les contenus proposés sur ce site le sont à titre informatif et éducatif. Les auteurs ne sauraient être tenus responsables de l’utilisation faite des informations ou fonctionnalités proposées.",
+
+        section4Title: "Propriété intellectuelle",
+        section4Text:
+            "L’ensemble des contenus présents sur ce site (textes, visuels, interfaces et code source) est destiné à un usage pédagogique. Toute reproduction, diffusion ou réutilisation en dehors de ce cadre est interdite sans autorisation.",
+
+        section5Title: "Données personnelles",
+        section5Text:
+            "Les données éventuellement manipulées dans l’application le sont exclusivement à des fins de démonstration ou de test. Aucune donnée réelle à caractère personnel n’est exploitée ni conservée.",
+
+        section6Title: "Contact",
+        section6Text:
+            "Pour toute question relative au projet, à son contenu ou à son fonctionnement, vous pouvez contacter l’équipe en charge du développement à l’adresse suivante :",
+    },
+
+    privacyPolicyPage: {
+        title: "Privacy Policy",
+
+        intro:
+            "This privacy policy aims to inform users about how data is handled within the MindfulSpace project, developed in a strictly academic context.",
+
+        section1Title: "Scope",
+        section1Text:
+            "This policy applies to all features of the MindfulSpace application and concerns only data handled for demonstration, testing, or educational purposes.",
+
+        section2Title: "Collected data",
+        section2Text:
+            "The data potentially handled within the application is limited. It may include account information (email address, user preferences) as well as data related to well-being activities such as meditation sessions or habit tracking.",
+
+        section3Title: "Purpose of data processing",
+        section3Text:
+            "Data is used exclusively for educational, technical, and demonstration purposes. It is intended to illustrate the operation of a full-stack web application and is not subject to any commercial use.",
+
+        section4Title: "Data retention period",
+        section4Text:
+            "Data is retained only for the duration necessary for educational activities and testing phases. It may be deleted, reset, or modified at any time without prior notice.",
+
+        section5Title: "Data sharing",
+        section5Text:
+            "No data is sold, transferred, or shared with third parties for commercial purposes. Any technical integrations used within the application are intended solely to simulate functionalities.",
+
+        section6Title: "User rights",
+        section6Text:
+            "Within the scope of the project, users may request access to, modification of, or deletion of the data associated with their account, insofar as such data exists for demonstration purposes.",
+
+        section7Title: "Contact",
+        section7Text:
+            "For any questions regarding data handling or the operation of the application, you may contact the project team at the following address:",
+    },
+
     notificationsBell: {
         ariaLabel: "Notifications",
         title: "Notifications",
@@ -842,6 +908,7 @@ const en: Messages = {
         worldPanelBackAria: "Go back",
         worldPanelHomeAria: "Back to overview",
         startSessionTitle: "Start a session",
+        back: "Back"
     },
 
     world: {
@@ -1031,9 +1098,11 @@ const en: Messages = {
      * Components
      */
     footer: {
-        deployMessage: "Deployed with ❤️ and calm thanks to GitLab CI/CD 🌿",
+        deployMessage: "Deployed with ❤️ and calm",
         cookiesLink: "Cookies",
         cookiePolicy: "Cookie policy",
+        legalNotice: "Legal notice",
+        privacyPolicy: "Privacy",
     },
 
     langSwitcher: {
