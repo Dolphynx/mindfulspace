@@ -1,53 +1,48 @@
 # C3 – Composants Frontend (Next.js)
 
+Ce diagramme présente l’organisation fonctionnelle
+du frontend basé sur l’App Router de Next.js.
+
 ```mermaid
 flowchart TD
 
-subgraph front [Next.js Frontend]
+subgraph Frontend["Frontend Next.js"]
 
-  subgraph pub [Pages publiques]
-    home[Home]
-    resources[Ressources publiques]
+  subgraph Public["Pages publiques"]
+    home[Accueil]
     about[Présentation]
+    legal[Pages légales]
   end
 
-  subgraph auth [Pages authentifiées]
+  subgraph Private["Espace utilisateur"]
     dashboard[Dashboard]
-    habitsUI[Habitudes]
-    meditationsUI[Méditations]
-    sessionWizard[Start Meditation]
+    encode[Encodage sessions]
+    guided[Sessions guidées]
+    badges[Badges]
     profile[Profil]
-    authHub[Auth Hub]
   end
 
-  subgraph infra [Infrastructure UI]
-    layout[Layout]
-    apiClient[API Client]
-    i18n[TranslationContext]
-    sw[Service Worker]
-    idx[IndexedDB]
+  subgraph Infra["Infrastructure front"]
+    layout[Layout global]
+    apiClient[Client API]
     authCtx[Auth Context]
+    i18n[I18N]
+    offline[Offline / IndexedDB]
   end
 end
 
 home --> layout
-resources --> layout
 about --> layout
+legal --> layout
 
 dashboard --> layout
-habitsUI --> layout
-meditationsUI --> layout
-sessionWizard --> layout
+encode --> layout
+guided --> layout
+badges --> layout
 profile --> layout
 
-authHub --> apiClient
 layout --> apiClient
 layout --> authCtx
 layout --> i18n
-
-sw --> idx
-habitsUI --> idx
-meditationsUI --> idx
-
-apiClient --> api[(API REST)]
+encode --> offline
 ```

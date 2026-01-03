@@ -1,134 +1,98 @@
 # Documentation technique – MindfulSpace
 
-Ce dossier contient la documentation d’architecture et de conception du projet **MindfulSpace** (HELMo – Bloc 3 Framework & Archilog, 2025).
+Ce dossier (`/docs`) centralise **l’ensemble de la documentation technique, architecturale et organisationnelle**
+du projet **MindfulSpace**  
+(HELMo – Bloc 3 · Framework & Archilog · 2025).
 
-## Structure
-
-| Dossier                                                 | Contenu                       | Objectif                                                                                                                     |
-|:--------------------------------------------------------|:------------------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| [`archi/adr/`](./archi/adr/README.md)                   | Architecture Decision Records | Explique **les choix techniques et architecturaux** du projet : décisions, justifications, conséquences, alternatives.       |
-| [`archi/c4/`](./archi/c4/README.md)                     | Diagrammes C4                 | Montre **comment ces décisions s’articulent visuellement** dans le système : contexte, conteneurs, composants, flux de code. |
-| [`project-management/`](./project-management/README.md) | Gestion de projet             | Informations de gestion, organisation ClickUp, workflow Git étendu, cohérence projet/technique.                              |
-| [`frontend/`](./frontend/index.html)                    | Doc frontend (TypeDoc)        | Documentation **automatique** du code du frontend (générée via TypeDoc).                                                     |
-| [`I18N`](./I18N.md)                                     | I18N - Multilingue            | Documentation sur le système d'internationalisation du front.                                                                |
-
-## Utilisation
-
-- Consulte les **ADR** pour comprendre les **raisons** derrière chaque choix technique.
-- Parcours ensuite les **diagrammes C4** pour visualiser la **structure et les interactions** du système.
-- Les deux approches sont complémentaires :
-  > *ADR = pourquoi* • *C4 = comment*
-
-## Formats utilisés
-
-- **Markdown (.md)** pour tous les documents : lisible sur GitLab/GitHub et versionné.
-- **Mermaid** pour les diagrammes C4 : rendu automatique dans GitLab/GitHub/VS Code.
+Il constitue le **point d’entrée** pour comprendre :
+- l’architecture globale du système,
+- les décisions techniques structurantes,
+- les mécanismes clés (authentification, i18n, offline, PWA),
+- le workflow Git et la chaîne CI/CD,
+- l’organisation et la gestion du projet.
 
 ---
 
-# Documentation API — Swagger (NestJS)
+## Structure globale
 
-La documentation API est générée automatiquement par **Swagger / OpenAPI**.
+### Architecture & conception
 
-## Consulter la documentation API
-
-### En développement
-
-1. Lancer l’API :
-   ```bash
-   pnpm dev:api
-   ```
-2. Ouvrir Swagger dans le navigateur :  
-   http://localhost:3001/api/docs
-
-### En staging / production
-
-L’URL reste la même :
-```
-/api/docs
-```
-
-## Comment Swagger est généré ?
-
-- Dans `apps/api-nest/src/main.ts` via `SwaggerModule`.
-- Chaque contrôleur utilise :
-    - `@ApiTags()`
-    - `@ApiOkResponse()`
-    - DTOs annotés avec `@ApiProperty()`
-
-Swagger se met à jour automatiquement dès que :
-- un contrôleur change,
-- un endpoint est ajouté,
-- un DTO est modifié.
+| Dossier | Contenu | Objectif |
+|-------|--------|----------|
+| [`archi/adr/`](./archi/adr/) | Architecture Decision Records (ADR) | Documente **les décisions techniques majeures** : contexte, choix retenus, alternatives, impacts. |
+| [`archi/c4/`](./archi/c4/) | Diagrammes C4 | Représentation **visuelle et structurée** du système (contexte, conteneurs, composants). |
+| [`archi/README.md`](./archi/README.md) | Vue d’ensemble | Point d’entrée reliant ADR et diagrammes C4. |
 
 ---
 
-# Documentation frontend — TypeDoc
+### Authentification & sécurité
 
-Le code du frontend (Next.js) est documenté via **TypeDoc**.
-
-## 🛠 Générer la documentation frontend
-
-Depuis la **racine du monorepo** :
-
-```bash
-pnpm docs:front
-```
-
-Cela génère :
-
-```
-docs/frontend/index.html
-```
-
-Pour consulter la documentation :
-
-- Ouvrir directement `docs/frontend/index.html`,
-- ou lancer un serveur local :
-
-  ```bash
-  pnpm dlx serve docs/frontend
-  ```
-
-## Enrichir la documentation via TSDoc
-
-Ajouter des commentaires **TSDoc** dans les composants, hooks et utilitaires :
-
-```ts
-/**
- * Sélecteur d’humeur de la séance.
- * @param currentMood humeur actuelle
- * @param onChange callback lors du changement
- */
-```
-
-Plus les commentaires sont complets, plus la documentation générée sera utile.
+| Dossier | Contenu | Objectif |
+|-------|--------|----------|
+| [`auth/backend/`](./auth/backend/) | Authentification backend | Mise en place de l’authentification côté API (stratégies, clés, configuration). |
+| [`auth/frontend/`](./auth/frontend/) | Authentification frontend | Intégration côté frontend (flux utilisateur, guards, gestion de session). |
+| [`auth/AUTHENTICATION_DEEP_DIVE.md`](./auth/AUTHENTICATION_DEEP_DIVE.md) | Analyse détaillée | Vue approfondie du fonctionnement global de l’authentification. |
 
 ---
 
-# Page interne de documentation frontend (`/docs`)
+### CI/CD, déploiement & infrastructure
 
-Une page interne accessible depuis le **frontend** fournit des informations utiles aux développeurs.
-
-Emplacement :
-
-```
-apps/frontend-next/src/app/docs/page.tsx
-```
-
-Cette page explique :
-
-- comment le frontend communique avec l’API,
-- comment lancer et consulter Swagger,
-- comment générer la documentation TypeDoc,
-- où se trouvent les fichiers importants du monorepo.
-
-Accès en développement :
-
-```
-http://localhost:3000/docs
-```
+| Dossier | Contenu | Objectif |
+|-------|--------|----------|
+| [`cicd/`](./cicd/) | CI/CD & déploiement | Décrit le **flux complet Dev → Prod**, les pipelines GitLab CI et les étapes de déploiement. |
 
 ---
 
-> Ces documents servent de référence commune pour l’équipe MindfulSpace et accompagnent le développement, la présentation et l’évaluation du projet.
+### Internationalisation (I18N)
+
+| Dossier | Contenu | Objectif |
+|-------|--------|----------|
+| [`I18N/I18N.md`](./I18N/I18N.md) | Principes i18n | Présente l’architecture de l’internationalisation du frontend. |
+| [`I18N/RESOURCE_TRANSLATION_IMPLEMENTATION.md`](./I18N/RESOURCE_TRANSLATION_IMPLEMENTATION.md) | Implémentation | Détaille la gestion des ressources traduites. |
+| [`I18N/RESOURCE_TRANSLATION_SLUG_CHANGE.md`](./I18N/RESOURCE_TRANSLATION_SLUG_CHANGE.md) | Évolution | Justifie et documente un changement de stratégie i18n. |
+
+---
+
+### Fonctionnalités transverses
+
+| Fichier | Contenu | Objectif |
+|-------|--------|----------|
+| [`OFFLINE-SYNC.md`](./OFFLINE-SYNC.md) | Offline & synchronisation | Gestion du mode hors-ligne et resynchronisation des données. |
+| [`PWA.md`](./PWA.md) | Progressive Web App | Fonctionnement PWA : cache, offline, installation. |
+
+---
+
+### Gestion de projet & workflow
+
+| Dossier | Contenu | Objectif |
+|-------|--------|----------|
+| [`project-management/`](./project-management/) | Organisation du projet | Méthodologie, ClickUp, gestion du backlog et des sprints. |
+| [`project-management/CLICKUP.md`](./project-management/CLICKUP.md) | Outil de gestion | Description de l’utilisation de ClickUp dans le projet. |
+| [`project-management/CONTRIBUTING_EXTENDED.md`](./project-management/CONTRIBUTING_EXTENDED.md) | Règles de contribution | Bonnes pratiques Git, conventions et organisation du travail. |
+| [`project-management/README_Git_Workflow.md`](./project-management/README_Git_Workflow.md) | Workflow Git | Détail du workflow Git utilisé par l’équipe. |
+
+---
+
+## Philosophie de documentation
+
+- **ADR** : expliquent *pourquoi* une décision a été prise.
+- **C4** : montrent *comment* le système est structuré.
+- **Docs techniques ciblées** : décrivent les mécanismes complexes ou transverses.
+- **Docs organisationnelles** : assurent la lisibilité du travail d’équipe.
+
+> *ADR = Pourquoi*  
+> *C4 = Comment*  
+> *Docs techniques = Comment ça fonctionne*  
+> *Gestion = Comment on travaille*
+
+---
+
+## Formats et conventions
+
+- **Markdown (`.md`)** pour tous les documents : lisible, versionné, compatible GitLab/GitHub.
+- **Mermaid** pour les diagrammes d’architecture (C4).
+- Structure pensée pour être **explorable facilement lors de l’examen oral**.
+
+---
+
+> Cette documentation accompagne le développement, la maintenance et l’évaluation du projet **MindfulSpace**.
