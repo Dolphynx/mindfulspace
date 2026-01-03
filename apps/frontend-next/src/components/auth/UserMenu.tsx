@@ -85,7 +85,12 @@ export default function UserMenu() {
 
             {isOpen && (
                 <div
-                    className="absolute right-0 mt-2 w-56 rounded-xl border border-brandBorder bg-white shadow-lg z-50"
+                    className="
+                              absolute mt-2
+                              left-0 lg:left-auto lg:right-0
+                              w-56 max-w-[calc(100vw-1rem)]
+                              rounded-xl border border-brandBorder bg-white shadow-lg z-50
+                            "
                     role="menu"
                     aria-label="User menu"
                 >
