@@ -150,7 +150,7 @@ function WorldV2Content() {
                             <IslandMapLayers islandPath={ISLAND_PATH} />
 
                             {/* Mantra IA (overlay) */}
-                            <div className="absolute inset-0 z-10">
+                            <div className="absolute inset-0 z-30">
                                 <MapMantra locale={locale} />
                             </div>
 
@@ -161,7 +161,7 @@ function WorldV2Content() {
 
                             {/* CTA DESKTOP+ : overlay uniquement (ne perturbe pas mobile) */}
                             {!state.isPanelOpen && (
-                                <div className="absolute inset-0 z-30 hidden sm:flex items-end justify-center pb-6 pointer-events-none">
+                                <div className="absolute inset-0 z-40 hidden sm:flex items-end justify-center pb-6 pointer-events-none">
                                     <div className="pointer-events-auto rounded-3xl bg-white/55 backdrop-blur border border-white/40 shadow-lg px-6 py-4">
                                         <div className="text-sm font-semibold text-slate-800 text-center">
                                             {t("worldStartTitle")}
@@ -223,7 +223,7 @@ function WorldV2Content() {
 
                 {/* PANEL FULLSCREEN */}
                 {state.isPanelOpen && (
-                    <div className="absolute inset-0 z-40">
+                    <div className="absolute inset-0 z-50">
                         {/* Backdrop cliquable */}
                         <button
                             type="button"
