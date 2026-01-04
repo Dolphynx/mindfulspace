@@ -30,7 +30,7 @@ import type { ProgramItem } from "@/lib/api/program";
  */
 export function ProgramsView() {
     const tWorld = useTranslations("world");
-    const tExercise = useTranslations("domainExercice");
+    const tExercise = useTranslations("domainExercise");
 
     const { goBack, openOverview, canGoBack } = useWorldHub();
 

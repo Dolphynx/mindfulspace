@@ -69,7 +69,11 @@ export function BadgeToastProvider({ children }: { children: ReactNode }) {
     return (
         <BadgeToastContext.Provider value={{ pushBadges }}>
             {children}
-            {active && <BadgeToast badge={active} onClose={pop} />}
+            {/*
+            key nécessaire pour relancer le timer d’auto-close à chaque badge
+            Force un nouveau cycle de vie du toast à chaque changement de badge
+            */}
+            {active && <BadgeToast key={active.id} badge={active} onClose={pop} />}
         </BadgeToastContext.Provider>
     );
 }

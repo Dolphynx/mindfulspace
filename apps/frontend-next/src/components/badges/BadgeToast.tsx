@@ -59,11 +59,7 @@ export function BadgeToast({ badge, onClose }: BadgeToastProps) {
     return (
         <div
             className="
-                fixed
-                bottom-6
-                left-1/2
-                -translate-x-1/2
-                z-50
+                fixed top-40 left-1/2 -translate-x-1/2 z-[1000]
                 rounded-2xl
                 bg-white
                 shadow-xl

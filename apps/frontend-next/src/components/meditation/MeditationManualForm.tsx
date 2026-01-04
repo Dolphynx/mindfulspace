@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "@/i18n/TranslationContext";
 import MoodPicker from "@/components/shared/MoodPicker";
 import { MoodValue } from "@/lib";
+import { formatLocalYYYYMMDD } from "@/lib/date";
 
 /**
  * Version minimale d’un type de méditation,
@@ -59,9 +60,11 @@ type MeditationManualFormProps = {
      * @default false
      */
     compact?: boolean;
+
+    onCloseAction?: () => void;
 };
 
-function dateInputToNoonIso(dateStr: string): string {
+/*function dateInputToNoonIso(dateStr: string): string {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date();
     date.setFullYear(y);
@@ -69,28 +72,27 @@ function dateInputToNoonIso(dateStr: string): string {
     date.setDate(d);
     date.setHours(12, 0, 0, 0);
     return date.toISOString();
-}
+}*/
 
-function buildTodayDateInput(): string {
+/*function buildTodayDateInput(): string {
     const now = new Date();
     const y = now.getFullYear();
     const m = `${now.getMonth() + 1}`.padStart(2, "0");
     const d = `${now.getDate()}`.padStart(2, "0");
     return `${y}-${m}-${d}`;
-}
+}*/
 
 export default function MeditationManualForm({
                                                  types,
                                                  onCreateSessionAction,
+                                                 onCloseAction,
                                                  defaultOpen = false,
                                                  compact = false,
                                              }: MeditationManualFormProps) {
     const t = useTranslations("domainMeditation");
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
-    const [dateInput, setDateInput] = useState<string>(() =>
-        buildTodayDateInput(),
-    );
+    const [dateInput, setDateInput] = useState<string>(() => formatLocalYYYYMMDD());
     const [manualDuration, setManualDuration] = useState<number>(10);
     const [manualQuality, setManualQuality] = useState<MoodValue | null>(
         3 as MoodValue,
@@ -109,7 +111,7 @@ export default function MeditationManualForm({
     }, [defaultOpen]);
 
     function resetForm() {
-        setDateInput(buildTodayDateInput());
+        setDateInput(formatLocalYYYYMMDD());
         setManualDuration(10);
         setManualQuality(3 as MoodValue);
         setSelectedTypeId(null);
@@ -125,7 +127,7 @@ export default function MeditationManualForm({
             await onCreateSessionAction({
                 durationSeconds: manualDuration * 60,
                 moodAfter: manualQuality ?? undefined,
-                dateSession: dateInputToNoonIso(dateInput),
+                dateSession: dateInput,
                 meditationTypeId: selectedTypeId,
             });
 
@@ -135,6 +137,11 @@ export default function MeditationManualForm({
         } finally {
             setSavingManual(false);
         }
+    }
+
+    function handleCancel() {
+        resetForm();
+        onCloseAction?.();
     }
 
     return (
@@ -245,25 +252,20 @@ export default function MeditationManualForm({
                         <button
                             type="submit"
                             disabled={savingManual || !selectedTypeId}
-                            className="rounded-full bg-teal-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+                            className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                         >
-                            {savingManual
-                                ? t("manualForm_savingButton")
-                                : t("manualForm_saveButton")}
+                            {t("manualForm_saveButton")}
                         </button>
 
-                        {!compact && (
+
                             <button
                                 type="button"
-                                onClick={() => {
-                                    resetForm();
-                                    setIsOpen(false);
-                                }}
-                                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                                onClick={handleCancel}
+                                className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
                             >
                                 {t("manualForm_cancelButton")}
                             </button>
-                        )}
+
                     </div>
                 </form>
             </div>

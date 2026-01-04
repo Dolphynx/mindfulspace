@@ -1,47 +1,41 @@
-# C3 – Composants API (NestJS)
+# C3 – Composants Backend (API NestJS)
+
+Ce diagramme détaille la **structure interne de l’API**
+selon l’architecture modulaire de NestJS.
 
 ```mermaid
 flowchart LR
 
-subgraph api [NestJS API]
-  %% Controllers
-  cAuth[AuthController]
-  cUsers[UsersController]
-  cHabits[HabitsController]
-  cMed[MeditationSessionController]
-  cRes[ResourcesController]
+subgraph API["API NestJS"]
 
-  %% Services
-  sAuth[AuthService]
-  sUsers[UsersService]
-  sHabits[HabitsService]
-  sMed[MeditationSessionService]
-  sRes[ResourcesService]
+  subgraph Controllers
+    AuthC[AuthController]
+    UserC[UserController]
+    DataC[SessionsController]
+    BadgeC[BadgeController]
+  end
 
-  %% Data (Prisma)
-  rUsers[(UsersRepository)]
-  rHabits[(HabitsRepository)]
-  rMed[(MeditationSessionsRepo)]
-  rRes[(ResourcesRepository)]
+  subgraph Services
+    AuthS[AuthService]
+    UserS[UserService]
+    DataS[SessionService]
+    BadgeS[BadgeService]
+  end
 
-  %% Infra
-  jwt[JwtProvider]
-  mail[Mailer]
-  validator[Validation Pipe]
+  subgraph Infra
+    JWT[JWT Provider]
+    Prisma[Prisma ORM]
+  end
 end
 
-cAuth --> sAuth --> rUsers
-cUsers --> sUsers --> rUsers
-cHabits --> sHabits --> rHabits
-cMed --> sMed --> rMed
-cRes --> sRes --> rRes
+AuthC --> AuthS
+UserC --> UserS
+DataC --> DataS
+BadgeC --> BadgeS
 
-sAuth --> jwt
-sAuth --> mail
-
-cAuth -.-> validator
-cUsers -.-> validator
-cHabits -.-> validator
-cMed -.-> validator
-cRes -.-> validator
+AuthS --> JWT
+AuthS --> Prisma
+UserS --> Prisma
+DataS --> Prisma
+BadgeS --> Prisma
 ```

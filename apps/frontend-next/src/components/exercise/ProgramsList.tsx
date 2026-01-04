@@ -9,7 +9,7 @@ export function ProgramsList({programs, loading, onCancel, onSelect}: {
     onCancel: () => void;
     onSelect: (id: string) => void;
 }) {
-    const t = useTranslations("domainExercice");
+    const t = useTranslations("domainExercise");
 
     if (loading) return <p>{t("program_list_loading")}</p>;
 

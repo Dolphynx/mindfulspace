@@ -13,6 +13,8 @@ type SleepManualFormProps = {
         quality?: MoodValue;
         dateSession: string;
     }) => Promise<void>;
+
+    onCloseAction?: () => void;
 };
 
 function buildTodayDateInput(): string {
@@ -23,7 +25,10 @@ function buildTodayDateInput(): string {
     return `${y}-${m}-${d}`;
 }
 
-export default function SleepManualForm({ onCreateSessionAction }: SleepManualFormProps) {
+export default function SleepManualForm({
+                                            onCreateSessionAction,
+                                            onCloseAction,
+}: SleepManualFormProps) {
     const t = useTranslations("domainSleep");
     const { notifySessionSavedOffline } = useNotifications();
 
@@ -81,7 +86,8 @@ export default function SleepManualForm({ onCreateSessionAction }: SleepManualFo
     }
 
     function handleCancel() {
-        setDurationHours(8);
+        resetForm();
+        onCloseAction?.();
     }
 
     function resetForm() {
@@ -143,14 +149,14 @@ export default function SleepManualForm({ onCreateSessionAction }: SleepManualFo
                 <button
                     type="submit"
                     disabled={savingManual}
-                    className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+                    className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                     {t("manualForm_saveButton")}
                 </button>
                 <button
                     type="button"
                     onClick={handleCancel}
-                    className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+                    className="rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50"
                 >
                     {t("manualForm_cancelButton")}
                 </button>

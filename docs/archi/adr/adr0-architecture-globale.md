@@ -14,7 +14,7 @@ Le projet doit combiner :
 - un **hébergement Dockerisé** sur VPS Debian,  
 - et un **pipeline CI/CD GitLab** entièrement automatisé.  
 
-L’objectif : mettre en place une architecture claire, sécurisée et réaliste, inspirée des pratiques professionnelles (micro-services, reverse proxy, staging / production, secrets protégés, etc.).
+L’objectif : mettre en place une architecture claire, sécurisée et réaliste, inspirée des pratiques professionnelles (architecture modulaire, reverse proxy, staging / production, secrets protégés, etc.).
 
 ## Decision
 L’architecture globale repose sur les principes suivants :
@@ -27,7 +27,7 @@ L’architecture globale repose sur les principes suivants :
 - Un `package.json` racine et un `pnpm-lock.yaml` unique assurent la cohérence des dépendances.  
 
 ### 2️ Infrastructure serveur
-- **VPS Debian 12 ** hébergeant **Docker 29.0.0**.  
+- **VPS Debian 13 ** hébergeant **Docker 29.0.0**.  
 - Conteneurs :  
   - `frontend` (Next.js buildé en production),  
   - `api` (NestJS),  

@@ -9,10 +9,10 @@ import { useWorldHub } from "../../hub/WorldHubProvider";
 
 import SleepManualForm from "@/components/sleep/SleepManualForm";
 import MeditationManualForm from "@/components/meditation/MeditationManualForm";
-import ExerciceManualForm from "@/components/exercise/ExerciceManualForm";
+import ExerciseManualForm from "@/components/exercise/ExerciseManualForm";
 
 import { useMeditationSessions } from "@/hooks/useMeditationSessions";
-import { useExerciceSessions } from "@/hooks/useExerciceSessions";
+import { useExerciseSessions } from "@/hooks/useExerciseSessions";
 import { useSleepSessions } from "@/hooks/useSleepSessions";
 import { QuickLogLauncher } from "../overview/QuickLogLauncher";
 
@@ -91,7 +91,7 @@ export function QuickLogView() {
         loading: exerciceLoading,
         errorType: exerciceErrorType,
         createSession: createExerciceSession,
-    } = useExerciceSessions();
+    } = useExerciseSessions();
 
     const {
         loading: sleepLoading,
@@ -157,22 +157,27 @@ export function QuickLogView() {
 
             <div className="rounded-3xl border border-white/40 bg-white/55 backdrop-blur p-4 shadow-md">
                 {active === "sleep" && (
-                    <SleepManualForm onCreateSessionAction={onCreateSleepSessionAction} />
+                    <SleepManualForm
+                        onCreateSessionAction={onCreateSleepSessionAction}
+                        onCloseAction={openOverview}
+                    />
                 )}
 
                 {active === "meditation" && (
                     <MeditationManualForm
                         types={meditationTypes ?? []}
                         onCreateSessionAction={onCreateMeditationSessionAction}
+                        onCloseAction={openOverview}
                         defaultOpen
                         compact
                     />
                 )}
 
                 {active === "exercise" && (
-                    <ExerciceManualForm
+                    <ExerciseManualForm
                         types={exerciceTypes ?? []}
                         onCreateSessionAction={onCreateExerciceSessionAction}
+                        onCloseAction={openOverview}
                         defaultOpen
                         compact
                     />

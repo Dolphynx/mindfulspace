@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell, MainNavbar } from "@/components/layout";
+import {AppToastProvider} from "@/components";
 
 /**
  * Layout du module public.
@@ -22,10 +23,12 @@ import { AppShell, MainNavbar } from "@/components/layout";
  */
 export default function PublicLayout({ children }: { children: ReactNode }) {
     return (
-        <AppShell navbar={<MainNavbar mode="public" />}>
-            <>
-                {children}
-            </>
-        </AppShell>
+        <AppToastProvider>
+            <AppShell navbar={<MainNavbar mode="public" />}>
+                <>
+                    {children}
+                </>
+            </AppShell>
+        </AppToastProvider>
     );
 }

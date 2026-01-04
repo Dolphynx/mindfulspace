@@ -13,8 +13,31 @@ export type CreateSleepSessionPayload = {
     quality?: number;
 };
 
+// URL de base de l’API utilisée par le frontend.
+//
+// Règles :
+// - En production, l’URL DOIT être fournie via NEXT_PUBLIC_API_URL
+//   (injectée au build Next.js).
+// - En développement local uniquement, on autorise un fallback
+//   vers http://localhost:3001 pour simplifier le setup dev.
+// - En production, on évite tout fallback silencieux afin de
+//   prévenir des bugs difficiles à diagnostiquer (ex: PWA mobile
+//   pointant vers localhost).
 const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+    process.env.NEXT_PUBLIC_API_URL ??
+    (process.env.NODE_ENV === "development" ? "http://localhost:3001" : "");
+
+// Vérifie que l’URL de l’API est bien définie avant d’effectuer un appel réseau.
+//
+// Cette garde permet de :
+// - détecter immédiatement une mauvaise configuration (CI / build / env)
+// - éviter des requêtes invalides vers une URL vide ou incorrecte
+// - échouer explicitement plutôt que de “fonctionner partiellement”
+function assertApiBaseUrl(baseUrl: string) {
+       if (!baseUrl) {
+            throw new Error("API base URL is missing (NEXT_PUBLIC_API_URL not set)");
+       }
+}
 
 
 export async function fetchLastSleepSessions(baseUrl: string = API_BASE_URL,): Promise<SleepSession[]> {
@@ -34,6 +57,10 @@ export async function createSleepSession(
     payload: CreateSleepSessionPayload,
     baseUrl: string = API_BASE_URL,
 ): Promise<CreateSleepSessionResponse> {
+
+    // Garde-fou : empêche un appel API si l’URL de base n’est pas configurée.
+    assertApiBaseUrl(baseUrl);
+
     const res = await apiFetch(`${baseUrl}/sleep`, {
         method: "POST",
         body: JSON.stringify(payload),

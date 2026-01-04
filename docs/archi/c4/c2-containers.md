@@ -1,30 +1,33 @@
-# C2 – Conteneurs MindfulSpace
+# C2 – Conteneurs et déploiement
+
+Ce diagramme décrit les **conteneurs applicatifs**, leur déploiement
+et leur interaction au sein de l’infrastructure.
 
 ```mermaid
 flowchart TD
 
-client[Client web]
+user[Utilisateur]
 
-subgraph vps [VPS Debian 13]
-  traefik[Traefik v3\nReverse proxy]
-  frontend[Next.js\nFrontend]
-  backend[NestJS\nAPI]
-  postgres[(PostgreSQL)]
+subgraph VPS["VPS Debian 13"]
+  traefik[Traefik\nReverse proxy]
+  frontend[Frontend\nNext.js]
+  backend[Backend\nNestJS API]
+  db[(PostgreSQL)]
 end
 
-subgraph cicd [GitLab CI/CD]
-  runner[Runner Docker\nKaniko + SSH]
+subgraph CI["GitLab CI/CD"]
+  runner[Runner Docker\nKaniko]
 end
 
-subgraph registry [GitLab Container Registry]
-  reg[(Registry Docker)]
+subgraph Registry["GitLab Container Registry"]
+  images[(Images Docker)]
 end
 
-client -->|HTTPS| traefik
+user -->|HTTPS| traefik
 traefik --> frontend
 traefik --> backend
-backend --> postgres
+backend --> db
 
-runner -->|build/push| reg
-vps -->|pull images| reg
+runner -->|build & push| images
+VPS -->|pull images| images
 ```

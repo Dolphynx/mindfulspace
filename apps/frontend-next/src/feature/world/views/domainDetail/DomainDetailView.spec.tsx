@@ -1,6 +1,5 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 /**
@@ -8,15 +7,14 @@ import "@testing-library/jest-dom";
  *
  * @remarks
  * DomainDetailView est un conteneur :
- * - lit `refreshKey` et `goBack()` depuis le WorldHub,
+ * - lit `refreshKey` depuis le WorldHub,
  * - résout un titre traduit selon le domaine,
  * - rend un sous-composant métier selon `domain`,
  * - force un remount du contenu via `key={refreshKey}`.
  *
  * On teste :
- * - le déclenchement de `goBack()` au clic sur le bouton retour,
  * - le mapping domain -> composant rendu,
- * - les clés de traduction utilisées pour le titre / sous-titre / bouton,
+ * - les clés de traduction utilisées pour le titre / sous-titre,
  * - le remount lorsque refreshKey change (preuve via un compteur mount/unmount).
  */
 
@@ -122,31 +120,8 @@ describe("DomainDetailView (World Hub)", () => {
         });
     });
 
-    test("clic sur le bouton retour appelle goBack()", async () => {
-        const user = userEvent.setup();
-        const goBack = jest.fn();
-
-        mockUseWorldHub.mockReturnValue({
-            goBack,
-            refreshKey: 0,
-        });
-
-        render(<DomainDetailView domain={"sleep" as Domain} />);
-
-        await user.click(
-            screen.getByRole("button", { name: "domainDetail.back" }),
-        );
-
-        expect(goBack).toHaveBeenCalledTimes(1);
-    });
-
-    test("utilise les clés de traduction attendues (bouton, sous-titre, titre)", () => {
+    test("utilise les clés de traduction attendues (sous-titre, titre)", () => {
         render(<DomainDetailView domain={"meditation" as Domain} />);
-
-        // Le bouton retour affiche la clé de traduction
-        expect(
-            screen.getByRole("button", { name: "domainDetail.back" }),
-        ).toBeInTheDocument();
 
         // Le sous-titre commun
         expect(screen.getByText("domainDetail.subtitle")).toBeInTheDocument();
@@ -217,7 +192,9 @@ describe("DomainDetailView (World Hub)", () => {
             refreshKey: 0,
         });
 
-        const { rerender } = render(<DomainDetailView domain={"sleep" as Domain} />);
+        const { rerender } = render(
+            <DomainDetailView domain={"sleep" as Domain} />,
+        );
 
         expect(screen.getByTestId("sleep-domain-detail")).toBeInTheDocument();
         expect(screen.getByTestId("remount-probe")).toBeInTheDocument();

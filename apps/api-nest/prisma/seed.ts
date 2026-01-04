@@ -3,6 +3,7 @@ import {
   MeditationSessionSource,
   MeditationMode,
   MeditationVisualType,
+  ExternalAudioProvider,
   BadgeDomain,
   BadgeMetricType,
 } from "@prisma/client";
@@ -495,7 +496,8 @@ async function main() {
     sortOrder: number;
     isPremium: boolean;
     mediaUrl?: string | null;
-    soundcloudUrl?: string | null;
+    externalAudioProvider?: ExternalAudioProvider | null;
+    externalAudioRef?: string | null;
   };
 
   const meditationContentsData: MeditationContentSeed[] = [
@@ -539,6 +541,21 @@ async function main() {
     },
 
     // ---------- MINDFULNESS ----------
+    {
+      title: "Méditation Audius – Présence guidée",
+      description:
+        "Méditation guidée issue d’Audius pour cultiver la présence et l’attention.",
+      defaultMeditationTypeId: mindfulnessType.id,
+      mode: MeditationMode.AUDIO,
+      minDurationSeconds: 600,
+      maxDurationSeconds: 600,
+      defaultDurationSeconds: 600,
+      sortOrder: 25,
+      isPremium: false,
+      externalAudioProvider: ExternalAudioProvider.AUDIUS,
+      externalAudioRef: "108194",
+    },
+
     {
       title: "Pleine conscience 5 minutes (timer)",
       description:
@@ -672,7 +689,8 @@ async function main() {
         isActive: true,
         isPremium: content.isPremium,
         mediaUrl: content.mediaUrl ?? null,
-        soundcloudUrl: content.soundcloudUrl ?? null,
+        externalAudioProvider: content.externalAudioProvider ?? null,
+        externalAudioRef: content.externalAudioRef ?? null,
       },
     });
     meditationContents.push(created);

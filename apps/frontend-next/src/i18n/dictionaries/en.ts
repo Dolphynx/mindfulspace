@@ -64,6 +64,98 @@ const en: Messages = {
         backToApp: "Back to app",
     },
 
+    legalNoticePage: {
+        title: "Mentions légales",
+
+        intro:
+            "La présente page a pour objectif de fournir les informations légales relatives au projet MindfulSpace, développé dans un cadre strictement académique.",
+
+        section1Title: "Éditeur du site",
+        section1Text:
+            "MindfulSpace est un projet pédagogique réalisé dans le cadre d’un cursus académique. Il ne constitue ni un service commercial, ni une entreprise réelle.",
+
+        section2Title: "Hébergement",
+        section2Text:
+            "Despite its educational context, the application is hosted on a professional technical infrastructure. We place importance on availability and performance; however, these cannot be guaranteed in this educational setting, as the server infrastructure is not a critical aspect of the evaluation.",
+
+        section3Title: "Responsabilité",
+        section3Text:
+            "Les contenus proposés sur ce site le sont à titre informatif et éducatif. Les auteurs ne sauraient être tenus responsables de l’utilisation faite des informations ou fonctionnalités proposées.",
+
+        section4Title: "Propriété intellectuelle",
+        section4Text:
+            "L’ensemble des contenus présents sur ce site (textes, visuels, interfaces et code source) est destiné à un usage pédagogique. Toute reproduction, diffusion ou réutilisation en dehors de ce cadre est interdite sans autorisation.",
+
+        section5Title: "Données personnelles",
+        section5Text:
+            "Les données éventuellement manipulées dans l’application le sont exclusivement à des fins de démonstration ou de test. Aucune donnée réelle à caractère personnel n’est exploitée ni conservée.",
+
+        section6Title: "Contact",
+        section6Text:
+            "Pour toute question relative au projet, à son contenu ou à son fonctionnement, vous pouvez contacter l’équipe en charge du développement à l’adresse suivante :",
+    },
+
+    privacyPolicyPage: {
+        title: "Privacy Policy",
+
+        intro:
+            "This privacy policy aims to inform users about how data is handled within the MindfulSpace project, developed in a strictly academic context.",
+
+        section1Title: "Scope",
+        section1Text:
+            "This policy applies to all features of the MindfulSpace application and concerns only data handled for demonstration, testing, or educational purposes.",
+
+        section2Title: "Collected data",
+        section2Text:
+            "The data potentially handled within the application is limited. It may include account information (email address, user preferences) as well as data related to well-being activities such as meditation sessions or habit tracking.",
+
+        section3Title: "Purpose of data processing",
+        section3Text:
+            "Data is used exclusively for educational, technical, and demonstration purposes. It is intended to illustrate the operation of a full-stack web application and is not subject to any commercial use.",
+
+        section4Title: "Data retention period",
+        section4Text:
+            "Data is retained only for the duration necessary for educational activities and testing phases. It may be deleted, reset, or modified at any time without prior notice.",
+
+        section5Title: "Data sharing",
+        section5Text:
+            "No data is sold, transferred, or shared with third parties for commercial purposes. Any technical integrations used within the application are intended solely to simulate functionalities.",
+
+        section6Title: "User rights",
+        section6Text:
+            "Within the scope of the project, users may request access to, modification of, or deletion of the data associated with their account, insofar as such data exists for demonstration purposes.",
+
+        section7Title: "Contact",
+        section7Text:
+            "For any questions regarding data handling or the operation of the application, you may contact the project team at the following address:",
+    },
+
+    notificationsBell: {
+        ariaLabel: "Notifications",
+        title: "Notifications",
+        markAllRead: "Mark all as read",
+        empty: "No notifications.",
+        detailsInProfile: "Details in your profile",
+        goToProfile: "Go to profile",
+        close: "Close",
+
+        target: {
+            premium: "Premium",
+            coach: "Coach",
+        },
+
+        decision: {
+            approved: "approved",
+            rejected: "rejected",
+            updated: "updated",
+        },
+
+        format: {
+            line: "{target}{tier}: {decision}",
+            tier: " ({tier})",
+        },
+    },
+
     adminDashboard: {
         title: "Admin Panel",
         tabs: {
@@ -147,30 +239,43 @@ const en: Messages = {
      * Pages
      */
     publicHome: {
-        heroTitle: "Welcome to MindfulSpace",
-        heroSubtitle:
-            "Track your wellbeing habits, meditate, and breathe mindfully.",
+        heroTitle: "MindfulSpace",
+        heroSubtitle: "Take care of your mental well-being, one step at a time",
 
-        welcomeTitle: "Take a moment for yourself",
-        welcomeParagraph1:
-            "MindfulSpace is a safe place to follow your wellbeing habits, take a step back on your days, and build a calmer and more balanced routine.",
-        welcomeParagraph2:
-            "Guided breathing, mood tracking, wellbeing goals… it's not about being perfect, but about regularly coming back to what makes you feel good.",
+        welcomeTitle: "Welcome to MindfulSpace",
+        welcomeParagraph1: "MindfulSpace supports you daily to cultivate calm, balance, and mindfulness.",
+        welcomeParagraph2: "Explore resources, track your habits, and progress at your own pace.",
 
-        discoverTitle: "Discover MindfulSpace:",
-        discoverResources: "Explore the resources (articles & videos)",
-        discoverCoachs: "Learn more about the role of the coaches",
-        discoverContact: "Contact the MindfulSpace team",
+        discoverTitle: "Discover",
+        discoverResources: "Well-being resources",
+        discoverCoachs: "Our coaches",
+        discoverContact: "Contact us",
 
-        ctaTitle: "Ready to take action?",
-        ctaDescription:
-            "Log in to your space to follow your mood, breathe step by step, and keep track of your progress.",
+        ctaTitle: "Your personal space",
+        ctaDescription: "Sign in to access your world, track your sessions, and view your progress.",
 
-        loginButton: "Log in to your account",
-        startBreathing: "Start a breathing session",
+        loginButton: "Sign in",
+        accessWorldButton: "Access my world",
+        disclaimer: "Some features require an account.",
 
-        disclaimer:
-            "Don't have an account yet? The client area is part of the MindfulSpace school project and is not intended for real medical use.",
+        mindfulTitle: "Why MindfulSpace?",
+        mindfulPoint1: "Guided breathing and meditation exercises",
+        mindfulPoint2: "Simple and visual well-being tracking",
+        mindfulPoint3: "A personal space designed for serenity",
+
+        registerButton: "Sign up",
+
+        featureMeditationTitle: "Guided meditations",
+        featureMeditationText: "Access structured sessions (various durations and themes) to refocus, release pressure, and build a routine.",
+        featureMeditationLink: "Explore resources",
+
+        featureTrackingTitle: "Track your progress",
+        featureTrackingText: "See your habits and sessions over time to understand what truly supports your day-to-day well-being.",
+        featureTrackingNote: "Tracking data is available after signing in.",
+
+        featureResourcesTitle: "Resources and guidance",
+        featureResourcesText: "Articles and curated content to better understand stress, mindfulness, and practical well-being routines.",
+        featureResourcesLink: "Contact us",
     },
 
     contactPage: {
@@ -435,6 +540,10 @@ const en: Messages = {
         skipAll: "Skip all",
 
         nextStep: "Next step",
+
+        skip: "Skip",
+
+        and_now: "And now ?"
     },
 
     sessionRecap: {
@@ -524,7 +633,7 @@ const en: Messages = {
 
     },
 
-    domainExercice: {
+    domainExercise: {
         title: "Exercise",
         subtitle: "Track and log your exercise sessions.",
 
@@ -547,7 +656,7 @@ const en: Messages = {
         manualForm_typePlaceholder: "Choose an exercise",
         manualForm_repetitionsLabel: "Repetitions",
         manualForm_qualityLabel: "Quality / perceived effort",
-        manualForm_saveButton: "Save session",
+        manualForm_saveButton: "Save",
         manualForm_savingButton: "Saving…",
         manualForm_cancelButton: "Cancel",
         manualForm_repetitionLabel: "Repetitions number",
@@ -584,13 +693,13 @@ const en: Messages = {
         exercice_plan_today_empty: "Nothing planned today 🙂",
         exercice_plan_loading: "Loading...",
 
-        weekday_0: "Sunday",
         weekday_1: "Monday",
         weekday_2: "Tuesday",
         weekday_3: "Wednesday",
         weekday_4: "Thursday",
         weekday_5: "Friday",
         weekday_6: "Saturday",
+        weekday_7: "Sunday",
 
         detail: {
             kpisTitle: "Key metrics",
@@ -694,7 +803,7 @@ const en: Messages = {
         manualForm_durationLabel: "Duration",
         manualForm_minutesSuffix: "minutes",
         manualForm_qualityLabel: "Perceived quality",
-        manualForm_saveButton: "Save session",
+        manualForm_saveButton: "Save",
         manualForm_savingButton: "Saving…",
         manualForm_typeLabel: "Meditation type",
         manualForm_button: "Encode a meditation",
@@ -788,7 +897,7 @@ const en: Messages = {
     publicWorld: {
         worldAlt: "MindfulSpace world map",
         sleepAlt: "Sleep",
-        exerciceAlt: "Exercise",
+        exerciseAlt: "Exercise",
         meditationAlt: "Meditation",
         encodeSessionTitle: "Log a session",
         quickLogTitle: "Quick log",
@@ -804,6 +913,7 @@ const en: Messages = {
         worldPanelBackAria: "Go back",
         worldPanelHomeAria: "Back to overview",
         startSessionTitle: "Start a session",
+        back: "Back"
     },
 
     world: {
@@ -993,9 +1103,11 @@ const en: Messages = {
      * Components
      */
     footer: {
-        deployMessage: "Deployed with ❤️ and calm thanks to GitLab CI/CD 🌿",
+        deployMessage: "Deployed with ❤️ and calm",
         cookiesLink: "Cookies",
         cookiePolicy: "Cookie policy",
+        legalNotice: "Legal notice",
+        privacyPolicy: "Privacy",
     },
 
     langSwitcher: {
@@ -1005,7 +1117,7 @@ const en: Messages = {
 
     globalNotice: {
         message:
-            "This is a student project application. All data, content and features are fictional.",
+            "This is a student project application.",
     },
 
     offlineNotice: {

@@ -1,26 +1,22 @@
-# C4 – Exemple de flux d’authentification
+# C4 – Exemple de flux : encodage d’une session (offline-first)
+
+Ce diagramme illustre un **flux métier réel** du projet,
+incluant le mode hors ligne.
 
 ```mermaid
 sequenceDiagram
 participant UI as Frontend
-participant AuthC as AuthController
-participant AuthS as AuthService
-participant UsersR as UsersRepository
-participant JWT as JwtProvider
-participant Mail as Mailer
+participant Cache as IndexedDB
+participant API as API NestJS
+participant DB as PostgreSQL
 
-UI->>AuthC: POST /register
-AuthC->>AuthS: register()
-AuthS->>UsersR: createUser()
-UsersR-->>AuthS: user
-AuthS->>Mail: sendConfirmation()
-AuthC-->>UI: 201
+UI->>Cache: Sauvegarde session (offline)
+Note right of Cache: Pas de réseau
 
-UI->>AuthC: POST /login
-AuthC->>AuthS: validateUser()
-AuthS->>UsersR: findByEmail()
-AuthS-->>AuthC: ok
-AuthC->>JWT: sign()
-JWT-->>AuthC: tokens
-AuthC-->>UI: 200 {tokens}
+UI-->>UI: Feedback utilisateur immédiat
+
+UI->>API: Synchronisation (réseau rétabli)
+API->>DB: Persist session
+DB-->>API: OK
+API-->>UI: Données mises à jour
 ```

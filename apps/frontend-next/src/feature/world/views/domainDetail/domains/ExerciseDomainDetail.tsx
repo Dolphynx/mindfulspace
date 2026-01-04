@@ -5,8 +5,8 @@ import { useTranslations } from "@/i18n/TranslationContext";
 import { KpiCard, Section, Sparkline } from "../shared/ui";
 import { clampRange, computeStreak, pctDelta, simpleMovingAverage } from "../shared/stats";
 
-import { ExerciceHistoryCard } from "@/components/exercise/ExerciceHistoryCard";
-import { useExerciceSessionsDetail } from "@/hooks/useExerciceSessionsDetail";
+import { ExerciseHistoryCard } from "@/components/exercise/ExerciseHistoryCard";
+import { useExerciseSessionsDetail } from "@/hooks/useExerciseSessionsDetail";
 
 /**
  * Trie des entrées de type `Map<K, number>` par valeur décroissante et retourne les `n` premières.
@@ -37,8 +37,8 @@ function topN<K>(entries: Map<K, number>, n: number) {
  * @returns Contenu React de la vue de détail Exercice.
  */
 export function ExerciseDomainDetail() {
-    const t = useTranslations("domainExercice");
-    const { sessions, loading, errorType } = useExerciceSessionsDetail(30);
+    const t = useTranslations("domainExercise");
+    const { sessions, loading, errorType } = useExerciseSessionsDetail(30);
 
     /**
      * Calculs dérivés à partir des sessions.
@@ -285,7 +285,7 @@ export function ExerciseDomainDetail() {
             </Section>
 
             <Section title={t("detail.historyTitle")}>
-                <ExerciceHistoryCard sessions={sessions} loading={loading} errorType={errorType} />
+                <ExerciseHistoryCard sessions={sessions} loading={loading} errorType={errorType} />
             </Section>
         </div>
     );

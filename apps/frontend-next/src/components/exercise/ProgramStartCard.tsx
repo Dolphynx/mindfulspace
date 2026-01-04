@@ -7,7 +7,7 @@ import { ProgramsList } from "./ProgramsList";
 import {ProgramDetails} from "@/components/exercise/ProgramDetails";
 
 export function WorkoutProgramsStartCard() {
-    const t = useTranslations("domainExercice");
+    const t = useTranslations("domainExercise");
     const { programs, loading } = usePrograms();
 
     const [showList, setShowList] = useState(false);
