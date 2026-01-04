@@ -47,6 +47,7 @@ export default function AdminPage() {
     const params = useParams();
     const locale = (params.locale as string) || "fr";
     const t = useTranslations("adminDashboard");
+    const tPeriods = useTranslations("adminDashboard.periods");
 
     // Initialize activeTab from URL parameter or default to dashboard
     const [activeTab, setActiveTab] = useState<TabType>(() => {
@@ -149,7 +150,7 @@ export default function AdminPage() {
                                     <>
                                         <span className={statistics.users.growthPercent >= 0 ? "text-green-600" : "text-red-600"}>
                                             {statistics.users.growthPercent >= 0 ? '+' : ''}{statistics.users.growthPercent}%
-                                        </span> {statistics.users.growthLabel}
+                                        </span> {tPeriods(statistics.users.growthLabel)}
                                     </>
                                 ) : (
                                     'N/A'
@@ -182,7 +183,7 @@ export default function AdminPage() {
                                     <span className="animate-pulse">Chargement...</span>
                                 ) : statistics ? (
                                     <>
-                                        <span className="text-green-600">+{statistics.resources.newThisPeriod}</span> {statistics.resources.growthLabel}
+                                        <span className="text-green-600">+{statistics.resources.newThisPeriod}</span> {tPeriods(statistics.resources.growthLabel)}
                                     </>
                                 ) : (
                                     'N/A'
@@ -215,7 +216,7 @@ export default function AdminPage() {
                                     <span className="animate-pulse">Chargement...</span>
                                 ) : statistics ? (
                                     <>
-                                        <span className="text-green-600">+{statistics.sessions.newThisPeriod}</span> {statistics.sessions.growthLabel}
+                                        <span className="text-green-600">+{statistics.sessions.newThisPeriod}</span> {tPeriods(statistics.sessions.growthLabel)}
                                     </>
                                 ) : (
                                     'N/A'

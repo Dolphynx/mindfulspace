@@ -77,7 +77,29 @@ cd mindfulspace
 
 ---
 
-### 3. Installation des dépendances
+### 3. Configurer les environnements
+
+Créer deux fichiers `.env` et `.env.local`.
+
+#### 1. `/apps/api-nest/.env`
+```env
+DATABASE_URL="postgresql://ms_user:ms_password@localhost:5432/mindfulspace_local"
+PORT=3001
+
+(...)
+```
+
+Toutes les variables nécessaires se trouvent dans le fichier `/apps/api-nest/.env.example`.
+
+
+#### 2. `/apps/frontend-next/.env.local`
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+---
+
+### 4. Installation des dépendances
 ```bash
 pnpm install
 ```
@@ -87,7 +109,7 @@ pnpm install
 
 ---
 
-### 4. Docker : structure actuelle
+### 5. Docker : structure actuelle
 
 | Fichier                  | Rôle | Description |
 |--------------------------|------|-------------|
@@ -98,7 +120,7 @@ Remarque : sous Windows il faut installer Docker Desktop (et le composant Linux)
 
 ---
 
-### 5. Lancer uniquement la base de données
+### 6. Lancer uniquement la base de données
 
 ```bash
 docker compose -f docker-compose-db.yml up -d
@@ -112,22 +134,6 @@ Cela crée un conteneur PostgreSQL :
 
 ---
 
-### 6. Configurer les environnements
-
-Créer deux fichiers `.env.local` (un par app).
-
-#### `/apps/api-nest/.env`
-```env
-DATABASE_URL="postgresql://ms_user:ms_password@localhost:5432/mindfulspace_local"
-PORT=3001
-```
-
-#### `/apps/frontend-next/.env.local`
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
----
 
 ### 7. Initialiser la base de données
 
