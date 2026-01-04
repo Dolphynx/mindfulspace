@@ -81,6 +81,11 @@ const en: Messages = {
             resources: "Resources",
             sessions: "Sessions",
         },
+        periods: {
+            today: "today",
+            thisWeek: "this week",
+            thisMonth: "this month",
+        },
         errors: {
             loadStatsFailed: "Failed to load statistics",
         },
@@ -1703,8 +1708,7 @@ const en: Messages = {
             translationRegenerateFailed: "Failed to regenerate translation",
             translateTextFailed: "Failed to translate text",
         },
-    }
-
+    },
 
 };
 

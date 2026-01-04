@@ -81,12 +81,12 @@ export class AdminService {
         total: totalUsers,
         growthThisPeriod: usersThisMonth,
         growthPercent: usersGrowthPercent,
-        growthLabel: 'ce mois',
+        growthLabel: 'thisMonth', // i18n key: dashboard.periods.thisMonth
       },
       resources: {
         total: totalResources,
         newThisPeriod: resourcesThisWeek,
-        growthLabel: 'cette semaine',
+        growthLabel: 'thisWeek', // i18n key: dashboard.periods.thisWeek
       },
       sessions: {
         total: totalSessions,
@@ -96,7 +96,7 @@ export class AdminService {
           sleep: totalSleepSessions,
         },
         newThisPeriod: totalSessionsToday,
-        growthLabel: "aujourd'hui",
+        growthLabel: 'today', // i18n key: dashboard.periods.today
       },
     };
   }

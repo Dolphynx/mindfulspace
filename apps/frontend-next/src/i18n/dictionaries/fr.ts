@@ -79,6 +79,11 @@ const fr = {
             resources: "Ressources",
             sessions: "Sessions",
         },
+        periods: {
+            today: "aujourd'hui",
+            thisWeek: "cette semaine",
+            thisMonth: "ce mois",
+        },
         errors: {
             loadStatsFailed: "Échec du chargement des statistiques",
         },
@@ -1703,7 +1708,7 @@ const fr = {
             translationRegenerateFailed: "Échec de la régénération de la traduction",
             translateTextFailed: "Échec de la traduction du texte",
         },
-    }
+    },
 
 }; // optionnel, juste pour garder un "shape"
 
