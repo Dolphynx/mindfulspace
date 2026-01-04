@@ -688,13 +688,13 @@ const en: Messages = {
         exercice_plan_today_empty: "Nothing planned today 🙂",
         exercice_plan_loading: "Loading...",
 
-        weekday_0: "Sunday",
         weekday_1: "Monday",
         weekday_2: "Tuesday",
         weekday_3: "Wednesday",
         weekday_4: "Thursday",
         weekday_5: "Friday",
         weekday_6: "Saturday",
+        weekday_7: "Sunday",
 
         detail: {
             kpisTitle: "Key metrics",

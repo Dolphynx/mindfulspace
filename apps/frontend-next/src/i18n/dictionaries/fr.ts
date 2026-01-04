@@ -685,13 +685,13 @@ const fr = {
         exercice_plan_today_empty: "Rien de prévu aujourd'hui",
         exercice_plan_loading: "Chargement...",
 
-        weekday_0: "Dimanche",
         weekday_1: "Lundi",
         weekday_2: "Mardi",
         weekday_3: "Mercredi",
         weekday_4: "Jeudi",
         weekday_5: "Vendredi",
         weekday_6: "Samedi",
+        weekday_7: "Dimanche",
 
         detail: {
             kpisTitle: "Indicateurs",
