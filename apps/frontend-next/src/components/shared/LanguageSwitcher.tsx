@@ -95,7 +95,7 @@ export default function LanguageSwitcher() {
             <div
                 className={[
                     open ? "block" : "hidden",
-                    "absolute right-0 top-full mt-2 w-20 rounded-lg border border-brandBorder bg-white/95 shadow-lg backdrop-blur z-50 p-1",
+                    "absolute left-0 top-full mt-2 w-20 rounded-lg border border-brandBorder bg-white/95 shadow-lg backdrop-blur z-50 p-1",
                 ].join(" ")}
                 role="menu"
                 aria-label={t?.("menuLabel") ?? "Language"}

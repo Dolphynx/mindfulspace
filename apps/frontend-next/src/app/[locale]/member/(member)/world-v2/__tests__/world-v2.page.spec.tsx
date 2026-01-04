@@ -163,6 +163,8 @@ describe("World V2 page (/member/world-v2)", () => {
         render(<WorldV2Page />);
 
         // Il y a 2 CTA (desktop + mobile) dans le DOM lors des tests : on clique sur le premier.
+        // => Deux CTA identiques (desktop + mobile) sont rendus simultanément en environnement de test
+        // car les classes responsive CSS ne filtrent pas le DOM : on cible donc explicitement le premier.
         await user.click(screen.getAllByTestId("world-start-cta")[0]);
 
         expect(openPanel).toHaveBeenCalledTimes(1);
