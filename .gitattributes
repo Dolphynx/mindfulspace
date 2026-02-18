@@ -1,3 +1,7 @@
+*.html linguist-detectable=false
+dist/* linguist-vendored
+build/* linguist-vendored
+
 * text=auto
 *.sh text eol=lf
 *.yml text eol=lf
