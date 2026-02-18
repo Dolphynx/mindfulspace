@@ -3,6 +3,10 @@
 Application web de bien-être mental et de pleine conscience.  
 Projet académique HELMo – Framework / Archilog.
 
+![NextJS](https://img.shields.io/badge/Next.js-black)
+![NestJS](https://img.shields.io/badge/NestJS-red)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue)
+
 ---
 
 ## Objectif
